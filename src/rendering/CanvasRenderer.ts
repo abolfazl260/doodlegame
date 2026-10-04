@@ -8,12 +8,7 @@ export class CanvasRenderer implements Renderer{
       const px=toX(p.x),py=toY(p.y);c.lineWidth=Math.max(1,scale*.035);
       if(p.weapon==="boomerang"){
         c.save();c.translate(px,py);c.rotate(p.rotation);c.beginPath();c.arc(0,0,Math.max(3,scale*.18),-.95,.95);c.stroke();c.beginPath();c.arc(0,0,Math.max(2,scale*.11),.95,2.15);c.stroke();c.restore();
-      }else if(p.weapon==="bow"){
-        const len=scale*.38;c.save();c.translate(px,py);c.rotate(p.rotation);
-        c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();
-        c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.12,-scale*.08);c.moveTo(len,0);c.lineTo(len-scale*.12,scale*.08);c.stroke();
-        c.beginPath();c.moveTo(-len*.55,-scale*.035);c.lineTo(-len*.18,-scale*.035);c.moveTo(-len*.55,scale*.035);c.lineTo(-len*.18,scale*.035);c.stroke();c.restore();
-      }else if(p.weapon==="missile"){const speed=Math.hypot(p.vx,p.vy);const trail=Math.max(scale*.55,Math.min(scale*1.9,scale*(.55+speed*.045)));const nx=speed>.01?p.vx/speed:1,ny=speed>.01?p.vy/speed:0;c.save();c.globalAlpha=.28;c.lineWidth=Math.max(2,scale*.075);c.beginPath();c.moveTo(px-nx*.10*scale,py-ny*.10*scale);c.lineTo(px-nx*trail,py-ny*trail);c.stroke();c.globalAlpha=.9;c.fillStyle="#fff";c.beginPath();c.arc(px-nx*trail,py-ny*trail,Math.max(2,scale*.055),0,Math.PI*2);c.fill();c.globalAlpha=.9;c.save();c.translate(px,py);c.rotate(p.rotation);const len=scale*.62;c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len+scale*.14,-scale*.09);c.moveTo(-len,0);c.lineTo(-len+scale*.14,scale*.09);c.stroke();c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.12,-scale*.07);c.moveTo(len,0);c.lineTo(len-scale*.12,scale*.07);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len-scale*.18,-scale*.10);c.moveTo(-len,0);c.lineTo(-len-scale*.18,scale*.10);c.stroke();c.restore();}else if(p.weapon==="bomb"){
+      }else if(p.weapon==="bow"){const len=scale*.58;c.save();c.translate(px,py);c.rotate(p.rotation);c.lineWidth=Math.max(2,scale*.045);c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.16,-scale*.11);c.moveTo(len,0);c.lineTo(len-scale*.16,scale*.11);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len+scale*.11,-scale*.09);c.moveTo(-len,0);c.lineTo(-len+scale*.11,scale*.09);c.stroke();c.globalAlpha=.22;c.lineWidth=Math.max(1,scale*.03);c.beginPath();c.moveTo(-len*.85,0);c.lineTo(-len*1.65,0);c.stroke();c.restore();}}else if(p.weapon==="missile"){const speed=Math.hypot(p.vx,p.vy);const trail=Math.max(scale*.55,Math.min(scale*1.9,scale*(.55+speed*.045)));const nx=speed>.01?p.vx/speed:1,ny=speed>.01?p.vy/speed:0;c.save();c.globalAlpha=.28;c.lineWidth=Math.max(2,scale*.075);c.beginPath();c.moveTo(px-nx*.10*scale,py-ny*.10*scale);c.lineTo(px-nx*trail,py-ny*trail);c.stroke();c.globalAlpha=.9;c.fillStyle="#fff";c.beginPath();c.arc(px-nx*trail,py-ny*trail,Math.max(2,scale*.055),0,Math.PI*2);c.fill();c.globalAlpha=.9;c.save();c.translate(px,py);c.rotate(p.rotation);const len=scale*.62;c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len+scale*.14,-scale*.09);c.moveTo(-len,0);c.lineTo(-len+scale*.14,scale*.09);c.stroke();c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.12,-scale*.07);c.moveTo(len,0);c.lineTo(len-scale*.12,scale*.07);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len-scale*.18,-scale*.10);c.moveTo(-len,0);c.lineTo(-len-scale*.18,scale*.10);c.stroke();c.restore();}else if(p.weapon==="bomb"){
         const blink=p.life<.6&&Math.floor(p.life*18)%2===0;
         if(!blink){c.beginPath();c.arc(px,py,Math.max(3,scale*.12),0,Math.PI*2);c.fill();}
         c.beginPath();c.arc(px,py,Math.max(5,scale*(.16+(1-p.life/1.5)*.06)),0,Math.PI*2);c.stroke();
@@ -102,10 +97,13 @@ export class CanvasRenderer implements Renderer{
    c.beginPath();c.moveTo(-.58*scale,.03*scale);c.quadraticCurveTo(-.26*scale,-.36*scale,.12*scale,-.31*scale);c.quadraticCurveTo(.36*scale,-.28*scale,.44*scale,0);c.quadraticCurveTo(.36*scale,.28*scale,.12*scale,.31*scale);c.quadraticCurveTo(-.26*scale,.36*scale,-.58*scale,-.03*scale);c.stroke();
    c.beginPath();c.moveTo(-.33*scale,-.07*scale);c.lineTo(.14*scale,-.16*scale);c.moveTo(-.33*scale,.07*scale);c.lineTo(.14*scale,.16*scale);c.stroke();c.restore();
   }else if(s.weapon==="bow"){
-   c.beginPath();c.moveTo(.38*scale,-.42*scale);c.quadraticCurveTo(.98*scale,0,.38*scale,.42*scale);c.moveTo(.38*scale,-.42*scale);c.lineTo(.38*scale,.42*scale);
-   c.moveTo(.38*scale,0);c.lineTo(1.12*scale,0);c.moveTo(1.02*scale,-.07*scale);c.lineTo(1.12*scale,0);c.lineTo(1.02*scale,.07*scale);
-   c.moveTo(.38*scale,-.06*scale);c.lineTo(.38*scale,.06*scale);c.stroke();
-   if(s.attackTime>0){c.beginPath();c.moveTo(.54*scale,0);c.lineTo(.38*scale,-.09*scale);c.moveTo(.54*scale,0);c.lineTo(.38*scale,.09*scale);c.stroke();}
+   const pull=.30*s.bowCharge;const nock=.02-pull;
+   c.save();c.lineWidth=Math.max(2,scale*.055);
+   c.beginPath();c.moveTo(.02*scale,-.48*scale);c.quadraticCurveTo(.30*scale,-.20*scale,.30*scale,0);c.quadraticCurveTo(.30*scale,.20*scale,.02*scale,.48*scale);c.stroke();
+   c.lineWidth=Math.max(1,scale*.035);c.beginPath();c.moveTo(.02*scale,-.48*scale);c.lineTo(nock*scale,0);c.lineTo(.02*scale,.48*scale);c.stroke();
+   c.lineWidth=Math.max(2,scale*.06);c.beginPath();c.moveTo(-.04*scale,-.12*scale);c.lineTo(.10*scale,.12*scale);c.stroke();
+   c.lineWidth=Math.max(1,scale*.035);c.beginPath();c.moveTo(nock*scale,0);c.lineTo(.92*scale,0);c.moveTo(.92*scale,0);c.lineTo(.76*scale,-.11*scale);c.moveTo(.92*scale,0);c.lineTo(.76*scale,.11*scale);c.moveTo(nock*scale,0);c.lineTo((nock+.10)*scale,-.08*scale);c.moveTo(nock*scale,0);c.lineTo((nock+.10)*scale,.08*scale);c.stroke();
+   if(s.attackTime>0){c.globalAlpha=.35;c.beginPath();c.arc(.30*scale,0,.20*scale,0,Math.PI*2);c.stroke();}c.restore();
   }else if(s.weapon==="missile"){
    c.save();c.translate(.60*scale,.02*scale);c.rotate(-.05);c.beginPath();c.moveTo(-.48*scale,-.10*scale);c.lineTo(.42*scale,-.10*scale);c.lineTo(.62*scale,0);c.lineTo(.42*scale,.10*scale);c.lineTo(-.48*scale,.10*scale);c.closePath();c.stroke();c.beginPath();c.moveTo(-.48*scale,-.10*scale);c.lineTo(-.62*scale,0);c.lineTo(-.48*scale,.10*scale);c.stroke();c.restore();
   }else if(s.weapon==="bomb"){
