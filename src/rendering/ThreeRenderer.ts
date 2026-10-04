@@ -47,7 +47,10 @@ export class ThreeRenderer implements Renderer{
   const td=view.toolDetailPositions;td.fill(0);
   const bd=view.bowDetailPositions;bd.fill(0);
   if(s.weapon==="blaster"){
-   td.set([-.23,.04,0,.23,.04,0,-.08,.04,0,-.08,.14,0,.02,.14,0,.02,.04,0,.15,.04,0,.15,.1,0,.08,.1,0,.08,.04,0,.2,-.01,0,.28,-.01,0,.28,.05,0,.2,.05,0,.2,-.01,0,.06,-.02,0,.02,-.16,0,.1,-.16,0,.12,-.02,0]);
+   td.set([-.30,.02,0,.30,.02,0,-.22,.02,0,-.22,.14,0,.12,.14,0,.12,.02,0,.12,.14,0,.26,.14,0,.26,.02,0,.26,.14,0,.34,.10,0,.34,.02,0,.40,.02,0,.40,.12,0,.34,.12,0,.34,.02,0,.08,-.16,0,.18,-.16,0,.18,.02,0,.08,.02,0,.08,-.16,0,.18,-.16,0,.12,-.25,0,.22,-.25,0,.22,-.16,0,.12,-.16,0,.12,-.25,0,.22,-.25,0,.22,-.16,0,.36,-.02,0,.64,-.02,0,.64,.07,0,.36,.07,0,.36,-.02,0,.64,-.02,0,.64,.07,0,.36,.07,0,.36,-.02,0,.72,.00,0,1.02,.00,0,1.02,.06,0,.72,.06,0,.72,.00,0,1.02,.00,0,1.02,.06,0,.72,.06,0]);
+  }else if(s.weapon==="uzi"){
+   td.set([-.28,.00,0,.28,.00,0,-.25,.00,0,-.25,.16,0,.18,.16,0,.18,.00,0,.18,.16,0,.28,.16,0,.28,.00,0,.34,.12,0,.48,.12,0,.48,.02,0,.34,.02,0,.34,.12,0,.48,.12,0,.48,.02,0,.34,.02,0,.05,-.18,0,.18,-.18,0,.20,.02,0,.05,.02,0,.05,-.18,0,.18,-.18,0,.18,-.02,0,.28,-.02,0,.28,-.18,0,.18,-.18,0,.18,-.02,0,.28,-.02,0,.28,-.18,0,.18,-.18,0,.18,-.02,0,.28,-.02,0,.28,-.18,0,.12,-.28,0,.28,-.28,0,.28,-.20,0,.12,-.20,0,.12,-.28,0,.28,-.28,0,.28,-.20,0,.12,-.20,0,.48,.03,0,.62,.03,0,.62,.11,0,.48,.11,0,.48,.03,0,.62,.03,0,.62,.11,0,.48,.11,0]);
+  }
   }else if(s.weapon==="bow"){
    // Bow limbs, reinforced riser, grip, upper/lower string anchors, taut string, arrow shaft, nock and fletching.
    bd.set([
@@ -158,7 +161,9 @@ export class ThreeRenderer implements Renderer{
   else if(s.weapon==="hammer"){view.weaponLines.rotation.z=-.65+attackSnap*1.9;w.set([.2,0,0,.78,0,0,.72,-.22,0,.98,.22,0,.98,.22,0,.98,-.22,0,.98,-.22,0,.72,-.22,0]);}
   else if(s.weapon==="boomerang"){view.weaponLines.rotation.z=s.animationTime*9+(s.attackTime>0?attackSnap*1.5:0);w.set([.3,0,0,.55,-.3,0,.55,-.3,0,.82,-.02,0,.82,-.02,0,.55,.26,0,.55,.26,0,.3,0,0]);}
   else if(s.weapon==="bow"){view.weaponLines.rotation.z=-.12+attackSnap*.28;w.set([.35,-.38,0,.82,0,0,.82,0,.35,.35,.38,0,.35,-.38,0,.35,.38,0,.35,0,0,.98,0,0]);view.weaponLines.visible=true;}
-  view.weaponLines.geometry.attributes.position.needsUpdate=true;view.torsoPositions.set([-.16,.4,0,.16,.4,0,.16,.4,0,.2,-.02,0,.2,-.02,0,-.2,-.02,0]);view.torso.geometry.attributes.position.needsUpdate=true;view.enemyArmor.geometry.attributes.position.needsUpdate=true;
+  view.weaponLines.geometry.attributes.position.needsUpdate=true;
+  const flash=view.gunDetails;
+  flash.scale.set(s.attackTime>0?1.12:1, s.attackTime>0?1.12:1, 1);view.torsoPositions.set([-.16,.4,0,.16,.4,0,.16,.4,0,.2,-.02,0,.2,-.02,0,-.2,-.02,0]);view.torso.geometry.attributes.position.needsUpdate=true;view.enemyArmor.geometry.attributes.position.needsUpdate=true;
  }
  dispose(){this.renderer.dispose();this.renderer.forceContextLoss();this.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});this.scene.clear();this.projectileGeometry.dispose();this.platformMaterial.dispose();}
 }
