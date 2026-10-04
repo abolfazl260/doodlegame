@@ -1,116 +1,27 @@
-import type {InputSource} from "../input/Input";
-
-export interface Platform {
-  readonly x:number;
-  readonly y:number;
-  readonly width:number;
-  readonly height:number;
-}
-
-export interface GameRenderState {
-  readonly playerX:number;
-  readonly playerY:number;
-  readonly playerVelocityX:number;
-  readonly playerVelocityY:number;
-  readonly grounded:boolean;
-  readonly facing:number;
-  readonly animationTime:number;
-  readonly platforms:readonly Platform[];
-}
-
-const PLATFORMS:readonly Platform[]=[
-  {x:-7,y:-0.25,width:34,height:0.5},
-  {x:3,y:1.5,width:4,height:0.35},
-  {x:10,y:3.4,width:4.5,height:0.35}
-];
-
-const PLAYER_WIDTH=0.8;
-const PLAYER_HEIGHT=1.8;
-const GRAVITY=-22;
-const MOVE_ACCELERATION=32;
-const MAX_SPEED=8;
-const GROUND_FRICTION=26;
-const AIR_FRICTION=5;
-const JUMP_VELOCITY=9.2;
-
-export class GameSession {
-  private elapsed=0;
-  private playerX=0;
-  private playerY=0.9;
-  private velocityX=0;
-  private velocityY=0;
-  private grounded=true;
-  private facing=1;
-
-  constructor(private readonly input:InputSource){}
-
-  reset(){
-    this.elapsed=0;
-    this.playerX=0;
-    this.playerY=PLAYER_HEIGHT/2;
-    this.velocityX=0;
-    this.velocityY=0;
-    this.grounded=true;
-    this.facing=1;
-  }
-
-  update(dt:number){
-    const input=this.input.getState();
-    this.elapsed+=dt;
-
-    const targetDirection=Math.abs(input.moveX)>0.01?Math.sign(input.moveX):0;
-    if(targetDirection!==0){
-      this.velocityX+=targetDirection*MOVE_ACCELERATION*dt;
-      this.facing=targetDirection;
-    }else{
-      const friction=this.grounded?GROUND_FRICTION:AIR_FRICTION;
-      const amount=friction*dt;
-      this.velocityX=Math.abs(this.velocityX)<=amount?0:this.velocityX-Math.sign(this.velocityX)*amount;
-    }
-    this.velocityX=Math.max(-MAX_SPEED,Math.min(MAX_SPEED,this.velocityX));
-
-    if(input.jumpPressed&&this.grounded){
-      this.velocityY=JUMP_VELOCITY;
-      this.grounded=false;
-    }
-
-    const previousBottom=this.playerY-PLAYER_HEIGHT/2;
-    this.velocityY+=GRAVITY*dt;
-    this.playerX+=this.velocityX*dt;
-    this.playerY+=this.velocityY*dt;
-    this.grounded=false;
-
-    const halfWidth=PLAYER_WIDTH/2;
-    const bottom=this.playerY-PLAYER_HEIGHT/2;
-    if(this.velocityY<=0){
-      for(const platform of PLATFORMS){
-        const overlapsX=this.playerX+halfWidth>platform.x&&this.playerX-halfWidth<platform.x+platform.width;
-        const crossedTop=previousBottom>=platform.y+platform.height&&bottom<=platform.y+platform.height;
-        if(overlapsX&&crossedTop){
-          this.playerY=platform.y+platform.height+PLAYER_HEIGHT/2;
-          this.velocityY=0;
-          this.grounded=true;
-          break;
-        }
-      }
-    }
-
-    if(this.playerY<-12)this.reset();
-    this.input.endFrame();
-  }
-
-  getRenderState():GameRenderState{
-    return {
-      playerX:this.playerX,
-      playerY:this.playerY,
-      playerVelocityX:this.velocityX,
-      playerVelocityY:this.velocityY,
-      grounded:this.grounded,
-      facing:this.facing,
-      animationTime:this.elapsed,
-      platforms:PLATFORMS
-    };
-  }
-
-  dispose(){}
+import type {InputSource,InputState,WeaponId} from "../input/Input";
+export interface Platform{readonly x:number;readonly y:number;readonly width:number;readonly height:number;}
+export interface DuelistRenderState{readonly x:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly weapon:WeaponId;readonly attackTime:number;readonly animationTime:number;}
+export interface ProjectileRenderState{readonly x:number;readonly y:number;readonly vx:number;readonly life:number;}
+export interface GameRenderState{readonly player:DuelistRenderState;readonly opponent:DuelistRenderState;readonly projectiles:readonly ProjectileRenderState[];readonly platforms:readonly Platform[];readonly winner:"player"|"opponent"|null;}
+interface Fighter{x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;weapon:WeaponId;attackTime:number;cooldown:number;}
+const PLATFORMS:readonly Platform[]=[{x:-12,y:-.25,width:24,height:.5},{x:-4,y:2,width:3.5,height:.35},{x:.5,y:3.7,width:3.5,height:.35}];
+const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2;
+const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number}>>={blade:{damage:14,range:1.35,cooldown:.32,knockback:4},hammer:{damage:24,range:1.45,cooldown:.75,knockback:8},blaster:{damage:12,range:0,cooldown:.5,knockback:5,projectileSpeed:14}};
+const ORDER:readonly WeaponId[]=["blade","hammer","blaster"];
+export class GameSession{
+ private elapsed=0;private player:Fighter=this.create(-5,1);private opponent:Fighter=this.create(5,-1);private projectiles:ProjectileRenderState[]=[];private winner:"player"|"opponent"|null=null;
+ constructor(private readonly input:InputSource){}
+ reset(){this.elapsed=0;this.player=this.create(-5,1);this.opponent=this.create(5,-1);this.projectiles=[];this.winner=null;}
+ selectWeapon(direction:1|-1){const i=ORDER.indexOf(this.player.weapon);this.player.weapon=ORDER[(i+direction+ORDER.length)%ORDER.length];}
+ update(dt:number){if(this.winner){this.input.endFrame();return;}this.elapsed+=dt;const input=this.input.getState();this.updatePlayer(input,dt);this.updateOpponent(dt);this.attack(this.player,this.opponent,input.attackPressed);this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0)this.winner="player";if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);this.input.endFrame();}
+ private create(x:number,facing:number):Fighter{return{x,y:HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:100,weapon:"blade",attackTime:0,cooldown:0};}
+ private updatePlayer(input:InputState,dt:number){const d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;this.move(this.player,d,dt);if(input.jumpPressed&&this.player.grounded){this.player.velocityY=JUMP;this.player.grounded=false;}this.integrate(this.player,dt);}
+ private updateOpponent(dt:number){const dx=this.player.x-this.opponent.x;const d=Math.abs(dx)>.9?Math.sign(dx):0;this.move(this.opponent,d*.55,dt);if(this.opponent.grounded&&this.player.y-this.opponent.y>1.5)this.opponent.velocityY=JUMP*.9;this.integrate(this.opponent,dt);if(Math.abs(dx)<2&&this.opponent.cooldown<=0)this.attack(this.opponent,this.player,true);}
+ private move(f:Fighter,d:number,dt:number){if(d){f.velocityX+=d*ACC*dt;f.facing=Math.sign(d);}else{const amount=(f.grounded?FRIC:AIR)*dt;f.velocityX=Math.abs(f.velocityX)<=amount?0:f.velocityX-Math.sign(f.velocityX)*amount;}f.velocityX=Math.max(-MAX,Math.min(MAX,f.velocityX));}
+ private integrate(f:Fighter,dt:number){const previous=f.y-HH/2;f.velocityY+=G*dt;f.x+=f.velocityX*dt;f.y+=f.velocityY*dt;f.grounded=false;const bottom=f.y-HH/2;for(const p of PLATFORMS){const overlap=f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width;const crossed=previous>=p.y+p.height&&bottom<=p.y+p.height;if(f.velocityY<=0&&overlap&&crossed){f.y=p.y+p.height+HH/2;f.velocityY=0;f.grounded=true;break;}}f.x=Math.max(-11.4,Math.min(11.4,f.x));}
+ private attack(a:Fighter,t:Fighter,pressed:boolean){const w=WEAPONS[a.weapon];if(!pressed||a.cooldown>0)return;a.cooldown=w.cooldown;a.attackTime=.14;if(w.projectileSpeed){this.projectiles.push({x:a.x+a.facing*.65,y:a.y+.35,vx:a.facing*w.projectileSpeed,life:1.6});return;}const distance=t.x-a.x;if(Math.sign(distance)===a.facing&&Math.abs(distance)<=w.range)this.damage(t,w.damage,a.facing*w.knockback);}
+ private damage(t:Fighter,damage:number,knockback:number){t.health=Math.max(0,t.health-damage);t.velocityX+=knockback;t.velocityY=Math.max(t.velocityY,2);}
+ private updateProjectiles(dt:number){for(let i=this.projectiles.length-1;i>=0;i--){const p=this.projectiles[i];p.x+=p.vx*dt;p.life-=dt;const target=p.vx>0?this.opponent:this.player;if(Math.abs(p.x-target.x)<.65&&Math.abs(p.y-(target.y+.35))<1){this.damage(target,WEAPONS.blaster.damage,Math.sign(p.vx)*WEAPONS.blaster.knockback);this.projectiles.splice(i,1);continue;}if(p.life<=0||Math.abs(p.x)>16)this.projectiles.splice(i,1);}}
+ getRenderState():GameRenderState{return{player:{...this.player,animationTime:this.elapsed},opponent:{...this.opponent,animationTime:this.elapsed},projectiles:this.projectiles,platforms:PLATFORMS,winner:this.winner};}
+ dispose(){}
 }
