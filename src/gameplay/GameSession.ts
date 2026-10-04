@@ -191,6 +191,15 @@ export class GameSession{
  private attack(a:Fighter,t:Fighter,pressed:boolean){
   const w=WEAPONS[a.weapon];
   if(!pressed||a.cooldown>0)return;
+  const wall=this.wallDirection(a);
+  const melee=a.weapon==="blade"||a.weapon==="hammer";
+  if(melee&&!a.grounded&&wall!==0){
+    a.velocityX=-wall*WALL_JUMP_SPEED;
+    a.velocityY=Math.max(a.velocityY,JUMP*this.arena.jumpMultiplier*.78);
+    a.facing=-wall;
+  }else if(melee){
+    a.velocityX=Math.max(-DASH_SPEED,Math.min(DASH_SPEED,a.velocityX+a.facing*(a.weapon==="hammer"?5.2:3.8)));
+  }
   if(this.arenaId==="fortress"&&a.weapon!=="missile")a.weapon="missile";
   a.cooldown=w.cooldown;
   if(this.arenaId==="fortress"&&a===this.player){
