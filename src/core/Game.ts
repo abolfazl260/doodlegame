@@ -12,7 +12,7 @@ export class Game{
  selectWeapon(direction:1|-1){this.ready();this.session.selectWeapon(direction);}
  selectArena(id:ArenaId){this.ready();if(this.state.getState()!==GameState.MENU)return;this.session.setArena(id);}
  getArena(){return this.session.getArena();}
- getHudState(){const s=this.session.getRenderState();return{playerHealth:s.player.health,opponentHealth:s.opponent.health,weapon:s.player.weapon,winner:s.winner};}
+ getHudState(){const s=this.session.getRenderState();return{playerHealth:s.player.health,opponentHealth:s.opponent.health,weapon:s.player.weapon,winner:s.winner,arena:s.arena};}
  subscribe(listener:(state:GameState)=>void){return this.state.subscribe(listener);}getState(){return this.state.getState();}
  resize(){this.assertNotDisposed();if(this.initialized)this.renderer.resize();}
  dispose(){if(this.disposed)return;this.loop.dispose();this.session.dispose();this.renderer.dispose();this.state.dispose();this.disposed=true;}
