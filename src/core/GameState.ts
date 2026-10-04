@@ -11,7 +11,8 @@ export class GameStateManager {
   getState(){return this.currentState;}
   canTransitionTo(next:GameState){return this.currentState===next||TRANSITIONS[this.currentState].includes(next);}
   transitionTo(next:GameState){if(next===this.currentState)return;if(!this.canTransitionTo(next))throw new Error(`Invalid game state transition: ${this.currentState} -> ${next}`);this.currentState=next;for(const listener of this.listeners)listener(next);}
-  reset(){this.currentState=GameState.MENU;for(const listener of this.listeners)listener(this.currentState);}
+  notify(){for(const listener of this.listeners)listener(this.currentState);}
+  reset(){this.currentState=GameState.MENU;this.notify();}
   subscribe(listener:Listener){this.listeners.add(listener);return()=>this.listeners.delete(listener);}
   dispose(){this.listeners.clear();}
 }
