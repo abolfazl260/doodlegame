@@ -18,7 +18,7 @@ export class CanvasRenderer implements Renderer{
         if(!blink){c.beginPath();c.arc(px,py,Math.max(3,scale*.12),0,Math.PI*2);c.fill();}
         c.beginPath();c.arc(px,py,Math.max(5,scale*(.16+(1-p.life/1.5)*.06)),0,Math.PI*2);c.stroke();
       }else{
-        const r=Math.max(2,scale*.075),len=p.weapon==="uzi"?scale*.30:p.weapon==="blaster"?scale*.22:scale*.12;
+        const r=Math.max(2,scale*.075),speed=Math.hypot(p.vx,p.vy),len=Math.max(scale*.12,Math.min(scale*.55,scale*.12+speed*scale*.018));
         c.beginPath();c.moveTo(px-Math.sign(p.vx)*len,py);c.lineTo(px,py);c.stroke();c.beginPath();c.arc(px,py,r,0,Math.PI*2);c.fill();
       }
     }}
@@ -36,6 +36,8 @@ export class CanvasRenderer implements Renderer{
   const landing=Math.abs(s.velocityY)<1.5&&!s.grounded;
   const enemyScale=enemy?(s.enemyType==="tank"?1.12:s.enemyType==="boss"?1.3:s.enemyType==="runner"?0.92:s.enemyType==="ninja"?0.96:1):1;c.save();c.translate(x,y);c.scale(dir*enemyScale,enemyScale);c.rotate(lean);
   c.strokeStyle="#fff";c.fillStyle="#fff";c.lineWidth=Math.max(2,scale*.055);c.lineCap="round";c.lineJoin="round";
+  if(!airborne&&Math.abs(s.velocityX)>1){c.save();c.globalAlpha=Math.min(.18,Math.abs(s.velocityX)/45);c.beginPath();c.ellipse(-dir*.34*scale,.95*scale,.48*scale,.07*scale,0,0,Math.PI*2);c.stroke();c.restore();}
+  if(!airborne){c.save();c.globalAlpha=.12;c.beginPath();c.ellipse(0,.93*scale,(.28+Math.min(.55,Math.abs(s.velocityX)*.035))*scale,.055*scale,0,0,Math.PI*2);c.stroke();c.restore();}
   const hipY=.08-bounce,shoulderY=-.42-bounce,headY=-.82-bounce;
   c.beginPath();c.arc(0,headY*scale,.24*scale,0,Math.PI*2);c.fill();
   if(enemy){c.save();if(s.enemyType==="tank"||s.enemyType==="boss"){c.strokeStyle="#fff";c.lineWidth=Math.max(3,scale*.08);c.beginPath();c.moveTo(-.30*scale,-.42*scale);c.lineTo(-.38*scale,.30*scale);c.moveTo(.30*scale,-.42*scale);c.lineTo(.38*scale,.30*scale);c.stroke();}if(s.enemyType==="ninja"){c.strokeStyle="#fff";c.lineWidth=Math.max(2,scale*.045);c.beginPath();c.moveTo(-.30*scale,-.72*scale);c.lineTo(.30*scale,-.72*scale);c.stroke();}c.fillStyle="#d11f2f";c.fillRect(-.28*scale,(headY-.01)*scale,.56*scale,.10*scale);c.beginPath();c.moveTo(.18*scale,(headY+.02)*scale);c.lineTo(.72*scale,(headY+.12)*scale);c.lineTo(.56*scale,(headY+.26)*scale);c.lineTo(.12*scale,(headY+.10)*scale);c.fill();c.beginPath();c.moveTo(-.18*scale,(headY+.02)*scale);c.lineTo(-.72*scale,(headY+.12)*scale);c.lineTo(-.56*scale,(headY+.26)*scale);c.lineTo(-.12*scale,(headY+.10)*scale);c.fill();c.restore();}
@@ -56,6 +58,7 @@ export class CanvasRenderer implements Renderer{
   c.moveTo(-.22*scale,shoulderY*scale);c.lineTo((-.42-armOffset)*scale,(airborne?-.02:.02)*scale);
   c.moveTo(.22*scale,shoulderY*scale);c.lineTo((.42+armOffset)*scale,(airborne?.04:-.02)*scale);
   c.stroke();
+  if(dash){c.save();c.globalAlpha=.18;c.lineWidth=Math.max(2,scale*.04);c.beginPath();c.moveTo(-dir*.15*scale,.15*scale);c.lineTo(-dir*.85*scale,.15*scale);c.moveTo(-dir*.18*scale,.02*scale);c.lineTo(-dir*.72*scale,.02*scale);c.stroke();c.restore();}
   this.drawWeapon(c,s,scale);
   if(s.attackTime>0){
    const attack=Math.min(1,s.attackTime/.14);
