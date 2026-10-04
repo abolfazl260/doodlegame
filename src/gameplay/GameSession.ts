@@ -50,6 +50,7 @@ export class GameSession{
   a.cooldown=w.cooldown;
   a.attackTime=a.weapon==="blade"?.22:a.weapon==="hammer"?.24:.14;
   if(a.weapon==="blade")a.attackVariant=(a.attackVariant+1)%4;
+  if(a.weapon==="bow")a.attackVariant=(a.attackVariant+1)%2;
   if(a.weapon==="hammer"){
     a.attackVariant=(a.attackVariant+1)%3;
     const distance=t.x-a.x;
@@ -69,7 +70,7 @@ export class GameSession{
     x:a.x+a.facing*.65,
     y:a.y+.35,
     vx:a.facing*(w.projectileSpeed??8),
-    vy:a.weapon==="boomerang"?2.8:a.weapon==="bomb"?2.4:0,
+    vy:a.weapon==="boomerang"?2.8:a.weapon==="bomb"?2.4:a.weapon==="bow"?1.8:0,
     life:a.weapon==="bomb"?1.5:a.weapon==="boomerang"?2.4:2,
     weapon:a.weapon,
     owner:a===this.player?"player":"opponent",
@@ -87,7 +88,8 @@ export class GameSession{
     const target=p.owner==="player"?this.opponent:this.player;
     const owner=p.owner==="player"?this.player:this.opponent;
     p.age+=dt;
-    p.spin+=dt*(p.weapon==="boomerang"?12:p.weapon==="bomb"?7:0);
+    if(p.weapon==="bow"){p.vy+=-7.5*dt;p.spin=Math.atan2(p.vy,p.vx);}
+    else p.spin+=dt*(p.weapon==="boomerang"?12:p.weapon==="bomb"?7:0);
     if(p.weapon==="boomerang"){
       if(!p.returning){
         p.vy+=-5.2*dt;
