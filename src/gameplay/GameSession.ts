@@ -1,12 +1,12 @@
 import type {InputSource,InputState,WeaponId} from "../input/Input";
 export interface Platform{readonly x:number;readonly y:number;readonly width:number;readonly height:number;}
 export type EnemyType="runner"|"tank"|"shooter"|"jumper"|"bomber"|"ninja"|"boss";
-export interface DuelistRenderState{readonly x:number;readonly enemyType:EnemyType|null;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;}
+export interface DuelistRenderState{readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;}
 export interface ProjectileRenderState{readonly x:number;readonly y:number;readonly vx:number;readonly vy:number;readonly life:number;readonly weapon:WeaponId;readonly rotation:number;readonly age:number;}
 export type ArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fortress";
 export interface ArenaDefinition{readonly id:ArenaId;readonly name:string;readonly platforms:readonly Platform[];readonly spawnX:[number,number];readonly speedMultiplier:number;readonly jumpMultiplier:number;readonly gravity:number;readonly fallLimit:number|null;readonly movingPlatforms:boolean;}
 export interface GameRenderState{readonly player:DuelistRenderState;readonly opponent:DuelistRenderState;readonly projectiles:readonly ProjectileRenderState[];readonly platforms:readonly Platform[];readonly winner:"player"|"opponent"|null;readonly arena:ArenaId;}
-interface Fighter{x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;}
+interface Fighter{x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;}
 interface Projectile{x:number;y:number;vx:number;vy:number;life:number;weapon:WeaponId;owner:"player"|"opponent";originX:number;returning:boolean;spin:number;age:number;bounce:number;ricochets:number;}
 const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2,DASH_SPEED=14,DASH_TIME=.12,DASH_COOLDOWN=.65,WALL_JUMP_SPEED=9.6,BOUNCE_MIN_SPEED=9.5,MIN_MISSILE_ANGLE=12,MAX_MISSILE_ANGLE=78,MIN_MISSILE_POWER=8,MAX_MISSILE_POWER=18;
 const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
@@ -40,7 +40,7 @@ export class GameSession{
  private create(x:number,facing:number,enemyType:EnemyType|null):Fighter{
   const p=this.platformAtSpawn(x);
   const stats=enemyType===null?{health:100,weapon:"blade" as WeaponId,speed:1,jump:1}:{health:{runner:85,tank:170,shooter:90,jumper:95,bomber:105,ninja:100,boss:220}[enemyType],weapon:{runner:"blade",tank:"hammer",shooter:"blaster",jumper:"boomerang",bomber:"bomb",ninja:"uzi",boss:"hammer"}[enemyType] as WeaponId,speed:{runner:1.35,tank:.68,shooter:.82,jumper:1.05,bomber:.9,ninja:1.2,boss:.92}[enemyType],jump:{runner:1.1,tank:.8,shooter:.9,jumper:1.35,bomber:1,ninja:1.15,boss:1.1}[enemyType]};
-  return{x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.arenaId==="fortress"?"missile":stats.weapon,attackTime:0,cooldown:0,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0};
+  return{x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.arenaId==="fortress"?"missile":stats.weapon,attackTime:0,cooldown:0,bowCharge:0,bowCharging:false,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0};
 }
  setArena(id:ArenaId){this.arenaId=id;this.reset();}
  getArena(){return this.arena;}
@@ -49,8 +49,8 @@ export class GameSession{
  fireWeapon(){if(this.winner)return;const w=WEAPONS[this.player.weapon];this.attack(this.player,this.opponent,Boolean(w));}
  getMissileAim(){return{angle:this.missileAngle,power:this.missilePower};}
  reset(){this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,types[(this.enemyRound-1)%types.length]);this.projectiles=[];this.winner=null;}
- selectWeapon(direction:1|-1){const available:WeaponId[]=this.arenaId==="fortress"?["missile"]:ORDER.filter(id=>id!=="missile");const i=Math.max(0,available.indexOf(this.player.weapon));this.player.weapon=available[(i+direction+available.length)%available.length];}
- selectWeaponById(id:WeaponId){if(id==="missile"&&this.arenaId!=="fortress")return;if(id!=="missile"&&this.arenaId==="fortress")return;this.player.weapon=id;}
+ selectWeapon(direction:1|-1){const available:WeaponId[]=this.arenaId==="fortress"?["missile"]:ORDER.filter(id=>id!=="missile");const i=Math.max(0,available.indexOf(this.player.weapon));this.player.weapon=available[(i+direction+available.length)%available.length];this.player.bowCharging=false;this.player.bowCharge=0;}
+ selectWeaponById(id:WeaponId){if(id==="missile"&&this.arenaId!=="fortress")return;if(id!=="missile"&&this.arenaId==="fortress")return;this.player.weapon=id;this.player.bowCharging=false;this.player.bowCharge=0;}
  update(dt:number){if(this.winner){this.input.endFrame();return;}this.elapsed+=dt;const input=this.input.getState();this.updatePlayer(input,dt);this.updateOpponent(dt);const playerWeapon=WEAPONS[this.player.weapon];this.attack(this.player,this.opponent,input.attackPressed||(Boolean(playerWeapon.automatic)&&input.attackHeld));this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0)this.winner="player";if(this.arenaId!=="fortress"){if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);}this.input.endFrame();}
  private updatePlayer(input:InputState,dt:number){
   const d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;
@@ -159,6 +159,19 @@ export class GameSession{
     }
   }
  }
+ private updateBow(input:InputState,dt:number){
+  if(input.attackPressed&&this.player.cooldown<=0&&!this.player.bowCharging){this.player.bowCharging=true;this.player.bowCharge=0;this.player.attackTime=.12;}
+  if(!this.player.bowCharging)return;
+  if(input.attackHeld){this.player.bowCharge=Math.min(1,this.player.bowCharge+dt/.9);this.player.attackTime=.12+this.player.bowCharge*.12;return;}
+  this.fireBow(this.player,Math.max(.12,this.player.bowCharge));
+ }
+ private fireBow(a:Fighter,charge:number){
+  if(a.cooldown>0){a.bowCharging=false;a.bowCharge=0;return;}
+  const w=WEAPONS.bow,direction=a.facing,speed=w.projectileSpeed!*(.58+.62*charge),angle=(4+11*charge)*Math.PI/180;
+  const originX=a.x+direction*(.72+.08*charge),originY=a.y+.48;
+  this.projectiles.push({x:originX,y:originY,vx:direction*Math.cos(angle)*speed+a.velocityX*.2,vy:Math.sin(angle)*speed+Math.max(0,a.velocityY*.12),life:2.8,weapon:"bow",owner:a===this.player?"player":"opponent",originX:a.x,returning:false,spin:angle,age:0,bounce:0,ricochets:0});
+  a.cooldown=w.cooldown;a.attackTime=.22;a.bowCharge=0;a.bowCharging=false;
+ }
  private attack(a:Fighter,t:Fighter,pressed:boolean){
   const w=WEAPONS[a.weapon];
   if(!pressed||a.cooldown>0)return;
@@ -215,7 +228,7 @@ export class GameSession{
     const owner=p.owner==="player"?this.player:this.opponent;
     const prevX=p.x,prevY=p.y;
     p.age+=dt;
-    if(p.weapon==="bow"){p.vy+=-7.5*dt;p.spin=Math.atan2(p.vy,p.vx);}
+    if(p.weapon==="bow"){p.vy+=-12.5*dt;p.spin=Math.atan2(p.vy,p.vx);}
     else if(p.weapon==="missile"){p.vy+=-7.8*dt;p.spin=Math.atan2(p.vy,p.vx);}
     else p.spin+=dt*(p.weapon==="boomerang"?12:p.weapon==="bomb"?7:0);
 
@@ -257,6 +270,12 @@ export class GameSession{
       if(!this.projectiles[i])continue;
     }
 
+    if(p.weapon==="bow"){
+      const sx=p.x-prevX,sy=p.y-prevY,segLenSq=sx*sx+sy*sy,targetY=target.y+.35;
+      const along=segLenSq>1e-8?Math.max(0,Math.min(1,((target.x-prevX)*sx+(targetY-prevY)*sy)/segLenSq)):0;
+      const cx=prevX+sx*along,cy=prevY+sy*along;
+      if(Math.hypot(target.x-cx,targetY-cy)<.38){this.damage(target,WEAPONS.bow.damage,Math.sign(p.vx)*WEAPONS.bow.knockback);this.projectiles.splice(i,1);continue;}
+    }
     if(p.weapon==="missile"&&Math.abs(p.x-target.x)<.72&&Math.abs(p.y-(target.y+.25))<.9){this.damage(target,WEAPONS.missile.damage,Math.sign(p.vx)*WEAPONS.missile.knockback);this.projectiles.splice(i,1);continue;}
     if(p.weapon==="bomb"&&p.life<=.55&&Math.abs(p.x-target.x)<1.05&&Math.abs(p.y-(target.y+.35))<1){this.explode(p);this.projectiles.splice(i,1);continue;}
     if(p.weapon!=="bomb"&&Math.abs(p.x-target.x)<.65&&Math.abs(p.y-(target.y+.35))<1){
