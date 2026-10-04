@@ -10,13 +10,17 @@ interface Projectile{x:number;y:number;vx:number;life:number;weapon:WeaponId;own
 const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
  classic:{id:"classic",name:"CLASSIC",spawnX:[-5,5],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-4,y:2,width:3.5,height:.35},{x:.5,y:3.7,width:3.5,height:.35}]},
  towers:{id:"towers",name:"TOWERS",spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.6,width:4.5,height:.35},{x:4.5,y:1.6,width:4.5,height:.35},{x:-3,y:3.5,width:6,height:.35},{x:-10,y:5.2,width:3.5,height:.35},{x:6.5,y:5.2,width:3.5,height:.35}]},
- pit:{id:"pit",name:"PIT",spawnX:[-6,6],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-7.5,y:2.1,width:4,height:.35},{x:3.5,y:2.1,width:4,height:.35},{x:-1.75,y:4,width:3.5,height:.35}]},\n steps:{id:"steps",name:"STEPS",spawnX:[-8,8],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-10,y:1.1,width:3.5,height:.35},{x:-6,y:2.0,width:3.5,height:.35},{x:-2,y:2.9,width:3.5,height:.35},{x:2,y:2.0,width:3.5,height:.35},{x:6,y:1.1,width:3.5,height:.35}]},\n zigzag:{id:"zigzag",name:"ZIGZAG",spawnX:[-8,8],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-10,y:1.3,width:4.5,height:.35},{x:-3.5,y:2.8,width:4,height:.35},{x:2.5,y:1.3,width:4.5,height:.35},{x:7,y:3.6,width:3,height:.35}]},\n sky:{id:"sky",name:"SKY",spawnX:[-6,6],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.7,width:3.5,height:.35},{x:-3,y:3.1,width:3.5,height:.35},{x:3,y:1.7,width:3.5,height:.35},{x:-1.75,y:4.7,width:3.5,height:.35}]}
+ pit:{id:"pit",name:"PIT",spawnX:[-6,6],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-7.5,y:2.1,width:4,height:.35},{x:3.5,y:2.1,width:4,height:.35},{x:-1.75,y:4,width:3.5,height:.35}]},
+ steps:{id:"steps",name:"STEPS",spawnX:[-8,8],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-10,y:1.1,width:3.5,height:.35},{x:-6,y:2.0,width:3.5,height:.35},{x:-2,y:2.9,width:3.5,height:.35},{x:2,y:2.0,width:3.5,height:.35},{x:6,y:1.1,width:3.5,height:.35}]},
+ zigzag:{id:"zigzag",name:"ZIGZAG",spawnX:[-8,8],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-10,y:1.3,width:4.5,height:.35},{x:-3.5,y:2.8,width:4,height:.35},{x:2.5,y:1.3,width:4.5,height:.35},{x:7,y:3.6,width:3,height:.35}]},
+ sky:{id:"sky",name:"SKY",spawnX:[-6,6],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.7,width:3.5,height:.35},{x:-3,y:3.1,width:3.5,height:.35},{x:3,y:1.7,width:3.5,height:.35},{x:-1.75,y:4.7,width:3.5,height:.35}]}
 };
 const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2;
 const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number;radius?:number}>>={
  blade:{damage:8,range:1.35,cooldown:.32,knockback:4},
  hammer:{damage:14,range:1.45,cooldown:.75,knockback:8},
- blaster:{damage:7,range:0,cooldown:.5,knockback:5,projectileSpeed:14},\n uzi:{damage:4,range:0,cooldown:.12,knockback:2.5,projectileSpeed:16},
+ blaster:{damage:7,range:0,cooldown:.5,knockback:5,projectileSpeed:14},
+ uzi:{damage:4,range:0,cooldown:.12,knockback:2.5,projectileSpeed:16},
  boomerang:{damage:9,range:0,cooldown:.7,knockback:4,projectileSpeed:10},
  bow:{damage:12,range:0,cooldown:.9,knockback:3,projectileSpeed:18},
  bomb:{damage:18,range:0,cooldown:1.15,knockback:9,projectileSpeed:8,radius:1.8}
