@@ -2,7 +2,7 @@ import type {InputSource,InputState} from "../../input/Input";
 type MutableInputState={-readonly [K in keyof InputState]:InputState[K]};
 const P1:Readonly<Record<string,[number,number]>>={KeyA:[-1,0],KeyD:[1,0],KeyW:[0,-1],KeyS:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
 const P2:Readonly<Record<string,[number,number]>>={KeyJ:[-1,0],KeyL:[1,0],KeyI:[0,-1],KeyK:[0,1]};
-const JUMP=new Set(["KeyW","Space","ArrowUp"]); const ATTACK=new Set(["KeyF","KeyU"]);
+const JUMP=new Set(["KeyW","Space","ArrowUp"]); const ATTACK=new Set(["KeyZ","KeyX"]);
 export class WebInput implements InputSource {
  private keys=new Set<string>(); private active=false;
  private state:MutableInputState={moveX:0,moveY:0,pointerX:0,pointerY:0,pointerDown:false,pointerPressed:false,pointerReleased:false,jumpPressed:false,attackPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};
