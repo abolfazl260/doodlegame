@@ -34,15 +34,15 @@ export class ThreeRenderer implements Renderer{
   view.eye.position.set(.08,.86+bodyBob+(airborne?Math.abs(jump)*.05:0),.04);
   view.head.rotation.z=cycle*.025+(rising?.04:0)-(falling?.06:0);
   view.eye.rotation.z=view.head.rotation.z;view.enemyArmor.visible=view===this.opponent;view.enemyArmor.position.set(0,bodyBob,0);view.torso.rotation.z=-lean*.5;
-  view.gun.visible=s.weapon==="blaster";
-  view.gun.position.set(.5,.08,.04);
+  view.gun.visible=s.weapon==="blaster"||s.weapon==="uzi";
+  view.gun.position.set(s.weapon==="uzi"?.48:.5,.08,.04);
   view.gun.rotation.z=lean*.35-(s.attackTime>0?attackSnap*.08:0);
-  view.gunMagazine.visible=s.weapon==="blaster";
+  view.gunMagazine.visible=s.weapon==="blaster"||s.weapon==="uzi";
   view.gunMagazine.position.set(.38,-.08,.035);
   view.gunMagazine.rotation.z=-.18;
-  view.gunDetails.visible=s.weapon==="blaster";
+  view.gunDetails.visible=s.weapon==="blaster"||s.weapon==="uzi";
   view.bowDetails.visible=s.weapon==="bow";
-  view.gunDetails.position.set(.5,.08,.045);
+  view.gunDetails.position.set(s.weapon==="uzi"?.48:.5,.08,.045);
   view.bowDetails.position.set(.22,.02,.045);
   const td=view.toolDetailPositions;td.fill(0);
   const bd=view.bowDetailPositions;bd.fill(0);
@@ -132,7 +132,7 @@ export class ThreeRenderer implements Renderer{
   }
   for(let i=0;i<values.length;i++)view.positions[i]=values[i];
   view.limbs.geometry.attributes.position.needsUpdate=true;
-  view.weaponLines.visible=s.weapon!=="blaster"&&s.weapon!=="bomb";view.weaponLines.rotation.z=0;view.weaponLines.position.set(0,0,0);view.gun.rotation.z=0;
+  view.weaponLines.visible=s.weapon!=="blaster"&&s.weapon!=="uzi"&&s.weapon!=="bomb";view.weaponLines.rotation.z=0;view.weaponLines.position.set(0,0,0);view.gun.rotation.z=0;
   view.bomb.visible=s.weapon==="bomb";
   view.bomb.position.set(.62-(s.weapon==="bomb"?attackSnap*.08:0),.02,.05);view.bomb.scale.setScalar(1+(s.weapon==="bomb"?Math.sin(s.animationTime*14)*.12+attackSnap*.2:0));
   const w=view.weaponPositions;w.fill(0);
