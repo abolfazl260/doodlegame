@@ -34,11 +34,11 @@ export class CanvasRenderer implements Renderer{
   const lean=airborne?-jumpPhase*.08:(moving?s.velocityX/8*.06:0);
   const armSwing=moving&&s.grounded?Math.sin(cycle)*.18:0;
   const landing=Math.abs(s.velocityY)<1.5&&!s.grounded;
-  c.save();c.translate(x,y);c.scale(dir,1);c.rotate(lean);
+  const enemyScale=enemy?(s.enemyType==="tank"?1.12:s.enemyType==="boss"?1.3:s.enemyType==="runner"?0.92:s.enemyType==="ninja"?0.96:1):1;c.save();c.translate(x,y);c.scale(dir*enemyScale,enemyScale);c.rotate(lean);
   c.strokeStyle="#fff";c.fillStyle="#fff";c.lineWidth=Math.max(2,scale*.055);c.lineCap="round";c.lineJoin="round";
   const hipY=.08-bounce,shoulderY=-.42-bounce,headY=-.82-bounce;
   c.beginPath();c.arc(0,headY*scale,.24*scale,0,Math.PI*2);c.fill();
-  if(enemy){c.save();c.fillStyle="#d11f2f";c.fillRect(-.28*scale,(headY-.01)*scale,.56*scale,.10*scale);c.beginPath();c.moveTo(.18*scale,(headY+.02)*scale);c.lineTo(.72*scale,(headY+.12)*scale);c.lineTo(.56*scale,(headY+.26)*scale);c.lineTo(.12*scale,(headY+.10)*scale);c.fill();c.beginPath();c.moveTo(-.18*scale,(headY+.02)*scale);c.lineTo(-.72*scale,(headY+.12)*scale);c.lineTo(-.56*scale,(headY+.26)*scale);c.lineTo(-.12*scale,(headY+.10)*scale);c.fill();c.restore();}
+  if(enemy){c.save();if(s.enemyType==="tank"||s.enemyType==="boss"){c.strokeStyle="#fff";c.lineWidth=Math.max(3,scale*.08);c.beginPath();c.moveTo(-.30*scale,-.42*scale);c.lineTo(-.38*scale,.30*scale);c.moveTo(.30*scale,-.42*scale);c.lineTo(.38*scale,.30*scale);c.stroke();}if(s.enemyType==="ninja"){c.strokeStyle="#fff";c.lineWidth=Math.max(2,scale*.045);c.beginPath();c.moveTo(-.30*scale,-.72*scale);c.lineTo(.30*scale,-.72*scale);c.stroke();}c.fillStyle="#d11f2f";c.fillRect(-.28*scale,(headY-.01)*scale,.56*scale,.10*scale);c.beginPath();c.moveTo(.18*scale,(headY+.02)*scale);c.lineTo(.72*scale,(headY+.12)*scale);c.lineTo(.56*scale,(headY+.26)*scale);c.lineTo(.12*scale,(headY+.10)*scale);c.fill();c.beginPath();c.moveTo(-.18*scale,(headY+.02)*scale);c.lineTo(-.72*scale,(headY+.12)*scale);c.lineTo(-.56*scale,(headY+.26)*scale);c.lineTo(-.12*scale,(headY+.10)*scale);c.fill();c.restore();}
   const hipX=0,shoulderX=0;
   const legBack=-.28+stride,legFront=.28-stride;
   const footY=.9-bounce;
