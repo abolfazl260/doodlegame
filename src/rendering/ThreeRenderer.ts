@@ -13,15 +13,27 @@ export class ThreeRenderer implements Renderer{
   const moving=Math.abs(s.velocityX)>.2;
   const speed=Math.min(1,Math.abs(s.velocityX)/8);
   const airborne=!s.grounded;
-  const phase=s.animationTime*(8+speed*6);
-  const step=moving&&s.grounded?Math.sin(phase)*(.22+.14*speed):0;
-  const bodyBob=moving&&s.grounded?Math.abs(Math.sin(phase))*.045:0;
+  const phase=s.animationTime*(7.5+speed*7);
+  const cycle=Math.sin(phase);
+  const cycle2=Math.sin(phase+Math.PI*.5);
+  const step=moving&&s.grounded?cycle*(.28+.2*speed):0;
+  const stepWide=moving&&s.grounded?cycle2*(.08+.08*speed):0;
+  const bodyBob=moving&&s.grounded?(Math.abs(cycle)*.055+Math.max(0,cycle2)*.025*speed):0;
   const jump=Math.max(-1,Math.min(1,s.velocityY/9.2));
-  const lean=airborne?-jump*.12:(moving?s.velocityX/8*.09:0);const attackProgress=s.attackTime>0?1-s.attackTime/.14:0;const attackSnap=s.attackTime>0?Math.sin(Math.min(1,attackProgress)*Math.PI):0;
+  const rising=airborne&&s.velocityY>.8;
+  const falling=airborne&&s.velocityY<-.8;
+  const landingPose=airborne&&falling?Math.min(1,Math.abs(s.velocityY)/12):0;
+  const lean=airborne?-jump*.16:(moving?s.velocityX/8*(.08+.05*speed):0);
+  const attackProgress=s.attackTime>0?1-s.attackTime/.14:0;
+  const attackSnap=s.attackTime>0?Math.sin(Math.min(1,attackProgress)*Math.PI):0;
+  const attackPrep=s.attackTime>0?Math.max(0,1-attackProgress*3):0;
   view.group.position.set(s.x,s.y,0);
   view.group.scale.x=s.facing;
-  view.group.rotation.z=(s.attackTime>0?s.facing*.18:0)+lean;
-  view.head.position.set(0,.82+bodyBob+(airborne?Math.abs(jump)*.04:0),.02);view.eye.position.set(.08,.86+bodyBob+(airborne?Math.abs(jump)*.04:0),.04);view.enemyArmor.visible=view===this.opponent;view.enemyArmor.position.set(0,bodyBob,0);view.torso.rotation.z=-lean*.5;
+  view.group.rotation.z=(s.attackTime>0?s.facing*(.12+attackSnap*.12):0)+lean;
+  view.head.position.set(0,.82+bodyBob+(airborne?Math.abs(jump)*.05:0),.02);
+  view.eye.position.set(.08,.86+bodyBob+(airborne?Math.abs(jump)*.05:0),.04);
+  view.head.rotation.z=cycle*.025+(rising?.04:0)-(falling?.06:0);
+  view.eye.rotation.z=view.head.rotation.z;view.enemyArmor.visible=view===this.opponent;view.enemyArmor.position.set(0,bodyBob,0);view.torso.rotation.z=-lean*.5;
   view.gun.visible=s.weapon==="blaster";
   view.gun.position.set(.48,.05,.04);
   const hip=-.08-bodyBob,shoulder=.42-bodyBob;
@@ -29,16 +41,38 @@ export class ThreeRenderer implements Renderer{
   values.set([0,hip,0,shoulder]);
   if(airborne){
    const tuck=Math.min(1,Math.abs(jump));
-   values.set([0,hip,-.34+tuck*.12,.48-tuck*.18],4);
-   values.set([0,hip,.34-tuck*.12,.43-tuck*.12],8);
-   values.set([-.22,shoulder,-.52-jump*.16,-.08-jump*.12],12);
-   values.set([.22,shoulder,.52-jump*.16,.06-jump*.12],16);
+   const kneeBend=.34-tuck*.12+landingPose*.12;
+   const kneeLift=.48-tuck*.18+landingPose*.08;
+   values.set([0,hip,-kneeBend,kneeLift],4);
+   values.set([0,hip,kneeBend,-kneeLift],8);
+   const airArm=cycle*.09+jump*.08;
+   values.set([-.22,shoulder,-.58-airArm,-.08-jump*.16],12);
+   values.set([.22,shoulder,.58-airArm,.06-jump*.16],16);
   }else{
-   values.set([0,hip,-.28+step,-.9],4);
-   values.set([0,hip,.28-step,-.9],8);
-   const arm=Math.sin(phase)*.24;
-   values.set([-.22,shoulder,-.45-arm,.02],12);
-   values.set([.22,shoulder,.45+arm,-.02],16);
+   const stride=step;
+   const kneeA=-.9+Math.max(0,stride)*.28+stepWide;
+   const kneeB=-.9+Math.max(0,-stride)*.28-stepWide;
+   const ankleA=-.28+stride+stepWide;
+   const ankleB=.28-stride-stepWide;
+   values.set([0,hip,ankleA,kneeA],4);
+   values.set([0,hip,ankleB,kneeB],8);
+   const armSwing=cycle*(.22+.16*speed);
+   const armLift=cycle2*(.06+.05*speed);
+   const guard=s.weapon==="hammer"||s.weapon==="blade";
+   const leftHandX=-.45-armSwing;
+   const rightHandX=.45+armSwing;
+   const leftHandY=.02+armLift+(guard?.05:0);
+   const rightHandY=-.02-armLift+(guard?.05:0);
+   values.set([-.22,shoulder,leftHandX,leftHandY],12);
+   values.set([.22,shoulder,rightHandX,rightHandY],16);
+   if(attackPrep>0){
+    values[14]-=attackPrep*.16;
+    values[17]+=attackPrep*.16;
+   }
+   if(attackSnap>0){
+    values[13]-=attackSnap*.12;
+    values[17]+=attackSnap*.12;
+   }
   }
   for(let i=0;i<values.length;i++)view.positions[i]=values[i];
   view.limbs.geometry.attributes.position.needsUpdate=true;
