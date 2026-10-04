@@ -23,6 +23,7 @@ const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:numb
 };
 const ORDER:readonly WeaponId[]=["blade","hammer","blaster","boomerang","bow","bomb"];
 export class GameSession{
+ private arenaId:ArenaId="classic";
  private elapsed=0;private player:Fighter=this.create(-5,1);private opponent:Fighter=this.create(5,-1);private projectiles:Projectile[]=[];private winner:"player"|"opponent"|null=null;
  constructor(private readonly input:InputSource){}
  private get arena(){return ARENAS[this.arenaId];}
