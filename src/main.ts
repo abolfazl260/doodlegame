@@ -17,7 +17,6 @@ const input=new WebInput(canvas);
 const storage=new WebStorage();
 void storage;
 
-const ui=new GameUI(root,{start:()=>game.start(),pause:()=>game.pause(),resume:()=>game.resume(),restart:()=>game.restart()});
 let renderer:Renderer;
 try{
   renderer=new ThreeRenderer(canvas);
@@ -25,9 +24,11 @@ try{
   console.warn("WebGL renderer unavailable; using canvas fallback.",error);
   renderer=new CanvasRenderer(canvas);
 }
+
 const game=new Game(renderer,new GameSession(input),new WebFrameScheduler(),error=>{
   console.error("DoodleGame error:",error);
 });
+const ui=new GameUI(root,{start:()=>game.start(),pause:()=>game.pause(),resume:()=>game.resume(),restart:()=>game.restart()});
 ui.bind(l=>game.subscribe(l));
 input.start();
 game.initialize();
