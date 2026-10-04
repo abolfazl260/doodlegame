@@ -4,8 +4,8 @@ export class CanvasRenderer implements Renderer{
  private readonly context:CanvasRenderingContext2D;private width=1;private height=1;private dpr=1;
  constructor(private readonly canvas:HTMLCanvasElement){const c=canvas.getContext("2d");if(!c)throw new Error("2D canvas rendering is unavailable.");this.context=c;this.resize();}
  resize(){this.width=Math.max(1,this.canvas.clientWidth);this.height=Math.max(1,this.canvas.clientHeight);this.dpr=Math.min(window.devicePixelRatio||1,2);this.canvas.width=Math.floor(this.width*this.dpr);this.canvas.height=Math.floor(this.height*this.dpr);}
- render(state:GameRenderState){const c=this.context;c.setTransform(this.dpr,0,0,this.dpr,0,0);c.fillStyle="#000";c.fillRect(0,0,this.width,this.height);const vh=10,vw=vh*this.width/Math.max(1,this.height),scale=this.height/vh,toX=(x:number)=>(x+vw/2)*scale,toY=(y:number)=>(2+vh/2-y)*scale;c.fillStyle="#777";for(const p of state.platforms)c.fillRect(toX(p.x),toY(p.y+p.height),p.width*scale,p.height*scale);this.draw(c,state.player,toX,toY,scale);this.draw(c,state.opponent,toX,toY,scale);c.fillStyle="#fff";for(const p of state.projectiles){c.beginPath();c.arc(toX(p.x),toY(p.y),Math.max(2,scale*.09),0,Math.PI*2);c.fill();}}
- private draw(c:CanvasRenderingContext2D,s:DuelistRenderState,toX:(x:number)=>number,toY:(y:number)=>number,scale:number){
+ render(state:GameRenderState){const c=this.context;c.setTransform(this.dpr,0,0,this.dpr,0,0);c.fillStyle="#000";c.fillRect(0,0,this.width,this.height);const vh=10,vw=vh*this.width/Math.max(1,this.height),scale=this.height/vh,toX=(x:number)=>(x+vw/2)*scale,toY=(y:number)=>(2+vh/2-y)*scale;c.fillStyle="#777";for(const p of state.platforms)c.fillRect(toX(p.x),toY(p.y+p.height),p.width*scale,p.height*scale);this.draw(c,state.player,toX,toY,scale,false);this.draw(c,state.opponent,toX,toY,scale,true);c.fillStyle="#fff";for(const p of state.projectiles){c.beginPath();c.arc(toX(p.x),toY(p.y),Math.max(2,scale*.09),0,Math.PI*2);c.fill();}}
+ private draw(c:CanvasRenderingContext2D,s:DuelistRenderState,toX:(x:number)=>number,toY:(y:number)=>number,scale:number,enemy:boolean){
   const x=toX(s.x),y=toY(s.y),dir=s.facing;
   const moving=Math.abs(s.velocityX)>.25;
   const speed=Math.min(1,Math.abs(s.velocityX)/8);
@@ -20,7 +20,7 @@ export class CanvasRenderer implements Renderer{
   c.save();c.translate(x,y);c.scale(dir,1);c.rotate(lean);
   c.strokeStyle="#fff";c.fillStyle="#fff";c.lineWidth=Math.max(2,scale*.055);c.lineCap="round";c.lineJoin="round";
   const hipY=.08-bounce,shoulderY=-.42-bounce,headY=-.82-bounce;
-  c.beginPath();c.arc(0,headY*scale,.24*scale,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(0,headY*scale,.24*scale,0,Math.PI*2);c.fill();\n  if(enemy){c.save();c.fillStyle="#d11f2f";c.fillRect(-.28*scale,(headY-.01)*scale,.56*scale,.10*scale);c.beginPath();c.moveTo(.18*scale,(headY+.02)*scale);c.lineTo(.72*scale,(headY+.12)*scale);c.lineTo(.56*scale,(headY+.26)*scale);c.lineTo(.12*scale,(headY+.10)*scale);c.fill();c.beginPath();c.moveTo(-.18*scale,(headY+.02)*scale);c.lineTo(-.72*scale,(headY+.12)*scale);c.lineTo(-.56*scale,(headY+.26)*scale);c.lineTo(-.12*scale,(headY+.10)*scale);c.fill();c.restore();}
   const hipX=0,shoulderX=0;
   const legBack=-.28+stride,legFront=.28-stride;
   const footY=.9-bounce;
