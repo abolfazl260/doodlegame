@@ -14,12 +14,12 @@ const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
 };
 const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2;
 const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number;radius?:number}>>={
- blade:{damage:14,range:1.35,cooldown:.32,knockback:4},
- hammer:{damage:24,range:1.45,cooldown:.75,knockback:8},
- blaster:{damage:12,range:0,cooldown:.5,knockback:5,projectileSpeed:14},
- boomerang:{damage:16,range:0,cooldown:.7,knockback:4,projectileSpeed:10},
- bow:{damage:20,range:0,cooldown:.9,knockback:3,projectileSpeed:18},
- bomb:{damage:30,range:0,cooldown:1.15,knockback:9,projectileSpeed:8,radius:1.8}
+ blade:{damage:8,range:1.35,cooldown:.32,knockback:4},
+ hammer:{damage:14,range:1.45,cooldown:.75,knockback:8},
+ blaster:{damage:7,range:0,cooldown:.5,knockback:5,projectileSpeed:14},
+ boomerang:{damage:9,range:0,cooldown:.7,knockback:4,projectileSpeed:10},
+ bow:{damage:12,range:0,cooldown:.9,knockback:3,projectileSpeed:18},
+ bomb:{damage:18,range:0,cooldown:1.15,knockback:9,projectileSpeed:8,radius:1.8}
 };
 const ORDER:readonly WeaponId[]=["blade","hammer","blaster","boomerang","bow","bomb"];
 export class GameSession{
