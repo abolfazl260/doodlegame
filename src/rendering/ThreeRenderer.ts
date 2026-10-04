@@ -35,7 +35,7 @@ export class ThreeRenderer implements Renderer{
   const enemyScale=s.enemyType==="tank"?1.12:s.enemyType==="boss"?1.3:s.enemyType==="runner"?0.92:s.enemyType==="ninja"?0.96:1;view.group.scale.set(s.facing*enemyScale*stretchX,enemyScale*stretchY,1);
   view.group.rotation.z=(s.attackTime>0?s.facing*(.12+attackSnap*.12):0)+lean;
   const ringPulse=airborne?Math.min(1,verticalSpeed*.9):Math.min(1,Math.abs(s.velocityX)/8);
-  view.motionRing.position.set(0,-.92, -.01);view.motionRing.scale.setScalar(.8+ringPulse*.9);view.motionRing.material.opacity=airborne?0:Math.max(.05,Math.min(.28,ringPulse*.16));
+  view.motionRing.position.set(0,-.92, -.01);view.motionRing.scale.setScalar(.8+ringPulse*.9);((view.motionRing.material as THREE.MeshBasicMaterial).opacity)=airborne?0:Math.max(.05,Math.min(.28,ringPulse*.16));
   view.head.position.set(0,.82+bodyBob+(airborne?Math.abs(jump)*.05:0),.02);view.head.rotation.z=cycle*.025+(rising?.04:0)-(falling?.06:0);view.headband.visible=view===this.opponent;view.headband.position.set(0,.91+bodyBob+(airborne?Math.abs(jump)*.05:0),.15);view.headband.rotation.z=view.head.rotation.z;view.headbandTail.visible=view===this.opponent;view.headbandTail.position.set(0,.91+bodyBob+(airborne?Math.abs(jump)*.05:0),.14);view.headbandTail.rotation.z=view.head.rotation.z;
   view.eye.position.set(.08,.86+bodyBob+(airborne?Math.abs(jump)*.05:0),.04);
   view.head.rotation.z=cycle*.025+(rising?.04:0)-(falling?.06:0);
