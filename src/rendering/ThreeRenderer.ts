@@ -134,7 +134,7 @@ export class ThreeRenderer implements Renderer{
   }
   for(let i=0;i<values.length;i++)view.positions[i]=values[i];
   view.limbs.geometry.attributes.position.needsUpdate=true;
-  view.weaponLines.visible=s.weapon!=="blaster"&&s.weapon!=="uzi"&&s.weapon!=="bomb";view.weaponLines.rotation.z=0;view.weaponLines.position.set(0,0,0);view.gun.rotation.z=0;
+  view.weaponLines.visible=s.weapon!=="blaster"&&s.weapon!=="uzi";view.weaponLines.rotation.z=0;view.weaponLines.position.set(0,0,.08);view.gun.rotation.z=0;
   view.bomb.visible=s.weapon==="bomb";
   view.bomb.position.set(.62-(s.weapon==="bomb"?attackSnap*.08:0),.02,.05);view.bomb.scale.setScalar(1+(s.weapon==="bomb"?Math.sin(s.animationTime*14)*.12+attackSnap*.2:0));
   const w=view.weaponPositions;w.fill(0);
@@ -149,20 +149,60 @@ export class ThreeRenderer implements Renderer{
    else a=1.05-attackSnap*2.15;
    view.weaponLines.rotation.z=a;
    w.set([
-    -.06,-.07,0,.06,-.07,0,.06,-.07,0,.10,-.18,0,.10,-.18,0,.16,-.18,0,
-    .16,-.18,0,.16,.18,0,.16,.18,0,.10,.18,0,.10,.18,0,.06,.07,0,
-    .06,.07,0,-.06,.07,0,-.06,.07,0,-.06,-.07,0,
-    .16,.18,0,.98,.10,0,.98,.10,0,1.14,0,0,1.14,0,0,.98,-.10,0,
-    .98,-.10,0,.16,-.18,0,.30,.10,0,.82,.04,0,.82,.04,0,1.00,0,0,
-    .30,-.10,0,.82,-.04,0,.82,-.04,0,1.00,0
+    -.08,-.07,0,.10,-.07,0,.10,-.07,0,.16,-.15,0,.16,-.15,0,.20,-.18,0,
+    .20,-.18,0,.25,-.07,0,.25,-.07,0,.22,.07,0,.22,.07,0,.16,.18,0,
+    .16,.18,0,.10,.07,0,.10,.07,0,-.08,.07,0,-.08,.07,0,-.08,-.07,0,
+    .05,-.09,0,.18,-.09,0,.18,-.09,0,.18,.10,0,.18,.10,0,.05,.10,0,
+    .05,.10,0,.05,-.09,0,.20,.02,0,.90,.00,0,.90,.00,0,1.18,.02,0,
+    .20,-.02,0,.90,-.06,0,.90,-.06,0,1.12,-.03,0
    ]);
   }
-  else if(s.weapon==="hammer"){view.weaponLines.rotation.z=-.65+attackSnap*1.9;w.set([.2,0,0,.78,0,0,.72,-.22,0,.98,.22,0,.98,.22,0,.98,-.22,0,.98,-.22,0,.72,-.22,0]);}
-  else if(s.weapon==="boomerang"){view.weaponLines.rotation.z=s.animationTime*9+(s.attackTime>0?attackSnap*1.5:0);w.set([.3,0,0,.55,-.3,0,.55,-.3,0,.82,-.02,0,.82,-.02,0,.55,.26,0,.55,.26,0,.3,0,0]);}
-  else if(s.weapon==="bow"){view.weaponLines.rotation.z=-.12+attackSnap*.28;w.set([.35,-.38,0,.82,0,0,.82,0,.35,.35,.38,0,.35,-.38,0,.35,.38,0,.35,0,0,.98,0,0]);view.weaponLines.visible=true;}
+  else if(s.weapon==="hammer"){
+   view.weaponLines.position.set(.05,.02,.08);
+   view.weaponLines.rotation.z=-.78+attackSnap*2.2+(s.attackVariant===1?.12:s.attackVariant===2?-.12:0);
+   w.set([
+    .10,-.03,0,.78,.00,0,.10,.03,0,.78,.00,0,
+    .70,-.24,0,.98,-.24,0,.98,-.24,0,1.10,-.10,0,
+    1.10,-.10,0,1.10,.16,0,1.10,.16,0,.98,.28,0,
+    .98,.28,0,.70,.24,0,.70,.24,0,.70,-.24,0,
+    .78,-.10,0,.86,-.03,0,.78,.04,0,.86,.10,0
+   ]);
+  }
+  else if(s.weapon==="boomerang"){
+   view.weaponLines.position.set(.12,.02,.08);
+   view.weaponLines.rotation.z=s.animationTime*10+(s.attackTime>0?attackSnap*1.8:0);
+   w.set([
+    .02,-.04,0,.28,-.30,0,.28,-.30,0,.52,-.34,0,.52,-.34,0,.70,-.18,0,
+    .70,-.18,0,.76,.00,0,.76,.00,0,.70,.18,0,.70,.18,0,.52,.34,0,
+    .52,.34,0,.28,.30,0,.28,.30,0,.02,.04,0,.28,-.04,0,.58,-.12,0,
+    .58,-.12,0,.66,0,0,.66,0,0,.58,.12,0,.58,.12,0,.28,.04,0
+   ]);
+  }
+  else if(s.weapon==="bow"){
+   view.weaponLines.position.set(.28,.02,.08);
+   view.weaponLines.rotation.z=-.08+attackSnap*.35;
+   w.set([
+    .32,-.03,0,1.05,-.03,0,1.05,-.03,0,1.18,0,0,
+    1.18,0,0,1.05,.03,0,1.05,.03,0,.32,.03,0,
+    .96,-.08,0,1.02,-.03,0,1.02,.03,0,.96,.08,0
+   ]);
+   view.weaponLines.visible=true;
+  }
+  else if(s.weapon==="bomb"){
+   view.weaponLines.position.set(.62,.02,.09);
+   const fuseWave=Math.sin(s.animationTime*18)*.02;
+   view.weaponLines.rotation.z=attackSnap*.18;
+   w.set([
+    .08,-.16,0,.16,-.22,0,.16,-.22,0,.20,-.16,0,
+    .20,-.16,0,.15,-.11,0,.15,-.11,0,.20,-.05,0
+   ]);
+   if(s.attackTime>0)w.set([.20,-.05,0,.26,-.01+fuseWave,0,.26,-.01+fuseWave,0,.23,.05,0],24);
+   view.weaponLines.visible=true;
+  }
   view.weaponLines.geometry.attributes.position.needsUpdate=true;
   const flash=view.gunDetails;
-  flash.scale.set(s.attackTime>0?1.12:1, s.attackTime>0?1.12:1, 1);view.torsoPositions.set([-.16,.4,0,.16,.4,0,.16,.4,0,.2,-.02,0,.2,-.02,0,-.2,-.02,0]);view.torso.geometry.attributes.position.needsUpdate=true;view.enemyArmor.geometry.attributes.position.needsUpdate=true;
+  flash.scale.set(s.attackTime>0?1.12:1, s.attackTime>0?1.12:1, 1);
+  if(s.weapon==="boomerang"||s.weapon==="bomb")view.bomb.scale.setScalar(1);view.torsoPositions.set([-.16,.4,0,.16,.4,0,.16,.4,0,.2,-.02,0,.2,-.02,0,-.2,-.02,0]);view.torso.geometry.attributes.position.needsUpdate=true;view.enemyArmor.geometry.attributes.position.needsUpdate=true;
  }
  dispose(){this.renderer.dispose();this.renderer.forceContextLoss();this.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});this.scene.clear();this.projectileGeometry.dispose();this.platformMaterial.dispose();}
 }
