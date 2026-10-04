@@ -67,11 +67,16 @@ The game currently includes three selectable arenas:
 
 - **Classic** — standard platforms and open movement.
 - **Towers** — multiple elevated platforms and vertical combat.
-- **Pit** — a more compact arena with central elevation.
+- **Pit** — a compact arena with a central gap and trap pressure.
+- **Steps** — staggered vertical platforms.
+- **Zigzag** — moving-platform traversal and one-way movement.
+- **Sky** — high vertical combat with bounce/trap interactions.
+- **Moving** — continuous moving-platform combat.
+- **Fortress** — the dedicated missile arena.
 
 ### Weapons
 
-Six weapons are currently available:
+Eight weapons are currently available:
 
 - Blade
 - Hammer
