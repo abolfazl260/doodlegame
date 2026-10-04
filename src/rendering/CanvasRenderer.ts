@@ -34,7 +34,10 @@ export class CanvasRenderer implements Renderer{
   const lean=airborne?-jumpPhase*.08:(moving?s.velocityX/8*.06:0);
   const armSwing=moving&&s.grounded?Math.sin(cycle)*.18:0;
   const landing=Math.abs(s.velocityY)<1.5&&!s.grounded;
-  const enemyScale=enemy?(s.enemyType==="tank"?1.12:s.enemyType==="boss"?1.3:s.enemyType==="runner"?0.92:s.enemyType==="ninja"?0.96:1):1;c.save();c.translate(x,y);c.scale(dir*enemyScale,enemyScale);c.rotate(lean);
+  const dash=Math.abs(s.velocityX)>9;
+  const stretchY=airborne?(1+Math.min(.16,Math.abs(s.velocityY)*.012)):(dash?.78:1);
+  const stretchX=airborne?(1-Math.min(.10,Math.abs(s.velocityY)*.007)):(dash?1.34:1);
+  const enemyScale=enemy?(s.enemyType==="tank"?1.12:s.enemyType==="boss"?1.3:s.enemyType==="runner"?0.92:s.enemyType==="ninja"?0.96:1):1;c.save();c.translate(x,y);c.scale(dir*enemyScale*stretchX,enemyScale*stretchY);c.rotate(lean);
   c.strokeStyle="#fff";c.fillStyle="#fff";c.lineWidth=Math.max(2,scale*.055);c.lineCap="round";c.lineJoin="round";
   if(!airborne&&Math.abs(s.velocityX)>1){c.save();c.globalAlpha=Math.min(.18,Math.abs(s.velocityX)/45);c.beginPath();c.ellipse(-dir*.34*scale,.95*scale,.48*scale,.07*scale,0,0,Math.PI*2);c.stroke();c.restore();}
   if(!airborne){c.save();c.globalAlpha=.12;c.beginPath();c.ellipse(0,.93*scale,(.28+Math.min(.55,Math.abs(s.velocityX)*.035))*scale,.055*scale,0,0,Math.PI*2);c.stroke();c.restore();}
@@ -102,6 +105,8 @@ export class CanvasRenderer implements Renderer{
    c.moveTo(.38*scale,0);c.lineTo(1.12*scale,0);c.moveTo(1.02*scale,-.07*scale);c.lineTo(1.12*scale,0);c.lineTo(1.02*scale,.07*scale);
    c.moveTo(.38*scale,-.06*scale);c.lineTo(.38*scale,.06*scale);c.stroke();
    if(s.attackTime>0){c.beginPath();c.moveTo(.54*scale,0);c.lineTo(.38*scale,-.09*scale);c.moveTo(.54*scale,0);c.lineTo(.38*scale,.09*scale);c.stroke();}
+  }else if(s.weapon==="missile"){
+   c.save();c.translate(.60*scale,.02*scale);c.rotate(-.05);c.beginPath();c.moveTo(-.48*scale,-.10*scale);c.lineTo(.42*scale,-.10*scale);c.lineTo(.62*scale,0);c.lineTo(.42*scale,.10*scale);c.lineTo(-.48*scale,.10*scale);c.closePath();c.stroke();c.beginPath();c.moveTo(-.48*scale,-.10*scale);c.lineTo(-.62*scale,0);c.lineTo(-.48*scale,.10*scale);c.stroke();c.restore();
   }else if(s.weapon==="bomb"){
    c.save();c.translate(.62*scale,.02*scale);c.scale(pulse,pulse);
    c.beginPath();c.arc(0,0,.20*scale,0,Math.PI*2);c.fill();c.beginPath();c.arc(0,0,.25*scale,0,Math.PI*2);c.stroke();
