@@ -243,12 +243,10 @@ export class GameSession{
   for(const e of this.environment)this.snapEnvironmentToPlatform(e);
  }
  private snapEnvironmentToPlatform(e:EnvironmentBody){
-  if(e.kind==="trap"||e.kind==="bounce"){
-   if(e.kind==="bounce"){const support=this.platforms.find(p=>e.x>=p.x&&e.x<=p.x+p.width&&p.y<=e.y+1.5);if(support)e.y=support.y+support.height+e.height/2-.02;}
-   return;
-  }
-  const support=this.platforms.find(p=>e.x>=p.x&&e.x<=p.x+p.width);
-  if(support)e.y=support.y+support.height+e.height/2;
+  if(e.kind==="trap"){return;}
+  const desiredBottom=e.y-e.height/2;
+  const support=this.platforms.filter(p=>e.x+e.width/2>p.x&&e.x-e.width/2<p.x+p.width).reduce<Platform|null>((best,p)=>!best||Math.abs((p.y+p.height)-desiredBottom)<Math.abs((best.y+best.height)-desiredBottom)?p:best,null);
+  if(support)e.y=support.y+support.height+e.height/2-(e.kind==="bounce"?.02:0);
  }
  private updateEnvironment(dt:number){
   for(const e of this.environment){
