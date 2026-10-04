@@ -44,12 +44,12 @@ export class ThreeRenderer implements Renderer{
   view.limbs.geometry.attributes.position.needsUpdate=true;
   view.weaponLines.visible=s.weapon!=="blaster"&&s.weapon!=="bomb";view.weaponLines.rotation.z=0;view.weaponLines.position.set(0,0,0);view.gun.rotation.z=0;
   view.bomb.visible=s.weapon==="bomb";
-  view.bomb.position.set(.62,.02,.05);
+  view.bomb.position.set(.62-(s.weapon==="bomb"?attackSnap*.08:0),.02,.05);view.bomb.scale.setScalar(1+(s.weapon==="bomb"?Math.sin(s.animationTime*14)*.12+attackSnap*.2:0));
   const w=view.weaponPositions;w.fill(0);
   if(s.weapon==="blade"){const a=-.15+attackSnap*1.15;view.weaponLines.rotation.z=a;w.set([.22,0,0,.98,-.08,0,.98,-.08,0,1.08,.03,0]);}
   else if(s.weapon==="hammer"){view.weaponLines.rotation.z=-.65+attackSnap*1.9;w.set([.2,0,0,.78,0,0,.72,-.22,0,.98,.22,0,.98,.22,0,.98,-.22,0,.98,-.22,0,.72,-.22,0]);}
   else if(s.weapon==="boomerang"){view.weaponLines.rotation.z=s.animationTime*9+(s.attackTime>0?attackSnap*1.5:0);w.set([.3,0,0,.55,-.3,0,.55,-.3,0,.82,-.02,0,.82,-.02,0,.55,.26,0,.55,.26,0,.3,0,0]);}
-  else if(s.weapon==="bow"){w.set([.35,-.38,0,.82,0,0,.82,0,.35,.35,.38,0,.35,-.38,0,.35,.38,0,.35,0,0,.98,0,0]);}
+  else if(s.weapon==="bow"){view.weaponLines.rotation.z=-.12+attackSnap*.28;w.set([.35,-.38,0,.82,0,0,.82,0,.35,.35,.38,0,.35,-.38,0,.35,.38,0,.35,0,0,.98,0,0]);}
   view.weaponLines.geometry.attributes.position.needsUpdate=true;view.torsoPositions.set([-.16,.4,0,.16,.4,0,.16,.4,0,.2,-.02,0,.2,-.02,0,-.2,-.02,0]);view.torso.geometry.attributes.position.needsUpdate=true;
  }
  dispose(){this.renderer.dispose();this.renderer.forceContextLoss();this.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});this.scene.clear();this.projectileGeometry.dispose();this.platformMaterial.dispose();}
