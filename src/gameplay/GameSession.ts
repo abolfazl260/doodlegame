@@ -173,7 +173,7 @@ export class GameSession{
     returning:false,
     spin:a.weapon==="boomerang"?a.facing:0,
     age:0,
-    bounce:0
+    bounce:0,ricochets:a.weapon==="blaster"?1:a.weapon==="bow"?1:0
   });
 }
  private damage(t:Fighter,damage:number,knockback:number){t.health=Math.max(0,t.health-damage);t.velocityX+=knockback;t.velocityY=Math.max(t.velocityY,2);}
