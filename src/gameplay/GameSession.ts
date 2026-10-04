@@ -1,4 +1,4 @@
-immoving:{id:"moving",name:"MOVING",speedMultiplier:1,jumpMultiplier:1.05,gravity:G,fallLimit:null,movingPlatforms:true,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.5,width:3.5,height:.35},{x:-3.5,y:2.8,width:3.5,height:.35},{x:2,y:1.6,width:3.5,height:.35},{x:6,y:3.3,width:3.5,height:.35}]},port type {InputSource,InputState,WeaponId} from "../input/Input";
+import type {InputSource,InputState,WeaponId} from "../input/Input";
 export interface Platform{readonly x:number;readonly y:number;readonly width:number;readonly height:number;}
 export interface DuelistRenderState{readonly x:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;}
 export interface ProjectileRenderState{readonly x:number;readonly y:number;readonly vx:number;readonly life:number;readonly weapon:WeaponId;}
