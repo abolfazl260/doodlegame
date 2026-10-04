@@ -38,12 +38,34 @@ export class CanvasRenderer implements Renderer{
   c.moveTo(-.22*scale,shoulderY*scale);c.lineTo((-.42-armOffset)*scale,(airborne?-.02:.02)*scale);
   c.moveTo(.22*scale,shoulderY*scale);c.lineTo((.42+armOffset)*scale,(airborne?.04:-.02)*scale);
   c.stroke();
+  this.drawWeapon(c,s,scale);
   if(s.attackTime>0){
    const attack=Math.min(1,s.attackTime/.14);
    c.lineWidth=Math.max(2,scale*(.055+.025*(1-attack)));
    c.beginPath();c.moveTo(.28*scale,0);c.lineTo((.8+.35*(1-attack))*scale,(-.04-.1*(1-attack))*scale);c.stroke();
   }
   if(landing){c.globalAlpha=.35;c.beginPath();c.ellipse(0,.93*scale,.38*scale,.08*scale,0,0,Math.PI*2);c.stroke();}
+  c.restore();
+ }
+ private drawWeapon(c:CanvasRenderingContext2D,s:DuelistRenderState,scale:number){
+  c.save();c.strokeStyle="#fff";c.fillStyle="#fff";c.lineWidth=Math.max(2,scale*.055);c.lineCap="round";c.lineJoin="round";
+  const active=s.attackTime>0?1.15:1;
+  c.beginPath();
+  if(s.weapon==="blade"){
+   c.moveTo(.28*scale,0);c.lineTo(.95*active*scale,-.08*scale);c.lineTo(1.05*active*scale,.02*scale);
+   c.stroke();
+  }else if(s.weapon==="hammer"){
+   c.moveTo(.22*scale,.02*scale);c.lineTo(.82*scale,-.02*scale);c.moveTo(.75*scale,-.22*scale);c.lineTo(.75*scale,.18*scale);c.lineTo(.98*scale,.18*scale);c.lineTo(.98*scale,-.18*scale);
+   c.stroke();
+  }else if(s.weapon==="blaster"){
+   c.moveTo(.2*scale,-.03*scale);c.lineTo(.72*scale,-.03*scale);c.lineTo(.72*scale,.1*scale);c.lineTo(.2*scale,.1*scale);c.stroke();
+  }else if(s.weapon==="boomerang"){
+   c.arc(.62*scale,-.02*scale,.34*scale,-1.05,1.05);c.stroke();
+  }else if(s.weapon==="bow"){
+   c.moveTo(.38*scale,-.38*scale);c.quadraticCurveTo(.95*scale,0,.38*scale,.38*scale);c.moveTo(.38*scale,-.38*scale);c.lineTo(.38*scale,.38*scale);c.moveTo(.38*scale,0);c.lineTo(.98*scale,0);c.stroke();
+  }else if(s.weapon==="bomb"){
+   c.beginPath();c.arc(.62*scale,.02*scale,.2*scale,0,Math.PI*2);c.fill();c.beginPath();c.moveTo(.72*scale,-.17*scale);c.lineTo(.84*scale,-.3*scale);c.stroke();
+  }
   c.restore();
  }
  dispose(){}
