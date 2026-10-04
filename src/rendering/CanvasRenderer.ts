@@ -9,7 +9,10 @@ export class CanvasRenderer implements Renderer{
       if(p.weapon==="boomerang"){
         c.save();c.translate(px,py);c.rotate(p.rotation);c.beginPath();c.arc(0,0,Math.max(3,scale*.18),-.95,.95);c.stroke();c.beginPath();c.arc(0,0,Math.max(2,scale*.11),.95,2.15);c.stroke();c.restore();
       }else if(p.weapon==="bow"){
-        const len=scale*.38;c.beginPath();c.moveTo(px-Math.sign(p.vx)*len,py);c.lineTo(px+Math.sign(p.vx)*len,py);c.stroke();c.beginPath();c.moveTo(px+Math.sign(p.vx)*len,py);c.lineTo(px+Math.sign(p.vx)*len-scale*.11,py-scale*.07);c.moveTo(px+Math.sign(p.vx)*len,py);c.lineTo(px+Math.sign(p.vx)*len-scale*.11,py+scale*.07);c.stroke();
+        const len=scale*.38;c.save();c.translate(px,py);c.rotate(p.rotation);
+        c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();
+        c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.12,-scale*.08);c.moveTo(len,0);c.lineTo(len-scale*.12,scale*.08);c.stroke();
+        c.beginPath();c.moveTo(-len*.55,-scale*.035);c.lineTo(-len*.18,-scale*.035);c.moveTo(-len*.55,scale*.035);c.lineTo(-len*.18,scale*.035);c.stroke();c.restore();
       }else if(p.weapon==="bomb"){
         const blink=p.life<.6&&Math.floor(p.life*18)%2===0;
         if(!blink){c.beginPath();c.arc(px,py,Math.max(3,scale*.12),0,Math.PI*2);c.fill();}
