@@ -44,6 +44,10 @@ export class GameSession{
 }
  setArena(id:ArenaId){this.arenaId=id;this.reset();}
  getArena(){return this.arena;}
+ setMissileAngle(angle:number){this.missileAngle=Math.max(MIN_MISSILE_ANGLE,Math.min(MAX_MISSILE_ANGLE,angle));}
+ setMissilePower(power:number){this.missilePower=Math.max(MIN_MISSILE_POWER,Math.min(MAX_MISSILE_POWER,power));}
+ fireMissile(){if(this.winner||this.arenaId!=="fortress")return;this.attack(this.player,this.opponent,true);}
+ getMissileAim(){return{angle:this.missileAngle,power:this.missilePower};}
  reset(){this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,types[(this.enemyRound-1)%types.length]);this.projectiles=[];this.winner=null;}
  selectWeapon(direction:1|-1){const i=ORDER.indexOf(this.player.weapon);this.player.weapon=ORDER[(i+direction+ORDER.length)%ORDER.length];}
  selectWeaponById(id:WeaponId){if(id==="missile"&&this.arenaId!=="fortress")return;this.player.weapon=id;}
