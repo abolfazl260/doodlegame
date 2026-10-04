@@ -20,7 +20,8 @@ export class CanvasRenderer implements Renderer{
   c.save();c.translate(x,y);c.scale(dir,1);c.rotate(lean);
   c.strokeStyle="#fff";c.fillStyle="#fff";c.lineWidth=Math.max(2,scale*.055);c.lineCap="round";c.lineJoin="round";
   const hipY=.08-bounce,shoulderY=-.42-bounce,headY=-.82-bounce;
-  c.beginPath();c.arc(0,headY*scale,.24*scale,0,Math.PI*2);c.fill();\n  if(enemy){c.save();c.fillStyle="#d11f2f";c.fillRect(-.28*scale,(headY-.01)*scale,.56*scale,.10*scale);c.beginPath();c.moveTo(.18*scale,(headY+.02)*scale);c.lineTo(.72*scale,(headY+.12)*scale);c.lineTo(.56*scale,(headY+.26)*scale);c.lineTo(.12*scale,(headY+.10)*scale);c.fill();c.beginPath();c.moveTo(-.18*scale,(headY+.02)*scale);c.lineTo(-.72*scale,(headY+.12)*scale);c.lineTo(-.56*scale,(headY+.26)*scale);c.lineTo(-.12*scale,(headY+.10)*scale);c.fill();c.restore();}
+  c.beginPath();c.arc(0,headY*scale,.24*scale,0,Math.PI*2);c.fill();
+  if(enemy){c.save();c.fillStyle="#d11f2f";c.fillRect(-.28*scale,(headY-.01)*scale,.56*scale,.10*scale);c.beginPath();c.moveTo(.18*scale,(headY+.02)*scale);c.lineTo(.72*scale,(headY+.12)*scale);c.lineTo(.56*scale,(headY+.26)*scale);c.lineTo(.12*scale,(headY+.10)*scale);c.fill();c.beginPath();c.moveTo(-.18*scale,(headY+.02)*scale);c.lineTo(-.72*scale,(headY+.12)*scale);c.lineTo(-.56*scale,(headY+.26)*scale);c.lineTo(-.12*scale,(headY+.10)*scale);c.fill();c.restore();}
   const hipX=0,shoulderX=0;
   const legBack=-.28+stride,legFront=.28-stride;
   const footY=.9-bounce;
