@@ -28,7 +28,7 @@ export class ThreeRenderer implements Renderer{
   const attackSnap=s.attackTime>0?Math.sin(Math.min(1,attackProgress)*Math.PI):0;
   const attackPrep=s.attackTime>0?Math.max(0,1-attackProgress*3):0;
   view.group.position.set(s.x,s.y,0);
-  view.group.scale.x=s.facing;
+  const enemyScale=s.enemyType==="tank"?1.12:s.enemyType==="boss"?1.3:s.enemyType==="runner"?0.92:s.enemyType==="ninja"?0.96:1;view.group.scale.set(s.facing*enemyScale,enemyScale,1);
   view.group.rotation.z=(s.attackTime>0?s.facing*(.12+attackSnap*.12):0)+lean;
   view.head.position.set(0,.82+bodyBob+(airborne?Math.abs(jump)*.05:0),.02);view.head.rotation.z=cycle*.025+(rising?.04:0)-(falling?.06:0);view.headband.visible=view===this.opponent;view.headband.position.set(0,.91+bodyBob+(airborne?Math.abs(jump)*.05:0),.15);view.headband.rotation.z=view.head.rotation.z;view.headbandTail.visible=view===this.opponent;view.headbandTail.position.set(0,.91+bodyBob+(airborne?Math.abs(jump)*.05:0),.14);view.headbandTail.rotation.z=view.head.rotation.z;
   view.eye.position.set(.08,.86+bodyBob+(airborne?Math.abs(jump)*.05:0),.04);
