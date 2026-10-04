@@ -13,7 +13,7 @@ export class CanvasRenderer implements Renderer{
         c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();
         c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.12,-scale*.08);c.moveTo(len,0);c.lineTo(len-scale*.12,scale*.08);c.stroke();
         c.beginPath();c.moveTo(-len*.55,-scale*.035);c.lineTo(-len*.18,-scale*.035);c.moveTo(-len*.55,scale*.035);c.lineTo(-len*.18,scale*.035);c.stroke();c.restore();
-      }else if(p.weapon==="missile"){const len=scale*.5;c.save();c.translate(px,py);c.rotate(p.rotation);c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len+scale*.14,-scale*.09);c.moveTo(-len,0);c.lineTo(-len+scale*.14,scale*.09);c.stroke();c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.12,-scale*.07);c.moveTo(len,0);c.lineTo(len-scale*.12,scale*.07);c.stroke();c.restore();}else if(p.weapon==="bomb"){
+      }else if(p.weapon==="missile"){const speed=Math.hypot(p.vx,p.vy);const trail=Math.max(scale*.55,Math.min(scale*1.9,scale*(.55+speed*.045)));const nx=speed>.01?p.vx/speed:1,ny=speed>.01?p.vy/speed:0;c.save();c.globalAlpha=.28;c.lineWidth=Math.max(2,scale*.075);c.beginPath();c.moveTo(px-nx*.10*scale,py-ny*.10*scale);c.lineTo(px-nx*trail,py-ny*trail);c.stroke();c.globalAlpha=.9;c.fillStyle="#fff";c.beginPath();c.arc(px-nx*trail,py-ny*trail,Math.max(2,scale*.055),0,Math.PI*2);c.fill();c.globalAlpha=.9;c.save();c.translate(px,py);c.rotate(p.rotation);const len=scale*.62;c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len+scale*.14,-scale*.09);c.moveTo(-len,0);c.lineTo(-len+scale*.14,scale*.09);c.stroke();c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.12,-scale*.07);c.moveTo(len,0);c.lineTo(len-scale*.12,scale*.07);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len-scale*.18,-scale*.10);c.moveTo(-len,0);c.lineTo(-len-scale*.18,scale*.10);c.stroke();c.restore();}else if(p.weapon==="bomb"){
         const blink=p.life<.6&&Math.floor(p.life*18)%2===0;
         if(!blink){c.beginPath();c.arc(px,py,Math.max(3,scale*.12),0,Math.PI*2);c.fill();}
         c.beginPath();c.arc(px,py,Math.max(5,scale*(.16+(1-p.life/1.5)*.06)),0,Math.PI*2);c.stroke();
@@ -113,7 +113,7 @@ export class CanvasRenderer implements Renderer{
    c.beginPath();c.arc(0,0,.20*scale,0,Math.PI*2);c.fill();c.beginPath();c.arc(0,0,.25*scale,0,Math.PI*2);c.stroke();
    c.beginPath();c.moveTo(.10*scale,-.17*scale);c.quadraticCurveTo(.20*scale,-.29*scale,.13*scale,-.38*scale);c.stroke();
    c.beginPath();c.arc(.13*scale,-.39*scale,.055*scale,0,Math.PI*2);c.fill();c.restore();
-   if(s.attackTime>0){c.globalAlpha=.55;c.beginPath();c.arc(.62*scale,.02*scale,.34*scale,0,Math.PI*2);c.stroke();}
+   if(s.attackTime>0){const flash=.34+(1-Math.min(1,s.attackTime/.22))*.25;c.globalAlpha=.7;c.beginPath();c.arc(.82*scale,.02*scale,flash*scale,0,Math.PI*2);c.stroke();c.beginPath();c.moveTo(.58*scale,.02*scale);c.lineTo(1.22*scale,-.14*scale);c.moveTo(.58*scale,.02*scale);c.lineTo(1.22*scale,.18*scale);c.stroke();}
   }
   c.restore();
  }
