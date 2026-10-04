@@ -321,9 +321,40 @@ export class GameSession{
   for(const t of [this.player,this.opponent]){const dx=t.x-e.x,dy=t.y-e.y,d=Math.hypot(dx,dy);if(d<=radius){const f=Math.max(.2,1-d/radius);this.damage(t,24*f,direction*7*f);t.velocityY=Math.max(t.velocityY,5*f);}}
   for(const other of this.environment){if(other===e||!other.active)continue;const d=Math.hypot(other.x-e.x,other.y-e.y);if(d>radius)continue;if(other.kind==="barrel")this.explodeBarrel(other,Math.sign(other.x-e.x)||direction);else if(other.kind==="box"){other.vx+=direction*5;other.vy=Math.max(other.vy,6);other.pulse=1;}else if(other.kind==="wall"||other.kind==="rock"){other.hp=Math.max(0,other.hp-28);other.pulse=1;if(other.hp<=0)other.active=false;}}
  }
+ private heldWeaponHit(f:Fighter,px:number,py:number,prevX:number,prevY:number){
+  const reach=f.weapon==="hammer"?1.05:f.weapon==="blade"?1.1:(f.weapon==="bow"||f.weapon==="blaster"||f.weapon==="uzi"||f.weapon==="missile")?1.0:.82;
+  const width=f.weapon==="hammer"?.28:f.weapon==="blade"?.18:(f.weapon==="bow"||f.weapon==="blaster"||f.weapon==="uzi"||f.weapon==="missile")?.22:.3;
+  const cx=f.x+f.facing*(.45+reach*.42);
+  const cy=f.y+.08+(f.weapon==="missile"?.16:0);
+  const dx=px-prevX,dy=py-prevY,lenSq=dx*dx+dy*dy;
+  const t=lenSq>1e-8?Math.max(0,Math.min(1,((cx-prevX)*dx+(cy-prevY)*dy)/lenSq)):0;
+  const closestX=prevX+dx*t,closestY=prevY+dy*t;
+  const radius=Math.hypot(reach*.5,width*.85);
+  const hitDistance=Math.hypot(closestX-cx,closestY-cy);
+  if(hitDistance>radius)return null;
+  const nx=(closestX-cx)/Math.max(.001,hitDistance),ny=(closestY-cy)/Math.max(.001,hitDistance);
+  return{nx,ny,bounce:.78+(f.weapon==="hammer"?.12:0)};
+ }
  private updateProjectiles(dt:number){
   for(let i=this.projectiles.length-1;i>=0;i--){
     const p=this.projectiles[i];
+    const opposingWeapon=p.owner==="player"?this.opponent:this.player;
+    if(p.weapon!=="bomb"){
+      const weaponHit=this.heldWeaponHit(opposingWeapon,p.x,p.y,prevX,prevY);
+      if(weaponHit){
+        const velocityNormal=p.vx*weaponHit.nx+p.vy*weaponHit.ny;
+        p.vx=(p.vx-2*velocityNormal*weaponHit.nx)*weaponHit.bounce;
+        p.vy=(p.vy-2*velocityNormal*weaponHit.ny)*weaponHit.bounce;
+        p.x=opposingWeapon.x+weaponHit.nx*.24;
+        p.y=opposingWeapon.y+weaponHit.ny*.24;
+        p.ricochets=Math.min(3,p.ricochets+1);
+        p.life-=.06;
+        opposingWeapon.velocityX-=weaponHit.nx*.7;
+        opposingWeapon.velocityY+=Math.max(0,weaponHit.ny)*.45;
+        opposingWeapon.attackTime=Math.max(opposingWeapon.attackTime,.08);
+        continue;
+      }
+    }
     const target=p.owner==="player"?this.opponent:this.player;
     const owner=p.owner==="player"?this.player:this.opponent;
     const prevX=p.x,prevY=p.y;
