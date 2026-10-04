@@ -6,10 +6,10 @@ export class ThreeRenderer implements Renderer{
  private player=this.fighter(0xffffff,false);private opponent=this.fighter(0x555555,true);private platforms:THREE.Mesh[]=[];private projectiles:THREE.Mesh[]=[];
  private projectileGeometry=new THREE.CircleGeometry(.09,10);private platformMaterial=new THREE.MeshBasicMaterial({color:0x777777});
  constructor(private readonly canvas:HTMLCanvasElement){this.renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:"high-performance"});this.renderer.setClearColor(0,1);this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));this.camera.position.z=20;for(const _ of [0,1,2,3,4,5]){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),this.platformMaterial);this.platforms.push(m);this.scene.add(m);}this.scene.add(this.player.group,this.opponent.group);this.resize();}
- private fighter(color:number,enemy:boolean){const group=new THREE.Group();const head=new THREE.Mesh(enemy?new THREE.CircleGeometry(.27,8):new THREE.CircleGeometry(.24,16),new THREE.MeshBasicMaterial({color}));const geometry=new THREE.BufferGeometry();const positions=new Float32Array(32);geometry.setAttribute("position",new THREE.BufferAttribute(positions,3));const limbs=new THREE.LineSegments(geometry,new THREE.LineBasicMaterial({color}));const gun=new THREE.Mesh(new THREE.BoxGeometry(.5,.14,.08),new THREE.MeshBasicMaterial({color:0xffffff}));const gunMagazine=new THREE.Mesh(new THREE.BoxGeometry(.12,.2,.07),new THREE.MeshBasicMaterial({color:0xffffff}));const gunDetails=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffffff}));const bowDetails=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffffff}));const toolDetailPositions=new Float32Array(96);gunDetails.geometry.setAttribute("position",new THREE.BufferAttribute(toolDetailPositions,3));bowDetails.geometry.setAttribute("position",new THREE.BufferAttribute(toolDetailPositions,3));const bomb=new THREE.Mesh(new THREE.CircleGeometry(.2,12),new THREE.MeshBasicMaterial({color:0xffffff}));const weaponGeometry=new THREE.BufferGeometry();const weaponPositions=new Float32Array(48);weaponGeometry.setAttribute("position",new THREE.BufferAttribute(weaponPositions,3));const weaponLines=new THREE.LineSegments(weaponGeometry,new THREE.LineBasicMaterial({color:0xffffff}));const eye=new THREE.Mesh(new THREE.CircleGeometry(.035,8),new THREE.MeshBasicMaterial({color:enemy?0xffffff:0x000000}));eye.position.set(.08,.86,.04);const enemyArmor=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffffff}));const armorPositions=new Float32Array(24);enemyArmor.geometry.setAttribute("position",new THREE.BufferAttribute(armorPositions,3));if(enemy){armorPositions.set([-.34,.5,0,-.18,.3,0,.18,.3,0,.34,.5,0,-.28,.22,0,-.42,.05,0,.28,.22,0,.42,.05,0]);}const torso=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color}));const torsoPositions=new Float32Array(12);torso.geometry.setAttribute("position",new THREE.BufferAttribute(torsoPositions,3));torsoPositions.set([-.16,.4,0,.16,.4,0,.16,.4,0,.2,-.02,0,.2,-.02,0,-.2,-.02,0]);group.add(head,limbs,gun,gunMagazine,gunDetails,bowDetails,weaponLines,bomb,eye,torso,enemyArmor);return{group,head,limbs,gun,gunMagazine,gunDetails,bowDetails,toolDetailPositions,positions,weaponLines,weaponPositions,bomb,eye,torso,torsoPositions,enemyArmor,armorPositions};}
+ private fighter(color:number,enemy:boolean){const group=new THREE.Group();const head=new THREE.Mesh(enemy?new THREE.CircleGeometry(.27,8):new THREE.CircleGeometry(.24,16),new THREE.MeshBasicMaterial({color}));const geometry=new THREE.BufferGeometry();const positions=new Float32Array(32);geometry.setAttribute("position",new THREE.BufferAttribute(positions,3));const limbs=new THREE.LineSegments(geometry,new THREE.LineBasicMaterial({color}));const gun=new THREE.Mesh(new THREE.BoxGeometry(.5,.14,.08),new THREE.MeshBasicMaterial({color:0xffffff}));const gunMagazine=new THREE.Mesh(new THREE.BoxGeometry(.12,.2,.07),new THREE.MeshBasicMaterial({color:0xffffff}));const gunDetails=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffffff}));const bowDetails=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffffff}));const toolDetailPositions=new Float32Array(96);const bowDetailPositions=new Float32Array(144);gunDetails.geometry.setAttribute("position",new THREE.BufferAttribute(toolDetailPositions,3));bowDetails.geometry.setAttribute("position",new THREE.BufferAttribute(bowDetailPositions,3));const bomb=new THREE.Mesh(new THREE.CircleGeometry(.2,12),new THREE.MeshBasicMaterial({color:0xffffff}));const weaponGeometry=new THREE.BufferGeometry();const weaponPositions=new Float32Array(48);weaponGeometry.setAttribute("position",new THREE.BufferAttribute(weaponPositions,3));const weaponLines=new THREE.LineSegments(weaponGeometry,new THREE.LineBasicMaterial({color:0xffffff}));const eye=new THREE.Mesh(new THREE.CircleGeometry(.035,8),new THREE.MeshBasicMaterial({color:enemy?0xffffff:0x000000}));eye.position.set(.08,.86,.04);const enemyArmor=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffffff}));const armorPositions=new Float32Array(24);enemyArmor.geometry.setAttribute("position",new THREE.BufferAttribute(armorPositions,3));if(enemy){armorPositions.set([-.34,.5,0,-.18,.3,0,.18,.3,0,.34,.5,0,-.28,.22,0,-.42,.05,0,.28,.22,0,.42,.05,0]);}const torso=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color}));const torsoPositions=new Float32Array(12);torso.geometry.setAttribute("position",new THREE.BufferAttribute(torsoPositions,3));torsoPositions.set([-.16,.4,0,.16,.4,0,.16,.4,0,.2,-.02,0,.2,-.02,0,-.2,-.02,0]);group.add(head,limbs,gun,gunMagazine,gunDetails,bowDetails,weaponLines,bomb,eye,torso,enemyArmor);return{group,head,limbs,gun,gunMagazine,gunDetails,bowDetails,toolDetailPositions,bowDetailPositions,positions,weaponLines,weaponPositions,bomb,eye,torso,torsoPositions,enemyArmor,armorPositions};}
  resize(){const w=Math.max(1,this.canvas.clientWidth),h=Math.max(1,this.canvas.clientHeight),a=w/h;this.renderer.setSize(w,h,false);const vh=10;this.camera.left=-a*vh/2;this.camera.right=a*vh/2;this.camera.top=vh/2;this.camera.bottom=-vh/2;this.camera.updateProjectionMatrix();}
  render(state:GameRenderState){this.draw(this.player,state.player);this.draw(this.opponent,state.opponent);for(let i=0;i<this.platforms.length;i++){const p=state.platforms[i],m=this.platforms[i];if(!p){m.visible=false;continue;}m.visible=true;m.position.set(p.x+p.width/2,p.y+p.height/2,-.05);m.scale.set(p.width,p.height,1);}while(this.projectiles.length<state.projectiles.length){const m=new THREE.Mesh(this.projectileGeometry,new THREE.MeshBasicMaterial({color:0xffffff}));this.projectiles.push(m);this.scene.add(m);}this.projectiles.forEach((m,i)=>{const p=state.projectiles[i];m.visible=Boolean(p);if(p)m.position.set(p.x,p.y,.1);});this.camera.position.y=2;this.renderer.render(this.scene,this.camera);}
- private draw(view:{group:THREE.Group;head:THREE.Mesh;limbs:THREE.LineSegments;gun:THREE.Mesh;positions:Float32Array;weaponLines:THREE.LineSegments;weaponPositions:Float32Array;bomb:THREE.Mesh;eye:THREE.Mesh;torso:THREE.LineSegments;torsoPositions:Float32Array;enemyArmor:THREE.LineSegments;armorPositions:Float32Array;gunMagazine:THREE.Mesh;gunDetails:THREE.LineSegments;bowDetails:THREE.LineSegments;toolDetailPositions:Float32Array},s:DuelistRenderState){
+ private draw(view:{group:THREE.Group;head:THREE.Mesh;limbs:THREE.LineSegments;gun:THREE.Mesh;positions:Float32Array;weaponLines:THREE.LineSegments;weaponPositions:Float32Array;bomb:THREE.Mesh;eye:THREE.Mesh;torso:THREE.LineSegments;torsoPositions:Float32Array;enemyArmor:THREE.LineSegments;armorPositions:Float32Array;gunMagazine:THREE.Mesh;gunDetails:THREE.LineSegments;bowDetails:THREE.LineSegments;toolDetailPositions:Float32Array;bowDetailPositions:Float32Array},s:DuelistRenderState){
   const moving=Math.abs(s.velocityX)>.2;
   const speed=Math.min(1,Math.abs(s.velocityX)/8);
   const airborne=!s.grounded;
@@ -45,10 +45,43 @@ export class ThreeRenderer implements Renderer{
   view.gunDetails.position.set(.5,.08,.045);
   view.bowDetails.position.set(.22,.02,.045);
   const td=view.toolDetailPositions;td.fill(0);
+  const bd=view.bowDetailPositions;bd.fill(0);
   if(s.weapon==="blaster"){
    td.set([-.23,.04,0,.23,.04,0,-.08,.04,0,-.08,.14,0,.02,.14,0,.02,.04,0,.15,.04,0,.15,.1,0,.08,.1,0,.08,.04,0,.2,-.01,0,.28,-.01,0,.28,.05,0,.2,.05,0,.2,-.01,0,.06,-.02,0,.02,-.16,0,.1,-.16,0,.12,-.02,0]);
   }else if(s.weapon==="bow"){
-   td.set([.02,-.42,0,.25,-.12,0,.25,-.12,0,.48,-.42,0,.02,-.42,0,.48,-.42,0,.25,-.12,0,.25,.28,0,.25,.28,0,.02,-.42,0,.02,.28,0,.48,-.42,0,.48,.28,0,.48,.28,0,.25,-.12,0]);
+   // Bow limbs, reinforced riser, grip, upper/lower string anchors, taut string, arrow shaft, nock and fletching.
+   bd.set([
+    .02,-.42,0,.12,-.34,0,
+    .12,-.34,0,.21,-.22,0,
+    .21,-.22,0,.27,-.08,0,
+    .27,-.08,0,.25,.06,0,
+    .25,.06,0,.18,.20,0,
+    .18,.20,0,.08,.30,0,
+    .08,.30,0,.02,.34,0,
+    .02,.34,0,-.03,.28,0,
+    -.03,.28,0,.05,.18,0,
+    .05,.18,0,.10,.06,0,
+    .10,.06,0,.10,-.08,0,
+    .10,-.08,0,.06,-.20,0,
+    .06,-.20,0,.02,-.30,0,
+    .02,-.30,0,.02,-.42,0,
+    .02,-.42,0,.10,-.42,0,
+    .10,-.42,0,.10,.34,0,
+    .10,.34,0,.02,.34,0,
+    .10,-.02,0,.25,-.02,0,
+    .25,-.02,0,.25,.07,0,
+    .25,.07,0,.10,.07,0,
+    .10,.07,0,.10,-.02,0,
+    .02,.02,0,.82,.02,0,
+    .82,.02,0,.90,.07,0,
+    .82,.02,0,.90,-.03,0,
+    .15,.02,0,.20,.08,0,
+    .20,.08,0,.27,.02,0,
+    .20,.08,0,.24,.14,0,
+    .20,.08,0,.24,.02,0,
+    .20,.08,0,.24,.00,0,
+    .20,.08,0,.24,.06,0
+   ]);
   }
   view.gunDetails.geometry.attributes.position.needsUpdate=true;view.bowDetails.geometry.attributes.position.needsUpdate=true;
   const hip=-.08-bodyBob,shoulder=.42-bodyBob;
