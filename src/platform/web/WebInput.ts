@@ -1,8 +1,9 @@
 import type {InputSource,InputState} from "../../input/Input";
+type MutableInputState={-readonly [K in keyof InputState]:InputState[K]};
 const KEYS:Readonly<Record<string,[number,number]>>={ArrowUp:[0,-1],KeyW:[0,-1],ArrowDown:[0,1],KeyS:[0,1],ArrowLeft:[-1,0],KeyA:[-1,0],ArrowRight:[1,0],KeyD:[1,0]};
 export class WebInput implements InputSource {
  private keys=new Set<string>(); private active=false;
- private state:InputState={moveX:0,moveY:0,pointerX:0,pointerY:0,pointerDown:false,pointerPressed:false,pointerReleased:false};
+ private state:MutableInputState={moveX:0,moveY:0,pointerX:0,pointerY:0,pointerDown:false,pointerPressed:false,pointerReleased:false};
  constructor(private readonly canvas:HTMLCanvasElement){this.keyDown=this.keyDown.bind(this);this.keyUp=this.keyUp.bind(this);this.down=this.down.bind(this);this.move=this.move.bind(this);this.up=this.up.bind(this);this.cancel=this.cancel.bind(this);this.blur=this.blur.bind(this);this.context=this.context.bind(this);}
  start(){if(this.active)return;this.active=true;window.addEventListener("keydown",this.keyDown);window.addEventListener("keyup",this.keyUp);window.addEventListener("blur",this.blur);this.canvas.addEventListener("pointerdown",this.down);this.canvas.addEventListener("pointermove",this.move);this.canvas.addEventListener("pointerup",this.up);this.canvas.addEventListener("pointercancel",this.cancel);this.canvas.addEventListener("contextmenu",this.context);}
  stop(){if(!this.active)return;this.active=false;window.removeEventListener("keydown",this.keyDown);window.removeEventListener("keyup",this.keyUp);window.removeEventListener("blur",this.blur);this.canvas.removeEventListener("pointerdown",this.down);this.canvas.removeEventListener("pointermove",this.move);this.canvas.removeEventListener("pointerup",this.up);this.canvas.removeEventListener("pointercancel",this.cancel);this.canvas.removeEventListener("contextmenu",this.context);this.keys.clear();this.reset();}
