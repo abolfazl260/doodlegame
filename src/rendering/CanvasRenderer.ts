@@ -60,6 +60,8 @@ export class CanvasRenderer implements Renderer{
    c.stroke();
   }else if(s.weapon==="blaster"){
    c.moveTo(.2*scale,-.03*scale);c.lineTo(.72*scale,-.03*scale);c.lineTo(.72*scale,.1*scale);c.lineTo(.2*scale,.1*scale);c.stroke();
+  }else if(s.weapon==="uzi"){
+   c.moveTo(.2*scale,-.08*scale);c.lineTo(.78*scale,-.08*scale);c.lineTo(.78*scale,.12*scale);c.lineTo(.2*scale,.12*scale);c.stroke();c.fillRect(.45*scale,.12*scale,.14*scale,.22*scale);
   }else if(s.weapon==="boomerang"){
    c.arc(.62*scale,-.02*scale,.34*scale,-1.05,1.05);c.stroke();
   }else if(s.weapon==="bow"){
