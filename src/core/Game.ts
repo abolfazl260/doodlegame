@@ -11,6 +11,9 @@ export class Game{
  restart(){this.ready();this.loop.stop();this.session.reset();this.state.reset();this.start();}
  selectWeapon(direction:1|-1){this.ready();this.session.selectWeapon(direction);}
  selectWeaponById(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectWeaponById(id);}
+ setMissileAngle(angle:number){this.ready();this.session.setMissileAngle(angle);}
+ setMissilePower(power:number){this.ready();this.session.setMissilePower(power);}
+ fireMissile(){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.fireMissile();}
  selectArena(id:ArenaId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return;if(current===GameState.GAME_OVER)this.loop.stop();this.session.setArena(id);if(current===GameState.GAME_OVER)this.state.reset();else this.state.notify();}
  getArena(){return this.session.getArena();}
  getHudState(){const s=this.session.getRenderState();return{playerHealth:s.player.health,opponentHealth:s.opponent.health,weapon:s.player.weapon,winner:s.winner,arena:s.arena,missileAngle:s.player.missileAngle,missilePower:s.player.missilePower};}
