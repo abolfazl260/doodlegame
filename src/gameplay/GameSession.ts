@@ -43,7 +43,7 @@ export class GameSession{
  private updatePlayer(input:InputState,dt:number){
   const d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;
   if(input.dashPressed)this.tryDash(this.player);
-  if(input.jumpPressed)this.tryJump(this.player,d);
+  if(input.jumpPressed)this.tryJump(this.player);
   if(this.player.dashCooldown>0)this.player.dashCooldown=Math.max(0,this.player.dashCooldown-dt);
   if(this.player.wallJumpCooldown>0)this.player.wallJumpCooldown=Math.max(0,this.player.wallJumpCooldown-dt);
   if(this.player.dashCooldown<=DASH_COOLDOWN-DASH_TIME)this.move(this.player,d,dt);
@@ -60,7 +60,7 @@ export class GameSession{
   this.integrate(this.opponent,dt);
   if(Math.abs(dx)<2&&this.opponent.cooldown<=0)this.attack(this.opponent,this.player,true);
 }
- private tryJump(f:Fighter,direction:number){
+ private tryJump(f:Fighter){
   if(f.grounded){
     f.velocityY=JUMP*this.arena.jumpMultiplier;
     f.grounded=false;
