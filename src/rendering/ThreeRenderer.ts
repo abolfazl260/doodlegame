@@ -1,102 +1,14 @@
 import * as THREE from "three";
 import type {Renderer} from "./Renderer";
-import type {GameRenderState} from "../gameplay/GameSession";
-
-export class ThreeRenderer implements Renderer {
-  private scene=new THREE.Scene();
-  private camera=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);
-  private renderer:THREE.WebGLRenderer;
-  private player=new THREE.Group();
-  private head:THREE.Mesh;
-  private limbs:THREE.LineSegments;
-  private platformMeshes:THREE.Mesh[]=[];
-  private limbPositions=new Float32Array(20);
-
-  constructor(private readonly canvas:HTMLCanvasElement){
-    this.renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:"high-performance"});
-    this.renderer.setClearColor(0x000000,1);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-    this.camera.position.z=20;
-
-    const headMaterial=new THREE.MeshBasicMaterial({color:0xffffff});
-    this.head=new THREE.Mesh(new THREE.CircleGeometry(.24,16),headMaterial);
-
-    const limbGeometry=new THREE.BufferGeometry();
-    limbGeometry.setAttribute("position",new THREE.BufferAttribute(this.limbPositions,3));
-    this.limbs=new THREE.LineSegments(limbGeometry,new THREE.LineBasicMaterial({color:0xffffff}));
-
-    this.player.add(this.head,this.limbs);
-    this.scene.add(this.player);
-
-    const platformMaterial=new THREE.MeshBasicMaterial({color:0x777777});
-    for(const _ of [0,1,2]){
-      const mesh=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),platformMaterial);
-      this.platformMeshes.push(mesh);
-      this.scene.add(mesh);
-    }
-    this.resize();
-  }
-
-  resize(){
-    const w=Math.max(1,this.canvas.clientWidth),h=Math.max(1,this.canvas.clientHeight),a=w/h;
-    this.renderer.setSize(w,h,false);
-    const viewHeight=10;
-    this.camera.left=-a*viewHeight/2;
-    this.camera.right=a*viewHeight/2;
-    this.camera.top=viewHeight/2;
-    this.camera.bottom=-viewHeight/2;
-    this.camera.updateProjectionMatrix();
-  }
-
-  render(state:GameRenderState){
-    const stride=state.grounded?Math.sin(state.animationTime*Math.min(Math.abs(state.playerVelocityX),6)*1.5)*.16:0;
-    const bob=state.grounded?Math.abs(stride)*.35:0;
-    const x=state.playerX,y=state.playerY+bob;
-    this.player.position.set(x,y,0);
-
-    this.head.position.set(0,.82,0);
-    const hipY=-.08, shoulderY=.42, footY=-.9;
-    const swing=stride;
-    const armSwing=-swing*.9;
-    const handY=shoulderY-.42;
-    const values=[
-      0,hipY, 0,shoulderY,
-      0,hipY, -.28+swing,footY,
-      0,hipY, .28-swing,footY,
-      -.22,shoulderY, -.42+armSwing,handY,
-      .22,shoulderY, .42-armSwing,handY
-    ];
-    for(let i=0;i<values.length;i++)this.limbPositions[i]=values[i];
-    this.limbs.geometry.attributes.position.needsUpdate=true;
-
-    for(let i=0;i<this.platformMeshes.length;i++){
-      const p=state.platforms[i];
-      if(!p)continue;
-      const mesh=this.platformMeshes[i];
-      mesh.position.set(p.x+p.width/2,p.y+p.height/2,-.05);
-      mesh.scale.set(p.width,p.height,1);
-    }
-
-    const targetY=Math.max(2.5,state.playerY+1.2);
-    this.camera.position.y+=(targetY-this.camera.position.y)*.12;
-    this.renderer.render(this.scene,this.camera);
-  }
-
-  dispose(){
-    this.renderer.dispose();
-    this.renderer.forceContextLoss();
-    this.scene.traverse(object=>{
-      if(object instanceof THREE.Mesh){
-        object.geometry.dispose();
-        if(Array.isArray(object.material))object.material.forEach(material=>material.dispose());
-        else object.material.dispose();
-      }
-      if(object instanceof THREE.LineSegments){
-        object.geometry.dispose();
-        if(Array.isArray(object.material))object.material.forEach(material=>material.dispose());
-        else object.material.dispose();
-      }
-    });
-    this.scene.clear();
-  }
+import type {GameRenderState,DuelistRenderState} from "../gameplay/GameSession";
+export class ThreeRenderer implements Renderer{
+ private scene=new THREE.Scene();private camera=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);private renderer:THREE.WebGLRenderer;
+ private player=this.fighter(0xffffff);private opponent=this.fighter(0xffffff);private platforms:THREE.Mesh[]=[];private projectiles:THREE.Mesh[]=[];
+ private projectileGeometry=new THREE.CircleGeometry(.09,10);private platformMaterial=new THREE.MeshBasicMaterial({color:0x777777});
+ constructor(private readonly canvas:HTMLCanvasElement){this.renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:"high-performance"});this.renderer.setClearColor(0,1);this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));this.camera.position.z=20;for(const _ of [0,1,2]){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),this.platformMaterial);this.platforms.push(m);this.scene.add(m);}this.scene.add(this.player.group,this.opponent.group);this.resize();}
+ private fighter(color:number){const group=new THREE.Group();const head=new THREE.Mesh(new THREE.CircleGeometry(.24,16),new THREE.MeshBasicMaterial({color}));const geometry=new THREE.BufferGeometry();const positions=new Float32Array(20);geometry.setAttribute("position",new THREE.BufferAttribute(positions,3));const limbs=new THREE.LineSegments(geometry,new THREE.LineBasicMaterial({color}));group.add(head,limbs);return{group,head,limbs,positions};}
+ resize(){const w=Math.max(1,this.canvas.clientWidth),h=Math.max(1,this.canvas.clientHeight),a=w/h;this.renderer.setSize(w,h,false);const vh=10;this.camera.left=-a*vh/2;this.camera.right=a*vh/2;this.camera.top=vh/2;this.camera.bottom=-vh/2;this.camera.updateProjectionMatrix();}
+ render(state:GameRenderState){this.draw(this.player,state.player);this.draw(this.opponent,state.opponent);for(let i=0;i<this.platforms.length;i++){const p=state.platforms[i],m=this.platforms[i];if(!p){m.visible=false;continue;}m.visible=true;m.position.set(p.x+p.width/2,p.y+p.height/2,-.05);m.scale.set(p.width,p.height,1);}while(this.projectiles.length<state.projectiles.length){const m=new THREE.Mesh(this.projectileGeometry,new THREE.MeshBasicMaterial({color:0xffffff}));this.projectiles.push(m);this.scene.add(m);}this.projectiles.forEach((m,i)=>{const p=state.projectiles[i];m.visible=Boolean(p);if(p)m.position.set(p.x,p.y,.1);});this.camera.position.y=2;this.renderer.render(this.scene,this.camera);}
+ private draw(view:{group:THREE.Group;head:THREE.Mesh;limbs:THREE.LineSegments;positions:Float32Array},s:DuelistRenderState){const stride=s.grounded?Math.sin(s.animationTime*6)*.12:0;view.group.position.set(s.x,s.y,0);view.group.scale.x=s.facing;view.group.rotation.z=s.attackTime>0?s.facing*.16:0;view.head.position.set(0,.82,0);const hip=-.08,shoulder=.42,foot=-.9,hand=0,values=[0,hip,0,shoulder,0,hip,-.28+stride,foot,0,hip,.28-stride,foot,-.22,shoulder,-.42,hand,.22,shoulder,.42,hand];for(let i=0;i<values.length;i++)view.positions[i]=values[i];view.limbs.geometry.attributes.position.needsUpdate=true;}
+ dispose(){this.renderer.dispose();this.renderer.forceContextLoss();this.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});this.scene.clear();this.projectileGeometry.dispose();this.platformMaterial.dispose();}
 }
