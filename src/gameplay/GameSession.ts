@@ -18,17 +18,17 @@ const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
  sky:{id:"sky",name:"SKY",speedMultiplier:1,jumpMultiplier:1.25,gravity:-18,fallLimit:null,movingPlatforms:false,spawnX:[-6,6],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.7,width:3.5,height:.35},{x:-3,y:3.1,width:3.5,height:.35},{x:3,y:1.7,width:3.5,height:.35},{x:-1.75,y:4.7,width:3.5,height:.35}]}, moving:{id:"moving",name:"MOVING",speedMultiplier:1,jumpMultiplier:1.05,gravity:G,fallLimit:null,movingPlatforms:true,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.5,width:3.5,height:.35},{x:-3.5,y:2.8,width:3.5,height:.35},{x:2,y:1.6,width:3.5,height:.35},{x:6,y:3.3,width:3.5,height:.35}]},
  fortress:{id:"fortress",name:"FORTRESS",speedMultiplier:.9,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-9,9],platforms:[{x:-12,y:-.25,width:24,height:.5}]}
 };
-const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number;radius?:number}>>={
+const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number;radius?:number;automatic?:boolean}>>={
  blade:{damage:8,range:1.35,cooldown:.32,knockback:4},
  hammer:{damage:14,range:1.45,cooldown:.75,knockback:8},
  blaster:{damage:7,range:0,cooldown:.5,knockback:5,projectileSpeed:14},
- uzi:{damage:4,range:0,cooldown:.12,knockback:2.5,projectileSpeed:16},
+ uzi:{damage:4,range:0,cooldown:.12,knockback:2.5,projectileSpeed:16,automatic:true},
  boomerang:{damage:9,range:0,cooldown:.7,knockback:4,projectileSpeed:10},
  bow:{damage:12,range:0,cooldown:.9,knockback:3,projectileSpeed:18},
  bomb:{damage:18,range:0,cooldown:1.15,knockback:9,projectileSpeed:8,radius:1.8},
  missile:{damage:22,range:0,cooldown:1.05,knockback:10,projectileSpeed:1,radius:1.15}
 };
-const ORDER:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb"];
+const ORDER:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
 export class GameSession{
  private arenaId:ArenaId="classic";
  private missileAngle=45;private missilePower=13;
@@ -46,12 +46,12 @@ export class GameSession{
  getArena(){return this.arena;}
  setMissileAngle(angle:number){this.missileAngle=Math.max(MIN_MISSILE_ANGLE,Math.min(MAX_MISSILE_ANGLE,angle));}
  setMissilePower(power:number){this.missilePower=Math.max(MIN_MISSILE_POWER,Math.min(MAX_MISSILE_POWER,power));}
- fireMissile(){if(this.winner||this.arenaId!=="fortress")return;this.attack(this.player,this.opponent,true);}
+ fireWeapon(){if(this.winner)return;const w=WEAPONS[this.player.weapon];this.attack(this.player,this.opponent,Boolean(w));}
  getMissileAim(){return{angle:this.missileAngle,power:this.missilePower};}
  reset(){this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,types[(this.enemyRound-1)%types.length]);this.projectiles=[];this.winner=null;}
- selectWeapon(direction:1|-1){const i=ORDER.indexOf(this.player.weapon);this.player.weapon=ORDER[(i+direction+ORDER.length)%ORDER.length];}
- selectWeaponById(id:WeaponId){if(id==="missile"&&this.arenaId!=="fortress")return;this.player.weapon=id;}
- update(dt:number){if(this.winner){this.input.endFrame();return;}this.elapsed+=dt;const input=this.input.getState();this.updatePlayer(input,dt);this.updateOpponent(dt);if(this.arenaId==="fortress"){if(input.attackPressed)this.fireMissile();}else{this.attack(this.player,this.opponent,input.attackPressed||input.attackHeld);}this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0)this.winner="player";if(this.arenaId!=="fortress"){if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);}this.input.endFrame();}
+ selectWeapon(direction:1|-1){const available=this.arenaId==="fortress"?(["missile"] as const):ORDER.filter(id=>id!=="missile");const i=Math.max(0,available.indexOf(this.player.weapon as (typeof available)[number]));this.player.weapon=available[(i+direction+available.length)%available.length];}
+ selectWeaponById(id:WeaponId){if(id==="missile"&&this.arenaId!=="fortress")return;if(id!=="missile"&&this.arenaId==="fortress")return;this.player.weapon=id;}
+ update(dt:number){if(this.winner){this.input.endFrame();return;}this.elapsed+=dt;const input=this.input.getState();this.updatePlayer(input,dt);this.updateOpponent(dt);const playerWeapon=WEAPONS[this.player.weapon];this.attack(this.player,this.opponent,input.attackPressed||(Boolean(playerWeapon.automatic)&&input.attackHeld));this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0)this.winner="player";if(this.arenaId!=="fortress"){if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);}this.input.endFrame();}
  private updatePlayer(input:InputState,dt:number){
   const d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;
   if(input.dashPressed)this.tryDash(this.player);
@@ -76,9 +76,8 @@ export class GameSession{
   if(type==="tank"&&distance<2)moveDirection=d;
   this.move(this.opponent,moveDirection*(type==="runner"?1.15:type==="tank"?.72:type==="shooter"?.8:type==="ninja"?1.05:1),dt);
   this.integrate(this.opponent,dt);
-  const attackRange=type==="shooter"?7:type==="bomber"?6:type==="jumper"?4.5:type==="boss"?2.4:2;
-  if(this.arenaId!=="fortress"&&distance<attackRange&&this.opponent.cooldown<=0)this.attack(this.opponent,this.player,true);
-  if(this.arenaId==="fortress"&&this.opponent.cooldown<=0&&distance>4.5)this.attack(this.opponent,this.player,true);
+  const attackRange=this.arenaId==="fortress"?Infinity:type==="shooter"?7:type==="bomber"?6:type==="jumper"?4.5:type==="boss"?2.4:2;
+  if(this.arenaId==="fortress"){if(this.opponent.cooldown<=0&&distance>4.5)this.attack(this.opponent,this.player,true);}else if(distance<attackRange&&this.opponent.cooldown<=0){this.attack(this.opponent,this.player,true);}
 }
  private tryJump(f:Fighter){
   if(f.grounded){
