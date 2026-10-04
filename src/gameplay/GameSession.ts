@@ -5,9 +5,9 @@ export interface ProjectileRenderState{readonly x:number;readonly y:number;reado
 export type ArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving";
 export interface ArenaDefinition{readonly id:ArenaId;readonly name:string;readonly platforms:readonly Platform[];readonly spawnX:[number,number];readonly speedMultiplier:number;readonly jumpMultiplier:number;readonly gravity:number;readonly fallLimit:number|null;readonly movingPlatforms:boolean;}
 export interface GameRenderState{readonly player:DuelistRenderState;readonly opponent:DuelistRenderState;readonly projectiles:readonly ProjectileRenderState[];readonly platforms:readonly Platform[];readonly winner:"player"|"opponent"|null;readonly arena:ArenaId;}
-interface Fighter{x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;weapon:WeaponId;attackTime:number;cooldown:number;attackVariant:number;}
-interface Projectile{x:number;y:number;vx:number;vy:number;life:number;weapon:WeaponId;owner:"player"|"opponent";originX:number;returning:boolean;spin:number;age:number;bounce:number;}
-const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2;
+interface Fighter{x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;weapon:WeaponId;attackTime:number;cooldown:number;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;}
+interface Projectile{x:number;y:number;vx:number;vy:number;life:number;weapon:WeaponId;owner:"player"|"opponent";originX:number;returning:boolean;spin:number;age:number;bounce:number;ricochets:number;}
+const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2,DASH_SPEED=14,DASH_TIME=.12,DASH_COOLDOWN=.65,WALL_JUMP_SPEED=9.6,BOUNCE_MIN_SPEED=9.5;
 const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
  classic:{id:"classic",name:"CLASSIC",speedMultiplier:1,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-5,5],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-4,y:2,width:3.5,height:.35},{x:.5,y:3.7,width:3.5,height:.35}]},
  towers:{id:"towers",name:"TOWERS",speedMultiplier:1,jumpMultiplier:1.15,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.6,width:4.5,height:.35},{x:4.5,y:1.6,width:4.5,height:.35},{x:-3,y:3.5,width:6,height:.35},{x:-10,y:5.2,width:3.5,height:.35},{x:6.5,y:5.2,width:3.5,height:.35}]},
@@ -33,17 +33,112 @@ export class GameSession{
  private get arena(){return ARENAS[this.arenaId];}
  private get platforms(){return this.arena.movingPlatforms?this.arena.platforms.map((p,i)=>i===0?p:{...p,x:p.x+Math.sin(this.elapsed*1.15+i*1.4)*1.1,y:p.y+Math.sin(this.elapsed*.8+i*1.9)*.22}):this.arena.platforms;}
  private platformAtSpawn(x:number){return this.platforms.reduce((best,p)=>Math.abs((p.x+p.width/2)-x)<Math.abs((best.x+best.width/2)-x)?p:best,this.platforms[0]);}
- private create(x:number,facing:number):Fighter{const p=this.platformAtSpawn(x);return{x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:100,weapon:"blade",attackTime:0,cooldown:0,attackVariant:0};}
+ private create(x:number,facing:number):Fighter{const p=this.platformAtSpawn(x);return{x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:100,weapon:"blade",attackTime:0,cooldown:0,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0};}
  setArena(id:ArenaId){this.arenaId=id;this.reset();}
  getArena(){return this.arena;}
  reset(){this.elapsed=0;this.player=this.create(this.arena.spawnX[0],1);this.opponent=this.create(this.arena.spawnX[1],-1);this.projectiles=[];this.winner=null;}
  selectWeapon(direction:1|-1){const i=ORDER.indexOf(this.player.weapon);this.player.weapon=ORDER[(i+direction+ORDER.length)%ORDER.length];}
  selectWeaponById(id:WeaponId){this.player.weapon=id;}
  update(dt:number){if(this.winner){this.input.endFrame();return;}this.elapsed+=dt;const input=this.input.getState();this.updatePlayer(input,dt);this.updateOpponent(dt);this.attack(this.player,this.opponent,input.attackPressed||input.attackHeld);this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0)this.winner="player";if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);this.input.endFrame();}
- private updatePlayer(input:InputState,dt:number){const d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;this.move(this.player,d,dt);if(input.jumpPressed&&this.player.grounded){this.player.velocityY=JUMP*this.arena.jumpMultiplier;this.player.grounded=false;}this.integrate(this.player,dt);}
- private updateOpponent(dt:number){const dx=this.player.x-this.opponent.x;const d=Math.abs(dx)>.9?Math.sign(dx):0;this.move(this.opponent,d*.55,dt);if(this.opponent.grounded&&this.player.y-this.opponent.y>1.5)this.opponent.velocityY=JUMP*this.arena.jumpMultiplier*.9;this.integrate(this.opponent,dt);if(Math.abs(dx)<2&&this.opponent.cooldown<=0)this.attack(this.opponent,this.player,true);}
+ private updatePlayer(input:InputState,dt:number){
+  const d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;
+  if(input.dashPressed)this.tryDash(this.player);
+  if(input.jumpPressed)this.tryJump(this.player,d);
+  if(this.player.dashCooldown>0)this.player.dashCooldown=Math.max(0,this.player.dashCooldown-dt);
+  if(this.player.wallJumpCooldown>0)this.player.wallJumpCooldown=Math.max(0,this.player.wallJumpCooldown-dt);
+  if(this.player.dashCooldown<=DASH_COOLDOWN-DASH_TIME)this.move(this.player,d,dt);
+  this.integrate(this.player,dt);
+}
+ private updateOpponent(dt:number){
+  const dx=this.player.x-this.opponent.x;
+  const d=Math.abs(dx)>.9?Math.sign(dx):0;
+  if(this.opponent.dashCooldown>0)this.opponent.dashCooldown=Math.max(0,this.opponent.dashCooldown-dt);
+  if(this.opponent.wallJumpCooldown>0)this.opponent.wallJumpCooldown=Math.max(0,this.opponent.wallJumpCooldown-dt);
+  if(this.opponent.grounded&&this.player.y-this.opponent.y>1.5)this.opponent.velocityY=JUMP*this.arena.jumpMultiplier*.9;
+  if(!this.opponent.grounded&&Math.abs(dx)>2.2&&this.opponent.dashCooldown<=0&&Math.random()<dt*.8)this.opponent.velocityX=Math.sign(dx)*DASH_SPEED;
+  this.move(this.opponent,d*.55,dt);
+  this.integrate(this.opponent,dt);
+  if(Math.abs(dx)<2&&this.opponent.cooldown<=0)this.attack(this.opponent,this.player,true);
+}
+ private tryJump(f:Fighter,direction:number){
+  if(f.grounded){
+    f.velocityY=JUMP*this.arena.jumpMultiplier;
+    f.grounded=false;
+    f.doubleJumpAvailable=true;
+    f.airDashAvailable=true;
+    return;
+  }
+  const wall=this.wallDirection(f);
+  if(wall!==0&&f.wallJumpCooldown<=0){
+    f.velocityY=JUMP*this.arena.jumpMultiplier;
+    f.velocityX=-wall*WALL_JUMP_SPEED;
+    f.facing=-wall;
+    f.doubleJumpAvailable=true;
+    f.airDashAvailable=true;
+    f.wallJumpCooldown=.18;
+    return;
+  }
+  if(f.doubleJumpAvailable){
+    f.velocityY=JUMP*this.arena.jumpMultiplier*.92;
+    f.doubleJumpAvailable=false;
+  }
+ }
+ private tryDash(f:Fighter){
+  if(f.dashCooldown>0||(!f.grounded&&!f.airDashAvailable))return;
+  f.velocityX=f.facing*DASH_SPEED;
+  if(!f.grounded){f.airDashAvailable=false;f.velocityY*=.35;}
+  f.dashCooldown=DASH_COOLDOWN;
+ }
+ private wallDirection(f:Fighter){
+  const edgeTolerance=.14;
+  for(const p of this.platforms){
+    const verticalOverlap=f.y-HH/2<p.y+p.height+.08&&f.y+HH/2>p.y-.05;
+    if(!verticalOverlap)continue;
+    if(Math.abs((f.x+PH/2)-p.x)<edgeTolerance)return -1;
+    if(Math.abs((f.x-PH/2)-(p.x+p.width))<edgeTolerance)return 1;
+  }
+  return 0;
+ }
  private move(f:Fighter,d:number,dt:number){d*=this.arena.speedMultiplier;if(d){f.velocityX+=d*ACC*dt;f.facing=Math.sign(d);}else{const amount=(f.grounded?FRIC:AIR)*dt;f.velocityX=Math.abs(f.velocityX)<=amount?0:f.velocityX-Math.sign(f.velocityX)*amount;}f.velocityX=Math.max(-MAX,Math.min(MAX,f.velocityX));}
- private integrate(f:Fighter,dt:number){const previousBottom=f.y-HH/2;f.velocityY+=this.arena.gravity*dt;f.x+=f.velocityX*dt;f.y+=f.velocityY*dt;f.grounded=false;const currentBottom=f.y-HH/2;let landingTop:number|null=null;for(const p of this.platforms){const top=p.y+p.height;const overlap=f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width;const crossed=previousBottom>=top-.08&&currentBottom<=top+.08;if(f.velocityY<=0&&overlap&&crossed&&(landingTop===null||top>landingTop))landingTop=top;}if(landingTop!==null){f.y=landingTop+HH/2;f.velocityY=0;f.grounded=true;}const bounds=this.platforms.reduce((b,p)=>({min:Math.min(b.min,p.x),max:Math.max(b.max,p.x+p.width)}),{min:Infinity,max:-Infinity});f.x=Math.max(bounds.min+PH/2,Math.min(bounds.max-PH/2,f.x));if(this.arena.fallLimit!==null&&f.y-HH/2<this.arena.fallLimit){f.health=0;return;}if(this.arena.id!=="pit"){for(const p of this.platforms){const top=p.y+p.height;if(f.y-HH/2<top&&f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width){f.y=top+HH/2;f.velocityY=0;f.grounded=true;break;}}}}
+ private integrate(f:Fighter,dt:number){
+  const previousBottom=f.y-HH/2;
+  f.velocityY+=this.arena.gravity*dt;
+  f.x+=f.velocityX*dt;
+  f.y+=f.velocityY*dt;
+  f.grounded=false;
+  const currentBottom=f.y-HH/2;
+  let landingTop:number|null=null;
+  for(const p of this.platforms){
+    const top=p.y+p.height;
+    const overlap=f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width;
+    const crossed=previousBottom>=top-.08&&currentBottom<=top+.08;
+    if(f.velocityY<=0&&overlap&&crossed&&(landingTop===null||top>landingTop))landingTop=top;
+  }
+  if(landingTop!==null){
+    const incoming=-f.velocityY;
+    f.y=landingTop+HH/2;
+    if(incoming>=BOUNCE_MIN_SPEED){
+      f.velocityY=Math.min(12,incoming*.62+3.5);
+      f.grounded=false;
+    }else{
+      f.velocityY=0;
+      f.grounded=true;
+      f.doubleJumpAvailable=true;
+      f.airDashAvailable=true;
+    }
+  }
+  const bounds=this.platforms.reduce((b,p)=>({min:Math.min(b.min,p.x),max:Math.max(b.max,p.x+p.width)}),{min:Infinity,max:-Infinity});
+  f.x=Math.max(bounds.min+PH/2,Math.min(bounds.max-PH/2,f.x));
+  if(this.arena.fallLimit!==null&&f.y-HH/2<this.arena.fallLimit){f.health=0;return;}
+  if(this.arena.id!=="pit"){
+    for(const p of this.platforms){
+      const top=p.y+p.height;
+      if(f.y-HH/2<top&&f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width){
+        f.y=top+HH/2;f.velocityY=0;f.grounded=true;f.doubleJumpAvailable=true;f.airDashAvailable=true;break;
+      }
+    }
+  }
+ }
  private attack(a:Fighter,t:Fighter,pressed:boolean){
   const w=WEAPONS[a.weapon];
   if(!pressed||a.cooldown>0)return;
@@ -87,34 +182,49 @@ export class GameSession{
     const p=this.projectiles[i];
     const target=p.owner==="player"?this.opponent:this.player;
     const owner=p.owner==="player"?this.player:this.opponent;
+    const prevX=p.x,prevY=p.y;
     p.age+=dt;
     if(p.weapon==="bow"){p.vy+=-7.5*dt;p.spin=Math.atan2(p.vy,p.vx);}
     else p.spin+=dt*(p.weapon==="boomerang"?12:p.weapon==="bomb"?7:0);
+
     if(p.weapon==="boomerang"){
       if(!p.returning){
-        p.vy+=-5.2*dt;
-        p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
+        p.vy+=-5.2*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
         if(Math.abs(p.x-owner.x)>3.5||p.age>.95)p.returning=true;
       }else{
-        const dx=owner.x-p.x,dy=(owner.y+.35)-p.y;
-        const dist=Math.max(.001,Math.hypot(dx,dy));
-        p.vx=dx/dist*11;p.vy=dy/dist*11;
-        p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
+        const dx=owner.x-p.x,dy=(owner.y+.35)-p.y,dist=Math.max(.001,Math.hypot(dx,dy));
+        p.vx=dx/dist*11;p.vy=dy/dist*11;p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
         if(dist<.45){this.projectiles.splice(i,1);continue;}
       }
     }else if(p.weapon==="bomb"){
-      p.vy+=G*.42*dt;
-      p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
+      p.vy+=G*.42*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
       for(const platform of this.platforms){
         const top=platform.y+platform.height;
-        if(p.vy<0&&p.y<=top+.05&&p.y>=top-.35&&p.x>platform.x-.15&&p.x<platform.x+platform.width+.15){
-          p.y=top+.06;p.vy=Math.abs(p.vy)*.56;p.vx*=.88;p.bounce++;
-          break;
+        if(p.vy<0&&prevY>=top&&p.y<=top+.05&&p.x>platform.x-.15&&p.x<platform.x+platform.width+.15){
+          p.y=top+.06;p.vy=Math.abs(p.vy)*.56;p.vx*=.88;p.bounce++;break;
         }
       }
     }else{
       p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
+      for(const platform of this.platforms){
+        const top=platform.y+platform.height;
+        const crossedTop=p.vy<0&&prevY>=top&&p.y<=top&&p.x>platform.x&&p.x<platform.x+platform.width;
+        const crossedSide=Math.abs(p.vx)>0&&p.y>platform.y&&p.y<top&&((prevX<platform.x&&p.x>=platform.x)||(prevX>platform.x+platform.width&&p.x<=platform.x+platform.width));
+        if(crossedTop||crossedSide){
+          if(p.ricochets>0){
+            if(crossedTop)p.vy=-p.vy*.9;
+            else p.vx=-p.vx*.9;
+            p.ricochets--;
+            p.x=prevX;p.y=prevY;
+          }else{
+            this.projectiles.splice(i,1);
+          }
+          break;
+        }
+      }
+      if(!this.projectiles[i])continue;
     }
+
     if(p.weapon==="bomb"&&p.life<=.55&&Math.abs(p.x-target.x)<1.05&&Math.abs(p.y-(target.y+.35))<1){this.explode(p);this.projectiles.splice(i,1);continue;}
     if(p.weapon!=="bomb"&&Math.abs(p.x-target.x)<.65&&Math.abs(p.y-(target.y+.35))<1){
       this.damage(target,WEAPONS[p.weapon].damage,Math.sign(p.vx)*WEAPONS[p.weapon].knockback);
@@ -123,8 +233,24 @@ export class GameSession{
     if(p.weapon==="bomb"&&p.life<=0){this.explode(p);this.projectiles.splice(i,1);continue;}
     if(p.life<=0||Math.abs(p.x)>16||p.y< -4||p.y>12){this.projectiles.splice(i,1);continue;}
   }
-}
- private explode(p:Projectile){const w=WEAPONS.bomb;const target=p.owner==="player"?this.opponent:this.player;const distance=Math.hypot(target.x-p.x,target.y-(p.y));if(distance<=w.radius!){const force=Math.max(.35,1-distance/w.radius!);this.damage(target,w.damage*force,Math.sign(target.x-p.x)*w.knockback*force);}}
+ }
+ private explode(p:Projectile){
+  const w=WEAPONS.bomb;
+  const target=p.owner==="player"?this.opponent:this.player;
+  const owner=p.owner==="player"?this.player:this.opponent;
+  const targetDistance=Math.hypot(target.x-p.x,target.y-p.y);
+  if(targetDistance<=w.radius!){
+    const force=Math.max(.35,1-targetDistance/w.radius!);
+    this.damage(target,w.damage*force,Math.sign(target.x-p.x)*w.knockback*force);
+    target.velocityY=Math.max(target.velocityY,5.5*force);
+  }
+  const ownerDistance=Math.hypot(owner.x-p.x,owner.y-p.y);
+  if(ownerDistance<=w.radius!){
+    const force=Math.max(.2,1-ownerDistance/w.radius!);
+    owner.velocityX+=Math.sign(owner.x-p.x||owner.facing)*w.knockback*.8*force;
+    owner.velocityY=Math.max(owner.velocityY,6.5*force);
+  }
+ }
  getRenderState():GameRenderState{return{player:{...this.player,animationTime:this.elapsed},opponent:{...this.opponent,animationTime:this.elapsed},projectiles:this.projectiles.map(p=>({...p,rotation:p.spin})),platforms:this.platforms,winner:this.winner,arena:this.arenaId};}
  dispose(){}
 }
