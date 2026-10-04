@@ -1,5 +1,5 @@
 import {GameState} from "../core/GameState";import type {WeaponId} from "../input/Input";import type {ArenaId} from "../gameplay/GameSession";
-const ARENAS:Readonly<Record<ArenaId,string>>={classic:"CLASSIC",towers:"TOWERS",pit:"PIT",steps:"STEPS",zigzag:"ZIGZAG",sky:"SKY"};
+const ARENAS:Readonly<Record<ArenaId,string>>={classic:"CLASSIC",towers:"TOWERS",pit:"PIT",steps:"STEPS",zigzag:"ZIGZAG",sky:"SKY",moving:"MOVING"};
 const LABELS:Readonly<Record<WeaponId,string>>={blade:"BLADE",hammer:"HAMMER",blaster:"BLASTER",uzi:"UZI",boomerang:"BOOMERANG",bow:"BOW",bomb:"BOMB"};
 export class GameUI{
  private root=document.createElement("section");private help=document.createElement("div");private title=document.createElement("h1");private status=document.createElement("p");private details=document.createElement("p");private playerHealth=document.createElement("div");private opponentHealth=document.createElement("div");private buttons=document.createElement("div");private weaponList=document.createElement("div");private arenaList=document.createElement("div");private playerHealthLabel=document.createElement("span");private opponentHealthLabel=document.createElement("span");private unsubscribe:(()=>void)|null=null;private hudFrame=0;private currentState=GameState.MENU;
