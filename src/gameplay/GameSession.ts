@@ -9,7 +9,7 @@ const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2;
 const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number}>>={blade:{damage:14,range:1.35,cooldown:.32,knockback:4},hammer:{damage:24,range:1.45,cooldown:.75,knockback:8},blaster:{damage:12,range:0,cooldown:.5,knockback:5,projectileSpeed:14}};
 const ORDER:readonly WeaponId[]=["blade","hammer","blaster"];
 export class GameSession{
- private elapsed=0;private player:Fighter=this.create(-5,1);private opponent:Fighter=this.create(5,-1);private projectiles:ProjectileRenderState[]=[];private winner:"player"|"opponent"|null=null;
+ private elapsed=0;private player:Fighter=this.create(-5,1);private opponent:Fighter=this.create(5,-1);private projectiles:Array<{x:number;y:number;vx:number;life:number}>=[];private winner:"player"|"opponent"|null=null;
  constructor(private readonly input:InputSource){}
  reset(){this.elapsed=0;this.player=this.create(-5,1);this.opponent=this.create(5,-1);this.projectiles=[];this.winner=null;}
  selectWeapon(direction:1|-1){const i=ORDER.indexOf(this.player.weapon);this.player.weapon=ORDER[(i+direction+ORDER.length)%ORDER.length];}
