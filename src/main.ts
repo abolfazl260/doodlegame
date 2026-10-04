@@ -9,6 +9,7 @@ import {GameSession} from "./gameplay/GameSession";
 import {GameUI} from "./ui/GameUI";
 import type {Renderer} from "./rendering/Renderer";
 
+const bootFallback=document.querySelector<HTMLElement>("#boot-fallback");
 const canvas=document.querySelector<HTMLCanvasElement>("#game-canvas");
 const root=document.querySelector<HTMLElement>("#ui-root");
 if(!canvas||!root)throw new Error("DoodleGame root elements are missing.");
@@ -32,6 +33,7 @@ const ui=new GameUI(root,{start:()=>game.start(),pause:()=>game.pause(),resume:(
 ui.bind(l=>game.subscribe(l));
 input.start();
 game.initialize();
+bootFallback?.remove();
 
 const resize=()=>game.resize();
 window.addEventListener("resize",resize);
