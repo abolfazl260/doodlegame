@@ -18,7 +18,6 @@ export class ThreeRenderer implements Renderer{
   const bodyBob=moving&&s.grounded?Math.abs(Math.sin(phase))*.045:0;
   const jump=Math.max(-1,Math.min(1,s.velocityY/9.2));
   const lean=airborne?-jump*.12:(moving?s.velocityX/8*.09:0);
-  const landing=airborne&&Math.abs(s.velocityY)<1.5;
   view.group.position.set(s.x,s.y,0);
   view.group.scale.x=s.facing;
   view.group.rotation.z=(s.attackTime>0?s.facing*.18:0)+lean;
