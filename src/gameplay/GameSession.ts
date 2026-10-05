@@ -28,7 +28,7 @@ const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
  ruins:{id:"ruins",name:"RUINS",speedMultiplier:.98,jumpMultiplier:1,gravity:G,fallLimit:-4.5,movingPlatforms:true,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:6.2,height:.5},{x:-5.1,y:1.1,width:3.1,height:.35},{x:-.6,y:2.35,width:3.6,height:.35,surface:"ice"},{x:3.7,y:1.05,width:3.2,height:.35,surface:"slippery"},{x:7.5,y:2.9,width:3.2,height:.35},{x:-1,y:4.1,width:2.6,height:.35,surface:"oneWay"}]}
 };
 interface EnvironmentTemplate{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;}
-const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate[]>>={classic:[],towers:[],pit:[],steps:[],zigzag:[],sky:[],moving:[],fortress:[]};
+const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate[]>>={classic:[],towers:[],pit:[],steps:[],zigzag:[],sky:[],moving:[],fortress:[],bridge:[],crater:[],vertical:[],ruins:[]};
 const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number;radius?:number;automatic?:boolean}>>={
  blade:{damage:8,range:1.35,cooldown:.32,knockback:4},
  hammer:{damage:14,range:1.45,cooldown:.75,knockback:8},
