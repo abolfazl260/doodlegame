@@ -49,7 +49,7 @@ export class ThreeRenderer implements Renderer{
   const verticalSpeed=Math.min(1,Math.abs(s.velocityY)/10);
   const stretchY=airborne?(1+Math.min(.16,Math.abs(s.velocityY)*.012)):(dash?.78:1);
   const stretchX=airborne?(1-Math.min(.10,Math.abs(s.velocityY)*.007)):(dash?1.34:1);
-  const enemyScale=s.enemyType==="tank"?1.12:s.enemyType==="boss"?1.3:s.enemyType==="runner"?0.92:s.enemyType==="ninja"?0.96:1;view.group.scale.set(s.facing*enemyScale*stretchX,enemyScale*stretchY,1);
+  const enemyScale=s.enemyType==="tank"?1.12:s.enemyType==="boss"?1.3:s.enemyType==="runner"?0.92:s.enemyType==="ninja"?0.96:1;const visualScale=.8;view.group.scale.set(s.facing*enemyScale*stretchX*visualScale,enemyScale*stretchY*visualScale,1);
   view.group.rotation.z=(s.attackTime>0?s.facing*(.12+attackSnap*.12):0)+lean;
   const ringPulse=airborne?Math.min(1,verticalSpeed*.9):Math.min(1,Math.abs(s.velocityX)/8);
   view.motionRing.position.set(0,-.92, -.01);view.motionRing.scale.setScalar(.8+ringPulse*.9);((view.motionRing.material as THREE.MeshBasicMaterial).opacity)=airborne?0:Math.max(.05,Math.min(.28,ringPulse*.16));
