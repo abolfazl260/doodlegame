@@ -154,7 +154,10 @@ export class GameSession{
   }
   const bounds=this.platforms.reduce((b,p)=>({min:Math.min(b.min,p.x),max:Math.max(b.max,p.x+p.width)}),{min:Infinity,max:-Infinity});
   f.x=Math.max(bounds.min+PH/2,Math.min(bounds.max-PH/2,f.x));
-  if(this.arenaId==="fortress"){if(f===this.player)f.x=Math.max(-10.8,Math.min(-2.6,f.x));else f.x=Math.max(2.6,Math.min(10.8,f.x));}
+  // Keep fighters inside the visible combat area rather than allowing them to run to off-screen platform edges.
+  const screenMin=-6,screenMax=6;
+  f.x=Math.max(screenMin+PH/2,Math.min(screenMax-PH/2,f.x));
+  if(this.arenaId==="fortress"){if(f===this.player)f.x=Math.max(screenMin+PH/2,Math.min(-2.6,f.x));else f.x=Math.max(2.6,Math.min(screenMax-PH/2,f.x));}
   if(this.arena.fallLimit!==null&&f.y-HH/2<this.arena.fallLimit){f.health=0;return;}
   if(this.arena.id!=="pit"){
     for(const p of this.platforms){
