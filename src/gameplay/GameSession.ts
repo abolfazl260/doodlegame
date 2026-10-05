@@ -4,16 +4,16 @@ export interface Platform{readonly x:number;readonly y:number;readonly width:num
 export type EnemyType="runner"|"tank"|"shooter"|"jumper"|"bomber"|"ninja"|"boss";
 export type EnvironmentKind="barrel"|"box"|"wall"|"bounce"|"trap"|"rock";
 export interface EnvironmentRenderState{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;readonly maxHp:number;readonly active:boolean;readonly rotation:number;readonly pulse:number;}
-export interface DuelistRenderState{readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;}
+export interface DuelistRenderState{readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;readonly gaitPhase:number;readonly landingTime:number;readonly hitTime:number;}
 export interface ProjectileRenderState{readonly x:number;readonly y:number;readonly vx:number;readonly vy:number;readonly life:number;readonly weapon:WeaponId;readonly rotation:number;readonly age:number;}
 export interface ExplosionRenderState{readonly x:number;readonly y:number;age:number;readonly life:number;readonly radius:number;}
 export type ArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fortress"|"bridge"|"crater"|"vertical"|"ruins";
 export interface ArenaDefinition{readonly id:ArenaId;readonly name:string;readonly platforms:readonly Platform[];readonly spawnX:[number,number];readonly speedMultiplier:number;readonly jumpMultiplier:number;readonly gravity:number;readonly fallLimit:number|null;readonly movingPlatforms:boolean;}
 export interface GameRenderState{readonly player:DuelistRenderState;readonly opponent:DuelistRenderState;readonly projectiles:readonly ProjectileRenderState[];readonly explosions:readonly ExplosionRenderState[];readonly platforms:readonly Platform[];readonly environment:readonly EnvironmentRenderState[];readonly winner:"player"|"opponent"|null;readonly arena:ArenaId;}
-interface Fighter{x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;}
-interface Projectile{x:number;y:number;vx:number;vy:number;life:number;weapon:WeaponId;owner:"player"|"opponent";originX:number;returning:boolean;spin:number;age:number;bounce:number;ricochets:number;}
+interface Fighter{x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;gaitPhase:number;landingTime:number;hitTime:number;}
+interface Projectile{x:number;y:number;vx:number;vy:number;life:number;weapon:WeaponId;owner:"player"|"opponent";originX:number;returning:boolean;spin:number;age:number;bounce:number;ricochets:number;deflectCooldown?:number;}
 interface EnvironmentBody{kind:EnvironmentKind;x:number;y:number;width:number;height:number;hp:number;maxHp:number;active:boolean;rotation:number;pulse:number;vx:number;vy:number;grounded:boolean;cooldown:number;}
-const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2,DASH_SPEED=14,DASH_TIME=.12,DASH_COOLDOWN=.65,WALL_JUMP_SPEED=9.6,BOUNCE_MIN_SPEED=9.5,MIN_MISSILE_ANGLE=12,MAX_MISSILE_ANGLE=78,MIN_MISSILE_POWER=8,MAX_MISSILE_POWER=18;
+const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2,DASH_SPEED=14,DASH_TIME=.12,DASH_COOLDOWN=.65,WALL_JUMP_SPEED=9.6,MIN_MISSILE_ANGLE=12,MAX_MISSILE_ANGLE=78,MIN_MISSILE_POWER=8,MAX_MISSILE_POWER=18;
 const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
  classic:{id:"classic",name:"CLASSIC",speedMultiplier:1,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-5,5],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-4,y:2,width:3.5,height:.35,surface:"ice"},{x:.5,y:3.7,width:3.5,height:.35,surface:"slippery"}]},
  towers:{id:"towers",name:"TOWERS",speedMultiplier:1,jumpMultiplier:1.15,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.6,width:4.5,height:.35,surface:"oneWay"},{x:4.5,y:1.6,width:4.5,height:.35},{x:-3,y:3.5,width:6,height:.35,surface:"ice"},{x:-10,y:5.2,width:3.5,height:.35},{x:6.5,y:5.2,width:3.5,height:.35}]},
@@ -46,12 +46,13 @@ export class GameSession{
  private elapsed=0;private enemyRound=0;private player:Fighter=this.create(-5,1,null);private opponent:Fighter=this.create(5,-1,"runner");private projectiles:Projectile[]=[];private explosions:ExplosionRenderState[]=[];private environment:EnvironmentBody[]=[];private winner:"player"|"opponent"|null=null;
  constructor(private readonly input:InputSource){}
  private get arena(){return ARENAS[this.arenaId];}
- private get platforms(){return this.arena.movingPlatforms?this.arena.platforms.map((p,i)=>i===0?p:{...p,x:p.x+Math.sin(this.elapsed*1.15+i*1.4)*1.1,y:p.y+Math.sin(this.elapsed*.8+i*1.9)*.22}):this.arena.platforms;}
- private platformAtSpawn(x:number){return this.platforms.reduce((best,p)=>Math.abs((p.x+p.width/2)-x)<Math.abs((best.x+best.width/2)-x)?p:best,this.platforms[0]);}
+ private get platforms(){return this.platformsAt(this.elapsed);}
+ private platformsAt(time:number){return this.arena.movingPlatforms?this.arena.platforms.map((p,i)=>i===0?p:{...p,x:p.x+Math.sin(time*1.15+i*1.4)*1.1,y:p.y+Math.sin(time*.8+i*1.9)*.22}):this.arena.platforms;}
+ private platformAtSpawn(x:number){const underneath=this.platforms.filter(p=>x>=p.x&&x<=p.x+p.width);if(underneath.length)return underneath.reduce((a,b)=>a.y+a.height>b.y+b.height?a:b);return this.platforms.reduce((best,p)=>Math.abs((p.x+p.width/2)-x)<Math.abs((best.x+best.width/2)-x)?p:best,this.platforms[0]);}
  private create(x:number,facing:number,enemyType:EnemyType|null):Fighter{
   const p=this.platformAtSpawn(x);
   const stats=enemyType===null?{health:100,weapon:"blade" as WeaponId,speed:1,jump:1}:{health:{runner:85,tank:170,shooter:90,jumper:95,bomber:105,ninja:100,boss:220}[enemyType],weapon:{runner:"blade",tank:"hammer",shooter:"blaster",jumper:"boomerang",bomber:"bomb",ninja:"uzi",boss:"hammer"}[enemyType] as WeaponId,speed:{runner:1.35,tank:.68,shooter:.82,jumper:1.05,bomber:.9,ninja:1.2,boss:.92}[enemyType],jump:{runner:1.1,tank:.8,shooter:.9,jumper:1.35,bomber:1,ninja:1.15,boss:1.1}[enemyType]};
-  return{x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.arenaId==="fortress"?"missile":stats.weapon,attackTime:0,cooldown:0,bowCharge:0,bowCharging:false,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0};
+  return{x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.arenaId==="fortress"?"missile":stats.weapon,attackTime:0,cooldown:0,bowCharge:0,bowCharging:false,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0,gaitPhase:0,landingTime:0,hitTime:0};
 }
  setArena(id:ArenaId){this.arenaId=id;this.reset();}
  getArena(){return this.arena;}
@@ -62,7 +63,25 @@ export class GameSession{
  reset(){this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.explosions=[];this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,types[(this.enemyRound-1)%types.length]);this.projectiles=[];this.resetEnvironment();this.winner=null;}
  selectWeapon(direction:1|-1){const available:WeaponId[]=this.arenaId==="fortress"?["missile"]:ORDER.filter(id=>id!=="missile");const i=Math.max(0,available.indexOf(this.player.weapon));this.player.weapon=available[(i+direction+available.length)%available.length];this.player.bowCharging=false;this.player.bowCharge=0;}
  selectWeaponById(id:WeaponId){if(id==="missile"&&this.arenaId!=="fortress")return;if(id!=="missile"&&this.arenaId==="fortress")return;this.player.weapon=id;this.player.bowCharging=false;this.player.bowCharge=0;}
- update(dt:number){if(this.winner){this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);this.input.endFrame();return;}this.elapsed+=dt;this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);const input=this.input.getState();this.updateEnvironment(dt);this.updatePlayer(input,dt);this.updateOpponent(dt);this.resolveEnvironmentFighter(this.player);this.resolveEnvironmentFighter(this.opponent);const playerWeapon=WEAPONS[this.player.weapon];if(this.player.weapon==="bow")this.updateBow(input,dt);else this.attack(this.player,this.opponent,input.attackPressed||(Boolean(playerWeapon.automatic)&&input.attackHeld));this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0)this.winner="player";if(this.arenaId!=="fortress"){if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);}this.input.endFrame();}
+ update(dt:number){
+  if(!Number.isFinite(dt)||dt<=0){this.input.endFrame();return;}
+  if(this.winner){this.explosions=this.explosions.filter(e=>(e.age+=Math.min(dt,.1))<e.life);this.input.endFrame();return;}
+  const input=this.input.getState(),duration=Math.min(dt,.1),steps=Math.ceil(duration/(1/120));
+  for(let i=0;i<steps;i++) {
+   const frame=i===0?input:{...input,jumpPressed:false,dashPressed:false,attackPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};
+   for(const f of [this.player,this.opponent]){f.landingTime=Math.max(0,f.landingTime-duration/steps);f.hitTime=Math.max(0,f.hitTime-duration/steps);}
+   const before=this.platforms;
+   const after=this.platformsAt(this.elapsed+duration/steps);
+   for(const f of [this.player,this.opponent]){
+    const index=f.grounded?before.findIndex(p=>Math.abs(f.y-HH/2-p.y-p.height)<.12&&f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width):-1;
+    if(index>=0){f.x+=after[index].x-before[index].x;f.y+=after[index].y-before[index].y;}
+   }
+   this.step(duration/steps,frame);
+   for(const f of [this.player,this.opponent])f.gaitPhase+=Math.abs(f.velocityX)*duration/steps*1.8;
+  }
+  this.input.endFrame();
+ }
+ private step(dt:number,input:InputState){if(this.winner){this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);return;}this.elapsed+=dt;this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);this.updateEnvironment(dt);this.updatePlayer(input,dt);this.updateOpponent(dt);this.resolveEnvironmentFighter(this.player);this.resolveEnvironmentFighter(this.opponent);const playerWeapon=WEAPONS[this.player.weapon];if(this.player.weapon==="bow")this.updateBow(input,dt);else this.attack(this.player,this.opponent,input.attackPressed||(Boolean(playerWeapon.automatic)&&input.attackHeld));this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0)this.winner="player";if(this.arenaId!=="fortress"){if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);}}
  private updatePlayer(input:InputState,dt:number){
   const d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;
   if(input.dashPressed)this.tryDash(this.player);
@@ -124,15 +143,31 @@ export class GameSession{
   for(const p of this.platforms){
     const verticalOverlap=f.y-HH/2<p.y+p.height+.08&&f.y+HH/2>p.y-.05;
     if(!verticalOverlap)continue;
-    if(Math.abs((f.x+PH/2)-p.x)<edgeTolerance)return -1;
-    if(Math.abs((f.x-PH/2)-(p.x+p.width))<edgeTolerance)return 1;
+    if(Math.abs((f.x+PH/2)-p.x)<edgeTolerance)return 1;
+    if(Math.abs((f.x-PH/2)-(p.x+p.width))<edgeTolerance)return -1;
   }
   return 0;
  }
- private move(f:Fighter,d:number,dt:number){d*=this.arena.speedMultiplier;if(d){f.velocityX+=d*ACC*dt;f.facing=Math.sign(d);}else{const support=this.supportPlatform(f);const surface=support?.surface??"normal";const factor=surface==="ice"?.18:surface==="slippery"?.05:1;const amount=(f.grounded?FRIC*factor:AIR)*dt;f.velocityX=Math.abs(f.velocityX)<=amount?0:f.velocityX-Math.sign(f.velocityX)*amount;}f.velocityX=Math.max(-MAX,Math.min(MAX,f.velocityX));}
+ private move(f:Fighter,d:number,dt:number){
+  if(f.hitTime>.12||f.wallJumpCooldown>.1)return;
+  if(f.dashCooldown>DASH_COOLDOWN-DASH_TIME)return;
+  const surface=this.supportPlatform(f)?.surface??'normal';
+  const grip=surface==='ice'?.22:surface==='slippery'?.1:1;
+  const max=MAX*this.arena.speedMultiplier;
+  if(d){
+   f.facing=Math.sign(d);
+   const target=d*max;
+   const acceleration=ACC*(f.grounded?grip:.42)*dt;
+   f.velocityX+=Math.max(-acceleration,Math.min(acceleration,target-f.velocityX));
+  }else{
+   const amount=(f.grounded?FRIC*grip:AIR*.25)*dt;
+   f.velocityX=Math.abs(f.velocityX)<=amount?0:f.velocityX-Math.sign(f.velocityX)*amount;
+  }
+ }
  private integrate(f:Fighter,dt:number){
   const previousX=f.x;
   const previousBottom=f.y-HH/2;
+  const previousTop=f.y+HH/2;
   f.velocityY+=this.arena.gravity*dt;
   f.x+=f.velocityX*dt;
   f.y+=f.velocityY*dt;
@@ -148,15 +183,11 @@ export class GameSession{
   if(landingTop!==null){
     const incoming=-f.velocityY;
     f.y=landingTop+HH/2;
-    if(incoming>=BOUNCE_MIN_SPEED){
-      f.velocityY=Math.min(12,incoming*.62+3.5);
-      f.grounded=false;
-    }else{
-      f.velocityY=0;
-      f.grounded=true;
-      f.doubleJumpAvailable=true;
-      f.airDashAvailable=true;
-    }
+    if(incoming>2)f.landingTime=.18*Math.min(1,incoming/10);
+    f.velocityY=0;
+    f.grounded=true;
+    f.doubleJumpAvailable=true;
+    f.airDashAvailable=true;
   }
   const bounds=this.platforms.reduce((b,p)=>({min:Math.min(b.min,p.x),max:Math.max(b.max,p.x+p.width)}),{min:Infinity,max:-Infinity});
   f.x=Math.max(bounds.min+PH/2,Math.min(bounds.max-PH/2,f.x));
@@ -165,13 +196,13 @@ export class GameSession{
   f.x=Math.max(screenMin+PH/2,Math.min(screenMax-PH/2,f.x));
   if(this.arenaId==="fortress"){if(f===this.player)f.x=Math.max(screenMin+PH/2,Math.min(-2.6,f.x));else f.x=Math.max(2.6,Math.min(screenMax-PH/2,f.x));}
   if(this.arena.fallLimit!==null&&f.y-HH/2<this.arena.fallLimit){f.health=0;return;}
-  if(this.arena.id!=="pit"){
-    for(const p of this.platforms){
-      const top=p.y+p.height;
-      if(p.surface!=="oneWay"&&f.y-HH/2<top&&f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width){
-        f.y=top+HH/2;f.velocityY=0;f.grounded=true;f.doubleJumpAvailable=true;f.airDashAvailable=true;break;
-      }
-    }
+  for(const p of this.platforms){
+   if(p.surface==='oneWay')continue;
+   const top=p.y+p.height;
+   const vertical=f.y-HH/2<top-.01&&f.y+HH/2>p.y+.01;
+   if(vertical&&previousX+PH/2<=p.x&&f.x+PH/2>p.x){f.x=p.x-PH/2;f.velocityX=0;}
+   else if(vertical&&previousX-PH/2>=p.x+p.width&&f.x-PH/2<p.x+p.width){f.x=p.x+p.width+PH/2;f.velocityX=0;}
+   if(f.velocityY>0&&previousTop<=p.y&&f.y+HH/2>=p.y&&f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width){f.y=p.y-HH/2;f.velocityY=0;}
   }
   this.resolveEnvironmentLanding(f,previousBottom,previousX);
  }
@@ -228,9 +259,10 @@ export class GameSession{
   }
   if(a.weapon==="blade"){
     const distance=t.x-a.x;
-    if(Math.sign(distance)===a.facing&&Math.abs(distance)<=w.range){this.damage(t,w.damage,a.facing*w.knockback);this.strikeEnvironment(a,w.damage*.9,a.facing*w.knockback);}
+    if(Math.sign(distance)===a.facing&&Math.abs(distance)<=w.range&&Math.abs(t.y-a.y)<1.2){this.damage(t,w.damage,a.facing*w.knockback);this.strikeEnvironment(a,w.damage*.9,a.facing*w.knockback);}
     return;
   }
+  a.velocityX-=a.facing*(a.weapon==="blaster"?1.3:a.weapon==="uzi"?.4:.6);
   this.projectiles.push({
     x:a.x+a.facing*.65,
     y:a.y+.35,
@@ -246,7 +278,7 @@ export class GameSession{
     bounce:0,ricochets:a.weapon==="blaster"?1:a.weapon==="bow"?1:0
   });
 }
- private damage(t:Fighter,damage:number,knockback:number){t.health=Math.max(0,t.health-damage);t.velocityX+=knockback;t.velocityY=Math.max(t.velocityY,2);}
+ private damage(t:Fighter,damage:number,knockback:number){const mass=t.enemyType==="tank"?1.8:t.enemyType==="boss"?2.2:1;t.health=Math.max(0,t.health-damage);t.velocityX+=knockback/mass;t.velocityY=Math.max(t.velocityY,2/mass);t.grounded=false;t.hitTime=.22;}
  private resetEnvironment(){
   this.environment=ENVIRONMENT_TEMPLATES[this.arenaId].map(t=>({kind:t.kind,x:t.x,y:t.y,width:t.width,height:t.height,hp:t.hp,maxHp:t.hp,active:true,rotation:0,pulse:0,vx:0,vy:0,grounded:false,cooldown:0}));
   for(const e of this.environment)this.snapEnvironmentToPlatform(e);
@@ -321,19 +353,15 @@ export class GameSession{
   for(const t of [this.player,this.opponent]){const dx=t.x-e.x,dy=t.y-e.y,d=Math.hypot(dx,dy);if(d<=radius){const f=Math.max(.2,1-d/radius);this.damage(t,24*f,direction*7*f);t.velocityY=Math.max(t.velocityY,5*f);}}
   for(const other of this.environment){if(other===e||!other.active)continue;const d=Math.hypot(other.x-e.x,other.y-e.y);if(d>radius)continue;if(other.kind==="barrel")this.explodeBarrel(other,Math.sign(other.x-e.x)||direction);else if(other.kind==="box"){other.vx+=direction*5;other.vy=Math.max(other.vy,6);other.pulse=1;}else if(other.kind==="wall"||other.kind==="rock"){other.hp=Math.max(0,other.hp-28);other.pulse=1;if(other.hp<=0)other.active=false;}}
  }
- private heldWeaponHit(f:Fighter,px:number,py:number,prevX:number,prevY:number){
-  const reach=f.weapon==="hammer"?1.05:f.weapon==="blade"?1.1:(f.weapon==="bow"||f.weapon==="blaster"||f.weapon==="uzi"||f.weapon==="missile")?1.0:.82;
-  const width=f.weapon==="hammer"?.28:f.weapon==="blade"?.18:(f.weapon==="bow"||f.weapon==="blaster"||f.weapon==="uzi"||f.weapon==="missile")?.22:.3;
-  const cx=f.x+f.facing*(.45+reach*.42);
-  const cy=f.y+.08+(f.weapon==="missile"?.16:0);
-  const dx=px-prevX,dy=py-prevY,lenSq=dx*dx+dy*dy;
-  const t=lenSq>1e-8?Math.max(0,Math.min(1,((cx-prevX)*dx+(cy-prevY)*dy)/lenSq)):0;
-  const closestX=prevX+dx*t,closestY=prevY+dy*t;
-  const radius=Math.hypot(reach*.5,width*.85);
-  const hitDistance=Math.hypot(closestX-cx,closestY-cy);
-  if(hitDistance>radius)return null;
-  const nx=(closestX-cx)/Math.max(.001,hitDistance),ny=(closestY-cy)/Math.max(.001,hitDistance);
-  return{nx,ny,bounce:.78+(f.weapon==="hammer"?.12:0)};
+ private deflectProjectile(p:Projectile,f:Fighter,previousX:number,previousY:number){
+  if((p.deflectCooldown??0)>0||f.attackTime<=0||(f.weapon!=='blade'&&f.weapon!=='hammer')||p.weapon==='bomb'||p.weapon==='missile')return false;
+  const cx=f.x+f.facing*.8,cy=f.y+.2,dx=p.x-previousX,dy=p.y-previousY,len=dx*dx+dy*dy;
+  const along=len>0?Math.max(0,Math.min(1,((cx-previousX)*dx+(cy-previousY)*dy)/len)):0;
+  const distance=Math.hypot(previousX+dx*along-cx,previousY+dy*along-cy);
+  if(distance>.3||p.vx*f.facing>=0)return false;
+  p.vx=f.facing*Math.max(8,Math.abs(p.vx)*.8);p.vy=Math.max(1,Math.abs(p.vy)*.5);
+  p.x=cx+f.facing*.35;p.y=cy;p.owner=f===this.player?'player':'opponent';p.deflectCooldown=.12;
+  f.velocityX-=f.facing*.6;return true;
  }
  private updateProjectiles(dt:number){
   for(let i=this.projectiles.length-1;i>=0;i--){
@@ -341,24 +369,7 @@ export class GameSession{
     const target=p.owner==="player"?this.opponent:this.player;
     const owner=p.owner==="player"?this.player:this.opponent;
     const prevX=p.x,prevY=p.y;
-    const opposingWeapon=p.owner==="player"?this.opponent:this.player;
-    if(p.weapon!=="bomb"){
-      const weaponHit=this.heldWeaponHit(opposingWeapon,p.x,p.y,prevX,prevY);
-      if(weaponHit){
-        const velocityNormal=p.vx*weaponHit.nx+p.vy*weaponHit.ny;
-        p.vx=(p.vx-2*velocityNormal*weaponHit.nx)*weaponHit.bounce;
-        p.vy=(p.vy-2*velocityNormal*weaponHit.ny)*weaponHit.bounce;
-        p.x=opposingWeapon.x+weaponHit.nx*.24;
-        p.y=opposingWeapon.y+weaponHit.ny*.24;
-        p.ricochets=Math.min(3,p.ricochets+1);
-        p.life-=.06;
-        opposingWeapon.velocityX-=weaponHit.nx*.7;
-        opposingWeapon.velocityY+=Math.max(0,weaponHit.ny)*.45;
-        opposingWeapon.attackTime=Math.max(opposingWeapon.attackTime,.08);
-        continue;
-      }
-    }
-    p.age+=dt;
+    p.age+=dt;p.deflectCooldown=Math.max(0,(p.deflectCooldown??0)-dt);
     if(p.weapon==="bow"){p.vy+=-12.5*dt;p.spin=Math.atan2(p.vy,p.vx);}
     else if(p.weapon==="missile"){p.vy+=-7.8*dt;p.spin=Math.atan2(p.vy,p.vx);}
     else p.spin+=dt*(p.weapon==="boomerang"?12:p.weapon==="bomb"?7:0);
@@ -400,9 +411,10 @@ export class GameSession{
           break;
         }
       }
-      if(!this.projectiles[i])continue;
+      if(!this.projectiles.includes(p))continue;
     }
 
+    if(this.deflectProjectile(p,target,prevX,prevY))continue;
     if(p.weapon==="bow"){
       const sx=p.x-prevX,sy=p.y-prevY,segLenSq=sx*sx+sy*sy,targetY=target.y+.35;
       const along=segLenSq>1e-8?Math.max(0,Math.min(1,((target.x-prevX)*sx+(targetY-prevY)*sy)/segLenSq)):0;

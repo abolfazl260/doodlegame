@@ -143,3 +143,20 @@ Current live deployment:
 **https://abolfazl260.github.io/doodlegame/**
 
 The current game is frontend-only. Persistent online presence, authentication, matchmaking, and real-time multiplayer would require a separate backend or hosted realtime service.
+
+## Motion and physics
+
+Both renderers use the same articulated pose and detailed vector tool geometry.
+Fighters breathe at rest, bend knees and elbows while running, change poses on
+ascent/descent, compress on landing, lean during dashes and recoil on impacts.
+Tools stay attached to the hand; blade/hammer variants, gun recoil and muzzle
+flashes, bow string tension and missile elevation have distinct visuals.
+
+Simulation uses substeps no longer than 1/120 second. Normal landings settle;
+ice and slippery surfaces reduce traction and braking, air steering is weaker,
+and moving platforms carry their riders. Tank/boss mass reduces hit impulses.
+Solid platform sides and undersides block movement; one-way platforms allow
+upward passage. Active blade/hammer swings can deflect incoming bullets/arrows;
+projectiles continue aging and can never remain indefinitely in a collision.
+
+Run `npm test` for motion/physics regressions, then `npm run build`.
