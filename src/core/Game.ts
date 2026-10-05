@@ -4,8 +4,8 @@ export class Game{
  constructor(private readonly renderer:Renderer,private readonly session:GameSession,scheduler:FrameScheduler,onError:(error:unknown)=>void){this.loop=new GameLoop(scheduler,dt=>this.update(dt),()=>this.renderer.render(this.session.getRenderState()),onError);}
  initialize(){this.assertNotDisposed();if(this.initialized)return;this.initialized=true;this.renderer.resize();this.renderer.render(this.session.getRenderState());}
  start(){this.ready();const s=this.state.getState();if(s===GameState.MENU||s===GameState.GAME_OVER){this.session.reset();this.state.transitionTo(GameState.PLAYING);}else if(s===GameState.PAUSED)this.state.transitionTo(GameState.PLAYING);this.loop.start();}
- pause(){this.ready();if(this.state.getState()===GameState.PLAYING)this.state.transitionTo(GameState.PAUSED);}
- resume(){this.ready();if(this.state.getState()===GameState.PAUSED)this.state.transitionTo(GameState.PLAYING);}
+ pause(){this.ready();if(this.state.getState()===GameState.PLAYING){this.loop.stop();this.state.transitionTo(GameState.PAUSED);}}
+ resume(){this.ready();if(this.state.getState()===GameState.PAUSED){this.state.transitionTo(GameState.PLAYING);this.loop.start();}}
  endGame(){this.ready();if(this.state.getState()===GameState.PLAYING){this.loop.stop();this.state.transitionTo(GameState.GAME_OVER);}}
  stop(){if(this.disposed)return;this.loop.stop();if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);}
  restart(){this.ready();this.loop.stop();this.session.reset();this.state.reset();this.start();}
