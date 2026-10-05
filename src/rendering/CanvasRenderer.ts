@@ -48,7 +48,7 @@ export class CanvasRenderer implements Renderer{
   const dash=Math.abs(s.velocityX)>9;
   const stretchY=airborne?(1+Math.min(.16,Math.abs(s.velocityY)*.012)):(dash?.78:1);
   const stretchX=airborne?(1-Math.min(.10,Math.abs(s.velocityY)*.007)):(dash?1.34:1);
-  const enemyScale=enemy?(s.enemyType==="tank"?1.12:s.enemyType==="boss"?1.3:s.enemyType==="runner"?0.92:s.enemyType==="ninja"?0.96:1):1;c.save();c.translate(x,y);c.scale(dir*enemyScale*stretchX,enemyScale*stretchY);c.rotate(lean);
+  const enemyScale=enemy?(s.enemyType==="tank"?1.12:s.enemyType==="boss"?1.3:s.enemyType==="runner"?0.92:s.enemyType==="ninja"?0.96:1):1;const visualScale=.8;c.save();c.translate(x,y);c.scale(dir*enemyScale*stretchX*visualScale,enemyScale*stretchY*visualScale);c.rotate(lean);
   c.strokeStyle="#fff";c.fillStyle="#fff";c.lineWidth=Math.max(2,scale*.055);c.lineCap="round";c.lineJoin="round";
   if(!airborne&&Math.abs(s.velocityX)>1){c.save();c.globalAlpha=Math.min(.18,Math.abs(s.velocityX)/45);c.beginPath();c.ellipse(-dir*.34*scale,.95*scale,.48*scale,.07*scale,0,0,Math.PI*2);c.stroke();c.restore();}
   if(!airborne){c.save();c.globalAlpha=.12;c.beginPath();c.ellipse(0,.93*scale,(.28+Math.min(.55,Math.abs(s.velocityX)*.035))*scale,.055*scale,0,0,Math.PI*2);c.stroke();c.restore();}
