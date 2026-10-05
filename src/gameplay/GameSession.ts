@@ -338,6 +338,9 @@ export class GameSession{
  private updateProjectiles(dt:number){
   for(let i=this.projectiles.length-1;i>=0;i--){
     const p=this.projectiles[i];
+    const target=p.owner==="player"?this.opponent:this.player;
+    const owner=p.owner==="player"?this.player:this.opponent;
+    const prevX=p.x,prevY=p.y;
     const opposingWeapon=p.owner==="player"?this.opponent:this.player;
     if(p.weapon!=="bomb"){
       const weaponHit=this.heldWeaponHit(opposingWeapon,p.x,p.y,prevX,prevY);
@@ -355,9 +358,6 @@ export class GameSession{
         continue;
       }
     }
-    const target=p.owner==="player"?this.opponent:this.player;
-    const owner=p.owner==="player"?this.player:this.opponent;
-    const prevX=p.x,prevY=p.y;
     p.age+=dt;
     if(p.weapon==="bow"){p.vy+=-12.5*dt;p.spin=Math.atan2(p.vy,p.vx);}
     else if(p.weapon==="missile"){p.vy+=-7.8*dt;p.spin=Math.atan2(p.vy,p.vx);}
