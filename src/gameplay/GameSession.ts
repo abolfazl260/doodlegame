@@ -23,7 +23,8 @@ const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
  fortress:{id:"fortress",name:"FORTRESS",speedMultiplier:.9,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-9,9],platforms:[{x:-12,y:-.25,width:24,height:.5}]}
 };
 interface EnvironmentTemplate{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;}
-const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate[]>>={classic:[],towers:[],pit:[],steps:[],zigzag:[],sky:[],moving:[],fortress:[]}const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number;radius?:number;automatic?:boolean}>>={
+const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate[]>>={classic:[],towers:[],pit:[],steps:[],zigzag:[],sky:[],moving:[],fortress:[]};
+const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number;radius?:number;automatic?:boolean}>>={
  blade:{damage:8,range:1.35,cooldown:.32,knockback:4},
  hammer:{damage:14,range:1.45,cooldown:.75,knockback:8},
  blaster:{damage:7,range:0,cooldown:.5,knockback:5,projectileSpeed:14},
