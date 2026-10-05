@@ -23,16 +23,7 @@ const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
  fortress:{id:"fortress",name:"FORTRESS",speedMultiplier:.9,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-9,9],platforms:[{x:-12,y:-.25,width:24,height:.5}]}
 };
 interface EnvironmentTemplate{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;}
-const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate[]>>={
- classic:[{kind:"barrel",x:-1.7,y:.5,width:.72,height:1,hp:28},{kind:"box",x:1.4,y:.56,width:1,height:1.12,hp:40},{kind:"rock",x:-2.15,y:2.78,width:.9,height:.82,hp:34},{kind:"bounce",x:5.2,y:.1,width:1.3,height:.2,hp:1}],
- towers:[{kind:"wall",x:0,y:.95,width:.75,height:1.9,hp:70},{kind:"barrel",x:-6.3,y:2.15,width:.72,height:1,hp:28},{kind:"box",x:5.8,y:2.2,width:1,height:1.1,hp:40},{kind:"bounce",x:0,y:3.72,width:1.35,height:.2,hp:1}],
- pit:[{kind:"barrel",x:-8.1,y:.5,width:.72,height:1,hp:28},{kind:"barrel",x:8.1,y:.5,width:.72,height:1,hp:28},{kind:"rock",x:0,y:4.42,width:.95,height:.84,hp:34},{kind:"trap",x:0,y:.03,width:2.8,height:.18,hp:1}],
- steps:[{kind:"box",x:-7.8,y:1.65,width:1,height:1,hp:40},{kind:"barrel",x:5.8,y:1.62,width:.72,height:1,hp:28},{kind:"bounce",x:0,y:3.02,width:1.3,height:.2,hp:1},{kind:"rock",x:2.8,y:2.72,width:.85,height:.78,hp:30}],
- zigzag:[{kind:"barrel",x:-5.8,y:.5,width:.72,height:1,hp:28},{kind:"box",x:3.8,y:1.85,width:1,height:1,hp:40},{kind:"bounce",x:-1.4,y:3.02,width:1.25,height:.2,hp:1},{kind:"rock",x:7.6,y:3.98,width:.8,height:.7,hp:26}],
- sky:[{kind:"bounce",x:-4.2,y:.1,width:1.3,height:.2,hp:1},{kind:"box",x:5.2,y:2.25,width:1,height:1,hp:40},{kind:"rock",x:3.1,y:5.15,width:.82,height:.7,hp:28},{kind:"trap",x:0,y:4.9,width:1.8,height:.16,hp:1}],
- moving:[{kind:"box",x:-7.2,y:2.0,width:1,height:1,hp:40},{kind:"barrel",x:5.3,y:.5,width:.72,height:1,hp:28},{kind:"bounce",x:-.5,y:3.05,width:1.25,height:.2,hp:1},{kind:"rock",x:6.9,y:3.82,width:.86,height:.76,hp:30}],
- fortress:[]
-};const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number;radius?:number;automatic?:boolean}>>={
+const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate[]>>={classic:[],towers:[],pit:[],steps:[],zigzag:[],sky:[],moving:[],fortress:[]}const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number;radius?:number;automatic?:boolean}>>={
  blade:{damage:8,range:1.35,cooldown:.32,knockback:4},
  hammer:{damage:14,range:1.45,cooldown:.75,knockback:8},
  blaster:{damage:7,range:0,cooldown:.5,knockback:5,projectileSpeed:14},
