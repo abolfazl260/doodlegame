@@ -110,7 +110,8 @@ const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate
  reactor:[
   {kind:"gravity",x:0,y:2.35,width:.9,height:.9,hp:0},
   {kind:"rock",x:-3.8,y:.78,width:1.05,height:1.05,hp:28},
-  {kind:"rock",x:3.8,y:.78,width:1.05,height:1.05,hp:28}
+  {kind:"box",x:2.7,y:.8,width:.9,height:.9,hp:18},
+  {kind:"rock",x:4.2,y:.78,width:1.05,height:1.05,hp:28}
  ]
 };
 const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number;radius?:number;automatic?:boolean}>>={
