@@ -261,12 +261,16 @@ export class GameUI{
   for(const item of this.arenaList.children){
    const button=item as HTMLButtonElement;
    const id=button.dataset.arena as ArenaId;
-   button.classList.toggle("active",id===s.arena);
+   const selected=id===s.arena;
+   button.classList.toggle("active",selected);
+   button.setAttribute("aria-pressed",String(selected));
    button.textContent=messages.arenas[id];
   }
   for(const item of this.modeList.children){
    const button=item as HTMLButtonElement;
-   button.classList.toggle("active",button.dataset.mode===s.mode);
+   const selected=button.dataset.mode===s.mode;
+   button.classList.toggle("active",selected);
+   button.setAttribute("aria-pressed",String(selected));
   }
   const missileRules=s.mode==="missile-duel"||(s.arena==="fortress"&&s.mode==="duel");
   for(const item of this.weaponList.children){
