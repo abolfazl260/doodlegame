@@ -102,9 +102,9 @@ test('reactor gravity well pulls fighters, boxes and projectiles toward its cent
  game.projectiles=[projectile];game.updateProjectiles(.1);
  assert.ok(projectile.vx<0,'projectile should curve toward reactor center');
 
- const box=game.environment.find(e=>e.kind==='rock');assert.ok(box);
- // Rocks stay static; movable boxes are the only environment bodies integrated.
- assert.equal(box.vx,0);
+ const box=game.environment.find(e=>e.kind==='box');assert.ok(box);
+ const beforeBoxVx=box.vx;game.updateEnvironment(.1);
+ assert.ok(box.vx<beforeBoxVx,'movable cover should also accelerate toward reactor center');
 });
 
 test('active melee parry redirects ownership while projectiles continue aging',()=>{
