@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "state": "disabled",
+  "reviewIssue": 25,
+  "adsEnabled": false,
+  "billingEnabled": false,
+  "privacyReviewApproved": false,
+  "audienceReviewApproved": false,
+  "sdkPolicyReviewApproved": false,
+  "consentReviewApproved": false,
+  "playBillingReviewApproved": false,
+  "externalPaymentPolicyReviewApproved": false,
+  "testFiles": []
+}
