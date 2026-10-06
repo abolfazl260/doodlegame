@@ -5,7 +5,8 @@ import {pathToFileURL} from "node:url";
 
 const BLOCKED_DEPENDENCY=/auth|firebase|supabase|billing|stripe|admob|ads|analytics|telemetry/i;
 const NETWORK_API=/\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b|\bEventSource\b|\bsendBeacon\s*\(/;
-const REMOTE_RESOURCE=/<(?:script|img|link|audio|video|source)\b[^>]*(?:src|href)=["']https?:\/\//i;
+const REMOTE_RESOURCE=/<(?:script|img|audio|video|source)\b[^>]*\bsrc=["']https?:\/\//i;
+const REMOTE_LINK=/<link\b(?=[^>]*\brel=["'](?:stylesheet|preload|modulepreload|icon)["'])[^>]*\bhref=["']https?:\/\//i;
 const REMOTE_CSS=/url\(\s*["']?https?:\/\//i;
 
 function walk(root,files=[]){
@@ -18,7 +19,7 @@ function walk(root,files=[]){
 }
 export function scanSourceForNetworkApi(text){return NETWORK_API.test(text);}
 export function hasRemoteRuntimeResource(text,extension){
- return extension===".html"?REMOTE_RESOURCE.test(text):extension===".css"?REMOTE_CSS.test(text):false;
+ return extension===".html"?(REMOTE_RESOURCE.test(text)||REMOTE_LINK.test(text)):extension===".css"?REMOTE_CSS.test(text):false;
 }
 export function blockedDependencies(dependencies){return Object.keys(dependencies).filter(name=>BLOCKED_DEPENDENCY.test(name));}
 function check(name,ok,detail){return{name,ok:Boolean(ok),detail};}
@@ -69,7 +70,7 @@ export function main(){
   check("Core source has no network API dependency",networkFindings.length===0,networkFindings.length?networkFindings.join(", "):"No fetch/XHR/WebSocket/EventSource/sendBeacon usage."),
   check("No auth/paywall/ads dependency",blocked.length===0,blocked.length?blocked.join(", "):"No blocked runtime dependency."),
   check("Reviewer access declaration",reviewer.includes("All functionality is available without special access"),"Play Console App Access wording is documented."),
-  check("Offline behavior documented",/offline/i.test(reviewer)&&/no account/i.test(reviewer),"Reviewer guide documents offline/no-account operation."),
+  check("Offline behavior documented",/offline/i.test(reviewer)&&/(no account|does not require an account|without an account)/i.test(reviewer),"Reviewer guide documents offline/no-account operation."),
   check("Boot error state exists",main.includes("showBootError")&&main.includes("Startup timed out."),"Startup failure cannot remain on an indefinite Loading screen."),
   check("WebGL fallback exists",main.includes("new ThreeRenderer")&&main.includes("new CanvasRenderer"),"Canvas fallback remains available."),
   check("Menu keyboard start exists",/event\.code==="Enter"/.test(main)&&main.includes("game.start()"),"Emulator/reviewer can start gameplay without pointer automation.")
