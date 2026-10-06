@@ -5,3 +5,10 @@ dist
 *.local
 
 .test-build/
+
+# Generated Android project and local signing material
+android/
+*.jks
+*.keystore
+keystore.properties
+release-keystore.properties
