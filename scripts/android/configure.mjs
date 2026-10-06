@@ -81,6 +81,14 @@ if (!gradle.includes(signingMarker)) {
 write(appGradlePath, gradle);
 
 let manifest = read(manifestPath);
+manifest = manifest.replace(
+  "<application",
+  '<application\n        android:hardwareAccelerated="true"\n        android:usesCleartextTraffic="false"'
+);
+manifest = manifest.replace(
+  /\s*<uses-permission android:name="android\.permission\.INTERNET" \/>/,
+  ""
+);
 if (!manifest.includes('android:screenOrientation="landscape"')) {
   manifest = manifest.replace(
     'android:name=".MainActivity"',
