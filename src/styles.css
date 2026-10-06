@@ -115,3 +115,69 @@ html[dir="rtl"] .game-ui__help,html[dir="rtl"] .game-ui__upgrade-grid button{tex
 html[dir="rtl"] .game-ui__missile-panel label{text-align:right}
 
 @media (max-width:640px){.game-ui__arena-list,.game-ui__mode-list{gap:.32rem}.game-ui__arena-list button,.game-ui__mode-list button{padding:.4rem .62rem;font-size:.68rem}.game-ui__section-title{font-size:.58rem;letter-spacing:.12em}}
+
+
+/* Native/mobile safe-area and compact touch HUD overrides. Capacitor 8 SystemBars
+   injects --safe-area-inset-* on Android WebViews that report env() incorrectly. */
+:root{
+ --safe-top:var(--safe-area-inset-top,env(safe-area-inset-top,0px));
+ --safe-right:var(--safe-area-inset-right,env(safe-area-inset-right,0px));
+ --safe-bottom:var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px));
+ --safe-left:var(--safe-area-inset-left,env(safe-area-inset-left,0px));
+}
+
+.game-ui:not(.playing){
+ max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 2rem);
+ max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 2rem);
+}
+
+@media (pointer:coarse){
+ .game-ui__joystick{
+  left:calc(var(--safe-left) + 1rem);
+  bottom:calc(var(--safe-bottom) + 1rem);
+ }
+ .game-ui__mobile-button--attack{
+  right:calc(var(--safe-right) + 1rem);
+  bottom:calc(var(--safe-bottom) + 1rem);
+ }
+ .game-ui__mobile-button--jump{
+  right:calc(var(--safe-right) + 1rem + clamp(74px,18vmin,96px));
+  bottom:calc(var(--safe-bottom) + 1.35rem);
+ }
+ .game-ui.playing .health-bar{top:calc(var(--safe-top) + 1rem)}
+ .game-ui.playing .health-bar--player{left:calc(var(--safe-left) + 1rem)}
+ .game-ui.playing .health-bar--opponent{right:calc(var(--safe-right) + 1rem)}
+ .game-ui.playing p:first-of-type{top:calc(var(--safe-top) + .45rem)}
+ .game-ui.playing p:nth-of-type(2){top:calc(var(--safe-top) + 2rem)}
+ .game-ui.playing .game-ui__weapon-list{top:calc(var(--safe-top) + 3rem)}
+ .game-ui.playing .game-ui__bow-panel{
+  bottom:calc(var(--safe-bottom) + clamp(5.4rem,19vmin,7rem));
+ }
+}
+
+@media (pointer:coarse) and (max-width:900px){
+ .game-ui.playing .game-ui__missile-panel{
+  left:auto;
+  right:calc(var(--safe-right) + .65rem);
+  bottom:calc(var(--safe-bottom) + clamp(5.25rem,18vmin,6.5rem));
+  transform:none;
+  width:min(48vw,13.5rem);
+  padding:.3rem .45rem;
+  gap:.2rem;
+  border-color:#555;
+  background:#000a;
+ }
+ .game-ui.playing .game-ui__missile-panel strong,
+ .game-ui.playing .game-ui__missile-panel button{
+  display:none!important;
+ }
+ .game-ui.playing .game-ui__missile-panel label{
+  grid-template-columns:2.55rem minmax(4.5rem,1fr) 2.35rem;
+  gap:.25rem;
+  font-size:.6rem;
+ }
+ .game-ui.playing .game-ui__missile-panel input[type="range"]{
+  min-width:0;
+  height:1.35rem;
+ }
+}
