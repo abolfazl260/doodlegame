@@ -7,9 +7,10 @@ import {WebFrameScheduler} from "./platform/web/WebFrameScheduler";
 import {WebInput} from "./platform/web/WebInput";
 import {WebStorage} from "./platform/web/WebStorage";
 import {installNativeAppLifecycle} from "./platform/mobile/NativeAppLifecycle";
+import {installWebVisibilityLifecycle} from "./platform/web/WebVisibilityLifecycle";
 import {CanvasRenderer} from "./rendering/CanvasRenderer";
-import type {Renderer} from "./rendering/Renderer";
 import {ThreeRenderer} from "./rendering/ThreeRenderer";
+import {createRendererWithFallback} from "./rendering/RendererFactory";
 import {GameUI} from "./ui/GameUI";
 import type {ArenaId,GameModeId} from "./gameplay/GameSession";
 
@@ -42,18 +43,19 @@ try{
  const input=new WebInput(canvas);
  const storage=new WebStorage();
  const i18n=new I18n(storage);
- let renderer:Renderer;
- try{
-  renderer=new ThreeRenderer(canvas);
- }catch(error){
-  console.warn("WebGL renderer unavailable; using canvas fallback.",error);
-  renderer=new CanvasRenderer(canvas);
- }
+ const renderer=createRendererWithFallback(
+  ()=>new ThreeRenderer(canvas),
+  ()=>new CanvasRenderer(canvas),
+  error=>console.warn("WebGL renderer unavailable; using canvas fallback.",error)
+ );
 
  const game=new Game(renderer,new GameSession(input),new WebFrameScheduler(),error=>console.error("DoodleGame error:",error));
  const pauseGame=()=>{input.resetTransientState();game.pause();};
  const resumeGame=()=>{input.resetTransientState();game.resume();};
  const stopToMenu=()=>{input.resetTransientState();game.stop();};
+ const disposeWebVisibility=installWebVisibilityLifecycle(document,()=>{
+  if(game.getState()===GameState.PLAYING)pauseGame();
+ });
 
  const ui=new GameUI(root,{
   start:()=>game.start(),
@@ -112,6 +114,7 @@ try{
  const resize=()=>game.resize();
  window.addEventListener("resize",resize);
  window.addEventListener("beforeunload",()=>{
+  disposeWebVisibility();
   disposeNativeLifecycle();
   input.dispose();
   game.dispose();
