@@ -299,6 +299,7 @@ export class GameSession{
 
   const order=previousOrder||currentOrder||1;
   const left=order>0?a:b,right=order>0?b:a;
+  const leftStart=left.x,rightStart=right.x;
   const midpoint=(a.x+b.x)/2;
   const separation=PH+.002;
   left.x=midpoint-separation/2;
@@ -313,11 +314,11 @@ export class GameSession{
    }
   }
 
-  this.resolveStaticHorizontalOverlap(left);
-  this.resolveStaticHorizontalOverlap(right);
+  this.resolveStaticHorizontalOverlap(left,leftStart);
+  this.resolveStaticHorizontalOverlap(right,rightStart);
   return true;
  }
- private resolveStaticHorizontalOverlap(f:Fighter){
+ private resolveStaticHorizontalOverlap(f:Fighter,previousX:number){
   const bounds=this.platforms.reduce((b,p)=>({min:Math.min(b.min,p.x),max:Math.max(b.max,p.x+p.width)}),{min:Infinity,max:-Infinity});
   let min=Math.max(bounds.min+PH/2,-6+PH/2),max=Math.min(bounds.max-PH/2,6-PH/2);
   if(this.arenaId==="fortress"&&this.modeId==="duel"){
@@ -330,24 +331,18 @@ export class GameSession{
    if(p.surface==="oneWay")continue;
    const top=p.y+p.height;
    const vertical=f.y-HH/2<top-.01&&f.y+HH/2>p.y+.01;
-   const overlap=f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width;
-   if(!vertical||!overlap)continue;
-   const pushLeft=(f.x+PH/2)-p.x;
-   const pushRight=(p.x+p.width)-(f.x-PH/2);
-   if(pushLeft<=pushRight){f.x=p.x-PH/2;if(f.velocityX>0)f.velocityX=0;}
-   else{f.x=p.x+p.width+PH/2;if(f.velocityX<0)f.velocityX=0;}
+   if(!vertical)continue;
+   if(previousX+PH/2<=p.x&&f.x+PH/2>p.x){f.x=p.x-PH/2;if(f.velocityX>0)f.velocityX=0;}
+   else if(previousX-PH/2>=p.x+p.width&&f.x-PH/2<p.x+p.width){f.x=p.x+p.width+PH/2;if(f.velocityX<0)f.velocityX=0;}
   }
 
   for(const e of this.environment){
    if(!e.active||e.kind!=="wall")continue;
    const left=e.x-e.width/2,right=e.x+e.width/2,bottom=e.y-e.height/2,top=e.y+e.height/2;
    const vertical=f.y-HH/2<top&&f.y+HH/2>bottom;
-   const overlap=f.x+PH/2>left&&f.x-PH/2<right;
-   if(!vertical||!overlap)continue;
-   const pushLeft=(f.x+PH/2)-left;
-   const pushRight=right-(f.x-PH/2);
-   if(pushLeft<=pushRight){f.x=left-PH/2;if(f.velocityX>0)f.velocityX=0;}
-   else{f.x=right+PH/2;if(f.velocityX<0)f.velocityX=0;}
+   if(!vertical)continue;
+   if(previousX+PH/2<=left&&f.x+PH/2>left){f.x=left-PH/2;if(f.velocityX>0)f.velocityX=0;}
+   else if(previousX-PH/2>=right&&f.x-PH/2<right){f.x=right+PH/2;if(f.velocityX<0)f.velocityX=0;}
   }
 
   f.x=Math.max(min,Math.min(max,f.x));
