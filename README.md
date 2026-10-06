@@ -63,16 +63,24 @@ The gameplay layer is kept separate from browser APIs where practical so the gam
 
 ### Arenas
 
-The game currently includes three selectable arenas:
+The game currently includes 16 selectable arenas:
 
-- **Classic** — standard platforms and open movement.
-- **Towers** — multiple elevated platforms and vertical combat.
-- **Pit** — a compact arena with a central gap and trap pressure.
-- **Steps** — staggered vertical platforms.
+- **Classic** — standard platforms with ice and slippery surfaces.
+- **Towers** — elevated vertical combat with one-way platforms.
+- **Pit** — split ground with lethal fall pressure.
+- **Steps** — staggered platforms with mixed traction.
 - **Zigzag** — moving-platform traversal and one-way movement.
-- **Sky** — high vertical combat with bounce/trap interactions.
+- **Sky** — lighter gravity and high-platform combat.
 - **Moving** — continuous moving-platform combat.
 - **Fortress** — the dedicated missile arena.
+- **Bridge** — destructible bridge cover over a fall zone.
+- **Crater** — recessed terrain with destructible cover.
+- **Vertical** — wall-jump and multi-level combat.
+- **Ruins** — broken moving terrain with mixed surfaces.
+- **Conveyor** — alternating floor belts physically carry grounded fighters in opposite directions.
+- **Collapse** — cracked bridge sections arm under a fighter and collapse after a short warning window.
+- **Storm** — oscillating wind gusts push fighters, movable cover, and projectiles.
+- **Reactor** — a local gravity well pulls fighters, movable cover, and projectiles toward the arena core.
 
 ### Weapons
 
@@ -81,9 +89,11 @@ Eight weapons are currently available:
 - Blade
 - Hammer
 - Blaster
+- UZI
 - Boomerang
 - Bow
 - Bomb
+- Missile
 
 Weapons have different damage, range, cooldown, knockback, and projectile behavior.
 
