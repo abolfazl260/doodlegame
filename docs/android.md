@@ -190,7 +190,7 @@ The release workflow rejects a mismatched tag.
 - landscape activity orientation
 - explicit WebView hardware acceleration
 - cleartext traffic disabled
-- removal of the template INTERNET permission because the packaged game is offline
+- Capacitor's INTERNET permission retained because native WebView startup/lifecycle validation depends on the packaged app's WebView networking stack
 
 Do not edit generated files under `android/` and expect those changes to persist. Put reproducible native changes in the configuration script instead.
 
