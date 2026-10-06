@@ -115,6 +115,7 @@ write(manifestPath, manifest);
 
 write(mainActivityPath, `package com.abolfazl.doodlegame;
 
+import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
@@ -123,7 +124,8 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG);
+        boolean debuggable = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+        WebView.setWebContentsDebuggingEnabled(debuggable);
         getBridge().getWebView().getSettings().setAllowFileAccess(false);
         getBridge().getWebView().getSettings().setAllowContentAccess(false);
     }
