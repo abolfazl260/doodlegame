@@ -24,8 +24,9 @@ const variablesPath = "android/variables.gradle";
 const appGradlePath = "android/app/build.gradle";
 const manifestPath = "android/app/src/main/AndroidManifest.xml";
 const stylesPath = "android/app/src/main/res/values/styles.xml";
+const mainActivityPath = "android/app/src/main/java/com/abolfazl/doodlegame/MainActivity.java";
 
-for (const path of [variablesPath, appGradlePath, manifestPath, stylesPath]) {
+for (const path of [variablesPath, appGradlePath, manifestPath, stylesPath, mainActivityPath]) {
   if (!existsSync(path)) {
     throw new Error(`Expected Capacitor Android file is missing: ${path}`);
   }
@@ -81,6 +82,14 @@ if (!gradle.includes(signingMarker)) {
 write(appGradlePath, gradle);
 
 let manifest = read(manifestPath);
+const setApplicationAttribute = (name, value) => {
+  const pattern = new RegExp(`android:${name}="[^"]*"`);
+  if (pattern.test(manifest)) manifest = manifest.replace(pattern, `android:${name}="${value}"`);
+  else manifest = manifest.replace("<application", `<application\n        android:${name}="${value}"`);
+};
+setApplicationAttribute("allowBackup", "false");
+setApplicationAttribute("fullBackupContent", "@xml/doodlegame_backup_rules");
+setApplicationAttribute("dataExtractionRules", "@xml/doodlegame_data_extraction_rules");
 if (!manifest.includes('android:hardwareAccelerated="true"')) {
   manifest = manifest.replace(
     "<application",
@@ -104,6 +113,25 @@ manifest = manifest
   .replace(/android:roundIcon="@mipmap\/ic_launcher_round"/, 'android:roundIcon="@mipmap/doodlegame_launcher_round"');
 write(manifestPath, manifest);
 
+write(mainActivityPath, `package com.abolfazl.doodlegame;
+
+import android.content.pm.ApplicationInfo;
+import android.os.Bundle;
+import android.webkit.WebView;
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        boolean debuggable = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+        WebView.setWebContentsDebuggingEnabled(debuggable);
+        getBridge().getWebView().getSettings().setAllowFileAccess(false);
+        getBridge().getWebView().getSettings().setAllowContentAccess(false);
+    }
+}
+`);
+
 const brandingPath = "assets/android/branding.json";
 if (!existsSync(brandingPath)) {
   throw new Error(`Android branding source is missing: ${brandingPath}`);
@@ -119,9 +147,46 @@ const {
 } = branding;
 
 const resRoot = "android/app/src/main/res";
-for (const relative of ["values", "drawable", "mipmap-anydpi", "mipmap-anydpi-v26"]) {
+for (const relative of ["values", "drawable", "xml", "mipmap-anydpi", "mipmap-anydpi-v26"]) {
   ensureDir(join(resRoot, relative));
 }
+
+write(join(resRoot, "xml/doodlegame_backup_rules.xml"), `<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <exclude domain="root" path="." />
+    <exclude domain="file" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="external" path="." />
+</full-backup-content>
+`);
+
+write(join(resRoot, "xml/doodlegame_data_extraction_rules.xml"), `<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+        <exclude domain="device_root" path="." />
+        <exclude domain="device_file" path="." />
+        <exclude domain="device_database" path="." />
+        <exclude domain="device_sharedpref" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+        <exclude domain="device_root" path="." />
+        <exclude domain="device_file" path="." />
+        <exclude domain="device_database" path="." />
+        <exclude domain="device_sharedpref" path="." />
+    </device-transfer>
+</data-extraction-rules>
+`);
 
 write(join(resRoot, "values/doodlegame_colors.xml"), `<?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -203,6 +268,7 @@ write(stylesPath, styles);
 
 console.log(`Android config ready: versionName=${packageJson.version}, versionCode=${versionCode}, SDK 24/36.`);
 console.log("Android branding ready: adaptive/legacy launcher icon + black doodle splash.");
+console.log("Android production hardening ready: backups excluded, WebView debugging bound to BuildConfig.DEBUG, file/content access disabled.");
 if (!process.env.ANDROID_KEYSTORE_PATH) {
   console.log("Release signing is not configured; release artifacts will be unsigned until signing env vars are provided.");
 }

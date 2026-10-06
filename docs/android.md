@@ -45,6 +45,8 @@ npm run android:build:debug
 npm run android:build:release
 npm run android:bundle:release
 npm run android:verify:play
+npm run android:audit:privacy
+npm run android:verify:production
 npm run android:reset
 ```
 
@@ -287,3 +289,44 @@ This smoke test is intentionally not treated as a replacement for real-device ga
 ## Remaining device acceptance work
 
 Automated CI now validates web build, Debug APK, unsigned Release APK/AAB, cold start and basic Android lifecycle on an emulator. Physical-device checks still need to cover audio/WebGL quality, multitouch feel across multiple aspect ratios, notch/cutout devices, and real task-switch/back-button behavior during an active fight. Any device-specific defect discovered there should be handled as a separate fix.
+
+
+## Production hardening verification
+
+After the Release APK/AAB is built, run:
+
+```bash
+npm run android:verify:production
+```
+
+The production verifier inspects the merged **release** manifest and the packaged Android web assets. It is blocking in both Android CI and the signed release workflow.
+
+It verifies:
+
+- release is not debuggable or test-only
+- cleartext traffic is disabled and hardware acceleration remains enabled
+- cloud backup and device-transfer extraction are explicitly excluded
+- every Android component declares `android:exported`; only the launcher activity may be exported without an access permission
+- release permissions still match the reviewed privacy allowlist
+- app label remains `DoodleGame`
+- WebView remote debugging follows `BuildConfig.DEBUG`, so release builds explicitly disable it
+- WebView file/content access are disabled
+- Capacitor adds no extra in-WebView navigation origins and has no dev-server URL
+- Android release assets contain no source maps
+- packaged HTML/JS/CSS/JSON/XML/TXT contain no localhost/emulator/HMR/live-reload endpoints or common embedded-secret signatures
+
+Evidence is written to:
+
+```text
+artifacts/production-hardening/production-hardening.md
+artifacts/production-hardening/production-hardening.json
+artifacts/production-hardening/merged-release-manifest.xml
+```
+
+### Backup policy
+
+DoodleGame currently stores only recreatable local preferences/progression and does not provide account/cloud sync. Android backup is therefore disabled. The generated Android project sets `android:allowBackup="false"` and also generates explicit legacy/full backup plus Android 12+ data-extraction rules excluding app data from cloud backup and device transfer.
+
+### WebView policy
+
+The generated `MainActivity` explicitly binds WebView debugging to `BuildConfig.DEBUG`; production releases therefore set it to false. Local file and content-provider access are disabled because Capacitor serves packaged game assets through its internal web server rather than `file://` URLs. `server.allowNavigation` is explicitly empty, so no external origin is added to the app WebView navigation allowlist.

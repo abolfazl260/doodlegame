@@ -44,6 +44,16 @@ jobs:
       - name: Audit Google Play privacy surface
         run: npm run android:audit:privacy
 
+      - name: Verify production hardening
+        run: npm run android:verify:production
+
+      - name: Upload production hardening report
+        uses: actions/upload-artifact@v4
+        with:
+          name: doodlegame-production-hardening
+          path: artifacts/production-hardening/
+          if-no-files-found: error
+
       - name: Upload privacy audit report
         uses: actions/upload-artifact@v4
         with:
