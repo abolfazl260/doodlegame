@@ -167,10 +167,15 @@ export function main(){
   audienceDoc
  });
 
+ const requireAndroidManifest=process.env.DOODLEGAME_REQUIRE_ANDROID_MANIFEST==="1";
  const checks=[
   check("Issue #22 review pointer",baseline.reviewIssue===22,`reviewIssue=${baseline.reviewIssue}`),
   check("Reviewed target age profile",validation.problems.length===0,validation.problems.length?validation.problems.join("; "):"13+ profile, SDKs, permissions and copy match the reviewed audience decision."),
-  check("Merged/static manifest inspected",manifests.length>0,manifests.length?manifests.join(", "):"No Android manifest available.")
+  check(
+   "Android manifest inspection",
+   !requireAndroidManifest||manifests.length>0,
+   manifests.length?manifests.join(", "):(requireAndroidManifest?"Android manifest is required in this job.":"No Android manifest yet; merged-manifest enforcement runs in the Android job.")
+  )
  ];
  const report={
   ok:checks.every(item=>item.ok),
