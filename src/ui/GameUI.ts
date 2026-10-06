@@ -74,7 +74,7 @@ export class GameUI{
  private unsubscribe:(()=>void)|null=null;
  private unsubscribeLocale:(()=>void)|null=null;
  private readHud:(()=>HudState)|null=null;
- private hudFrame=0;
+ private hudFrame:number|null=null;
  private currentState=GameState.MENU;
 
  constructor(container:HTMLElement,actions:Actions,private readonly i18n:I18n){
@@ -251,14 +251,33 @@ export class GameUI{
 
  bind(subscribe:(listener:(state:GameState)=>void)=>()=>void,read:()=>HudState){
   this.unsubscribe?.();
+  this.stopHudLoop();
   this.readHud=read;
-  this.unsubscribe=subscribe(state=>{this.currentState=state;this.render(state,read());});
+  this.unsubscribe=subscribe(state=>{
+   this.currentState=state;
+   this.render(state,read());
+   if(state===GameState.PLAYING)this.startHudLoop();
+   else this.stopHudLoop();
+  });
+  this.currentState=GameState.MENU;
   this.render(GameState.MENU,read());
+ }
+
+ private startHudLoop(){
+  if(this.hudFrame!==null)return;
   const frame=()=>{
-   if(this.currentState===GameState.PLAYING)this.render(this.currentState,read());
+   this.hudFrame=null;
+   if(this.currentState!==GameState.PLAYING||!this.readHud)return;
+   this.render(this.currentState,this.readHud());
    this.hudFrame=window.requestAnimationFrame(frame);
   };
   this.hudFrame=window.requestAnimationFrame(frame);
+ }
+
+ private stopHudLoop(){
+  if(this.hudFrame===null)return;
+  window.cancelAnimationFrame(this.hudFrame);
+  this.hudFrame=null;
  }
 
  render(state:GameState,s:HudState){
@@ -347,7 +366,7 @@ export class GameUI{
  dispose(){
   this.unsubscribe?.();
   this.unsubscribeLocale?.();
-  if(this.hudFrame)window.cancelAnimationFrame(this.hudFrame);
+  this.stopHudLoop();
   this.root.remove();
  }
 
