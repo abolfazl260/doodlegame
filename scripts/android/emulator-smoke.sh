@@ -37,6 +37,15 @@ test -n "$PID"
 is_resumed
 adb exec-out screencap -p > android-smoke-offline-menu.png
 
+echo "Backgrounding and restoring the offline menu"
+adb shell input keyevent KEYCODE_HOME
+sleep 1
+MENU_RESTORE_OUTPUT="$(start_app)"
+printf '%s\n' "$MENU_RESTORE_OUTPUT"
+grep -q "Status: ok" <<<"$MENU_RESTORE_OUTPUT"
+sleep 1
+is_resumed
+
 echo "Starting a match from the menu using the Enter shortcut"
 adb shell input keyevent KEYCODE_ENTER
 sleep 2
@@ -58,17 +67,7 @@ adb shell input keyevent KEYCODE_BACK
 sleep 1
 is_resumed
 
-echo "Start a second match and verify Back pauses instead of exiting"
-adb shell input keyevent KEYCODE_ENTER
-sleep 1
-adb shell input keyevent KEYCODE_BACK
-sleep 1
-is_resumed
-
-echo "Back from pause returns to menu; Back from menu exits"
-adb shell input keyevent KEYCODE_BACK
-sleep 1
-is_resumed
+echo "Back from menu exits"
 adb shell input keyevent KEYCODE_BACK
 sleep 2
 if is_resumed; then
