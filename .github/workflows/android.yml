@@ -47,6 +47,16 @@ jobs:
       - name: Verify production hardening
         run: npm run android:verify:production
 
+      - name: Verify Google Play reviewer readiness
+        run: npm run android:verify:review
+
+      - name: Upload reviewer readiness report
+        uses: actions/upload-artifact@v4
+        with:
+          name: doodlegame-review-readiness
+          path: artifacts/review-readiness/
+          if-no-files-found: error
+
       - name: Upload production hardening report
         uses: actions/upload-artifact@v4
         with:
@@ -124,7 +134,10 @@ jobs:
         with:
           name: doodlegame-emulator-smoke
           path: |
-            android-smoke-launch.png
+            android-smoke-offline-menu.png
+            android-smoke-offline-match.png
+            android-smoke-restored-paused.png
+            android-smoke-resized.png
             android-smoke-final.png
             emulator-logcat.txt
           if-no-files-found: warn
