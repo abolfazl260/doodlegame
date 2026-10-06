@@ -57,10 +57,16 @@ Debug APK:
 android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Release APK:
+Signed release APK:
 
 ```text
 android/app/build/outputs/apk/release/app-release.apk
+```
+
+Unsigned release APK (when signing variables are not set):
+
+```text
+android/app/build/outputs/apk/release/app-release-unsigned.apk
 ```
 
 Release Android App Bundle:
@@ -168,7 +174,7 @@ The release workflow rejects a mismatched tag.
 
 ## CI behavior
 
-`.github/workflows/android.yml` builds and uploads a Debug APK on pull requests, pushes to `main`, and manual runs.
+`.github/workflows/android.yml` runs the existing regression tests, builds/uploads a Debug APK, and also validates unsigned Release APK/AAB packaging (including R8/resource shrinking) on pull requests, pushes to `main`, and manual runs.
 
 `.github/workflows/android-release.yml` builds signed APK/AAB artifacts for version tags and manual runs. Tag builds also create/update the matching GitHub Release and attach both Android artifacts.
 
