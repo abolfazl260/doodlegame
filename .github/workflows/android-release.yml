@@ -80,6 +80,16 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: node scripts/android/gradle.mjs assembleRelease bundleRelease
 
+      - name: Audit Google Play privacy surface
+        run: npm run android:audit:privacy
+
+      - name: Upload privacy audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: doodlegame-privacy-audit
+          path: artifacts/privacy-audit/
+          if-no-files-found: error
+
       - name: Verify signed Google Play artifact
         run: npm run android:verify:play -- --apk android/app/build/outputs/apk/release/app-release.apk
 

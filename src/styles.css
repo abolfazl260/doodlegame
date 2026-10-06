@@ -181,3 +181,27 @@ html[dir="rtl"] .game-ui__missile-panel label{text-align:right}
   height:1.35rem;
  }
 }
+
+
+/* Google Play privacy surface: full local copy remains available without network. */
+.game-ui__privacy{
+ width:min(34rem,calc(100vw - 3rem));
+ max-height:min(62vh,30rem);
+ overflow:auto;
+ padding:.9rem 1rem;
+ border:1px solid #555;
+ border-radius:.55rem;
+ background:#050505;
+ color:#fff;
+ text-align:left;
+ font-size:.78rem;
+ line-height:1.5;
+}
+.game-ui__privacy[hidden]{display:none}
+.game-ui__privacy>strong{display:block;margin-bottom:.5rem;text-align:center;font-size:.9rem;letter-spacing:.08em}
+.game-ui__privacy-content p{margin:.55rem 0}
+.game-ui__privacy a{display:inline-block;margin:.4rem 0;color:#fff;text-decoration:underline}
+.game-ui__privacy-network{display:block;color:#aaa;margin:.2rem 0 .65rem}
+.game-ui__privacy button{width:100%;min-width:0}
+.game-ui.playing .game-ui__privacy,.game-ui.playing button[data-privacy]{display:none!important}
+html[dir="rtl"] .game-ui__privacy{text-align:right}

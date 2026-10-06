@@ -18,6 +18,7 @@ type UiAction="start"|"pause"|"resume"|"restart";
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
+const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";
 
 export class GameUI{
  private root=document.createElement("section");
@@ -32,6 +33,13 @@ export class GameUI{
  private bowValue=document.createElement("span");
  private help=document.createElement("div");
  private helpButton=document.createElement("button");
+ private privacy=document.createElement("div");
+ private privacyButton=document.createElement("button");
+ private privacyTitle=document.createElement("strong");
+ private privacyContent=document.createElement("div");
+ private privacyLink=document.createElement("a");
+ private privacyNetworkNote=document.createElement("small");
+ private privacyCloseButton=document.createElement("button");
  private title=document.createElement("h1");
  private status=document.createElement("p");
  private details=document.createElement("p");
@@ -92,6 +100,17 @@ export class GameUI{
 
   this.help.className="game-ui__help";
   this.help.hidden=true;
+
+  this.privacy.className="game-ui__privacy";
+  this.privacy.hidden=true;
+  this.privacyContent.className="game-ui__privacy-content";
+  this.privacyLink.href=PRIVACY_POLICY_URL;
+  this.privacyLink.target="_blank";
+  this.privacyLink.rel="noopener noreferrer";
+  this.privacyNetworkNote.className="game-ui__privacy-network";
+  this.privacyCloseButton.type="button";
+  this.privacyCloseButton.onclick=()=>{this.privacy.hidden=true;};
+  this.privacy.append(this.privacyTitle,this.privacyContent,this.privacyLink,this.privacyNetworkNote,this.privacyCloseButton);
 
   this.playerHealth.className="health-bar health-bar--player";
   this.opponentHealth.className="health-bar health-bar--opponent";
@@ -181,7 +200,11 @@ export class GameUI{
 
   this.helpButton.type="button";
   this.helpButton.dataset.help="true";
-  this.helpButton.onclick=()=>{this.help.hidden=!this.help.hidden;};
+  this.helpButton.onclick=()=>{this.privacy.hidden=true;this.help.hidden=!this.help.hidden;};
+
+  this.privacyButton.type="button";
+  this.privacyButton.dataset.privacy="true";
+  this.privacyButton.onclick=()=>{this.help.hidden=true;this.privacy.hidden=!this.privacy.hidden;};
 
   this.bowMeter.innerHTML="<span></span>";
   this.bowPanel.append(this.bowTitle,this.bowMeter,this.bowValue);
@@ -217,7 +240,7 @@ export class GameUI{
   this.mobileAttackButton.addEventListener("pointerup",event=>{event.preventDefault();actions.touchAttackEnd();});
   this.mobileAttackButton.addEventListener("pointercancel",event=>{event.preventDefault();actions.touchAttackEnd();});
 
-  this.root.append(this.languageControl,this.title,this.helpButton,this.help,this.status,this.details,this.upgradePanel,this.modeTitle,this.modeList,this.arenaTitle,this.arenaList,this.playerHealth,this.opponentHealth,this.weaponList,this.missilePanel,this.bowPanel,this.buttons,this.mobileControls,this.rotateHint);
+  this.root.append(this.languageControl,this.title,this.helpButton,this.privacyButton,this.help,this.privacy,this.status,this.details,this.upgradePanel,this.modeTitle,this.modeList,this.arenaTitle,this.arenaList,this.playerHealth,this.opponentHealth,this.weaponList,this.missilePanel,this.bowPanel,this.buttons,this.mobileControls,this.rotateHint);
   container.append(this.root);
   this.applyLocale();
   this.unsubscribeLocale=this.i18n.subscribe(()=>{
@@ -243,6 +266,7 @@ export class GameUI{
   this.root.classList.toggle("playing",state===GameState.PLAYING);
   this.root.classList.toggle("paused",state===GameState.PAUSED);
   this.root.classList.toggle("game-over",state===GameState.GAME_OVER);
+  if(state===GameState.PLAYING)this.privacy.hidden=true;
   this.root.dataset.arena=s.arena;
   this.root.dataset.mode=s.mode;
 
@@ -339,6 +363,12 @@ export class GameUI{
   this.rotateHint.textContent=messages.rotateHint;
   this.helpButton.textContent=messages.buttons.help;
   this.help.innerHTML=messages.helpHtml;
+  this.privacyButton.textContent=messages.privacy.button;
+  this.privacyTitle.textContent=messages.privacy.title;
+  this.privacyContent.innerHTML=messages.privacy.html;
+  this.privacyLink.textContent=messages.privacy.web;
+  this.privacyNetworkNote.textContent=messages.privacy.networkNote;
+  this.privacyCloseButton.textContent=messages.privacy.close;
   this.jumpButton.textContent=messages.buttons.jump;
   this.mobileAttackButton.textContent=messages.buttons.attack;
   this.upgradeTitle.textContent=messages.panels.weaponUpgrades;
