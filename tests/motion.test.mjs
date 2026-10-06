@@ -180,3 +180,36 @@ test('king of the hill awards uncontested center control, victory and upgrade po
  for(let i=0;i<90&&!game.winner;i++)game.update(.1);
  const state=game.getRenderState();assert.equal(state.mode,'king-of-hill');assert.ok(state.hill.player>=state.hill.target);assert.equal(state.winner,'player');assert.equal(state.upgradePoints,before+1);
 });
+
+test('fighter body collision blocks walking and dash tunneling',()=>{
+ const {game,input}=setup();
+ game.player.x=-.65;game.opponent.x=.65;game.player.y=game.opponent.y=1.15;
+ input.state={...idle,moveX:1};
+ for(let i=0;i<45;i++)game.update(1/60);
+ assert.ok(game.opponent.x-game.player.x>=.799,'walking fighters must remain separated');
+
+ game.player.x=-1;game.opponent.x=0;game.player.y=game.opponent.y=1.15;
+ game.player.velocityX=0;game.opponent.velocityX=0;game.player.facing=1;
+ input.state={...idle,dashPressed:true};
+ game.update(.1);
+ assert.ok(game.player.x<game.opponent.x,'dash must not tunnel through the opponent');
+ assert.ok(game.opponent.x-game.player.x>=.799,'dash collision must preserve body separation');
+});
+
+test('spawn and knockback overlaps depenetrate without vertical jitter',()=>{
+ const {game,input}=setup();
+ const y=game.player.y;
+ game.player.x=0;game.opponent.x=0;game.player.y=y;game.opponent.y=y;
+ game.player.velocityX=0;game.opponent.velocityX=0;
+ input.state={...idle};
+ game.update(1/120);
+ assert.ok(Math.abs(game.opponent.x-game.player.x)>=.799,'spawn overlap must be resolved');
+ assert.ok(Math.abs(game.player.y-y)<.05&&Math.abs(game.opponent.y-y)<.05,'depenetration should stay horizontal');
+
+ game.player.x=-.55;game.opponent.x=.35;game.player.y=game.opponent.y=y;
+ game.player.velocityX=20;game.opponent.velocityX=0;game.player.grounded=true;game.opponent.grounded=true;
+ game.update(1/30);
+ assert.ok(game.player.x<game.opponent.x,'knockback-speed motion must not swap fighter order');
+ assert.ok(game.opponent.x-game.player.x>=.799,'knockback-speed motion must end without overlap');
+ assert.ok([game.player.x,game.player.y,game.opponent.x,game.opponent.y].every(Number.isFinite));
+});

@@ -144,7 +144,7 @@ export class GameSession{
   }
   this.input.endFrame();
  }
- private step(dt:number,input:InputState){if(this.winner){this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);return;}this.elapsed+=dt;this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);this.updateEnvironment(dt);this.updatePlayer(input,dt);this.updateOpponent(dt);this.resolveEnvironmentFighter(this.player);this.resolveEnvironmentFighter(this.opponent);const playerWeapon=WEAPONS[this.player.weapon];if(this.player.weapon==="bow")this.updateBow(input,dt);else this.attack(this.player,this.opponent,input.attackPressed||(Boolean(playerWeapon.automatic)&&input.attackHeld));this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0){this.winner="player";this.upgradePoints++;}else this.updateHill(dt);if(!this.missileRules&&this.modeId!=="random-weapons"){if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);}}
+ private step(dt:number,input:InputState){if(this.winner){this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);return;}this.elapsed+=dt;this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);this.updateEnvironment(dt);const previousPlayerX=this.player.x,previousOpponentX=this.opponent.x;this.updatePlayer(input,dt);this.updateOpponent(dt);this.resolveCharacterCollisions(previousPlayerX,previousOpponentX);this.resolveEnvironmentFighter(this.player);this.resolveEnvironmentFighter(this.opponent);const playerWeapon=WEAPONS[this.player.weapon];if(this.player.weapon==="bow")this.updateBow(input,dt);else this.attack(this.player,this.opponent,input.attackPressed||(Boolean(playerWeapon.automatic)&&input.attackHeld));this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0){this.winner="player";this.upgradePoints++;}else this.updateHill(dt);if(!this.missileRules&&this.modeId!=="random-weapons"){if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);}}
  private updatePlayer(input:InputState,dt:number){
   const d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;
   if(input.dashPressed)this.tryDash(this.player);
@@ -276,6 +276,92 @@ export class GameSession{
    if(f.velocityY>0&&previousTop<=p.y&&f.y+HH/2>=p.y&&f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width){f.y=p.y-HH/2;f.velocityY=0;}
   }
   this.resolveEnvironmentLanding(f,previousBottom,previousX);
+ }
+ private resolveCharacterCollisions(previousPlayerX:number,previousOpponentX:number){
+  const fighters=[this.player,this.opponent] as const;
+  const previousX=[previousPlayerX,previousOpponentX] as const;
+  for(let pass=0;pass<6;pass++){
+   let resolved=false;
+   for(let i=0;i<fighters.length;i++)for(let j=i+1;j<fighters.length;j++){
+    if(this.resolveCharacterPair(fighters[i],fighters[j],previousX[i],previousX[j]))resolved=true;
+   }
+   if(!resolved)break;
+  }
+ }
+ private resolveCharacterPair(a:Fighter,b:Fighter,previousA:number,previousB:number){
+  if(HH-Math.abs(a.y-b.y)<=0)return false;
+  const previousOrder=Math.sign(previousB-previousA);
+  const currentDelta=b.x-a.x;
+  const overlap=PH-Math.abs(currentDelta);
+  const currentOrder=Math.sign(currentDelta);
+  const crossed=previousOrder!==0&&currentOrder!==0&&currentOrder!==previousOrder;
+  if(overlap<=0&&!crossed)return false;
+
+  const order=previousOrder||currentOrder||1;
+  const left=order>0?a:b,right=order>0?b:a;
+  const leftStart=left.x,rightStart=right.x;
+  const midpoint=(a.x+b.x)/2;
+  const separation=PH+.002;
+  left.x=midpoint-separation/2;
+  right.x=midpoint+separation/2;
+
+  if(left.velocityX>right.velocityX){
+   if(left.velocityX>0&&right.velocityX>=0)left.velocityX=right.velocityX;
+   else if(left.velocityX<=0&&right.velocityX<0)right.velocityX=left.velocityX;
+   else{
+    if(left.velocityX>0)left.velocityX=0;
+    if(right.velocityX<0)right.velocityX=0;
+   }
+  }
+
+  this.resolveStaticHorizontalOverlap(left,leftStart);
+  this.resolveStaticHorizontalOverlap(right,rightStart);
+
+  // A static edge may clamp one fighter back toward the pair after depenetration.
+  // Transfer the remaining correction to the other fighter instead of relying on
+  // repeated half-distance iterations that can leave a small residual overlap.
+  let residual=separation-(right.x-left.x);
+  if(residual>0){
+   const beforeRight=right.x;
+   right.x+=residual;
+   this.resolveStaticHorizontalOverlap(right,beforeRight);
+   residual=separation-(right.x-left.x);
+  }
+  if(residual>0){
+   const beforeLeft=left.x;
+   left.x-=residual;
+   this.resolveStaticHorizontalOverlap(left,beforeLeft);
+  }
+  return true;
+ }
+ private resolveStaticHorizontalOverlap(f:Fighter,previousX:number){
+  const bounds=this.platforms.reduce((b,p)=>({min:Math.min(b.min,p.x),max:Math.max(b.max,p.x+p.width)}),{min:Infinity,max:-Infinity});
+  let min=Math.max(bounds.min+PH/2,-6+PH/2),max=Math.min(bounds.max-PH/2,6-PH/2);
+  if(this.arenaId==="fortress"&&this.modeId==="duel"){
+   if(f===this.player)max=Math.min(max,-2.6);
+   else min=Math.max(min,2.6);
+  }
+  f.x=Math.max(min,Math.min(max,f.x));
+
+  for(const p of this.platforms){
+   if(p.surface==="oneWay")continue;
+   const top=p.y+p.height;
+   const vertical=f.y-HH/2<top-.01&&f.y+HH/2>p.y+.01;
+   if(!vertical)continue;
+   if(previousX+PH/2<=p.x&&f.x+PH/2>p.x){f.x=p.x-PH/2;if(f.velocityX>0)f.velocityX=0;}
+   else if(previousX-PH/2>=p.x+p.width&&f.x-PH/2<p.x+p.width){f.x=p.x+p.width+PH/2;if(f.velocityX<0)f.velocityX=0;}
+  }
+
+  for(const e of this.environment){
+   if(!e.active||e.kind!=="wall")continue;
+   const left=e.x-e.width/2,right=e.x+e.width/2,bottom=e.y-e.height/2,top=e.y+e.height/2;
+   const vertical=f.y-HH/2<top&&f.y+HH/2>bottom;
+   if(!vertical)continue;
+   if(previousX+PH/2<=left&&f.x+PH/2>left){f.x=left-PH/2;if(f.velocityX>0)f.velocityX=0;}
+   else if(previousX-PH/2>=right&&f.x-PH/2<right){f.x=right+PH/2;if(f.velocityX<0)f.velocityX=0;}
+  }
+
+  f.x=Math.max(min,Math.min(max,f.x));
  }
  private updateBow(input:InputState,dt:number){
   if(input.attackPressed&&this.player.cooldown<=0&&!this.player.bowCharging){this.player.bowCharging=true;this.player.bowCharge=0;this.player.attackTime=.12;}
