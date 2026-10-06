@@ -45,3 +45,19 @@ test('bomb and multi-stage explosion geometry stays finite throughout its lifeti
   for(const child of explosion.children){assert.ok([child.position.x,child.position.y,child.scale.x,child.material.opacity].every(Number.isFinite));assert.ok(child.material.opacity>=0&&child.material.opacity<=1);}
  }
 });
+
+test('new arena mechanics have finite WebGL environment geometry',async()=>{
+ const {ThreeRenderer}=await rendererModule('ThreeRenderer');
+ const renderer=Object.create(ThreeRenderer.prototype);
+ for(const kind of ['crumble','fan','gravity']){
+  const group=renderer.buildEnvironment(kind);
+  assert.ok(group.children.length>0);
+  group.traverse(o=>{
+   if(o.geometry?.getAttribute?.('position')){
+    const values=o.geometry.getAttribute('position').array;
+    assert.ok([...values].every(Number.isFinite));
+   }
+  });
+  group.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
+ }
+});

@@ -1,21 +1,21 @@
 import type {InputSource,InputState,WeaponId} from "../input/Input";
-export type PlatformSurface="normal"|"ice"|"slippery"|"oneWay";
+export type PlatformSurface="normal"|"ice"|"slippery"|"oneWay"|"conveyorLeft"|"conveyorRight";
 export interface Platform{readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly surface?:PlatformSurface;}
 export type EnemyType="runner"|"tank"|"shooter"|"jumper"|"bomber"|"ninja"|"boss";
-export type EnvironmentKind="barrel"|"box"|"wall"|"bounce"|"trap"|"rock";
+export type EnvironmentKind="barrel"|"box"|"wall"|"bounce"|"trap"|"rock"|"crumble"|"fan"|"gravity";
 export interface EnvironmentRenderState{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;readonly maxHp:number;readonly active:boolean;readonly rotation:number;readonly pulse:number;}
 export interface DuelistRenderState{readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly maxHealth:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;readonly gaitPhase:number;readonly landingTime:number;readonly hitTime:number;}
 export interface ProjectileRenderState{readonly x:number;readonly y:number;readonly vx:number;readonly vy:number;readonly life:number;readonly weapon:WeaponId;readonly rotation:number;readonly age:number;}
 export interface ExplosionRenderState{readonly x:number;readonly y:number;age:number;readonly life:number;readonly radius:number;}
-export type ArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fortress"|"bridge"|"crater"|"vertical"|"ruins";
+export type ArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fortress"|"bridge"|"crater"|"vertical"|"ruins"|"conveyor"|"collapse"|"storm"|"reactor";
 export type GameModeId="duel"|"missile-duel"|"melee-only"|"random-weapons"|"sudden-death"|"low-gravity"|"king-of-hill";
 export interface HillState{readonly player:number;readonly opponent:number;readonly target:number;readonly halfWidth:number;}
-export interface ArenaDefinition{readonly id:ArenaId;readonly name:string;readonly platforms:readonly Platform[];readonly spawnX:[number,number];readonly speedMultiplier:number;readonly jumpMultiplier:number;readonly gravity:number;readonly fallLimit:number|null;readonly movingPlatforms:boolean;}
+export interface ArenaDefinition{readonly id:ArenaId;readonly name:string;readonly platforms:readonly Platform[];readonly spawnX:[number,number];readonly speedMultiplier:number;readonly jumpMultiplier:number;readonly gravity:number;readonly fallLimit:number|null;readonly movingPlatforms:boolean;readonly windStrength?:number;readonly gravityWell?:{readonly x:number;readonly y:number;readonly radius:number;readonly strength:number;};}
 export interface GameRenderState{readonly player:DuelistRenderState;readonly opponent:DuelistRenderState;readonly projectiles:readonly ProjectileRenderState[];readonly explosions:readonly ExplosionRenderState[];readonly platforms:readonly Platform[];readonly environment:readonly EnvironmentRenderState[];readonly winner:"player"|"opponent"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];}
 export interface GameHudState{readonly playerHealth:number;readonly playerMaxHealth:number;readonly opponentHealth:number;readonly opponentMaxHealth:number;readonly weapon:WeaponId;readonly winner:"player"|"opponent"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];}
 interface Fighter{x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;gaitPhase:number;landingTime:number;hitTime:number;}
 interface Projectile{x:number;y:number;vx:number;vy:number;life:number;weapon:WeaponId;owner:"player"|"opponent";originX:number;returning:boolean;spin:number;age:number;bounce:number;ricochets:number;deflectCooldown?:number;damageScale?:number;sticky?:boolean;stuck?:boolean;clusterChild?:boolean;}
-interface EnvironmentBody{kind:EnvironmentKind;x:number;y:number;width:number;height:number;hp:number;maxHp:number;active:boolean;rotation:number;pulse:number;vx:number;vy:number;grounded:boolean;cooldown:number;}
+interface EnvironmentBody{kind:EnvironmentKind;x:number;y:number;width:number;height:number;hp:number;maxHp:number;active:boolean;rotation:number;pulse:number;vx:number;vy:number;grounded:boolean;cooldown:number;timer:number;}
 const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2,DASH_SPEED=14,DASH_TIME=.12,DASH_COOLDOWN=.65,WALL_JUMP_SPEED=9.6,MIN_MISSILE_ANGLE=12,MAX_MISSILE_ANGLE=78,MIN_MISSILE_POWER=8,MAX_MISSILE_POWER=18,HILL_TARGET=8,HILL_HALF_WIDTH=1.6;
 const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
  classic:{id:"classic",name:"CLASSIC",speedMultiplier:1,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-5,5],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-4,y:2,width:3.5,height:.35,surface:"ice"},{x:.5,y:3.7,width:3.5,height:.35,surface:"slippery"}]},
@@ -28,7 +28,11 @@ const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
  bridge:{id:"bridge",name:"BRIDGE",speedMultiplier:1.05,jumpMultiplier:1,gravity:G,fallLimit:-4.5,movingPlatforms:false,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:7.5,height:.5},{x:5.2,y:.2,width:6.8,height:.5}]},
  crater:{id:"crater",name:"CRATER",speedMultiplier:1,jumpMultiplier:1.08,gravity:G,fallLimit:-5,movingPlatforms:false,spawnX:[-6,6],platforms:[{x:-12,y:-.25,width:5.5,height:.5},{x:-5.3,y:-1,width:10.6,height:.5},{x:6.5,y:-.25,width:5.5,height:.5},{x:-2.5,y:1.25,width:5,height:.35},{x:3.3,y:3,width:3.3,height:.35,surface:"oneWay"}]},
  vertical:{id:"vertical",name:"VERTICAL",speedMultiplier:1.12,jumpMultiplier:1.2,gravity:G,fallLimit:-5,movingPlatforms:false,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-8.8,y:1.35,width:3.2,height:.35},{x:5.6,y:1.35,width:3.2,height:.35},{x:-5.4,y:3,width:3.1,height:.35,surface:"oneWay"},{x:2.3,y:3,width:3.1,height:.35,surface:"oneWay"},{x:-1.7,y:4.65,width:3.4,height:.35}]},
- ruins:{id:"ruins",name:"RUINS",speedMultiplier:.98,jumpMultiplier:1,gravity:G,fallLimit:-4.5,movingPlatforms:true,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:6.2,height:.5},{x:-5.1,y:1.1,width:3.1,height:.35},{x:-.6,y:2.35,width:3.6,height:.35,surface:"ice"},{x:3.7,y:1.05,width:3.2,height:.35,surface:"slippery"},{x:7.5,y:2.9,width:3.2,height:.35},{x:-1,y:4.1,width:2.6,height:.35,surface:"oneWay"}]}
+ ruins:{id:"ruins",name:"RUINS",speedMultiplier:.98,jumpMultiplier:1,gravity:G,fallLimit:-4.5,movingPlatforms:true,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:6.2,height:.5},{x:-5.1,y:1.1,width:3.1,height:.35},{x:-.6,y:2.35,width:3.6,height:.35,surface:"ice"},{x:3.7,y:1.05,width:3.2,height:.35,surface:"slippery"},{x:7.5,y:2.9,width:3.2,height:.35},{x:-1,y:4.1,width:2.6,height:.35,surface:"oneWay"}]},
+ conveyor:{id:"conveyor",name:"CONVEYOR",speedMultiplier:1.03,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-5,5],platforms:[{x:-12,y:-.25,width:8,height:.5,surface:"conveyorRight"},{x:-4,y:-.25,width:8,height:.5,surface:"conveyorLeft"},{x:4,y:-.25,width:8,height:.5,surface:"conveyorRight"},{x:-2.4,y:2.15,width:4.8,height:.35,surface:"oneWay"}]},
+ collapse:{id:"collapse",name:"COLLAPSE",speedMultiplier:1,jumpMultiplier:1.08,gravity:G,fallLimit:-4.5,movingPlatforms:false,spawnX:[-5.6,5.6],platforms:[{x:-12,y:-.25,width:6.8,height:.5},{x:5.2,y:-.25,width:6.8,height:.5},{x:-1.8,y:3.35,width:3.6,height:.35,surface:"oneWay"}]},
+ storm:{id:"storm",name:"STORM",speedMultiplier:1.05,jumpMultiplier:1.05,gravity:-20,fallLimit:null,movingPlatforms:false,windStrength:8.5,spawnX:[-5,5],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.65,width:4,height:.35},{x:-2.1,y:3,width:4.2,height:.35,surface:"oneWay"},{x:5,y:1.65,width:4,height:.35},{x:-1.7,y:4.55,width:3.4,height:.3,surface:"ice"}]},
+ reactor:{id:"reactor",name:"REACTOR",speedMultiplier:1,jumpMultiplier:1.05,gravity:G,fallLimit:null,movingPlatforms:false,gravityWell:{x:0,y:2.35,radius:4.7,strength:13},spawnX:[-5.3,5.3],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.75,width:3.8,height:.35},{x:5.2,y:1.75,width:3.8,height:.35},{x:-4.2,y:3.55,width:3.2,height:.35,surface:"oneWay"},{x:1,y:3.55,width:3.2,height:.35,surface:"oneWay"}]}
 };
 interface EnvironmentTemplate{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;}
 const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate[]>>={
@@ -85,6 +89,29 @@ const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate
  ruins:[
   {kind:"box",x:-10.1,y:.8,width:1,height:1,hp:16},
   {kind:"barrel",x:-8.55,y:.8,width:.75,height:1.1,hp:1}
+ ],
+ conveyor:[
+  {kind:"box",x:0,y:.82,width:1,height:1,hp:18},
+  {kind:"barrel",x:3.15,y:.82,width:.75,height:1.1,hp:1}
+ ],
+ collapse:[
+  {kind:"crumble",x:-4.25,y:.22,width:1.55,height:.28,hp:12},
+  {kind:"crumble",x:-2.55,y:.22,width:1.55,height:.28,hp:12},
+  {kind:"crumble",x:-.85,y:.22,width:1.55,height:.28,hp:12},
+  {kind:"crumble",x:.85,y:.22,width:1.55,height:.28,hp:12},
+  {kind:"crumble",x:2.55,y:.22,width:1.55,height:.28,hp:12},
+  {kind:"crumble",x:4.25,y:.22,width:1.55,height:.28,hp:12}
+ ],
+ storm:[
+  {kind:"fan",x:-5.45,y:.72,width:.72,height:1.05,hp:0},
+  {kind:"bounce",x:0,y:.55,width:1.2,height:.34,hp:0},
+  {kind:"fan",x:5.45,y:.72,width:.72,height:1.05,hp:0}
+ ],
+ reactor:[
+  {kind:"gravity",x:0,y:2.35,width:.9,height:.9,hp:0},
+  {kind:"rock",x:-3.8,y:.78,width:1.05,height:1.05,hp:28},
+  {kind:"box",x:2.7,y:.8,width:.9,height:.9,hp:18},
+  {kind:"rock",x:4.2,y:.78,width:1.05,height:1.05,hp:28}
  ]
 };
 const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number;radius?:number;automatic?:boolean}>>={
@@ -174,6 +201,24 @@ export class GameSession{
   const attackRange=this.missileRules?Infinity:type==="shooter"?7:type==="bomber"?6:type==="jumper"?4.5:type==="boss"?2.4:2;
   if(this.missileRules){if(this.opponent.cooldown<=0&&distance>4.5)this.attack(this.opponent,this.player,true);}else if(distance<attackRange&&this.opponent.cooldown<=0){this.attack(this.opponent,this.player,true);}
 }
+ private arenaForceAt(x:number,y:number){
+  let ax=0,ay=0;
+  if(this.arena.windStrength){
+   const gust=Math.sin(this.elapsed*1.85+x*.23)+Math.sin(this.elapsed*.72+y*.31)*.35;
+   ax+=gust*this.arena.windStrength;
+  }
+  const well=this.arena.gravityWell;
+  if(well){
+   const dx=well.x-x,dy=well.y-y,distance=Math.hypot(dx,dy);
+   if(distance>.16&&distance<well.radius){
+    const falloff=1-distance/well.radius;
+    const force=well.strength*(.35+.65*falloff);
+    ax+=dx/distance*force;
+    ay+=dy/distance*force;
+   }
+  }
+  return{x:ax,y:ay};
+ }
  private tryJump(f:Fighter){
   if(f.grounded){
     f.velocityY=JUMP*this.arena.jumpMultiplier;
@@ -240,8 +285,12 @@ export class GameSession{
   const previousX=f.x;
   const previousBottom=f.y-HH/2;
   const previousTop=f.y+HH/2;
-  f.velocityY+=this.arena.gravity*this.gravityScale*dt;
-  f.x+=f.velocityX*dt;
+  const support=f.grounded?this.supportPlatform(f):null;
+  const conveyorVelocity=support?.surface==="conveyorLeft"?-3.2:support?.surface==="conveyorRight"?3.2:0;
+  const field=this.arenaForceAt(f.x,f.y);
+  f.velocityX=Math.max(-18,Math.min(18,f.velocityX+field.x*dt));
+  f.velocityY+=((this.arena.gravity*this.gravityScale)+field.y)*dt;
+  f.x+=(f.velocityX+conveyorVelocity)*dt;
   f.y+=f.velocityY*dt;
   f.grounded=false;
   const currentBottom=f.y-HH/2;
@@ -466,11 +515,11 @@ export class GameSession{
  private damage(t:Fighter,damage:number,knockback:number){const mass=t.enemyType==="tank"?1.8:t.enemyType==="boss"?2.2:1;t.health=Math.max(0,t.health-(this.modeId==="sudden-death"&&damage>0?t.health:damage));t.velocityX+=knockback/mass;t.velocityY=Math.max(t.velocityY,2/mass);t.grounded=false;t.hitTime=.22;}
  private updateHill(dt:number){if(this.modeId!=="king-of-hill")return;const playerIn=Math.abs(this.player.x)<=HILL_HALF_WIDTH,opponentIn=Math.abs(this.opponent.x)<=HILL_HALF_WIDTH;if(playerIn===opponentIn)return;if(playerIn)this.hillPlayer=Math.min(HILL_TARGET,this.hillPlayer+dt);else this.hillOpponent=Math.min(HILL_TARGET,this.hillOpponent+dt);if(this.hillPlayer>=HILL_TARGET){this.winner="player";this.upgradePoints++;}else if(this.hillOpponent>=HILL_TARGET)this.winner="opponent";}
  private resetEnvironment(){
-  this.environment=ENVIRONMENT_TEMPLATES[this.arenaId].map(t=>({kind:t.kind,x:t.x,y:t.y,width:t.width,height:t.height,hp:t.hp,maxHp:t.hp,active:true,rotation:0,pulse:0,vx:0,vy:0,grounded:false,cooldown:0}));
+  this.environment=ENVIRONMENT_TEMPLATES[this.arenaId].map(t=>({kind:t.kind,x:t.x,y:t.y,width:t.width,height:t.height,hp:t.hp,maxHp:t.hp,active:true,rotation:0,pulse:0,vx:0,vy:0,grounded:false,cooldown:0,timer:0}));
   for(const e of this.environment)this.snapEnvironmentToPlatform(e);
  }
  private snapEnvironmentToPlatform(e:EnvironmentBody){
-  if(e.kind==="trap"){return;}
+  if(e.kind==="trap"||e.kind==="crumble"||e.kind==="fan"||e.kind==="gravity"){return;}
   const desiredBottom=e.y-e.height/2;
   const support=this.platforms.filter(p=>e.x+e.width/2>p.x&&e.x-e.width/2<p.x+p.width).reduce<Platform|null>((best,p)=>!best||Math.abs((p.y+p.height)-desiredBottom)<Math.abs((best.y+best.height)-desiredBottom)?p:best,null);
   if(support)e.y=support.y+support.height+e.height/2-(e.kind==="bounce"?.02:0);
@@ -479,8 +528,20 @@ export class GameSession{
   for(const e of this.environment){
    if(!e.active)continue;
    e.pulse=Math.max(0,e.pulse-dt*4);e.cooldown=Math.max(0,e.cooldown-dt);
+   if(e.kind==="crumble"){
+    if(e.timer>0){
+     e.timer=Math.max(0,e.timer-dt);
+     e.pulse=Math.max(e.pulse,.25+(1-e.timer/.68)*.75);
+     if(e.timer<=0)e.active=false;
+    }
+    continue;
+   }
+   if(e.kind==="fan"){e.rotation+=dt*(e.x<0?5:-5);continue;}
+   if(e.kind==="gravity"){e.rotation+=dt*1.7;e.pulse=.28+.16*Math.sin(this.elapsed*3.2);continue;}
    if(e.kind!=="box")continue;
-   e.vy+=this.arena.gravity*this.gravityScale*dt;e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=Math.pow(.08,dt);
+   const field=this.arenaForceAt(e.x,e.y);
+   e.vx=Math.max(-10,Math.min(10,e.vx+field.x*.45*dt));
+   e.vy+=((this.arena.gravity*this.gravityScale)+field.y*.45)*dt;e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=Math.pow(.08,dt);
    let landed=false;
    const bottom=e.y-e.height/2;
    for(const p of this.platforms){const top=p.y+p.height;const overlap=e.x+e.width/2>p.x&&e.x-e.width/2<p.x+p.width;if(e.vy<=0&&overlap&&bottom<=top+.08&&bottom>=top-.35){e.y=top+e.height/2;e.vy=0;e.grounded=true;landed=true;break;}}
@@ -492,12 +553,13 @@ export class GameSession{
  private supportPlatform(f:Fighter){const bottom=f.y-HH/2;return this.platforms.find(p=>Math.abs(bottom-(p.y+p.height))<.12&&f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width)||null;}
  private resolveEnvironmentLanding(f:Fighter,previousBottom:number,previousX:number){
   for(const e of this.environment){
-   if(!e.active||e.kind==="barrel"||e.kind==="bounce"||e.kind==="trap")continue;
+   if(!e.active||e.kind==="barrel"||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity")continue;
    const left=e.x-e.width/2,right=e.x+e.width/2,top=e.y+e.height/2,bottom=e.y-e.height/2;
    const overlap=f.x+PH/2>left&&f.x-PH/2<right;
    const crossed=previousBottom>=top-.08&&f.y-HH/2<=top+.08;
    if(crossed&&overlap&&f.velocityY<=0){
     f.y=top+HH/2;f.velocityY=0;f.grounded=true;f.doubleJumpAvailable=true;f.airDashAvailable=true;
+    if(e.kind==="crumble"&&e.timer<=0)e.timer=.68;
     continue;
    }
    if(e.kind==="wall"&&overlap&&f.y-HH/2<top&&f.y+HH/2>bottom){
@@ -525,7 +587,7 @@ export class GameSession{
  }
  private hitEnvironment(x:number,y:number,damage:number,force:number,_owner:"player"|"opponent"){
   for(const e of this.environment){
-   if(!e.active||e.kind==="bounce"||e.kind==="trap")continue;
+   if(!e.active||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity")continue;
    if(Math.abs(x-e.x)<=e.width/2+.18&&Math.abs(y-e.y)<=e.height/2+.28){
     if(e.kind==="barrel")this.explodeBarrel(e,x>=e.x?1:-1);
     else{
@@ -548,7 +610,7 @@ export class GameSession{
    if(other===e||!other.active)continue;
    const d=Math.hypot(other.x-e.x,other.y-e.y);if(d>radius)continue;
    if(other.kind==="barrel")this.explodeBarrel(other,Math.sign(other.x-e.x)||direction);
-   else if(other.kind!=="bounce"&&other.kind!=="trap"){
+   else if(other.kind!=="bounce"&&other.kind!=="trap"&&other.kind!=="fan"&&other.kind!=="gravity"){
     other.hp=Math.max(0,other.hp-28);other.pulse=1;
     if(other.kind==="box"){other.vx+=direction*5;other.vy=Math.max(other.vy,6);}
     if(other.hp<=0)other.active=false;
@@ -557,7 +619,7 @@ export class GameSession{
  }
  private blastEnvironment(x:number,y:number,radius:number,damage:number,force:number){
   for(const e of this.environment){
-   if(!e.active||e.kind==="bounce"||e.kind==="trap")continue;
+   if(!e.active||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity")continue;
    const distance=Math.hypot(e.x-x,e.y-y),reach=radius+Math.hypot(e.width,e.height)*.22;
    if(distance>reach)continue;
    const falloff=Math.max(.28,1-distance/Math.max(.01,radius));
@@ -588,6 +650,8 @@ export class GameSession{
     const owner=p.owner==="player"?this.player:this.opponent;
     const prevX=p.x,prevY=p.y;
     p.age+=dt;p.deflectCooldown=Math.max(0,(p.deflectCooldown??0)-dt);
+    const field=this.arenaForceAt(p.x,p.y);
+    p.vx+=field.x*.5*dt;p.vy+=field.y*.5*dt;
     if(p.weapon==="bow"){p.vy+=-12.5*this.gravityScale*dt;p.spin=Math.atan2(p.vy,p.vx);}
     else if(p.weapon==="missile"){p.vy+=-7.8*this.gravityScale*dt;p.spin=Math.atan2(p.vy,p.vx);}
     else p.spin+=dt*(p.weapon==="boomerang"?12:p.weapon==="bomb"?7:0);

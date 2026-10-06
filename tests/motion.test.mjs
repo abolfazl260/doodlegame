@@ -51,11 +51,62 @@ test('all tool geometries have finite, complete vertex pairs and match both rend
  }
 });
 test('physics stays finite in every arena at 30, 60 and 120 FPS',()=>{
- for(const arena of ['classic','towers','pit','steps','zigzag','sky','moving','fortress','bridge','crater','vertical','ruins'])for(const fps of [30,60,120]){
+ for(const arena of ['classic','towers','pit','steps','zigzag','sky','moving','fortress','bridge','crater','vertical','ruins','conveyor','collapse','storm','reactor'])for(const fps of [30,60,120]){
   const {game,input}=setup(arena);for(let i=0;i<fps*2;i++){input.state.moveX=i<fps?1:-1;input.state.jumpPressed=i===0;game.update(1/fps);}
   const p=game.getRenderState().player;assert.ok([p.x,p.y,p.velocityX,p.velocityY,p.gaitPhase].every(Number.isFinite));
  }
 });
+test('conveyor terrain transports grounded fighters without overriding their own velocity',()=>{
+ const {game}=setup('conveyor');
+ game.player.x=-5.2;game.player.y=1.15;game.player.velocityX=0;game.player.grounded=true;
+ const before=game.player.x;
+ for(let i=0;i<18;i++)game.update(1/120);
+ assert.ok(game.player.x>before+.35,'right-moving belt should carry a resting fighter');
+ assert.ok(Math.abs(game.player.velocityX)<.1,'belt transport should not become permanent fighter velocity');
+});
+
+test('collapse bridge arms on contact and drops out after its warning window',()=>{
+ const {game}=setup('collapse');
+ const slab=game.environment.find(e=>e.kind==='crumble');assert.ok(slab);
+ const top=slab.y+slab.height/2;
+ game.player.x=slab.x;game.player.y=top+.94;game.player.velocityY=-1;game.player.grounded=false;
+ game.integrate(game.player,1/120);
+ assert.equal(game.player.grounded,true);assert.ok(slab.timer>0);
+ for(let i=0;i<100&&slab.active;i++)game.updateEnvironment(1/120);
+ assert.equal(slab.active,false,'armed bridge section should collapse');
+});
+
+test('storm gusts bend fighter and projectile motion deterministically',()=>{
+ const {game}=setup('storm');
+ game.elapsed=.6;
+ game.player.x=-2;game.player.y=3;game.player.velocityX=0;game.player.velocityY=0;game.player.grounded=false;
+ const fighterBefore=game.player.velocityX;
+ game.integrate(game.player,.1);
+ assert.notEqual(game.player.velocityX,fighterBefore);
+
+ const projectile={x:-2,y:3,vx:8,vy:0,life:1,weapon:'blaster',owner:'player',originX:-2,returning:false,spin:0,age:0,bounce:0,ricochets:0};
+ game.projectiles=[projectile];
+ const beforeVx=projectile.vx;
+ game.updateProjectiles(.1);
+ assert.notEqual(projectile.vx,beforeVx,'gust should curve projectile velocity');
+});
+
+test('reactor gravity well pulls fighters, boxes and projectiles toward its center',()=>{
+ const {game}=setup('reactor');
+ game.elapsed=.5;
+ game.player.x=3.2;game.player.y=2.35;game.player.velocityX=0;game.player.velocityY=0;game.player.grounded=false;
+ game.integrate(game.player,.1);
+ assert.ok(game.player.velocityX<0,'fighter should accelerate toward reactor center');
+
+ const projectile={x:3.2,y:2.35,vx:0,vy:0,life:1,weapon:'blaster',owner:'player',originX:3.2,returning:false,spin:0,age:0,bounce:0,ricochets:0};
+ game.projectiles=[projectile];game.updateProjectiles(.1);
+ assert.ok(projectile.vx<0,'projectile should curve toward reactor center');
+
+ const box=game.environment.find(e=>e.kind==='box');assert.ok(box);
+ const beforeBoxVx=box.vx;game.updateEnvironment(.1);
+ assert.ok(box.vx<beforeBoxVx,'movable cover should also accelerate toward reactor center');
+});
+
 test('active melee parry redirects ownership while projectiles continue aging',()=>{
  const {game}=setup();game.opponent.weapon='blade';game.opponent.attackTime=.1;
  const f=game.opponent,cx=f.x+f.facing*.8;
