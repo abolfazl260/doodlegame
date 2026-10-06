@@ -22,7 +22,8 @@
     "android:verify:production": "node scripts/android/verify-production.mjs",
     "android:verify:review": "node scripts/android/verify-review-readiness.mjs",
     "ci:bundle-budget": "node scripts/ci/check-bundle-size.mjs",
-    "ci:verify-monetization": "node scripts/ci/verify-monetization.mjs"
+    "ci:verify-monetization": "node scripts/ci/verify-monetization.mjs",
+    "ci:verify-audience": "node scripts/ci/verify-audience.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^8.0.0",
