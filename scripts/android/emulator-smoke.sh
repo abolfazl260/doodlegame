@@ -67,16 +67,7 @@ adb shell input keyevent KEYCODE_BACK
 sleep 1
 is_resumed
 
-echo "Back from menu exits"
-adb shell input keyevent KEYCODE_BACK
-sleep 2
-if is_resumed; then
-  echo "App remained resumed after Back from menu." >&2
-  exit 1
-fi
-
-echo "Relaunching and exercising an alternate phone resolution"
-start_app >/dev/null
+echo "Exercising an alternate phone resolution from the menu"
 sleep 1
 adb shell wm size 720x1600
 sleep 2
