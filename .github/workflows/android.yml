@@ -38,6 +38,16 @@ jobs:
       - name: Validate unsigned release APK and AAB
         run: node scripts/android/gradle.mjs assembleRelease bundleRelease
 
+      - name: Verify Google Play technical compliance
+        run: npm run android:verify:play
+
+      - name: Upload Google Play compliance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: doodlegame-play-compliance
+          path: artifacts/play-compliance/
+          if-no-files-found: error
+
       - name: Report Android artifact sizes
         shell: bash
         run: |
