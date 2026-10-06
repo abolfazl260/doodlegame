@@ -39,7 +39,9 @@ export class GameUI{
  private opponentHealth=document.createElement("div");
  private buttons=document.createElement("div");
  private weaponList=document.createElement("div");
+ private arenaTitle=document.createElement("div");
  private arenaList=document.createElement("div");
+ private modeTitle=document.createElement("div");
  private modeList=document.createElement("div");
  private rotateHint=document.createElement("div");
  private upgradePanel=document.createElement("div");
@@ -100,7 +102,9 @@ export class GameUI{
 
   this.buttons.className="game-ui__controls";
   this.weaponList.className="game-ui__weapon-list";
+  this.arenaTitle.className="game-ui__section-title";
   this.arenaList.className="game-ui__arena-list";
+  this.modeTitle.className="game-ui__section-title";
   this.modeList.className="game-ui__mode-list";
   this.rotateHint.className="game-ui__rotate-hint";
 
@@ -213,7 +217,7 @@ export class GameUI{
   this.mobileAttackButton.addEventListener("pointerup",event=>{event.preventDefault();actions.touchAttackEnd();});
   this.mobileAttackButton.addEventListener("pointercancel",event=>{event.preventDefault();actions.touchAttackEnd();});
 
-  this.root.append(this.languageControl,this.title,this.helpButton,this.help,this.status,this.details,this.upgradePanel,this.modeList,this.arenaList,this.playerHealth,this.opponentHealth,this.weaponList,this.missilePanel,this.bowPanel,this.buttons,this.mobileControls,this.rotateHint);
+  this.root.append(this.languageControl,this.title,this.helpButton,this.help,this.status,this.details,this.upgradePanel,this.modeTitle,this.modeList,this.arenaTitle,this.arenaList,this.playerHealth,this.opponentHealth,this.weaponList,this.missilePanel,this.bowPanel,this.buttons,this.mobileControls,this.rotateHint);
   container.append(this.root);
   this.applyLocale();
   this.unsubscribeLocale=this.i18n.subscribe(()=>{
@@ -257,12 +261,16 @@ export class GameUI{
   for(const item of this.arenaList.children){
    const button=item as HTMLButtonElement;
    const id=button.dataset.arena as ArenaId;
-   button.classList.toggle("active",id===s.arena);
+   const selected=id===s.arena;
+   button.classList.toggle("active",selected);
+   button.setAttribute("aria-pressed",String(selected));
    button.textContent=messages.arenas[id];
   }
   for(const item of this.modeList.children){
    const button=item as HTMLButtonElement;
-   button.classList.toggle("active",button.dataset.mode===s.mode);
+   const selected=button.dataset.mode===s.mode;
+   button.classList.toggle("active",selected);
+   button.setAttribute("aria-pressed",String(selected));
   }
   const missileRules=s.mode==="missile-duel"||(s.arena==="fortress"&&s.mode==="duel");
   for(const item of this.weaponList.children){
@@ -292,7 +300,9 @@ export class GameUI{
   this.opponentHealth.style.setProperty("--health",opponent+"%");
 
   this.arenaList.hidden=state!==GameState.MENU&&state!==GameState.GAME_OVER;
+  this.arenaTitle.hidden=this.arenaList.hidden;
   this.modeList.hidden=state!==GameState.MENU&&state!==GameState.GAME_OVER;
+  this.modeTitle.hidden=this.modeList.hidden;
   this.weaponList.hidden=state!==GameState.PLAYING||s.winner!==null;
   this.missilePanel.hidden=state!==GameState.PLAYING||s.winner!==null||s.weapon!=="missile";
   this.bowPanel.hidden=state!==GameState.PLAYING||s.winner!==null||s.weapon!=="bow";
@@ -324,6 +334,8 @@ export class GameUI{
   this.languageSelect.value=this.i18n.locale;
   this.languageSelect.setAttribute("aria-label",messages.language.label);
   this.title.textContent=messages.title;
+  this.modeTitle.textContent=messages.sections.gameMode;
+  this.arenaTitle.textContent=messages.sections.arena;
   this.rotateHint.textContent=messages.rotateHint;
   this.helpButton.textContent=messages.buttons.help;
   this.help.innerHTML=messages.helpHtml;
