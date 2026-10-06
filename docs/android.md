@@ -47,7 +47,7 @@ npm run android:bundle:release
 npm run android:reset
 ```
 
-`android:reset` removes the generated native project and recreates it from the current Capacitor version on the next sync.
+`android:reset` removes the generated native project and immediately recreates it from the current Capacitor version.
 
 ## Output files
 
