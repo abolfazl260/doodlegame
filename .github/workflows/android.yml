@@ -48,6 +48,8 @@ jobs:
         run: npm run ci:verify-monetization
 
       - name: Verify target audience guardrail
+        env:
+          DOODLEGAME_REQUIRE_ANDROID_MANIFEST: "1"
         run: npm run ci:verify-audience
 
       - name: Verify production hardening
