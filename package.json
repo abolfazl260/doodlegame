@@ -19,7 +19,8 @@
     "android:bundle:release": "npm run android:sync && node scripts/android/gradle.mjs bundleRelease",
     "android:verify:play": "node scripts/android/verify-play.mjs",
     "android:audit:privacy": "node scripts/android/privacy-audit.mjs",
-    "android:verify:production": "node scripts/android/verify-production.mjs"
+    "android:verify:production": "node scripts/android/verify-production.mjs",
+    "android:verify:review": "node scripts/android/verify-review-readiness.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^8.0.0",
