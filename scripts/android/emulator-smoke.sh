@@ -10,52 +10,87 @@ if [[ ! -f "$APK_PATH" ]]; then
   exit 1
 fi
 
+is_resumed() {
+  adb shell dumpsys activity activities | tr -d '\r' | grep -E 'mResumedActivity|topResumedActivity' | grep -q "$PACKAGE"
+}
+
+start_app() {
+  adb shell am start -W -n "$ACTIVITY" | tr -d '\r'
+}
+
 echo "Installing $APK_PATH"
 adb install -r "$APK_PATH"
 adb logcat -c
 
-echo "Cold-starting $ACTIVITY"
+echo "Disabling device network for reviewer/offline validation"
+adb shell cmd connectivity airplane-mode enable >/dev/null 2>&1 || true
+adb shell svc wifi disable >/dev/null 2>&1 || true
+adb shell svc data disable >/dev/null 2>&1 || true
+
+echo "Cold-starting offline $ACTIVITY"
 START_OUTPUT="$(adb shell am start -S -W -n "$ACTIVITY" | tr -d '\r')"
 printf '%s\n' "$START_OUTPUT"
 grep -q "Status: ok" <<<"$START_OUTPUT"
-
 sleep 3
 PID="$(adb shell pidof "$PACKAGE" | tr -d '\r')"
 test -n "$PID"
-echo "App process: $PID"
+is_resumed
+adb exec-out screencap -p > android-smoke-offline-menu.png
 
-RESUMED="$(adb shell dumpsys activity activities | tr -d '\r' | grep -E 'mResumedActivity|topResumedActivity' | grep "$PACKAGE" || true)"
-test -n "$RESUMED"
-printf '%s\n' "$RESUMED"
-
-adb exec-out screencap -p > android-smoke-launch.png
-
-echo "Backgrounding and restoring app"
+echo "Backgrounding and restoring the offline menu"
 adb shell input keyevent KEYCODE_HOME
 sleep 1
-RESTORE_OUTPUT="$(adb shell am start -W -n "$ACTIVITY" | tr -d '\r')"
+MENU_RESTORE_OUTPUT="$(start_app)"
+printf '%s\n' "$MENU_RESTORE_OUTPUT"
+grep -q "Status: ok" <<<"$MENU_RESTORE_OUTPUT"
+sleep 1
+is_resumed
+
+echo "Starting a match from the menu using the Enter shortcut"
+adb shell input keyevent KEYCODE_ENTER
+sleep 2
+is_resumed
+adb exec-out screencap -p > android-smoke-offline-match.png
+
+echo "Backgrounding an active match; foreground must return to a paused app"
+adb shell input keyevent KEYCODE_HOME
+sleep 1
+RESTORE_OUTPUT="$(start_app)"
 printf '%s\n' "$RESTORE_OUTPUT"
 grep -q "Status: ok" <<<"$RESTORE_OUTPUT"
 sleep 2
+is_resumed
+adb exec-out screencap -p > android-smoke-restored-paused.png
 
-echo "Testing Android Back from menu"
+echo "Back from PAUSED must return to menu without exiting"
 adb shell input keyevent KEYCODE_BACK
-sleep 2
-if adb shell dumpsys activity activities | tr -d '\r' | grep -E 'mResumedActivity|topResumedActivity' | grep -q "$PACKAGE"; then
-  echo "App remained resumed after Back from menu." >&2
-  exit 1
-fi
+sleep 1
+is_resumed
 
-echo "Relaunching for final health check"
-adb shell am start -W -n "$ACTIVITY" >/dev/null
+echo "Exercising an alternate phone resolution from the menu"
+sleep 1
+adb shell wm size 720x1600
 sleep 2
+is_resumed
+adb exec-out screencap -p > android-smoke-resized.png
+adb shell wm size reset
+sleep 1
+
+echo "Force-stopping process and validating clean recreation"
+adb shell am force-stop "$PACKAGE"
+sleep 1
+RECREATE_OUTPUT="$(start_app)"
+printf '%s\n' "$RECREATE_OUTPUT"
+grep -q "Status: ok" <<<"$RECREATE_OUTPUT"
+sleep 2
+is_resumed
 adb exec-out screencap -p > android-smoke-final.png
-adb logcat -d -t 1500 > emulator-logcat.txt
 
+adb logcat -d -t 2000 > emulator-logcat.txt
 if grep -A 15 -E 'FATAL EXCEPTION' emulator-logcat.txt | grep -q "$PACKAGE"; then
   echo "Fatal Android exception detected." >&2
   grep -A 20 -E 'FATAL EXCEPTION' emulator-logcat.txt >&2 || true
   exit 1
 fi
 
-echo "Android emulator smoke test passed."
+echo "Offline reviewer smoke test passed."

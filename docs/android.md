@@ -47,6 +47,7 @@ npm run android:bundle:release
 npm run android:verify:play
 npm run android:audit:privacy
 npm run android:verify:production
+npm run android:verify:review
 npm run android:reset
 ```
 
@@ -330,3 +331,22 @@ DoodleGame currently stores only recreatable local preferences/progression and d
 ### WebView policy
 
 The generated `MainActivity` explicitly binds WebView debugging to `BuildConfig.DEBUG`; production releases therefore set it to false. Local file and content-provider access are disabled because Capacitor serves packaged game assets through its internal web server rather than `file://` URLs. `server.allowNavigation` is explicitly empty, so no external origin is added to the app WebView navigation allowlist.
+
+
+## Google Play reviewer/offline verification
+
+Run after building the Release AAB:
+
+```bash
+npm run android:verify:review
+```
+
+This gate verifies that every Vite `dist/` file is present inside the AAB, runtime HTML/CSS does not reference CDN assets, core source code has no external network API dependency, no auth/billing/ads dependency gates gameplay, startup has an explicit error state, and the WebGL-to-Canvas fallback remains present.
+
+Reviewer instructions and the Play Console App Access declaration are maintained in:
+
+```text
+docs/play/reviewer-access.md
+```
+
+The emulator smoke test runs offline and covers cold start, starting gameplay, match background/foreground behavior, Android Back state transitions, a second phone resolution, process force-stop/recreation, screenshots and logcat evidence.

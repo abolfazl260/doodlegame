@@ -86,6 +86,16 @@ jobs:
       - name: Verify production hardening
         run: npm run android:verify:production
 
+      - name: Verify Google Play reviewer readiness
+        run: npm run android:verify:review
+
+      - name: Upload reviewer readiness report
+        uses: actions/upload-artifact@v4
+        with:
+          name: doodlegame-review-readiness
+          path: artifacts/review-readiness/
+          if-no-files-found: error
+
       - name: Upload production hardening report
         uses: actions/upload-artifact@v4
         with:
