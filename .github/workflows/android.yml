@@ -38,6 +38,17 @@ jobs:
       - name: Validate unsigned release APK and AAB
         run: node scripts/android/gradle.mjs assembleRelease bundleRelease
 
+      - name: Report Android artifact sizes
+        shell: bash
+        run: |
+          ls -lh \
+            android/app/build/outputs/apk/debug/app-debug.apk \
+            android/app/build/outputs/apk/release/app-release-unsigned.apk \
+            android/app/build/outputs/bundle/release/app-release.aab
+          test "$(stat -c%s android/app/build/outputs/apk/debug/app-debug.apk)" -lt 25000000
+          test "$(stat -c%s android/app/build/outputs/apk/release/app-release-unsigned.apk)" -lt 25000000
+          test "$(stat -c%s android/app/build/outputs/bundle/release/app-release.aab)" -lt 25000000
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
