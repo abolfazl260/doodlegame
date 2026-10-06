@@ -1,4 +1,4 @@
-import {GameLoop} from "./GameLoop";import {GameState,GameStateManager} from "./GameState";import type {FrameScheduler} from "./FrameScheduler";import type {Renderer} from "../rendering/Renderer";import type {GameSession,ArenaId} from "../gameplay/GameSession";
+import {GameLoop} from "./GameLoop";import {GameState,GameStateManager} from "./GameState";import type {FrameScheduler} from "./FrameScheduler";import type {Renderer} from "../rendering/Renderer";import type {GameSession,ArenaId,GameModeId} from "../gameplay/GameSession";
 export class Game{
  private state=new GameStateManager();private loop:GameLoop;private initialized=false;private disposed=false;
  constructor(private readonly renderer:Renderer,private readonly session:GameSession,scheduler:FrameScheduler,onError:(error:unknown)=>void){this.loop=new GameLoop(scheduler,dt=>this.update(dt),()=>this.renderer.render(this.session.getRenderState()),onError);}
@@ -16,8 +16,9 @@ export class Game{
  setMissilePower(power:number){this.ready();this.session.setMissilePower(power);}
  fireWeapon(){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.fireWeapon();}
  selectArena(id:ArenaId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return;if(current===GameState.GAME_OVER)this.loop.stop();this.session.setArena(id);if(current===GameState.GAME_OVER)this.state.reset();else this.state.notify();}
+ selectMode(id:GameModeId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return;if(current===GameState.GAME_OVER)this.loop.stop();this.session.setMode(id);if(current===GameState.GAME_OVER)this.state.reset();else this.state.notify();}
  getArena(){return this.session.getArena();}
- getHudState(){const s=this.session.getRenderState();return{playerHealth:s.player.health,opponentHealth:s.opponent.health,weapon:s.player.weapon,winner:s.winner,arena:s.arena,bowCharge:s.player.bowCharge,missileAngle:s.player.missileAngle,missilePower:s.player.missilePower,upgradePoints:s.upgradePoints,upgradedWeapons:s.upgradedWeapons};}
+ getHudState(){const s=this.session.getRenderState();return{playerHealth:s.player.health,opponentHealth:s.opponent.health,weapon:s.player.weapon,winner:s.winner,arena:s.arena,mode:s.mode,hill:s.hill,bowCharge:s.player.bowCharge,missileAngle:s.player.missileAngle,missilePower:s.player.missilePower,upgradePoints:s.upgradePoints,upgradedWeapons:s.upgradedWeapons};}
  subscribe(listener:(state:GameState)=>void){return this.state.subscribe(listener);}getState(){return this.state.getState();}
  resize(){this.assertNotDisposed();if(this.initialized)this.renderer.resize();}
  dispose(){if(this.disposed)return;this.loop.dispose();this.session.dispose();this.renderer.dispose();this.state.dispose();this.disposed=true;}
