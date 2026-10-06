@@ -44,6 +44,7 @@ npm run android:run
 npm run android:build:debug
 npm run android:build:release
 npm run android:bundle:release
+npm run android:verify:play
 npm run android:reset
 ```
 
@@ -171,6 +172,39 @@ tag:          v0.2.1
 ```
 
 The release workflow rejects a mismatched tag.
+
+## Google Play technical verification
+
+After a Release APK/AAB has been built, run:
+
+```bash
+npm run android:verify:play
+```
+
+The verifier is a blocking release gate. It checks:
+
+- target/compile SDK are at least API 36
+- applicationId is `com.abolfazl.doodlegame`
+- Android versionName/versionCode match `package.json` (or `ANDROID_VERSION_CODE` when explicitly overridden)
+- the Play publishing artifact is an AAB
+- Android Gradle Plugin is at least 8.5.1
+- every packaged native `.so` is inventoried from both AAB and APK
+- every 32-bit ARM/x86 native library has the same 64-bit counterpart
+- Release APK passes `zipalign -c -P 16 -v 4`
+- every packaged 64-bit ELF library has LOAD alignment of at least 16 KB
+
+If no native shared libraries are present, the report explicitly records the package as architecture-neutral. This is still checked on every CI run so a future SDK cannot silently introduce incompatible native code.
+
+Reports are written to:
+
+```text
+artifacts/play-compliance/play-compliance.md
+artifacts/play-compliance/play-compliance.json
+```
+
+The Android workflow uploads them as the `doodlegame-play-compliance` artifact. The signed release workflow runs the same verifier against the signed release APK before publishing artifacts.
+
+The verifier itself has regression tests, including a deliberately incompatible 32-bit-only native fixture which must be rejected.
 
 ## CI behavior
 

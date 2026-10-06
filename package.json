@@ -16,7 +16,8 @@
     "android:run": "npm run android:sync && cap run android",
     "android:build:debug": "npm run android:sync && node scripts/android/gradle.mjs assembleDebug",
     "android:build:release": "npm run android:sync && node scripts/android/gradle.mjs assembleRelease",
-    "android:bundle:release": "npm run android:sync && node scripts/android/gradle.mjs bundleRelease"
+    "android:bundle:release": "npm run android:sync && node scripts/android/gradle.mjs bundleRelease",
+    "android:verify:play": "node scripts/android/verify-play.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^8.0.0",
