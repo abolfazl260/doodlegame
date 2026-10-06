@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "policyUrl": "https://abolfazl260.github.io/doodlegame/privacy.html",
+  "runtimeDependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "three": "0.186.1"
+  },
+  "releasePermissions": [
+    "android.permission.INTERNET"
+  ],
+  "allowedReviewRequiredPermissions": []
+}
