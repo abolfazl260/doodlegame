@@ -27,6 +27,17 @@ jobs:
       - name: Verify monetization guardrail
         run: npm run ci:verify-monetization
 
+      - name: Verify target audience guardrail
+        run: npm run ci:verify-audience
+
+      - name: Upload target audience audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doodlegame-audience-audit
+          path: artifacts/audience-audit/
+          if-no-files-found: warn
+
       - name: Upload monetization dependency inventory
         if: always()
         uses: actions/upload-artifact@v4
