@@ -81,10 +81,18 @@ if (!gradle.includes(signingMarker)) {
 write(appGradlePath, gradle);
 
 let manifest = read(manifestPath);
-manifest = manifest.replace(
-  "<application",
-  '<application\n        android:hardwareAccelerated="true"\n        android:usesCleartextTraffic="false"'
-);
+if (!manifest.includes('android:hardwareAccelerated="true"')) {
+  manifest = manifest.replace(
+    "<application",
+    '<application\n        android:hardwareAccelerated="true"'
+  );
+}
+if (!manifest.includes('android:usesCleartextTraffic="false"')) {
+  manifest = manifest.replace(
+    "<application",
+    '<application\n        android:usesCleartextTraffic="false"'
+  );
+}
 manifest = manifest.replace(
   /\s*<uses-permission android:name="android\.permission\.INTERNET" \/>/,
   ""
