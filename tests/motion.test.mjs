@@ -79,6 +79,30 @@ test('close-range bomb detonates once and the final-hit explosion continues fadi
  for(let i=0;i<10;i++)game.update(.1);assert.equal(game.explosions.length,0);
 });
 
+test('arenas seed destructible cover and bridge terrain is fully destructible',()=>{
+ const fortress=setup('fortress').game.getRenderState();
+ assert.ok(fortress.environment.some(e=>e.kind==='wall'&&e.active));
+ const bridge=setup('bridge').game.getRenderState();
+ assert.equal(bridge.platforms.length,2);
+ assert.equal(bridge.environment.filter(e=>e.kind==='wall'&&e.active).length,4);
+});
+test('crates and bridge sections take direct and explosive damage',()=>{
+ const {game}=setup('classic');const crate=game.environment.find(e=>e.kind==='box');assert.ok(crate);
+ const startHp=crate.hp;assert.equal(game.hitEnvironment(crate.x,crate.y,7,4,'player'),true);assert.ok(crate.hp<startHp&&crate.active);
+ game.explode({x:crate.x,y:crate.y,vx:0,vy:0,life:0,weapon:'bomb',owner:'player',originX:crate.x,returning:false,spin:0,age:0,bounce:0,ricochets:0});
+ assert.equal(crate.active,false);
+ const bridge=setup('bridge').game,section=bridge.environment[0];assert.ok(section.active);
+ bridge.explode({x:section.x,y:section.y,vx:0,vy:0,life:0,weapon:'bomb',owner:'player',originX:section.x,returning:false,spin:0,age:0,bounce:0,ricochets:0});
+ assert.equal(section.active,false);
+});
+test('destructible bridge sections support fighters until destroyed',()=>{
+ const {game}=setup('bridge'),section=game.environment[1],top=section.y+section.height/2;
+ game.player.x=section.x;game.player.y=top+.98;game.player.velocityY=-1.5;game.player.grounded=false;game.integrate(game.player,1/120);
+ assert.equal(game.player.grounded,true);assert.ok(Math.abs(game.player.y-(top+.9))<1e-9);
+ section.active=false;game.player.y=top+1.1;game.player.velocityY=-2;game.player.grounded=false;game.integrate(game.player,.05);
+ assert.equal(game.player.grounded,false);
+});
+
 test('victories award upgrade points and upgrades persist across rounds',()=>{
  const {game}=setup();
  game.opponent.x=game.player.x+1;game.opponent.y=game.player.y;game.opponent.health=1;
