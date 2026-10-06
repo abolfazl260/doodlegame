@@ -26,3 +26,14 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Enforce JS bundle budget
+        run: npm run ci:bundle-budget
+
+      - name: Upload Core Vitals build metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doodlegame-core-vitals-build
+          path: artifacts/core-vitals/
+          if-no-files-found: warn
