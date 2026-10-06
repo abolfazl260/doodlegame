@@ -24,6 +24,17 @@ jobs:
       - name: Physics and motion regressions
         run: npm test
 
+      - name: Verify monetization guardrail
+        run: npm run ci:verify-monetization
+
+      - name: Upload monetization dependency inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doodlegame-monetization-guardrail
+          path: artifacts/monetization-guardrail/
+          if-no-files-found: warn
+
       - name: Build
         run: npm run build
 

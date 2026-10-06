@@ -44,6 +44,9 @@ jobs:
       - name: Audit Google Play privacy surface
         run: npm run android:audit:privacy
 
+      - name: Verify monetization guardrail
+        run: npm run ci:verify-monetization
+
       - name: Verify production hardening
         run: npm run android:verify:production
 
@@ -69,6 +72,13 @@ jobs:
         with:
           name: doodlegame-privacy-audit
           path: artifacts/privacy-audit/
+          if-no-files-found: error
+
+      - name: Upload monetization dependency inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: doodlegame-monetization-guardrail
+          path: artifacts/monetization-guardrail/
           if-no-files-found: error
 
       - name: Upload Google Play compliance report
