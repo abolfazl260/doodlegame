@@ -316,6 +316,22 @@ export class GameSession{
 
   this.resolveStaticHorizontalOverlap(left,leftStart);
   this.resolveStaticHorizontalOverlap(right,rightStart);
+
+  // A static edge may clamp one fighter back toward the pair after depenetration.
+  // Transfer the remaining correction to the other fighter instead of relying on
+  // repeated half-distance iterations that can leave a small residual overlap.
+  let residual=separation-(right.x-left.x);
+  if(residual>0){
+   const beforeRight=right.x;
+   right.x+=residual;
+   this.resolveStaticHorizontalOverlap(right,beforeRight);
+   residual=separation-(right.x-left.x);
+  }
+  if(residual>0){
+   const beforeLeft=left.x;
+   left.x-=residual;
+   this.resolveStaticHorizontalOverlap(left,beforeLeft);
+  }
   return true;
  }
  private resolveStaticHorizontalOverlap(f:Fighter,previousX:number){
