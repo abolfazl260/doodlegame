@@ -1,6 +1,6 @@
 import {GameState} from "../core/GameState";
 import type {WeaponId} from "../input/Input";
-import type {ArenaId} from "../gameplay/GameSession";
+import type {ArenaId,GameModeId,HillState} from "../gameplay/GameSession";
 
 const ARENAS:Readonly<Record<ArenaId,string>>={
  classic:"CLASSIC",towers:"TOWERS",pit:"PIT",steps:"STEPS",zigzag:"ZIGZAG",sky:"SKY",
@@ -9,6 +9,7 @@ const ARENAS:Readonly<Record<ArenaId,string>>={
 const LABELS:Readonly<Record<WeaponId,string>>={
  blade:"BLADE",hammer:"HAMMER",blaster:"BLASTER",uzi:"UZI",boomerang:"BOOMERANG",bow:"BOW",bomb:"BOMB",missile:"MISSILE"
 };
+const MODES:Readonly<Record<GameModeId,string>>={duel:"DUEL","missile-duel":"MISSILE DUEL","melee-only":"MELEE ONLY","random-weapons":"RANDOM WEAPONS","sudden-death":"SUDDEN DEATH","low-gravity":"LOW GRAVITY","king-of-hill":"KING OF THE HILL"};
 const UPGRADES:Readonly<Record<WeaponId,{name:string;description:string}>>={
  blade:{name:"TWIN SLASH",description:"Wider strike with heavier follow-through damage."},
  hammer:{name:"GROUND SLAM",description:"Grounded hits create a short-range shockwave."},
@@ -21,12 +22,12 @@ const UPGRADES:Readonly<Record<WeaponId,{name:string;description:string}>>={
 };
 
 type HudState={
- playerHealth:number;opponentHealth:number;weapon:WeaponId;winner:"player"|"opponent"|null;arena:ArenaId;
+ playerHealth:number;opponentHealth:number;weapon:WeaponId;winner:"player"|"opponent"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;missileAngle:number;missilePower:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
 };
 type Actions={
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
- weaponSelect:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;
+ weaponSelect:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
  setTouchMove:(x:number,y:number)=>void;touchJump:()=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;
 };
@@ -50,6 +51,8 @@ export class GameUI{
  private buttons=document.createElement("div");
  private weaponList=document.createElement("div");
  private arenaList=document.createElement("div");
+ private modeList=document.createElement("div");
+ private rotateHint=document.createElement("div");
  private upgradePanel=document.createElement("div");
  private upgradeGrid=document.createElement("div");
  private upgradePointsLabel=document.createElement("span");
@@ -95,6 +98,9 @@ export class GameUI{
   this.buttons.className="game-ui__controls";
   this.weaponList.className="game-ui__weapon-list";
   this.arenaList.className="game-ui__arena-list";
+  this.modeList.className="game-ui__mode-list";
+  this.rotateHint.className="game-ui__rotate-hint";
+  this.rotateHint.textContent="ROTATE DEVICE FOR A BETTER VIEW";
 
   this.upgradePanel.className="game-ui__upgrade-panel";
   this.upgradeGrid.className="game-ui__upgrade-grid";
@@ -148,6 +154,14 @@ export class GameUI{
    b.onclick=()=>actions.arenaSelect(id);
    this.arenaList.append(b);
   }
+  for(const id of Object.keys(MODES) as GameModeId[]){
+   const b=document.createElement("button");
+   b.type="button";
+   b.dataset.mode=id;
+   b.textContent=MODES[id];
+   b.onclick=()=>actions.modeSelect(id);
+   this.modeList.append(b);
+  }
   for(const id of Object.keys(LABELS) as WeaponId[]){
    const item=document.createElement("button");
    item.type="button";
@@ -183,6 +197,7 @@ export class GameUI{
   powerRow.append(this.powerInput,this.powerLabel);
   this.missilePanel.append(angleRow,powerRow,this.fireButton);
 
+  const haptic=(duration=10)=>{if(typeof navigator!=="undefined"&&"vibrate" in navigator)navigator.vibrate(duration);};
   let joystickPointer=-1;
   const updateJoystick=(e:PointerEvent)=>{
    const rect=this.joystick.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
@@ -192,22 +207,23 @@ export class GameUI{
    this.joystickThumb.style.transform="translate(calc(-50% + "+dx+"px), calc(-50% + "+dy+"px))";
    actions.setTouchMove(dx/max,dy/max);
   };
-  this.joystick.addEventListener("pointerdown",e=>{e.preventDefault();joystickPointer=e.pointerId;this.joystick.setPointerCapture(e.pointerId);updateJoystick(e);});
+  this.joystick.addEventListener("pointerdown",e=>{e.preventDefault();joystickPointer=e.pointerId;this.joystick.classList.add("active");this.joystick.setPointerCapture(e.pointerId);updateJoystick(e);});
   this.joystick.addEventListener("pointermove",e=>{if(e.pointerId===joystickPointer)updateJoystick(e);});
   const releaseJoystick=(e:PointerEvent)=>{
    if(e.pointerId!==joystickPointer)return;
    joystickPointer=-1;
+   this.joystick.classList.remove("active");
    this.joystickThumb.style.transform="translate(-50%,-50%)";
    actions.setTouchMove(0,0);
   };
   this.joystick.addEventListener("pointerup",releaseJoystick);
   this.joystick.addEventListener("pointercancel",releaseJoystick);
-  this.jumpButton.addEventListener("pointerdown",e=>{e.preventDefault();actions.touchJump();});
-  this.mobileAttackButton.addEventListener("pointerdown",e=>{e.preventDefault();actions.touchAttackStart();});
+  this.jumpButton.addEventListener("pointerdown",e=>{e.preventDefault();haptic(12);actions.touchJump();});
+  this.mobileAttackButton.addEventListener("pointerdown",e=>{e.preventDefault();haptic(16);actions.touchAttackStart();});
   this.mobileAttackButton.addEventListener("pointerup",e=>{e.preventDefault();actions.touchAttackEnd();});
   this.mobileAttackButton.addEventListener("pointercancel",e=>{e.preventDefault();actions.touchAttackEnd();});
 
-  this.root.append(this.title,helpButton,this.help,this.status,this.details,this.upgradePanel,this.arenaList,this.playerHealth,this.opponentHealth,this.weaponList,this.missilePanel,this.bowPanel,this.buttons,this.mobileControls);
+  this.root.append(this.title,helpButton,this.help,this.status,this.details,this.upgradePanel,this.modeList,this.arenaList,this.playerHealth,this.opponentHealth,this.weaponList,this.missilePanel,this.bowPanel,this.buttons,this.mobileControls,this.rotateHint);
   container.append(this.root);
  }
 
@@ -227,13 +243,14 @@ export class GameUI{
   this.root.classList.toggle("paused",state===GameState.PAUSED);
   this.root.classList.toggle("game-over",state===GameState.GAME_OVER);
   this.root.dataset.arena=s.arena;
+  this.root.dataset.mode=s.mode;
 
   const upgraded=new Set(s.upgradedWeapons);
   const equipped=upgraded.has(s.weapon)?UPGRADES[s.weapon].name:LABELS[s.weapon];
-  this.status.textContent=s.winner?(s.winner==="player"?"YOU WIN":"YOU LOSE"):"DUEL";
+  this.status.textContent=s.winner?(s.winner==="player"?"YOU WIN":"YOU LOSE"):s.mode==="king-of-hill"?`HILL  ${s.hill.player.toFixed(1)} — ${s.hill.opponent.toFixed(1)} / ${s.hill.target.toFixed(0)}`:MODES[s.mode];
   const player=Math.max(0,Math.min(100,s.playerHealth));
   const opponent=Math.max(0,Math.min(100,s.opponentHealth));
-  this.details.textContent=`EQUIPPED  ${equipped}${s.arena==="fortress"?`  •  ANGLE ${Math.round(s.missileAngle)}°  •  POWER ${s.missilePower.toFixed(1)}`:""}`;
+  this.details.textContent=`${MODES[s.mode]}  •  EQUIPPED ${equipped}${s.weapon==="missile"?`  •  ANGLE ${Math.round(s.missileAngle)}°  •  POWER ${s.missilePower.toFixed(1)}`:""}`;
 
   this.angleInput.value=String(s.missileAngle);
   this.powerInput.value=String(s.missilePower);
@@ -244,12 +261,17 @@ export class GameUI{
    const b=item as HTMLButtonElement;
    b.classList.toggle("active",b.dataset.arena===s.arena);
   }
+  for(const item of this.modeList.children){
+   const b=item as HTMLButtonElement;
+   b.classList.toggle("active",b.dataset.mode===s.mode);
+  }
+  const missileRules=s.mode==="missile-duel"||(s.arena==="fortress"&&s.mode==="duel");
   for(const item of this.weaponList.children){
    const x=item as HTMLButtonElement;
    const id=x.dataset.weapon as WeaponId;
    x.classList.toggle("active",id===s.weapon);
    x.textContent=LABELS[id]+(upgraded.has(id)?" ★":"");
-   x.hidden=(s.arena==="fortress"&&id!=="missile")||(s.arena!=="fortress"&&id==="missile");
+   x.hidden=missileRules?id!=="missile":s.mode==="melee-only"?(id!=="blade"&&id!=="hammer"):s.mode==="random-weapons"?id!==s.weapon:id==="missile";
   }
   for(const item of this.upgradeGrid.children){
    const x=item as HTMLButtonElement;
@@ -271,6 +293,7 @@ export class GameUI{
   this.opponentHealth.style.setProperty("--health",`${opponent}%`);
 
   this.arenaList.hidden=state!==GameState.MENU&&state!==GameState.GAME_OVER;
+  this.modeList.hidden=state!==GameState.MENU&&state!==GameState.GAME_OVER;
   this.weaponList.hidden=state!==GameState.PLAYING||s.winner!==null;
   this.missilePanel.hidden=state!==GameState.PLAYING||s.winner!==null||s.weapon!=="missile";
   this.bowPanel.hidden=state!==GameState.PLAYING||s.winner!==null||s.weapon!=="bow";

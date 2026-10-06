@@ -147,3 +147,36 @@ test('all eight weapon upgrades change their combat behavior',()=>{
  const children=game.projectiles.filter(p=>p.clusterChild);
  assert.equal(children.length,4);assert.ok(children.every(p=>p.damageScale===.42));
 });
+
+
+test('game modes apply weapon rules without losing upgrade progression',()=>{
+ const {game}=setup();game.upgradePoints=1;assert.equal(game.upgradeWeapon('missile'),true);
+ game.setMode('missile-duel');
+ let state=game.getRenderState();
+ assert.equal(state.mode,'missile-duel');assert.equal(state.arena,'classic');assert.equal(state.player.weapon,'missile');assert.equal(state.opponent.weapon,'missile');assert.ok(state.upgradedWeapons.includes('missile'));
+ game.setMode('melee-only');state=game.getRenderState();assert.ok(['blade','hammer'].includes(state.player.weapon));assert.ok(['blade','hammer'].includes(state.opponent.weapon));
+ game.selectWeaponById('blaster');assert.ok(['blade','hammer'].includes(game.getRenderState().player.weapon));
+ game.selectWeapon(1);assert.equal(game.getRenderState().player.weapon,'hammer');
+ game.setMode('random-weapons');const randomWeapon=game.getRenderState().player.weapon;game.selectWeapon(1);game.selectWeaponById('blade');assert.equal(game.getRenderState().player.weapon,randomWeapon);
+});
+
+test('sudden death makes any positive hit lethal',()=>{
+ const {game}=setup();game.setMode('sudden-death');assert.ok(game.opponent.health>0);game.damage(game.opponent,.1,0);assert.equal(game.opponent.health,0);
+});
+
+test('low gravity reduces fighter and projectile downward acceleration',()=>{
+ const normal=setup().game,low=setup().game;low.setMode('low-gravity');
+ normal.player.grounded=false;low.player.grounded=false;normal.player.y=5;low.player.y=5;normal.player.velocityY=0;low.player.velocityY=0;
+ normal.integrate(normal.player,.1);low.integrate(low.player,.1);
+ assert.ok(Math.abs(low.player.velocityY)<Math.abs(normal.player.velocityY));
+ const pNormal={x:0,y:5,vx:0,vy:0,life:1,weapon:'bow',owner:'player',originX:0,returning:false,spin:0,age:0,bounce:0,ricochets:0};
+ const pLow={...pNormal};normal.projectiles=[pNormal];low.projectiles=[pLow];normal.updateProjectiles(.1);low.updateProjectiles(.1);
+ assert.ok(Math.abs(pLow.vy)<Math.abs(pNormal.vy));
+});
+
+test('king of the hill awards uncontested center control, victory and upgrade point',()=>{
+ const {game}=setup();game.setMode('king-of-hill');game.player.x=0;game.opponent.x=5;
+ const before=game.upgradePoints;
+ for(let i=0;i<90&&!game.winner;i++)game.update(.1);
+ const state=game.getRenderState();assert.equal(state.mode,'king-of-hill');assert.ok(state.hill.player>=state.hill.target);assert.equal(state.winner,'player');assert.equal(state.upgradePoints,before+1);
+});
