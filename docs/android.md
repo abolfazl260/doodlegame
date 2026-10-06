@@ -195,15 +195,22 @@ Do not edit generated files under `android/` and expect those changes to persist
 
 The generated Capacitor project currently uses its generated/default Android launcher and splash resources. Before a public store release, provide final high-resolution icon/splash source artwork and generate the Android resource set. That work does not require changing gameplay code.
 
-## Phase 2: game-coupled mobile work
+## Mobile runtime behavior
 
-The following Android/mobile items are intentionally deferred because they touch or depend on game/UI behavior rather than build infrastructure:
+The Android wrapper uses Capacitor 8 SystemBars in immersive mode. Safe-area values are exposed to CSS through the SystemBars inset variables with `env(safe-area-inset-*)` as a browser fallback.
 
-- safe-area CSS around notches and system bars
-- immersive fullscreen behavior coordinated with touch controls
-- Android back-button -> pause/menu behavior
-- app pause/resume integration with the game loop
-- touch/Missile UI changes
-- device-level gameplay acceptance testing and any fixes it reveals
+Runtime behavior:
 
-This separation keeps Phase 1 limited to packaging, build, signing, CI, and native scaffolding.
+- Android system bars are hidden on launch and hidden again when the app becomes active.
+- Leaving the app while a fight is running pauses the game loop.
+- Returning to the app keeps the game paused until the player presses Resume.
+- Android Back pauses an active fight.
+- Android Back from Pause or Game Over returns to the game menu.
+- Android Back from the menu exits the app.
+- Touch input is cleared whenever Pause/Resume/menu navigation occurs so movement or attack cannot remain stuck after an interruption.
+- The mobile missile panel only contains compact Angle/Power sliders; the separate FIRE MISSILE button is hidden because the on-screen ATTACK control already fires the missile.
+- HUD, joystick, action buttons, bow panel, and missile panel respect notch/gesture safe areas.
+
+## Remaining device acceptance work
+
+The build pipeline validates the web build plus Debug APK and unsigned Release APK/AAB in CI. Physical-device checks still need to cover cold start, audio/WebGL, touch feel across multiple aspect ratios, notch/cutout devices, and real Android task-switch/back-button behavior. Any device-specific defect discovered there should be handled as a separate fix.
