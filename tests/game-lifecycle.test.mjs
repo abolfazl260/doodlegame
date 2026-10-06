@@ -46,8 +46,10 @@ test('render state exposes the actual enemy maximum health',()=>{
 test('HUD wiring uses max health instead of a hard-coded 100',()=>{
  const gameSource=readFileSync(new URL('../src/core/Game.ts',import.meta.url),'utf8');
  const uiSource=readFileSync(new URL('../src/ui/GameUI.ts',import.meta.url),'utf8');
- assert.match(gameSource,/opponentMaxHealth:s\.opponent\.maxHealth/);
- assert.match(gameSource,/playerMaxHealth:s\.player\.maxHealth/);
+ assert.match(gameSource,/getHudState\(\)\{return this\.session\.getHudState\(\);\}/);
+ const sessionSource=readFileSync(new URL('../src/gameplay/GameSession.ts',import.meta.url),'utf8');
+ assert.match(sessionSource,/opponentMaxHealth:this\.opponent\.maxHealth/);
+ assert.match(sessionSource,/playerMaxHealth:this\.player\.maxHealth/);
  assert.match(uiSource,/opponentHealth\/opponentMax\*100/);
  assert.match(uiSource,/playerHealth\/playerMax\*100/);
  assert.match(uiSource,/opponentHealthLabel\.textContent=Math\.ceil\(opponentHealth\)\+"\/"\+Math\.ceil\(opponentMax\)/);
