@@ -12,6 +12,7 @@ export type Messages={
  buttons:{start:string;pause:string;resume:string;restart:string;help:string;jump:string;attack:string;fireMissile:string};
  status:{win:string;lose:string;duel:string;hill:string};
  details:{equipped:string;angle:string;power:string};
+ sections:{gameMode:string;arena:string};
  panels:{weaponUpgrades:string;missileControl:string;bowDraw:string;releaseToFire:string};
  upgrade:{points:string;choose:string;earn:string;upgraded:string;upgrade:string;locked:string};
  helpHtml:string;
@@ -30,6 +31,7 @@ const EN:Messages={
  buttons:{start:"Start",pause:"Pause",resume:"Resume",restart:"Restart",help:"HOW TO PLAY",jump:"JUMP",attack:"ATTACK",fireMissile:"FIRE MISSILE"},
  status:{win:"YOU WIN",lose:"YOU LOSE",duel:"DUEL",hill:"HILL"},
  details:{equipped:"EQUIPPED",angle:"ANGLE",power:"POWER"},
+ sections:{gameMode:"GAME MODE",arena:"ARENA"},
  panels:{weaponUpgrades:"WEAPON UPGRADES",missileControl:"MISSILE CONTROL",bowDraw:"BOW DRAW",releaseToFire:"RELEASE TO FIRE"},
  upgrade:{points:"UPGRADE POINTS",choose:"Choose a weapon upgrade before the next fight.",earn:"Win a duel to earn another point.",upgraded:"UPGRADED",upgrade:"UPGRADE",locked:"LOCKED"},
  helpHtml:"<strong>HOW TO PLAY</strong><br><br><b>MOVE</b> <span dir=\"ltr\">A / D or ← / →</span><br><b>JUMP</b> <span dir=\"ltr\">W / Space / ↑</span><br><b>ATTACK</b> <span dir=\"ltr\">Z / X</span><br><b>PREVIOUS WEAPON</b> <span dir=\"ltr\">Q / O</span><br><b>NEXT WEAPON</b> <span dir=\"ltr\">E / P</span><br><br><b>PROGRESSION</b><br>Win a duel to earn 1 Upgrade Point. Spend it between fights to permanently upgrade one weapon for this run.<br><br><b>WEAPONS</b><br>BLADE · HAMMER · BLASTER<br>UZI · BOOMERANG · BOW · BOMB · MISSILE",
@@ -55,6 +57,7 @@ const FA:Messages={
  buttons:{start:"شروع",pause:"توقف",resume:"ادامه",restart:"شروع دوباره",help:"راهنمای بازی",jump:"پرش",attack:"حمله",fireMissile:"شلیک موشک"},
  status:{win:"بردی",lose:"باختی",duel:"دوئل",hill:"تپه"},
  details:{equipped:"سلاح",angle:"زاویه",power:"قدرت"},
+ sections:{gameMode:"حالت بازی",arena:"میدان"},
  panels:{weaponUpgrades:"ارتقای سلاح‌ها",missileControl:"کنترل موشک",bowDraw:"کشش کمان",releaseToFire:"برای شلیک رها کن"},
  upgrade:{points:"امتیاز ارتقا",choose:"قبل از مبارزه بعدی یک ارتقای سلاح انتخاب کن.",earn:"برای گرفتن یک امتیاز دیگر، دوئل را ببر.",upgraded:"ارتقا یافته",upgrade:"ارتقا",locked:"قفل"},
  helpHtml:"<strong>راهنمای بازی</strong><br><br><b>حرکت</b> <span dir=\"ltr\">A / D یا ← / →</span><br><b>پرش</b> <span dir=\"ltr\">W / Space / ↑</span><br><b>حمله</b> <span dir=\"ltr\">Z / X</span><br><b>سلاح قبلی</b> <span dir=\"ltr\">Q / O</span><br><b>سلاح بعدی</b> <span dir=\"ltr\">E / P</span><br><br><b>پیشرفت</b><br>با بردن هر دوئل ۱ امتیاز ارتقا می‌گیری. بین مبارزه‌ها آن را خرج کن تا یکی از سلاح‌ها برای همین دور به‌صورت دائمی ارتقا پیدا کند.<br><br><b>سلاح‌ها</b><br>تیغه · چکش · بلستر<br>یوزی · بومرنگ · کمان · بمب · موشک",
