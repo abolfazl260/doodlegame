@@ -26,7 +26,7 @@ Generate/sync the Android project:
 npm run android:sync
 ```
 
-The command performs an Android-specific Vite build with relative asset paths, creates `android/` if needed, runs Capacitor sync, and applies the repository's deterministic Android configuration.
+The command performs an Android-specific Vite build with relative asset paths and source maps disabled, creates `android/` if needed, runs Capacitor sync, and applies the repository's deterministic Android configuration. The normal GitHub Pages build keeps source maps enabled.
 
 The normal web build remains unchanged:
 
@@ -188,6 +188,9 @@ The release workflow rejects a mismatched tag.
 - release R8 minification and resource shrinking
 - optional release signing from environment variables
 - landscape activity orientation
+- explicit WebView hardware acceleration
+- cleartext traffic disabled
+- removal of the template INTERNET permission because the packaged game is offline
 
 Do not edit generated files under `android/` and expect those changes to persist. Put reproducible native changes in the configuration script instead.
 
@@ -233,7 +236,7 @@ Runtime behavior:
 
 ## Automated emulator smoke test
 
-The Android CI also installs the generated Debug APK on an API 35 Pixel 6 emulator and validates:
+The Android CI also reports/enforces a 25 MB upper bound for each APK/AAB artifact, then installs the generated Debug APK on an API 35 Pixel 6 emulator and validates:
 
 - APK installation
 - cold start of `MainActivity`
