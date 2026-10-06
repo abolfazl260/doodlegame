@@ -102,3 +102,48 @@ test('destructible bridge sections support fighters until destroyed',()=>{
  section.active=false;game.player.y=top+1.1;game.player.velocityY=-2;game.player.grounded=false;game.integrate(game.player,.05);
  assert.equal(game.player.grounded,false);
 });
+
+test('victories award upgrade points and upgrades persist across rounds',()=>{
+ const {game}=setup();
+ game.opponent.x=game.player.x+1;game.opponent.y=game.player.y;game.opponent.health=1;
+ game.fireWeapon();game.update(1/120);
+ let state=game.getRenderState();
+ assert.equal(state.winner,'player');assert.equal(state.upgradePoints,1);
+ assert.equal(game.upgradeWeapon('bow'),true);assert.equal(game.upgradeWeapon('bow'),false);
+ game.reset();state=game.getRenderState();
+ assert.equal(state.upgradePoints,0);assert.ok(state.upgradedWeapons.includes('bow'));
+});
+
+test('all eight weapon upgrades change their combat behavior',()=>{
+ const {game}=setup();game.upgradePoints=8;
+ for(const id of ['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile'])assert.equal(game.upgradeWeapon(id),true);
+
+ game.opponent.x=game.player.x+1;game.opponent.y=game.player.y;
+ let before=game.opponent.health;game.player.weapon='blade';game.player.cooldown=0;game.fireWeapon();
+ assert.ok(before-game.opponent.health>8);
+
+ game.opponent.health=100;game.opponent.x=game.player.x+2;game.player.weapon='hammer';game.player.cooldown=0;game.player.grounded=true;game.fireWeapon();
+ assert.ok(game.opponent.health<100);assert.ok(game.explosions.some(e=>e.radius===2.35));
+
+ game.projectiles=[];game.player.weapon='blaster';game.player.cooldown=0;game.fireWeapon();
+ assert.equal(game.projectiles.length,3);assert.ok(game.projectiles.every(p=>p.damageScale===.58));
+
+ game.projectiles=[];game.player.weapon='uzi';game.player.cooldown=0;game.fireWeapon();
+ assert.equal(game.projectiles.length,1);assert.equal(game.projectiles[0].ricochets,2);
+
+ game.projectiles=[];game.player.weapon='boomerang';game.player.cooldown=0;game.fireWeapon();
+ assert.equal(game.projectiles.length,2);assert.ok(game.projectiles.every(p=>p.damageScale===.72));
+
+ game.projectiles=[];game.player.weapon='bow';game.player.cooldown=0;game.fireBow(game.player,1);
+ assert.equal(game.projectiles.length,3);assert.ok(game.projectiles.every(p=>p.damageScale===.65));
+
+ game.projectiles=[];game.player.weapon='bomb';game.player.cooldown=0;game.fireWeapon();
+ assert.equal(game.projectiles[0].sticky,true);
+ const sticky=game.projectiles[0];sticky.x=0;sticky.y=.3;sticky.vx=0;sticky.vy=-1;game.update(1/60);
+ assert.equal(sticky.stuck,true);
+
+ game.setArena('fortress');game.projectiles=[];game.player.cooldown=0;game.fireWeapon();
+ const missile=game.projectiles[0];game.explodeMissile(missile);
+ const children=game.projectiles.filter(p=>p.clusterChild);
+ assert.equal(children.length,4);assert.ok(children.every(p=>p.damageScale===.42));
+});
