@@ -4,7 +4,7 @@ import type {I18n,Locale} from "../i18n/I18n";
 import type {WeaponId} from "../input/Input";
 
 type HudState={
- playerHealth:number;opponentHealth:number;weapon:WeaponId;winner:"player"|"opponent"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
+ playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;missileAngle:number;missilePower:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
 };
 type Actions={
@@ -273,8 +273,9 @@ export class GameUI{
   const upgraded=new Set(s.upgradedWeapons);
   const equipped=upgraded.has(s.weapon)?messages.upgrades[s.weapon].name:messages.weapons[s.weapon];
   this.status.textContent=s.winner?(s.winner==="player"?messages.status.win:messages.status.lose):s.mode==="king-of-hill"?messages.status.hill+"  "+s.hill.player.toFixed(1)+" — "+s.hill.opponent.toFixed(1)+" / "+s.hill.target.toFixed(0):messages.modes[s.mode];
-  const player=Math.max(0,Math.min(100,s.playerHealth));
-  const opponent=Math.max(0,Math.min(100,s.opponentHealth));
+  const playerMax=Math.max(1,s.playerMaxHealth),opponentMax=Math.max(1,s.opponentMaxHealth);
+  const playerHealth=Math.max(0,Math.min(playerMax,s.playerHealth)),opponentHealth=Math.max(0,Math.min(opponentMax,s.opponentHealth));
+  const player=playerHealth/playerMax*100,opponent=opponentHealth/opponentMax*100;
   this.details.textContent=messages.modes[s.mode]+"  •  "+messages.details.equipped+" "+equipped+(s.weapon==="missile"?"  •  "+messages.details.angle+" "+Math.round(s.missileAngle)+"°  •  "+messages.details.power+" "+s.missilePower.toFixed(1):"");
 
   this.angleInput.value=String(s.missileAngle);
@@ -318,8 +319,8 @@ export class GameUI{
   this.upgradeHint.textContent=s.upgradePoints>0?messages.upgrade.choose:messages.upgrade.earn;
   this.upgradePanel.hidden=!((state===GameState.MENU||state===GameState.GAME_OVER)&&(s.upgradePoints>0||upgraded.size>0));
 
-  this.playerHealthLabel.textContent=Math.ceil(player)+"/100";
-  this.opponentHealthLabel.textContent=Math.ceil(opponent)+"/100";
+  this.playerHealthLabel.textContent=Math.ceil(playerHealth)+"/"+Math.ceil(playerMax);
+  this.opponentHealthLabel.textContent=Math.ceil(opponentHealth)+"/"+Math.ceil(opponentMax);
   this.playerHealth.style.setProperty("--health",player+"%");
   this.opponentHealth.style.setProperty("--health",opponent+"%");
 
