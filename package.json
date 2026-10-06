@@ -19,6 +19,7 @@
     "android:bundle:release": "npm run android:sync && node scripts/android/gradle.mjs bundleRelease"
   },
   "dependencies": {
+    "@capacitor/app": "^8.0.0",
     "@capacitor/android": "^8.0.0",
     "@capacitor/core": "^8.0.0",
     "three": "0.186.1"

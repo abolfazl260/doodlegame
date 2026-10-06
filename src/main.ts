@@ -1,3 +1,93 @@
-import "./styles.css";import {Game} from "./core/Game";import {GameState} from "./core/GameState";import {WebFrameScheduler} from "./platform/web/WebFrameScheduler";import {WebInput} from "./platform/web/WebInput";import {WebStorage} from "./platform/web/WebStorage";import {ThreeRenderer} from "./rendering/ThreeRenderer";import {CanvasRenderer} from "./rendering/CanvasRenderer";import {GameSession} from "./gameplay/GameSession";import {GameUI} from "./ui/GameUI";import {I18n} from "./i18n/I18n";import type {ArenaId,GameModeId} from "./gameplay/GameSession";import type {Renderer} from "./rendering/Renderer";
-const bootFallback=document.querySelector<HTMLElement>("#boot-fallback");const canvas=document.querySelector<HTMLCanvasElement>("#game-canvas");const root=document.querySelector<HTMLElement>("#ui-root");if(!canvas||!root)throw new Error("DoodleGame root elements are missing.");const input=new WebInput(canvas);const storage=new WebStorage();const i18n=new I18n(storage);let renderer:Renderer;try{renderer=new ThreeRenderer(canvas);}catch(error){console.warn("WebGL renderer unavailable; using canvas fallback.",error);renderer=new CanvasRenderer(canvas);}
-const game=new Game(renderer,new GameSession(input),new WebFrameScheduler(),error=>console.error("DoodleGame error:",error));const ui=new GameUI(root,{start:()=>game.start(),pause:()=>game.pause(),resume:()=>game.resume(),restart:()=>game.restart(),weaponNext:()=>game.selectWeapon(1),weaponPrevious:()=>game.selectWeapon(-1),weaponSelect:(id)=>game.selectWeaponById(id),upgradeWeapon:(id)=>game.upgradeWeapon(id),arenaSelect:(id:ArenaId)=>game.selectArena(id),modeSelect:(id:GameModeId)=>game.selectMode(id),setMissileAngle:(angle)=>game.setMissileAngle(angle),setMissilePower:(power)=>game.setMissilePower(power),fireWeapon:()=>game.fireWeapon(),setTouchMove:(x,y)=>input.setTouchMove(x,y),touchJump:()=>input.touchJump(),touchAttackStart:()=>input.touchAttack(true),touchAttackEnd:()=>input.touchAttackRelease()},i18n);ui.bind(l=>game.subscribe(l),()=>game.getHudState());input.start();game.initialize();window.addEventListener("keydown",e=>{if(e.code!=="Escape"||e.repeat)return;const state=game.getState();if(state===GameState.PLAYING){e.preventDefault();game.pause();}else if(state===GameState.PAUSED){e.preventDefault();game.resume();}});bootFallback?.remove();const resize=()=>game.resize();window.addEventListener("resize",resize);window.addEventListener("error",e=>console.error(e.error??e.message));window.addEventListener("unhandledrejection",e=>console.error(e.reason));window.addEventListener("beforeunload",()=>{input.dispose();game.dispose();ui.dispose();});
+import "./styles.css";
+import {Game} from "./core/Game";
+import {GameState} from "./core/GameState";
+import {GameSession} from "./gameplay/GameSession";
+import {I18n} from "./i18n/I18n";
+import {WebFrameScheduler} from "./platform/web/WebFrameScheduler";
+import {WebInput} from "./platform/web/WebInput";
+import {WebStorage} from "./platform/web/WebStorage";
+import {installNativeAppLifecycle} from "./platform/mobile/NativeAppLifecycle";
+import {CanvasRenderer} from "./rendering/CanvasRenderer";
+import type {Renderer} from "./rendering/Renderer";
+import {ThreeRenderer} from "./rendering/ThreeRenderer";
+import {GameUI} from "./ui/GameUI";
+import type {ArenaId,GameModeId} from "./gameplay/GameSession";
+
+const bootFallback=document.querySelector<HTMLElement>("#boot-fallback");
+const canvas=document.querySelector<HTMLCanvasElement>("#game-canvas");
+const root=document.querySelector<HTMLElement>("#ui-root");
+if(!canvas||!root)throw new Error("DoodleGame root elements are missing.");
+
+const input=new WebInput(canvas);
+const storage=new WebStorage();
+const i18n=new I18n(storage);
+let renderer:Renderer;
+try{
+ renderer=new ThreeRenderer(canvas);
+}catch(error){
+ console.warn("WebGL renderer unavailable; using canvas fallback.",error);
+ renderer=new CanvasRenderer(canvas);
+}
+
+const game=new Game(renderer,new GameSession(input),new WebFrameScheduler(),error=>console.error("DoodleGame error:",error));
+const pauseGame=()=>{input.resetTransientState();game.pause();};
+const resumeGame=()=>{input.resetTransientState();game.resume();};
+const stopToMenu=()=>{input.resetTransientState();game.stop();};
+
+const ui=new GameUI(root,{
+ start:()=>game.start(),
+ pause:pauseGame,
+ resume:resumeGame,
+ restart:()=>game.restart(),
+ weaponNext:()=>game.selectWeapon(1),
+ weaponPrevious:()=>game.selectWeapon(-1),
+ weaponSelect:(id)=>game.selectWeaponById(id),
+ upgradeWeapon:(id)=>game.upgradeWeapon(id),
+ arenaSelect:(id:ArenaId)=>game.selectArena(id),
+ modeSelect:(id:GameModeId)=>game.selectMode(id),
+ setMissileAngle:(angle)=>game.setMissileAngle(angle),
+ setMissilePower:(power)=>game.setMissilePower(power),
+ fireWeapon:()=>game.fireWeapon(),
+ setTouchMove:(x,y)=>input.setTouchMove(x,y),
+ touchJump:()=>input.touchJump(),
+ touchAttackStart:()=>input.touchAttack(true),
+ touchAttackEnd:()=>input.touchAttackRelease()
+},i18n);
+
+ui.bind(listener=>game.subscribe(listener),()=>game.getHudState());
+input.start();
+game.initialize();
+
+window.addEventListener("keydown",event=>{
+ if(event.code!=="Escape"||event.repeat)return;
+ const state=game.getState();
+ if(state===GameState.PLAYING){
+  event.preventDefault();
+  pauseGame();
+ }else if(state===GameState.PAUSED){
+  event.preventDefault();
+  resumeGame();
+ }
+});
+
+let disposeNativeLifecycle=()=>{};
+void installNativeAppLifecycle({
+ getState:()=>game.getState(),
+ pause:pauseGame,
+ stopToMenu,
+ resize:()=>game.resize()
+}).then(dispose=>{
+ disposeNativeLifecycle=dispose;
+}).catch(error=>console.error("Could not initialize native app lifecycle.",error));
+
+bootFallback?.remove();
+const resize=()=>game.resize();
+window.addEventListener("resize",resize);
+window.addEventListener("error",event=>console.error(event.error??event.message));
+window.addEventListener("unhandledrejection",event=>console.error(event.reason));
+window.addEventListener("beforeunload",()=>{
+ disposeNativeLifecycle();
+ input.dispose();
+ game.dispose();
+ ui.dispose();
+});
