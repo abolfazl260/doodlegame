@@ -193,7 +193,27 @@ Do not edit generated files under `android/` and expect those changes to persist
 
 ## Branding
 
-The generated Capacitor project currently uses its generated/default Android launcher and splash resources. Before a public store release, provide final high-resolution icon/splash source artwork and generate the Android resource set. That work does not require changing gameplay code.
+Android branding is reproducible and applied during every `android:sync`.
+
+Source files:
+
+```text
+assets/android/branding.json
+assets/android/doodlegame-mark.svg
+```
+
+`branding.json` is the generator source of truth. It defines the monochrome doodle mark, foreground/background colors, and vector paths. The SVG is a human-readable preview/reference of the same mark.
+
+`scripts/android/configure.mjs` generates:
+
+- a density-independent legacy launcher vector for API 24/25
+- adaptive launcher and round icons for API 26+
+- a black splash drawable with the DoodleGame mark
+- launch-theme wiring so the WebView does not begin with the default white Capacitor splash
+
+Because the launcher assets are vectors, separate PNG copies for mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi are not required. Android rasterizes the resource for each device density.
+
+To replace the temporary/minimal DoodleGame mark later, update both branding source files and run `npm run android:sync`.
 
 ## Mobile runtime behavior
 
@@ -211,6 +231,22 @@ Runtime behavior:
 - The mobile missile panel only contains compact Angle/Power sliders; the separate FIRE MISSILE button is hidden because the on-screen ATTACK control already fires the missile.
 - HUD, joystick, action buttons, bow panel, and missile panel respect notch/gesture safe areas.
 
+## Automated emulator smoke test
+
+The Android CI also installs the generated Debug APK on an API 35 Pixel 6 emulator and validates:
+
+- APK installation
+- cold start of `MainActivity`
+- application process remains alive after startup
+- activity reaches resumed state
+- background -> foreground restoration
+- Android Back exits from the menu
+- no package-specific fatal Android exception is present in logcat
+
+CI uploads launch/final screenshots and logcat as the `doodlegame-emulator-smoke` artifact.
+
+This smoke test is intentionally not treated as a replacement for real-device gameplay testing.
+
 ## Remaining device acceptance work
 
-The build pipeline validates the web build plus Debug APK and unsigned Release APK/AAB in CI. Physical-device checks still need to cover cold start, audio/WebGL, touch feel across multiple aspect ratios, notch/cutout devices, and real Android task-switch/back-button behavior. Any device-specific defect discovered there should be handled as a separate fix.
+Automated CI now validates web build, Debug APK, unsigned Release APK/AAB, cold start and basic Android lifecycle on an emulator. Physical-device checks still need to cover audio/WebGL quality, multitouch feel across multiple aspect ratios, notch/cutout devices, and real task-switch/back-button behavior during an active fight. Any device-specific defect discovered there should be handled as a separate fix.
