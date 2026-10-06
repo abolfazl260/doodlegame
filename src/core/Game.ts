@@ -6,7 +6,7 @@ export class Game{
  start(){this.ready();const s=this.state.getState();if(s===GameState.MENU||s===GameState.GAME_OVER){this.session.reset();this.state.transitionTo(GameState.PLAYING);}else if(s===GameState.PAUSED)this.state.transitionTo(GameState.PLAYING);this.loop.start();}
  pause(){this.ready();if(this.state.getState()===GameState.PLAYING){this.loop.stop();this.state.transitionTo(GameState.PAUSED);}}
  resume(){this.ready();if(this.state.getState()===GameState.PAUSED){this.state.transitionTo(GameState.PLAYING);this.loop.start();}}
- endGame(){this.ready();if(this.state.getState()===GameState.PLAYING){this.loop.stop();this.state.transitionTo(GameState.GAME_OVER);}}
+ endGame(){this.ready();if(this.state.getState()===GameState.PLAYING){this.state.transitionTo(GameState.GAME_OVER);}}
  stop(){if(this.disposed)return;this.loop.stop();if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);}
  restart(){this.ready();this.loop.stop();this.session.reset();this.state.reset();this.start();}
  selectWeapon(direction:1|-1){this.ready();this.session.selectWeapon(direction);}
@@ -20,6 +20,6 @@ export class Game{
  subscribe(listener:(state:GameState)=>void){return this.state.subscribe(listener);}getState(){return this.state.getState();}
  resize(){this.assertNotDisposed();if(this.initialized)this.renderer.resize();}
  dispose(){if(this.disposed)return;this.loop.dispose();this.session.dispose();this.renderer.dispose();this.state.dispose();this.disposed=true;}
- private update(dt:number){if(this.state.getState()===GameState.PLAYING){this.session.update(dt);if(this.session.getRenderState().winner)this.endGame();}}
+ private update(dt:number){if(this.state.getState()===GameState.GAME_OVER){this.session.update(dt);if(this.session.getRenderState().explosions.length===0)this.loop.stop();return;}if(this.state.getState()===GameState.PLAYING){this.session.update(dt);if(this.session.getRenderState().winner)this.endGame();}}
  private ready(){this.assertNotDisposed();if(!this.initialized)throw new Error("Game must be initialized before lifecycle operations.");}private assertNotDisposed(){if(this.disposed)throw new Error("Game has been disposed.");}
 }

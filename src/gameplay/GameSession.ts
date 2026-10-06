@@ -459,6 +459,7 @@ export class GameSession{
  }
  private explode(p:Projectile){
   const w=WEAPONS.bomb;
+  this.explosions.push({x:p.x,y:p.y,age:0,life:.75,radius:w.radius!});
   for(const e of this.environment){if(e.active&&Math.hypot(e.x-p.x,e.y-p.y)<=w.radius!*1.2){if(e.kind==="barrel")this.explodeBarrel(e,Math.sign(e.x-p.x)||1);else if(e.kind==="wall"||e.kind==="rock"){e.hp=Math.max(0,e.hp-w.damage*.8);e.pulse=1;if(e.hp<=0)e.active=false;}else if(e.kind==="box"){e.vx+=Math.sign(e.x-p.x||1)*5;e.vy=Math.max(e.vy,5);e.pulse=1;}}}
   const target=p.owner==="player"?this.opponent:this.player;
   const owner=p.owner==="player"?this.player:this.opponent;

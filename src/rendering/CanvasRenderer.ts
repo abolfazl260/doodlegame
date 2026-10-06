@@ -10,24 +10,30 @@ export class CanvasRenderer implements Renderer{
       if(p.weapon==="boomerang"){
         c.save();c.translate(px,py);c.rotate(-p.rotation);c.beginPath();c.arc(0,0,Math.max(3,scale*.18),-.95,.95);c.stroke();c.beginPath();c.arc(0,0,Math.max(2,scale*.11),.95,2.15);c.stroke();c.restore();
       }else if(p.weapon==="bow"){const len=scale*.58;c.save();c.translate(px,py);c.rotate(-p.rotation);c.lineWidth=Math.max(2,scale*.045);c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.16,-scale*.11);c.moveTo(len,0);c.lineTo(len-scale*.16,scale*.11);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len+scale*.11,-scale*.09);c.moveTo(-len,0);c.lineTo(-len+scale*.11,scale*.09);c.stroke();c.globalAlpha=.22;c.lineWidth=Math.max(1,scale*.03);c.beginPath();c.moveTo(-len*.85,0);c.lineTo(-len*1.65,0);c.stroke();c.restore();}else if(p.weapon==="missile"){const speed=Math.hypot(p.vx,p.vy);const trail=Math.max(scale*.55,Math.min(scale*1.9,scale*(.55+speed*.045)));const nx=speed>.01?p.vx/speed:1,ny=speed>.01?p.vy/speed:0;c.save();c.globalAlpha=.28;c.lineWidth=Math.max(2,scale*.075);c.beginPath();c.moveTo(px-nx*.10*scale,py+ny*.10*scale);c.lineTo(px-nx*trail,py+ny*trail);c.stroke();c.globalAlpha=.9;c.fillStyle="#fff";c.beginPath();c.arc(px-nx*trail,py+ny*trail,Math.max(2,scale*.055),0,Math.PI*2);c.fill();c.globalAlpha=.9;c.save();c.translate(px,py);c.rotate(-p.rotation);const len=scale*.62;c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len+scale*.14,-scale*.09);c.moveTo(-len,0);c.lineTo(-len+scale*.14,scale*.09);c.stroke();c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.12,-scale*.07);c.moveTo(len,0);c.lineTo(len-scale*.12,scale*.07);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len-scale*.18,-scale*.10);c.moveTo(-len,0);c.lineTo(-len-scale*.18,scale*.10);c.stroke();c.restore();c.restore();}else if(p.weapon==="bomb"){
-        const blink=p.life<.6&&Math.floor(p.life*18)%2===0;
-        if(!blink){c.beginPath();c.arc(px,py,Math.max(3,scale*.12),0,Math.PI*2);c.fill();}
-        c.beginPath();c.arc(px,py,Math.max(5,scale*(.16+(1-p.life/1.5)*.06)),0,Math.PI*2);c.stroke();
+        c.save();c.translate(px,py);c.rotate(-p.rotation);
+        const warning=p.life<.55?1+Math.sin(p.age*45)*.1:1;c.scale(warning,warning);
+        c.fillStyle='#252525';c.strokeStyle='#fff';c.lineWidth=Math.max(2,scale*.025);
+        c.beginPath();c.arc(0,0,scale*.18,0,Math.PI*2);c.fill();c.stroke();
+        c.beginPath();c.moveTo(-.08*scale,-.07*scale);c.lineTo(-.03*scale,-.12*scale);
+        c.moveTo(0,-.17*scale);c.lineTo(0,-.25*scale);c.lineTo(.08*scale,-.3*scale);c.lineTo(.06*scale,-.36*scale);c.stroke();
+        c.fillStyle='#fff';c.beginPath();c.arc(.06*scale,-.36*scale,scale*.055*(.7+.6*Math.abs(Math.sin(p.age*38))),0,Math.PI*2);c.fill();c.restore();
       }else{
         const r=Math.max(2,scale*.075),speed=Math.hypot(p.vx,p.vy),len=Math.max(scale*.12,Math.min(scale*.55,scale*.12+speed*scale*.018));
         c.beginPath();c.moveTo(px-Math.sign(p.vx)*len,py);c.lineTo(px,py);c.stroke();c.beginPath();c.arc(px,py,r,0,Math.PI*2);c.fill();
       }
     }this.drawExplosions(c,state.explosions,toX,toY,scale);}
- private drawExplosions(c:CanvasRenderingContext2D,items:GameRenderState["explosions"],toX:(x:number)=>number,toY:(y:number)=>number,scale:number){
+ private drawExplosions(c:CanvasRenderingContext2D,items:GameRenderState['explosions'],toX:(x:number)=>number,toY:(y:number)=>number,scale:number){
   for(const e of items){
-    const progress=Math.max(0,Math.min(1,e.age/e.life));
-    const fade=1-progress;
-    const x=toX(e.x),y=toY(e.y),r=e.radius*scale*(.55+progress*1.65);
-    c.save();c.strokeStyle="#fff";c.fillStyle="#fff";c.lineWidth=Math.max(2,scale*.05);
-    c.globalAlpha=.14*fade;c.beginPath();c.arc(x,y,r*.48,0,Math.PI*2);c.fill();
-    c.globalAlpha=.92*fade;c.beginPath();c.arc(x,y,r*.72,0,Math.PI*2);c.stroke();
-    c.globalAlpha=.78*fade;c.lineWidth=Math.max(2,scale*.035);c.beginPath();c.arc(x,y,r*.34,0,Math.PI*2);c.fill();
-    c.restore();
+   const t=Math.max(0,Math.min(1,e.age/e.life)),fade=1-t,r=e.radius*scale;
+   c.save();c.translate(toX(e.x),toY(e.y));c.strokeStyle='#fff';c.fillStyle='#fff';
+   c.globalAlpha=.8*Math.max(0,1-t*5);c.beginPath();c.arc(0,0,r*.38*(1+t*2),0,Math.PI*2);c.fill();
+   c.globalAlpha=.85*fade;c.lineWidth=Math.max(2,r*.06);c.beginPath();c.arc(0,0,r*(.15+.85*Math.min(1,t*2.5)),0,Math.PI*2);c.stroke();
+   c.globalAlpha=.9*Math.max(0,1-t*3);c.beginPath();c.arc(0,0,r*.25*(1+t*3),0,Math.PI*2);c.fill();
+   c.globalAlpha=fade*fade;c.lineWidth=Math.max(2,r*.035);
+   for(let i=0;i<12;i++){const a=i*Math.PI/6,d=.15+t*(.65+((i+3)%3)*.12),x=Math.cos(a)*d,y=Math.sin(a)*d-t*t*.35,len=.09*(1-t*.7);c.beginPath();c.moveTo((x-Math.cos(a)*len)*r,-(y-Math.sin(a)*len)*r);c.lineTo((x+Math.cos(a)*len)*r,-(y+Math.sin(a)*len)*r);c.stroke();}
+   c.globalAlpha=.35*fade;c.lineWidth=Math.max(1,r*.035);
+   for(let i=0;i<6;i++){const a=i*Math.PI/3,d=.2+t*.48;c.beginPath();c.arc(Math.cos(a)*d*r,-(Math.sin(a)*d+t*.35)*r,r*.175*(.7+t*1.5),0,Math.PI*2);c.stroke();}
+   c.restore();
   }
  }
  private drawEnvironment(c:CanvasRenderingContext2D,items:GameRenderState["environment"],toX:(x:number)=>number,toY:(y:number)=>number,scale:number){

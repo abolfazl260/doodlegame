@@ -80,7 +80,8 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
    line([.12,-.24],[.4,-.28]);break;
   case 'bomb':
    for(let i=0;i<16;i++){const a=i*Math.PI/8,b=(i+1)*Math.PI/8;line([Math.cos(a)*.2,Math.sin(a)*.2],[Math.cos(b)*.2,Math.sin(b)*.2]);}
-   rect(-.05,.18,.1,.07);path([[0,.25],[.09,.31],[.06,.4]]);break;
+   rect(-.05,.18,.1,.07);path([[0,.25],[.09,.31],[.06,.4]]);
+   for(let i=0;i<4;i++){const a=i*Math.PI/2+s.animationTime*8,r=.035+.025*Math.abs(Math.sin(s.animationTime*19));line([.06,.4],[.06+Math.cos(a)*r,.4+Math.sin(a)*r]);}break;
   case 'missile':
    rect(-.2,-.11,.68,.22);path([[.48,-.11],[.68,0],[.48,.11]]);
    path([[-.15,-.11],[-.3,-.23],[.03,-.11]]);path([[-.15,.11],[-.3,.23],[.03,.11]]);

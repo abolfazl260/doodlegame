@@ -34,3 +34,13 @@ test('Canvas render balances transformations and opacity for missiles and every 
  }
  delete globalThis.window;
 });
+test('bomb and multi-stage explosion geometry stays finite throughout its lifetime',async()=>{
+ const {ThreeRenderer}=await rendererModule('ThreeRenderer');const renderer=Object.create(ThreeRenderer.prototype);
+ const bomb=renderer.buildBomb();assert.equal(bomb.children.length,4);
+ const explosion=renderer.buildExplosion();assert.equal(explosion.children.length,21);
+ for(const age of [0,.04,.2,.5,.74]){
+  renderer.drawExplosion(explosion,{x:2,y:3,age,life:.75,radius:1.8});
+  assert.equal(explosion.position.x,2);assert.equal(explosion.scale.x,1.8);
+  for(const child of explosion.children){assert.ok([child.position.x,child.position.y,child.scale.x,child.material.opacity].every(Number.isFinite));assert.ok(child.material.opacity>=0&&child.material.opacity<=1);}
+ }
+});

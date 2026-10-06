@@ -64,3 +64,17 @@ test('active melee parry redirects ownership while projectiles continue aging',(
  assert.equal(game.deflectProjectile(p,f,cx-.1,p.y),false);
  f.attackTime=0;p.deflectCooldown=0;assert.equal(game.deflectProjectile(p,f,cx-.1,p.y),false);
 });
+test('bomb fuse expiry removes the bomb and emits one visible blast that fades',()=>{
+ const {game}=setup();game.selectWeaponById('bomb');game.fireWeapon();
+ for(let i=0;i<181;i++)game.update(1/120);
+ assert.equal(game.projectiles.length,0);assert.equal(game.explosions.length,1);
+ const blast=game.explosions[0];assert.equal(blast.radius,1.8);assert.equal(blast.life,.75);assert.ok(blast.age>=0&&blast.age<.75);
+ for(let i=0;i<100;i++)game.update(1/120);assert.equal(game.explosions.length,0);
+});
+test('close-range bomb detonates once and the final-hit explosion continues fading',()=>{
+ const {game}=setup();game.opponent.x=0;game.opponent.y=1.15;game.opponent.health=1;
+ game.projectiles.push({x:0,y:1.15,vx:0,vy:0,life:.5,weapon:'bomb',owner:'player',originX:0,returning:false,spin:0,age:1,bounce:0,ricochets:0});
+ game.update(1/120);assert.equal(game.projectiles.length,0);assert.equal(game.explosions.length,1);assert.equal(game.winner,'player');
+ const before=game.explosions[0].age;game.update(.1);assert.ok(game.explosions[0].age>before);
+ for(let i=0;i<10;i++)game.update(.1);assert.equal(game.explosions.length,0);
+});
