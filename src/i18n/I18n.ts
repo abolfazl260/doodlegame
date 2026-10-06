@@ -10,6 +10,7 @@ export type Messages={
  title:string;
  rotateHint:string;
  buttons:{start:string;pause:string;resume:string;restart:string;help:string;jump:string;attack:string;fireMissile:string};
+ privacy:{button:string;title:string;web:string;networkNote:string;close:string;html:string};
  status:{win:string;lose:string;duel:string;hill:string};
  details:{equipped:string;angle:string;power:string};
  sections:{gameMode:string;arena:string};
@@ -29,6 +30,7 @@ const EN:Messages={
  title:"DOODLEGAME DUEL",
  rotateHint:"ROTATE DEVICE FOR A BETTER VIEW",
  buttons:{start:"Start",pause:"Pause",resume:"Resume",restart:"Restart",help:"HOW TO PLAY",jump:"JUMP",attack:"ATTACK",fireMissile:"FIRE MISSILE"},
+ privacy:{button:"PRIVACY POLICY",title:"PRIVACY POLICY",web:"OPEN WEB COPY",networkNote:"The complete policy is shown here and works offline. The web copy may require an internet connection.",close:"CLOSE",html:"<p><b>DoodleGame does not collect or share personal or sensitive user data.</b></p><p>There are no accounts, analytics, ads, crash-reporting service, cloud save, location, contacts, camera or microphone features.</p><p>Only the selected language is stored locally on this device. Match and upgrade state stay in the current session and are not sent off-device.</p><p>The Android wrapper includes INTERNET permission for its WebView runtime, but current DoodleGame code does not transmit gameplay or personal data to a DoodleGame backend.</p><p>Local preferences remain until app/site data is cleared or the app is uninstalled. DoodleGame has no server-side user account or profile to delete.</p>"},
  status:{win:"YOU WIN",lose:"YOU LOSE",duel:"DUEL",hill:"HILL"},
  details:{equipped:"EQUIPPED",angle:"ANGLE",power:"POWER"},
  sections:{gameMode:"GAME MODE",arena:"ARENA"},
@@ -55,6 +57,7 @@ const FA:Messages={
  title:"دوئل دودل‌گیم",
  rotateHint:"برای دید بهتر دستگاه را بچرخان",
  buttons:{start:"شروع",pause:"توقف",resume:"ادامه",restart:"شروع دوباره",help:"راهنمای بازی",jump:"پرش",attack:"حمله",fireMissile:"شلیک موشک"},
+ privacy:{button:"حریم خصوصی",title:"سیاست حریم خصوصی",web:"نسخه وب",networkNote:"متن کامل سیاست همین‌جا و بدون اینترنت قابل خواندن است. نسخه وب ممکن است به اینترنت نیاز داشته باشد.",close:"بستن",html:"<p><b>DoodleGame هیچ داده شخصی یا حساس کاربر را جمع‌آوری یا به‌اشتراک نمی‌گذارد.</b></p><p>بازی حساب کاربری، analytics، تبلیغات، سرویس گزارش crash، ذخیره ابری، موقعیت مکانی، مخاطبین، دوربین یا میکروفن ندارد.</p><p>فقط زبان انتخاب‌شده به‌صورت محلی روی همین دستگاه ذخیره می‌شود. وضعیت مبارزه و ارتقاهای دور فعلی فقط در نشست جاری می‌ماند و از دستگاه خارج نمی‌شود.</p><p>بسته اندروید برای runtime مبتنی بر WebView مجوز INTERNET دارد، اما کد فعلی DoodleGame داده gameplay یا اطلاعات شخصی را به backend بازی ارسال نمی‌کند.</p><p>تنظیم محلی تا پاک‌کردن داده برنامه/سایت یا uninstall باقی می‌ماند. DoodleGame حساب یا پروفایل سمت سرور برای حذف ندارد.</p>"},
  status:{win:"بردی",lose:"باختی",duel:"دوئل",hill:"تپه"},
  details:{equipped:"سلاح",angle:"زاویه",power:"قدرت"},
  sections:{gameMode:"حالت بازی",arena:"میدان"},
