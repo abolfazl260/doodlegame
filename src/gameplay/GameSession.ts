@@ -535,6 +535,8 @@ export class GameSession{
     }
     continue;
    }
+   if(e.kind==="fan"){e.rotation+=dt*(e.x<0?5:-5);continue;}
+   if(e.kind==="gravity"){e.rotation+=dt*1.7;e.pulse=.28+.16*Math.sin(this.elapsed*3.2);continue;}
    if(e.kind!=="box")continue;
    const field=this.arenaForceAt(e.x,e.y);
    e.vx=Math.max(-10,Math.min(10,e.vx+field.x*.45*dt));
