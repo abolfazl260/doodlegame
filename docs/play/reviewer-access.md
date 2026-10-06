@@ -42,7 +42,7 @@ The Android emulator smoke test runs with Wi-Fi/mobile data disabled and validat
 - menu availability
 - starting a match via Enter
 - background/foreground while a match is active
-- Back behavior from paused/match/menu states
+- Back transition from paused gameplay to the menu
 - alternate phone resolution via `wm size`
 - force-stop + clean process recreation
 - no package-specific fatal Android exception in logcat
