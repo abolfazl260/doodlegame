@@ -11,7 +11,7 @@ export class Game{
  restart(){this.ready();this.loop.stop();this.session.reset();this.state.reset();this.start();}
  selectWeapon(direction:1|-1){this.ready();this.session.selectWeapon(direction);}
  selectWeaponById(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectWeaponById(id);}
- upgradeWeapon(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()!==GameState.GAME_OVER)return false;const upgraded=this.session.upgradeWeapon(id);if(upgraded)this.state.notify();return upgraded;}
+ upgradeWeapon(id:import("../input/Input").WeaponId){this.ready();const state=this.state.getState();if(state===GameState.PLAYING||state===GameState.PAUSED)return false;const upgraded=this.session.upgradeWeapon(id);if(upgraded)this.state.notify();return upgraded;}
  setMissileAngle(angle:number){this.ready();this.session.setMissileAngle(angle);}
  setMissilePower(power:number){this.ready();this.session.setMissilePower(power);}
  fireWeapon(){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.fireWeapon();}
