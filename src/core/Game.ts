@@ -8,7 +8,7 @@ export class Game{
  resume(){this.ready();if(this.state.getState()===GameState.PAUSED){this.state.transitionTo(GameState.PLAYING);this.loop.start();}}
  endGame(){this.ready();if(this.state.getState()===GameState.PLAYING){this.state.transitionTo(GameState.GAME_OVER);}}
  stop(){if(this.disposed)return;this.loop.stop();if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);}
- restart(){this.ready();this.loop.stop();this.session.reset();this.state.reset();this.start();}
+ restart(){this.ready();this.loop.stop();this.state.reset();this.start();}
  selectWeapon(direction:1|-1){this.ready();this.session.selectWeapon(direction);}
  selectWeaponById(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectWeaponById(id);}
  upgradeWeapon(id:import("../input/Input").WeaponId){this.ready();const state=this.state.getState();if(state===GameState.PLAYING||state===GameState.PAUSED)return false;const upgraded=this.session.upgradeWeapon(id);if(upgraded)this.state.notify();return upgraded;}
@@ -18,7 +18,7 @@ export class Game{
  selectArena(id:ArenaId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return;if(current===GameState.GAME_OVER)this.loop.stop();this.session.setArena(id);if(current===GameState.GAME_OVER)this.state.reset();else this.state.notify();}
  selectMode(id:GameModeId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return;if(current===GameState.GAME_OVER)this.loop.stop();this.session.setMode(id);if(current===GameState.GAME_OVER)this.state.reset();else this.state.notify();}
  getArena(){return this.session.getArena();}
- getHudState(){const s=this.session.getRenderState();return{playerHealth:s.player.health,opponentHealth:s.opponent.health,weapon:s.player.weapon,winner:s.winner,arena:s.arena,mode:s.mode,hill:s.hill,bowCharge:s.player.bowCharge,missileAngle:s.player.missileAngle,missilePower:s.player.missilePower,upgradePoints:s.upgradePoints,upgradedWeapons:s.upgradedWeapons};}
+ getHudState(){const s=this.session.getRenderState();return{playerHealth:s.player.health,playerMaxHealth:s.player.maxHealth,opponentHealth:s.opponent.health,opponentMaxHealth:s.opponent.maxHealth,weapon:s.player.weapon,winner:s.winner,arena:s.arena,mode:s.mode,hill:s.hill,bowCharge:s.player.bowCharge,missileAngle:s.player.missileAngle,missilePower:s.player.missilePower,upgradePoints:s.upgradePoints,upgradedWeapons:s.upgradedWeapons};}
  subscribe(listener:(state:GameState)=>void){return this.state.subscribe(listener);}getState(){return this.state.getState();}
  resize(){this.assertNotDisposed();if(this.initialized)this.renderer.resize();}
  dispose(){if(this.disposed)return;this.loop.dispose();this.session.dispose();this.renderer.dispose();this.state.dispose();this.disposed=true;}
