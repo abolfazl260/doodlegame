@@ -210,13 +210,12 @@ function writeReports(reportDir, report) {
     ...report.checks.map((item) => `- [${item.ok ? "x" : " "}] ${item.name}: ${item.detail}`),
     "",
     "## Native library inventory",
-    "",
-    report.native.aab.length === 0
-      ? "- AAB: no native shared libraries detected (architecture-neutral Java/Kotlin/JS package)."
-      : ...[],
+    ""
   ];
 
-  if (report.native.aab.length > 0) {
+  if (report.native.aab.length === 0) {
+    lines.push("- AAB: no native shared libraries detected (architecture-neutral Java/Kotlin/JS package).");
+  } else {
     for (const lib of report.native.aab) lines.push(`- AAB: \`${lib.entry}\``);
   }
   if (report.native.apk.length === 0) {
