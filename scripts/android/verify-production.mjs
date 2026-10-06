@@ -129,7 +129,7 @@ export function main(){
     check("Exported component policy",exportedProblems.length===0,exportedProblems.length?exportedProblems.join("; "):"All components explicitly declare exported; only launcher may be exported without a permission."),
     check("Release permission allowlist",JSON.stringify(permissions)===JSON.stringify(expectedPermissions),`actual=[${permissions.join(", ")}] expected=[${expectedPermissions.join(", ")}]`),
     check("Production app label",/name="app_name">DoodleGame<\/string>/.test(strings), "app_name = DoodleGame"),
-    check("WebView debugging build-gated",/setWebContentsDebuggingEnabled\(BuildConfig\.DEBUG\)/.test(activity),"Release BuildConfig.DEBUG=false explicitly disables remote WebView debugging."),
+    check("WebView debugging build-gated",/ApplicationInfo\.FLAG_DEBUGGABLE/.test(activity)&&/setWebContentsDebuggingEnabled\(debuggable\)/.test(activity),"WebView debugging follows the app debuggable flag; release manifests are non-debuggable."),
     check("WebView file access disabled",/setAllowFileAccess\(false\)/.test(activity),"setAllowFileAccess(false)"),
     check("WebView content access disabled",/setAllowContentAccess\(false\)/.test(activity),"setAllowContentAccess(false)"),
     check("Navigation allowlist is explicit",/allowNavigation\s*:\s*\[\s*\]/.test(cap)&&!/\burl\s*:/.test(cap),"No extra in-WebView origins and no dev server URL."),
