@@ -140,4 +140,6 @@ jobs:
             android-smoke-resized.png
             android-smoke-final.png
             emulator-logcat.txt
+            startup-metrics.txt
+            memory-metrics.txt
           if-no-files-found: warn

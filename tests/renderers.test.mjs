@@ -7,7 +7,8 @@ async function rendererModule(name){
  const source=await readFile(new URL('../.test-build/rendering/'+name+'.js',import.meta.url),'utf8');
  const visual=new URL('../.test-build/rendering/FighterVisual.js',import.meta.url).href;
  const three=new URL('../node_modules/three/build/three.module.js',import.meta.url).href;
- return import('data:text/javascript;base64,'+Buffer.from(source.replaceAll("'./FighterVisual'",JSON.stringify(visual)).replaceAll('"three"',JSON.stringify(three))).toString('base64'));
+ const contextLifecycle=new URL('../.test-build/rendering/WebGLContextLifecycle.js',import.meta.url).href;
+ return import('data:text/javascript;base64,'+Buffer.from(source.replaceAll("'./FighterVisual'",JSON.stringify(visual)).replaceAll('"three"',JSON.stringify(three)).replaceAll('"./WebGLContextLifecycle"',JSON.stringify(contextLifecycle))).toString('base64'));
 }
 const state=()=>new GameSession({getState(){return {}},endFrame(){}}).getRenderState();
 test('WebGL fighter draw places both fighters and produces valid geometries for every tool',async()=>{
