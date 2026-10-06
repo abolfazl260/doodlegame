@@ -1,6 +1,9 @@
 import { defineConfig } from "vite";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   base: "/doodlegame/",
-  build: { target: "es2022", sourcemap: true }
-});
+  build: {
+    target: "es2022",
+    sourcemap: mode !== "android"
+  }
+}));
