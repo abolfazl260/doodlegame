@@ -1,5 +1,6 @@
 import {App} from "@capacitor/app";
 import {Capacitor,SystemBars} from "@capacitor/core";
+import type {PluginListenerHandle} from "@capacitor/core";
 import {GameState} from "../../core/GameState";
 
 type NativeLifecycleActions={
@@ -12,7 +13,7 @@ type NativeLifecycleActions={
 export async function installNativeAppLifecycle(actions:NativeLifecycleActions):Promise<()=>void>{
  if(!Capacitor.isNativePlatform())return()=>{};
 
- const handles=[];
+ const handles:PluginListenerHandle[]=[];
 
  const restoreImmersiveMode=async()=>{
   try{
