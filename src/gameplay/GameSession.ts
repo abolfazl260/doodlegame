@@ -22,13 +22,68 @@ const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
  zigzag:{id:"zigzag",name:"ZIGZAG",speedMultiplier:1,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:true,spawnX:[-8,8],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-10,y:1.3,width:4.5,height:.35},{x:-3.5,y:2.8,width:4,height:.35,surface:"oneWay"},{x:2.5,y:1.3,width:4.5,height:.35},{x:7,y:3.6,width:3,height:.35}]},
  sky:{id:"sky",name:"SKY",speedMultiplier:1,jumpMultiplier:1.25,gravity:-18,fallLimit:null,movingPlatforms:false,spawnX:[-6,6],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.7,width:3.5,height:.35},{x:-3,y:3.1,width:3.5,height:.35,surface:"ice"},{x:3,y:1.7,width:3.5,height:.35},{x:-1.75,y:4.7,width:3.5,height:.35}]}, moving:{id:"moving",name:"MOVING",speedMultiplier:1,jumpMultiplier:1.05,gravity:G,fallLimit:null,movingPlatforms:true,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.5,width:3.5,height:.35,surface:"slippery"},{x:-3.5,y:2.8,width:3.5,height:.35},{x:2,y:1.6,width:3.5,height:.35},{x:6,y:3.3,width:3.5,height:.35}]},
  fortress:{id:"fortress",name:"FORTRESS",speedMultiplier:.9,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-9,9],platforms:[{x:-12,y:-.25,width:24,height:.5}]},
- bridge:{id:"bridge",name:"BRIDGE",speedMultiplier:1.05,jumpMultiplier:1,gravity:G,fallLimit:-4.5,movingPlatforms:false,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:7.5,height:.5},{x:-3.5,y:.55,width:3.5,height:.35},{x:1,y:1.35,width:3.5,height:.35},{x:5.2,y:.2,width:6.8,height:.5}]},
+ bridge:{id:"bridge",name:"BRIDGE",speedMultiplier:1.05,jumpMultiplier:1,gravity:G,fallLimit:-4.5,movingPlatforms:false,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:7.5,height:.5},{x:5.2,y:.2,width:6.8,height:.5}]},
  crater:{id:"crater",name:"CRATER",speedMultiplier:1,jumpMultiplier:1.08,gravity:G,fallLimit:-5,movingPlatforms:false,spawnX:[-6,6],platforms:[{x:-12,y:-.25,width:5.5,height:.5},{x:-5.3,y:-1,width:10.6,height:.5},{x:6.5,y:-.25,width:5.5,height:.5},{x:-2.5,y:1.25,width:5,height:.35},{x:3.3,y:3,width:3.3,height:.35,surface:"oneWay"}]},
  vertical:{id:"vertical",name:"VERTICAL",speedMultiplier:1.12,jumpMultiplier:1.2,gravity:G,fallLimit:-5,movingPlatforms:false,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-8.8,y:1.35,width:3.2,height:.35},{x:5.6,y:1.35,width:3.2,height:.35},{x:-5.4,y:3,width:3.1,height:.35,surface:"oneWay"},{x:2.3,y:3,width:3.1,height:.35,surface:"oneWay"},{x:-1.7,y:4.65,width:3.4,height:.35}]},
  ruins:{id:"ruins",name:"RUINS",speedMultiplier:.98,jumpMultiplier:1,gravity:G,fallLimit:-4.5,movingPlatforms:true,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:6.2,height:.5},{x:-5.1,y:1.1,width:3.1,height:.35},{x:-.6,y:2.35,width:3.6,height:.35,surface:"ice"},{x:3.7,y:1.05,width:3.2,height:.35,surface:"slippery"},{x:7.5,y:2.9,width:3.2,height:.35},{x:-1,y:4.1,width:2.6,height:.35,surface:"oneWay"}]}
 };
 interface EnvironmentTemplate{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;}
-const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate[]>>={classic:[],towers:[],pit:[],steps:[],zigzag:[],sky:[],moving:[],fortress:[],bridge:[],crater:[],vertical:[],ruins:[]};
+const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate[]>>={
+ classic:[
+  {kind:"box",x:-1.8,y:.8,width:1.05,height:1.05,hp:16},
+  {kind:"barrel",x:1.65,y:.8,width:.75,height:1.1,hp:1}
+ ],
+ towers:[
+  {kind:"wall",x:-1.35,y:1.2,width:.7,height:1.9,hp:30},
+  {kind:"wall",x:1.35,y:1.2,width:.7,height:1.9,hp:30},
+  {kind:"box",x:0,y:.8,width:1,height:1,hp:18}
+ ],
+ pit:[
+  {kind:"rock",x:-4.9,y:.8,width:1.15,height:1.1,hp:28},
+  {kind:"rock",x:4.9,y:.8,width:1.15,height:1.1,hp:28}
+ ],
+ steps:[
+  {kind:"box",x:-4.2,y:.8,width:1,height:1,hp:16},
+  {kind:"barrel",x:4.4,y:.8,width:.75,height:1.1,hp:1}
+ ],
+ zigzag:[
+  {kind:"box",x:-5.1,y:.8,width:1.05,height:1.05,hp:16},
+  {kind:"barrel",x:5.1,y:.8,width:.75,height:1.1,hp:1}
+ ],
+ sky:[
+  {kind:"rock",x:0,y:.8,width:1.2,height:1.05,hp:28},
+  {kind:"box",x:4.2,y:.8,width:1,height:1,hp:16}
+ ],
+ moving:[
+  {kind:"box",x:-5.2,y:.8,width:1,height:1,hp:16},
+  {kind:"box",x:5.2,y:.8,width:1,height:1,hp:16}
+ ],
+ fortress:[
+  {kind:"wall",x:-1.95,y:1.2,width:1.05,height:1.9,hp:46},
+  {kind:"wall",x:1.95,y:1.2,width:1.05,height:1.9,hp:46},
+  {kind:"barrel",x:0,y:.8,width:.75,height:1.1,hp:1}
+ ],
+ bridge:[
+  {kind:"wall",x:-3.225,y:.40,width:2.35,height:.30,hp:14},
+  {kind:"wall",x:-.875,y:.50,width:2.35,height:.30,hp:14},
+  {kind:"wall",x:1.475,y:.60,width:2.35,height:.30,hp:14},
+  {kind:"wall",x:3.825,y:.70,width:2.35,height:.30,hp:14}
+ ],
+ crater:[
+  {kind:"rock",x:-1.35,y:.15,width:1.2,height:1.2,hp:30},
+  {kind:"barrel",x:0,y:.05,width:.75,height:1.1,hp:1},
+  {kind:"rock",x:1.35,y:.15,width:1.2,height:1.2,hp:30}
+ ],
+ vertical:[
+  {kind:"wall",x:-2.15,y:1.0,width:.72,height:1.5,hp:26},
+  {kind:"wall",x:2.15,y:1.0,width:.72,height:1.5,hp:26},
+  {kind:"box",x:0,y:.8,width:1,height:1,hp:18}
+ ],
+ ruins:[
+  {kind:"box",x:-10.1,y:.8,width:1,height:1,hp:16},
+  {kind:"barrel",x:-8.55,y:.8,width:.75,height:1.1,hp:1}
+ ]
+};
 const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number;radius?:number;automatic?:boolean}>>={
  blade:{damage:8,range:1.35,cooldown:.32,knockback:4},
  hammer:{damage:14,range:1.45,cooldown:.75,knockback:8},
@@ -146,6 +201,13 @@ export class GameSession{
     if(Math.abs((f.x+PH/2)-p.x)<edgeTolerance)return 1;
     if(Math.abs((f.x-PH/2)-(p.x+p.width))<edgeTolerance)return -1;
   }
+  for(const e of this.environment){
+    if(!e.active||e.kind!=="wall")continue;
+    const left=e.x-e.width/2,right=e.x+e.width/2,bottom=e.y-e.height/2,top=e.y+e.height/2;
+    if(f.y-HH/2>=top+.08||f.y+HH/2<=bottom-.05)continue;
+    if(Math.abs((f.x+PH/2)-left)<edgeTolerance)return 1;
+    if(Math.abs((f.x-PH/2)-right)<edgeTolerance)return -1;
+  }
   return 0;
  }
  private move(f:Fighter,d:number,dt:number){
@@ -252,14 +314,15 @@ export class GameSession{
     if(Math.sign(distance)===a.facing&&Math.abs(distance)<=w.range*1.08&&Math.abs(t.y-a.y)<1.2){
       this.damage(t,w.damage,a.facing*w.knockback*1.15);
       t.velocityY=Math.max(t.velocityY,a.grounded?5.2:3.6);
-      this.strikeEnvironment(a,w.damage*1.35,a.facing*w.knockback*1.35);
       if(a.grounded)a.velocityX*=.55;
     }
+    this.strikeEnvironment(a,w.damage*1.35,a.facing*w.knockback*1.35);
     return;
   }
   if(a.weapon==="blade"){
     const distance=t.x-a.x;
-    if(Math.sign(distance)===a.facing&&Math.abs(distance)<=w.range&&Math.abs(t.y-a.y)<1.2){this.damage(t,w.damage,a.facing*w.knockback);this.strikeEnvironment(a,w.damage*.9,a.facing*w.knockback);}
+    if(Math.sign(distance)===a.facing&&Math.abs(distance)<=w.range&&Math.abs(t.y-a.y)<1.2)this.damage(t,w.damage,a.facing*w.knockback);
+    this.strikeEnvironment(a,w.damage*.9,a.facing*w.knockback);
     return;
   }
   a.velocityX-=a.facing*(a.weapon==="blaster"?1.3:a.weapon==="uzi"?.4:.6);
@@ -309,14 +372,17 @@ export class GameSession{
    if(!e.active||e.kind==="barrel"||e.kind==="bounce"||e.kind==="trap")continue;
    const left=e.x-e.width/2,right=e.x+e.width/2,top=e.y+e.height/2,bottom=e.y-e.height/2;
    const overlap=f.x+PH/2>left&&f.x-PH/2<right;
+   const crossed=previousBottom>=top-.08&&f.y-HH/2<=top+.08;
+   if(crossed&&overlap&&f.velocityY<=0){
+    f.y=top+HH/2;f.velocityY=0;f.grounded=true;f.doubleJumpAvailable=true;f.airDashAvailable=true;
+    continue;
+   }
    if(e.kind==="wall"&&overlap&&f.y-HH/2<top&&f.y+HH/2>bottom){
     if(previousX<=left&&f.x>left){f.x=left-PH/2;f.velocityX=Math.min(0,f.velocityX);}
     else if(previousX>=right&&f.x<right){f.x=right+PH/2;f.velocityX=Math.max(0,f.velocityX);}
     continue;
    }
-   const crossed=previousBottom>=top-.08&&f.y-HH/2<=top+.08;
-   if(crossed&&overlap&&f.velocityY<=0){f.y=top+HH/2;f.velocityY=0;f.grounded=true;f.doubleJumpAvailable=true;f.airDashAvailable=true;}
-   else if(e.kind==="box"&&overlap&&f.y+HH/2>bottom&&f.y-HH/2<top){const push=Math.sign(f.x-e.x)||f.facing;e.vx=Math.max(-5,Math.min(5,e.vx+f.velocityX*.75));f.x+=push*.03;}
+   if(e.kind==="box"&&overlap&&f.y+HH/2>bottom&&f.y-HH/2<top){const push=Math.sign(f.x-e.x)||f.facing;e.vx=Math.max(-5,Math.min(5,e.vx+f.velocityX*.75));f.x+=push*.03;}
   }
  }
  private resolveEnvironmentFighter(f:Fighter){
@@ -338,9 +404,13 @@ export class GameSession{
   for(const e of this.environment){
    if(!e.active||e.kind==="bounce"||e.kind==="trap")continue;
    if(Math.abs(x-e.x)<=e.width/2+.18&&Math.abs(y-e.y)<=e.height/2+.28){
-    if(e.kind==="box"){e.vx=Math.max(-6,Math.min(6,e.vx+force*.55));e.pulse=1;}
-    else if(e.kind==="barrel"){this.explodeBarrel(e,x>=e.x?1:-1);}
-    else{e.hp=Math.max(0,e.hp-damage);e.pulse=1;e.vx=Math.max(-5,Math.min(5,e.vx+force*.15));if(e.hp<=0)e.active=false;}
+    if(e.kind==="barrel")this.explodeBarrel(e,x>=e.x?1:-1);
+    else{
+      e.hp=Math.max(0,e.hp-damage);e.pulse=1;
+      if(e.kind==="box")e.vx=Math.max(-6,Math.min(6,e.vx+force*.55));
+      else e.vx=Math.max(-5,Math.min(5,e.vx+force*.15));
+      if(e.hp<=0)e.active=false;
+    }
     return true;
    }
   }
@@ -351,7 +421,32 @@ export class GameSession{
   if(!e.active)return;
   e.active=false;e.pulse=1;const radius=2.15;
   for(const t of [this.player,this.opponent]){const dx=t.x-e.x,dy=t.y-e.y,d=Math.hypot(dx,dy);if(d<=radius){const f=Math.max(.2,1-d/radius);this.damage(t,24*f,direction*7*f);t.velocityY=Math.max(t.velocityY,5*f);}}
-  for(const other of this.environment){if(other===e||!other.active)continue;const d=Math.hypot(other.x-e.x,other.y-e.y);if(d>radius)continue;if(other.kind==="barrel")this.explodeBarrel(other,Math.sign(other.x-e.x)||direction);else if(other.kind==="box"){other.vx+=direction*5;other.vy=Math.max(other.vy,6);other.pulse=1;}else if(other.kind==="wall"||other.kind==="rock"){other.hp=Math.max(0,other.hp-28);other.pulse=1;if(other.hp<=0)other.active=false;}}
+  for(const other of this.environment){
+   if(other===e||!other.active)continue;
+   const d=Math.hypot(other.x-e.x,other.y-e.y);if(d>radius)continue;
+   if(other.kind==="barrel")this.explodeBarrel(other,Math.sign(other.x-e.x)||direction);
+   else if(other.kind!=="bounce"&&other.kind!=="trap"){
+    other.hp=Math.max(0,other.hp-28);other.pulse=1;
+    if(other.kind==="box"){other.vx+=direction*5;other.vy=Math.max(other.vy,6);}
+    if(other.hp<=0)other.active=false;
+   }
+  }
+ }
+ private blastEnvironment(x:number,y:number,radius:number,damage:number,force:number){
+  for(const e of this.environment){
+   if(!e.active||e.kind==="bounce"||e.kind==="trap")continue;
+   const distance=Math.hypot(e.x-x,e.y-y),reach=radius+Math.hypot(e.width,e.height)*.22;
+   if(distance>reach)continue;
+   const falloff=Math.max(.28,1-distance/Math.max(.01,radius));
+   const direction=Math.sign(e.x-x)||Math.sign(force)||1;
+   if(e.kind==="barrel"){this.explodeBarrel(e,direction);continue;}
+   e.hp=Math.max(0,e.hp-damage*falloff);e.pulse=1;
+   if(e.kind==="box"){
+    e.vx=Math.max(-7,Math.min(7,e.vx+direction*force*.55*falloff));
+    e.vy=Math.max(e.vy,4.5*falloff);
+   }
+   if(e.hp<=0)e.active=false;
+  }
  }
  private deflectProjectile(p:Projectile,f:Fighter,previousX:number,previousY:number){
   if((p.deflectCooldown??0)>0||f.attackTime<=0||(f.weapon!=='blade'&&f.weapon!=='hammer')||p.weapon==='bomb'||p.weapon==='missile')return false;
@@ -435,6 +530,7 @@ export class GameSession{
   const w=WEAPONS.missile;
   const radius=1.9;
   this.explosions.push({x:p.x,y:p.y,age:0,life:.48,radius});
+  this.blastEnvironment(p.x,p.y,radius*1.08,w.damage*.85,w.knockback);
   const blastTargets=[this.player,this.opponent];
   for(const target of blastTargets){
     const dx=target.x-p.x,dy=(target.y+.35)-p.y,dist=Math.hypot(dx,dy);
@@ -460,7 +556,7 @@ export class GameSession{
  private explode(p:Projectile){
   const w=WEAPONS.bomb;
   this.explosions.push({x:p.x,y:p.y,age:0,life:.75,radius:w.radius!});
-  for(const e of this.environment){if(e.active&&Math.hypot(e.x-p.x,e.y-p.y)<=w.radius!*1.2){if(e.kind==="barrel")this.explodeBarrel(e,Math.sign(e.x-p.x)||1);else if(e.kind==="wall"||e.kind==="rock"){e.hp=Math.max(0,e.hp-w.damage*.8);e.pulse=1;if(e.hp<=0)e.active=false;}else if(e.kind==="box"){e.vx+=Math.sign(e.x-p.x||1)*5;e.vy=Math.max(e.vy,5);e.pulse=1;}}}
+  this.blastEnvironment(p.x,p.y,w.radius!*1.2,w.damage*.95,w.knockback);
   const target=p.owner==="player"?this.opponent:this.player;
   const owner=p.owner==="player"?this.player:this.opponent;
   const targetDistance=Math.hypot(target.x-p.x,target.y-p.y);
