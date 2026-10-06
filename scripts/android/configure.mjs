@@ -93,10 +93,6 @@ if (!manifest.includes('android:usesCleartextTraffic="false"')) {
     '<application\n        android:usesCleartextTraffic="false"'
   );
 }
-manifest = manifest.replace(
-  /\s*<uses-permission android:name="android\.permission\.INTERNET" \/>/,
-  ""
-);
 if (!manifest.includes('android:screenOrientation="landscape"')) {
   manifest = manifest.replace(
     'android:name=".MainActivity"',
