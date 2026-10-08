@@ -23,6 +23,7 @@ export class OpeningIntro{
  private ratio=1;
  private active=false;
  private ambient=false;
+ private ambientSince=0;
  private reducedMotion=false;
 
  constructor(private readonly menuRoot:HTMLElement,locale:"en"|"fa"){
@@ -127,7 +128,11 @@ export class OpeningIntro{
   }
   ctx.globalAlpha=1;
   this.drawPlanet(ctx,w,h,t);
-  this.drawFighter(ctx,w,h,t,pose.x,pose.y,pose.angle,pose.paddle);
+  // Drift towards the open edge once the menu is visible, so the figure
+  // remains visible rather than sitting entirely under the opaque panel.
+  const ambientBlend=this.ambient?Math.min(1,(this.elapsed-this.ambientSince)/2400):0;
+  const figureX=pose.x+((w>=760?.82:.77)-pose.x)*ambientBlend;
+  this.drawFighter(ctx,w,h,t,figureX,pose.y,pose.angle,pose.paddle);
 
  }
 
@@ -236,6 +241,7 @@ export class OpeningIntro{
  private finish(){
   if(!this.active||this.ambient)return;
   this.ambient=true;
+  this.ambientSince=this.elapsed;
   this.skip.hidden=true;
   this.overlay.classList.add("opening-intro--ambient");
   this.overlay.removeAttribute("role");
