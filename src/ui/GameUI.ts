@@ -1,6 +1,6 @@
 import {GameState} from "../core/GameState";
 import type {ArenaId,GameModeId,HillState} from "../gameplay/GameSession";
-import type {I18n,Locale} from "../i18n/I18n";
+import type {I18n} from "../i18n/I18n";
 import type {WeaponId} from "../input/Input";
 
 type HudState={
@@ -89,9 +89,9 @@ export class GameUI{
  private angleLabel=document.createElement("span");
  private powerLabel=document.createElement("span");
  private fireButton=document.createElement("button");
- private languageControl=document.createElement("label");
+ private languageControl=document.createElement("div");
  private languageLabel=document.createElement("span");
- private languageSelect=document.createElement("select");
+ private languageButton=document.createElement("button");
  private unsubscribe:(()=>void)|null=null;
  private unsubscribeLocale:(()=>void)|null=null;
  private readHud:(()=>HudState)|null=null;
@@ -102,12 +102,9 @@ export class GameUI{
   this.root.className="game-ui";
 
   this.languageControl.className="game-ui__language";
-  this.languageSelect.setAttribute("aria-label","Language");
-  const english=document.createElement("option");english.value="en";
-  const persian=document.createElement("option");persian.value="fa";
-  this.languageSelect.append(english,persian);
-  this.languageSelect.onchange=()=>this.i18n.setLocale(this.languageSelect.value as Locale);
-  this.languageControl.append(this.languageLabel,this.languageSelect);
+  this.languageButton.type="button";
+  this.languageButton.onclick=()=>this.i18n.setLocale(this.i18n.locale==="fa"?"en":"fa");
+  this.languageControl.append(this.languageLabel,this.languageButton);
 
   this.mobileControls.className="game-ui__mobile-controls";
   this.joystick.className="game-ui__joystick";
@@ -468,10 +465,9 @@ export class GameUI{
  private applyLocale(){
   const messages=this.i18n.messages;
   this.languageLabel.textContent=messages.language.label;
-  (this.languageSelect.querySelector('option[value="en"]') as HTMLOptionElement).textContent=messages.language.english;
-  (this.languageSelect.querySelector('option[value="fa"]') as HTMLOptionElement).textContent=messages.language.persian;
-  this.languageSelect.value=this.i18n.locale;
-  this.languageSelect.setAttribute("aria-label",messages.language.label);
+  const currentLanguage=this.i18n.locale==="fa"?messages.language.persian:messages.language.english;
+  this.languageButton.textContent=currentLanguage;
+  this.languageButton.setAttribute("aria-label",messages.language.label+": "+currentLanguage);
   this.title.textContent=messages.title;
   this.modeTitle.textContent=messages.sections.gameMode;
   this.arenaTitle.textContent=messages.sections.arena;
