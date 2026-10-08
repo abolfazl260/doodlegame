@@ -247,3 +247,9 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
 
 /* Visual cue: pulling the joystick upward jumps. */
 .game-ui__joystick::before{content:"↑";position:absolute;left:50%;top:5px;transform:translateX(-50%);color:#fff;font-size:1rem;font-weight:800;line-height:1;opacity:.72;pointer-events:none}
+
+/* Issue #38: only the current HP digits turn red; /maximum stays unchanged. */
+.health-label__current{
+ color:#ff4545;
+ text-shadow:0 1px 1px #000,0 -1px 1px #000,1px 0 1px #000,-1px 0 1px #000;
+}

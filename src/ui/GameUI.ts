@@ -62,6 +62,10 @@ export class GameUI{
  private upgradeHint=document.createElement("span");
  private playerHealthLabel=document.createElement("span");
  private opponentHealthLabel=document.createElement("span");
+ private playerHealthCurrent=document.createElement("span");
+ private opponentHealthCurrent=document.createElement("span");
+ private playerHealthMaximum=document.createElement("span");
+ private opponentHealthMaximum=document.createElement("span");
  private missilePanel=document.createElement("div");
  private missileTitle=document.createElement("strong");
  private angleInput=document.createElement("input");
@@ -128,6 +132,10 @@ export class GameUI{
   this.opponentHealth.className="health-bar health-bar--opponent";
   this.playerHealthLabel.className="health-label";
   this.opponentHealthLabel.className="health-label";
+  this.playerHealthCurrent.className="health-label__current";
+  this.opponentHealthCurrent.className="health-label__current";
+  this.playerHealthLabel.append(this.playerHealthCurrent,"/",this.playerHealthMaximum);
+  this.opponentHealthLabel.append(this.opponentHealthCurrent,"/",this.opponentHealthMaximum);
   this.playerHealth.append(this.playerHealthLabel);
   this.opponentHealth.append(this.opponentHealthLabel);
 
@@ -352,8 +360,10 @@ export class GameUI{
   this.upgradeHint.textContent=s.upgradePoints>0?messages.upgrade.choose:messages.upgrade.earn;
   this.upgradePanel.hidden=!((state===GameState.MENU||state===GameState.GAME_OVER)&&(s.upgradePoints>0||upgraded.size>0));
 
-  this.playerHealthLabel.textContent=Math.ceil(playerHealth)+"/"+Math.ceil(playerMax);
-  this.opponentHealthLabel.textContent=Math.ceil(opponentHealth)+"/"+Math.ceil(opponentMax);
+  this.playerHealthCurrent.textContent=String(Math.ceil(playerHealth));
+  this.playerHealthMaximum.textContent=String(Math.ceil(playerMax));
+  this.opponentHealthCurrent.textContent=String(Math.ceil(opponentHealth));
+  this.opponentHealthMaximum.textContent=String(Math.ceil(opponentMax));
   this.playerHealth.style.setProperty("--health",player+"%");
   this.opponentHealth.style.setProperty("--health",opponent+"%");
 
