@@ -11,7 +11,7 @@ type Actions={
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
- setTouchMove:(x:number,y:number)=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;
+ setTouchMove:(x:number,y:number)=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;
 };
 type UiAction="start"|"pause"|"resume"|"restart";
 
@@ -26,6 +26,11 @@ export class GameUI{
  private joystick=document.createElement("div");
  private joystickThumb=document.createElement("div");
  private mobileAttackButton=document.createElement("button");
+ private missileAimGuide=document.createElement("div");
+ private missileAimValues=document.createElement("div");
+ private missileAimPath:SVGPathElement|null=null;
+ private cancelTouchControls:()=>void=()=>{};
+ private removeTouchLifecycle:()=>void=()=>{};
  private mobileWeaponSwitcher=document.createElement("div");
  private previousWeaponButton=document.createElement("button");
  private mobileWeaponName=document.createElement("span");
@@ -130,6 +135,26 @@ export class GameUI{
   this.mobileWeaponSwitcher.append(weaponDisplay,this.previousWeaponButton,this.nextWeaponButton);
   this.joystick.append(this.joystickThumb);
   this.mobileControls.append(this.mobileWeaponSwitcher,this.joystick,this.mobileAttackButton);
+  this.missileAimGuide.className="game-ui__missile-aim-guide";
+  this.missileAimGuide.hidden=true;
+  this.missileAimGuide.setAttribute("aria-live","off");
+  this.missileAimValues.className="game-ui__missile-aim-values";
+  this.missileAimGuide.append(this.missileAimValues);
+  if(typeof document.createElementNS==="function"){
+   const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+   svg.setAttribute("viewBox","0 0 220 118");
+   svg.setAttribute("aria-hidden","true");
+   const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+   path.setAttribute("fill","none");
+   path.setAttribute("stroke","currentColor");
+   path.setAttribute("stroke-width","2.5");
+   path.setAttribute("stroke-dasharray","4 5");
+   path.setAttribute("stroke-linecap","round");
+   this.missileAimPath=path;
+   svg.append(path);
+   this.missileAimGuide.append(svg);
+  }
+  this.mobileControls.append(this.missileAimGuide);
 
   this.help.className="game-ui__help game-ui__menu-dialog";
   this.help.hidden=true;
@@ -321,9 +346,101 @@ export class GameUI{
   this.joystick.addEventListener("lostpointercapture",releaseJoystick);
   this.previousWeaponButton.onclick=()=>{haptic(8);actions.weaponPrevious();};
   this.nextWeaponButton.onclick=()=>{haptic(8);actions.weaponNext();};
-  this.mobileAttackButton.addEventListener("pointerdown",event=>{event.preventDefault();haptic(16);actions.touchAttackStart();});
-  this.mobileAttackButton.addEventListener("pointerup",event=>{event.preventDefault();actions.touchAttackEnd();});
-  this.mobileAttackButton.addEventListener("pointercancel",event=>{event.preventDefault();actions.touchAttackEnd();});
+  // A captured pointer owns ATTACK independently of the movement joystick.
+  // Missile gestures fire only on pointerup; cancellation never launches a missile.
+  let attackPointer=-1;
+  let attackWeapon:WeaponId|null=null;
+  let startX=0,startY=0,baseAngle=45,basePower=13;
+  const clearAttack=()=>{
+   const id=attackPointer;
+   attackPointer=-1;
+   attackWeapon=null;
+   this.missileAimGuide.hidden=true;
+   this.mobileAttackButton.classList.remove("aiming");
+   if(id!==-1&&this.mobileAttackButton.hasPointerCapture?.(id))this.mobileAttackButton.releasePointerCapture(id);
+  };
+  const cancelAttack=()=>{
+   if(attackPointer===-1)return;
+   const weapon=attackWeapon;
+   clearAttack();
+   if(weapon!=="missile")actions.touchAttackCancel();
+  };
+  const cancelControls=()=>{
+   cancelAttack();
+   if(joystickPointer!==-1){
+    const id=joystickPointer;
+    joystickPointer=-1;
+    this.joystick.classList.remove("active");
+    this.joystickThumb.style.transform="translate(-50%,-50%)";
+    actions.setTouchMove(0,0);
+    if(this.joystick.hasPointerCapture?.(id))this.joystick.releasePointerCapture(id);
+   }
+  };
+  this.cancelTouchControls=cancelControls;
+  this.mobileAttackButton.addEventListener("pointerdown",event=>{
+   if(attackPointer!==-1||this.currentState!==GameState.PLAYING)return;
+   const hud=this.readHud?.();
+   if(!hud||hud.winner!==null)return;
+   event.preventDefault();
+   attackPointer=event.pointerId;
+   attackWeapon=hud.weapon;
+   startX=event.clientX;
+   startY=event.clientY;
+   baseAngle=hud.missileAngle;
+   basePower=hud.missilePower;
+   this.mobileAttackButton.setPointerCapture?.(event.pointerId);
+   haptic(16);
+   if(attackWeapon==="missile"){
+    this.mobileAttackButton.classList.add("aiming");
+    this.missileAimGuide.hidden=false;
+    this.updateMissileAimGuide(baseAngle,basePower);
+   }else actions.touchAttackStart();
+  });
+  this.mobileAttackButton.addEventListener("pointermove",event=>{
+   if(attackPointer!==event.pointerId||attackWeapon!=="missile")return;
+   const hud=this.readHud?.();
+   if(this.currentState!==GameState.PLAYING||!hud||hud.winner!==null||hud.weapon!=="missile"){cancelAttack();return;}
+   event.preventDefault();
+   const dx=event.clientX-startX,dy=startY-event.clientY;
+   const distance=Math.hypot(dx,dy);
+   // Short taps fire with the previously selected angle/power.
+   const angle=distance<12?baseAngle:Math.max(12,Math.min(78,Math.round(Math.atan2(Math.max(0,dy),Math.max(1,Math.abs(dx)))*180/Math.PI)));
+   const power=distance<12?basePower:Math.max(8,Math.min(18,Math.round((8+Math.min(1,distance/160)*10)*2)/2));
+   actions.setMissileAngle(angle);
+   actions.setMissilePower(power);
+   this.updateMissileAimGuide(angle,power);
+  });
+  this.mobileAttackButton.addEventListener("pointerup",event=>{
+   if(attackPointer!==event.pointerId)return;
+   event.preventDefault();
+   const weapon=attackWeapon,hud=this.readHud?.();
+   const mayFire=this.currentState===GameState.PLAYING&&hud?.winner===null&&hud.weapon===weapon;
+   clearAttack();
+   if(!mayFire){if(weapon!=="missile")actions.touchAttackCancel();return;}
+   if(weapon==="missile")actions.fireWeapon();
+   else actions.touchAttackEnd();
+  });
+  this.mobileAttackButton.addEventListener("pointercancel",event=>{
+   if(event.pointerId!==attackPointer)return;
+   event.preventDefault();
+   cancelAttack();
+  });
+  this.mobileAttackButton.addEventListener("lostpointercapture",event=>{
+   if(event.pointerId===attackPointer)cancelAttack();
+  });
+  const onVisibility=()=>{if(document.visibilityState==="hidden")cancelControls();};
+  if(typeof window!=="undefined"){
+   window.addEventListener("blur",cancelControls);
+   window.addEventListener("orientationchange",cancelControls);
+  }
+  if(typeof document.addEventListener==="function")document.addEventListener("visibilitychange",onVisibility);
+  this.removeTouchLifecycle=()=>{
+   if(typeof window!=="undefined"){
+    window.removeEventListener("blur",cancelControls);
+    window.removeEventListener("orientationchange",cancelControls);
+   }
+   if(typeof document.removeEventListener==="function")document.removeEventListener("visibilitychange",onVisibility);
+  };
 
   this.menuLinks.append(this.helpButton,this.privacyButton);
   this.menu.append(this.menuHeader,this.menuResult,this.menuSettings,this.upgradePanel,this.buttons,this.menuLinks);
@@ -447,6 +564,7 @@ export class GameUI{
   this.playerHealth.hidden=state!==GameState.PLAYING;
   this.opponentHealth.hidden=state!==GameState.PLAYING;
   this.mobileControls.hidden=state!==GameState.PLAYING||s.winner!==null;
+  if(state!==GameState.PLAYING||s.winner!==null)this.cancelTouchControls();
 
   for(const item of this.buttons.children){
    const button=item as HTMLButtonElement;
@@ -455,7 +573,23 @@ export class GameUI{
   }
  }
 
+ private updateMissileAimGuide(angle:number,power:number){
+  const details=this.i18n.messages.details;
+  this.missileAimValues.textContent=details.angle+" "+Math.round(angle)+"°  ·  "+details.power+" "+power.toFixed(1);
+  if(!this.missileAimPath)return;
+  const radians=angle*Math.PI/180,vx=Math.cos(radians)*power,vy=Math.sin(radians)*power;
+  const points:string[]=[];
+  // Preview uses the game's missile launch speed and -7.8 vertical acceleration.
+  for(let i=0;i<=28;i++){
+   const t=i*.1,x=8+vx*t*4.6,y=109-(vy*t-3.9*t*t)*4.6;
+   if(x>219||y<4||y>117)break;
+   points.push((points.length?"L":"M")+x.toFixed(1)+" "+y.toFixed(1));
+  }
+  this.missileAimPath.setAttribute("d",points.join(" "));
+ }
  dispose(){
+  this.cancelTouchControls();
+  this.removeTouchLifecycle();
   this.unsubscribe?.();
   this.unsubscribeLocale?.();
   this.stopHudLoop();
