@@ -1,13 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import {getArenaTheme} from "../.test-build/themes/ArenaThemes.js";
 const states={MENU:"MENU",PLAYING:"PLAYING",PAUSED:"PAUSED",GAME_OVER:"GAME_OVER"};
 const compiled=readFileSync(".test-build/ui/GameUI.js","utf8");
 const gameStateImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("GameState"));
 assert.ok(gameStateImport,"compiled UI imports GameState");
-const runnable=compiled.replace(gameStateImport,"const GameState=states;").replace("export class GameUI","class GameUI");
+const themeImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("ArenaThemes"));
+assert.ok(themeImport,"compiled UI imports arena themes");
+const runnable=compiled.replace(gameStateImport,"const GameState=states;").replace(themeImport,"").replace("export class GameUI","class GameUI");
 assert.equal(runnable.includes("export class GameUI"),false);
-const {GameUI}=new Function("states",runnable+";return {GameUI};")(states);
+const {GameUI}=new Function("states","getArenaTheme",runnable+";return {GameUI};")(states,getArenaTheme);
 
 const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const modes=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
