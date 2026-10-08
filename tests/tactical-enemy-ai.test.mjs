@@ -104,7 +104,8 @@ test("opponents remain finite and never loop over the full arena set",()=>{
    for(let frame=0;frame<80;frame++)game.update(1/120);
    const enemy=game.getRenderState().opponent;
    assert.ok([enemy.x,enemy.y,enemy.velocityX,enemy.velocityY,enemy.attackTelegraph].every(Number.isFinite),arena+"/"+enemy.enemyType);
-   assert.ok(Math.abs(enemy.x)<=6.01);
+   const bounds=game.fighterHorizontalBounds(game.opponent);
+   assert.ok(enemy.x>=bounds.min-1e-6&&enemy.x<=bounds.max+1e-6,arena+"/"+enemy.enemyType);
   }
   game.dispose();
  }
