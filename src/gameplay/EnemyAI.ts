@@ -48,7 +48,8 @@ export function chooseEnemyPlan(s:EnemySituation):EnemyPlan{
  if(s.hillDx!==null)return{intent:"approach",move:toward,attack:false,dodge:false,leap:s.type==="jumper"};
  const desiredMin=s.type==="boss"&&s.bossPhase>0&&s.weaponIsRanged?2.9:profile.idealMin;
  const desiredMax=s.type==="boss"&&s.bossPhase>0&&s.weaponIsRanged?5.2:profile.idealMax;
- const canAttack=s.distance<=profile.attackRange&&Math.abs(s.dy)<(s.weaponIsRanged?2.3:1.25)&&(!s.weaponIsRanged||s.clearShot);
+ const attackReach=s.type==="boss"&&s.weaponIsRanged?6.4:profile.attackRange;
+ const canAttack=s.distance<=attackReach&&Math.abs(s.dy)<(s.weaponIsRanged?2.3:1.25)&&(!s.weaponIsRanged||s.clearShot);
  if(s.weaponIsRanged&&!s.clearShot&&s.distance<profile.attackRange){
   return{intent:"reposition",move:toward,attack:false,dodge:false,leap:true};
  }
