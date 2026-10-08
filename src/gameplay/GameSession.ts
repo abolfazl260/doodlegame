@@ -143,7 +143,7 @@ export class GameSession{
  private freshEnemyBrain():EnemyBrain{
   return{plan:{intent:"approach",move:0,attack:false,dodge:false,leap:false},thinkClock:.12,chargeTime:0,chargeTotal:0,recoverTime:0,dodgeCooldown:0,jumpCooldown:0,transitionTime:0,phase:0,phaseAttacks:0,lastX:0,stuckTime:0};
  }
- private elapsed=0;private enemyRound=0;private upgradePoints=0;private readonly upgradedWeapons=new Set<WeaponId>();private player:Fighter=this.create(-5,1,null);private opponent:Fighter=this.create(5,-1,"runner");private projectiles:Projectile[]=[];private explosions:ExplosionRenderState[]=[];private debris:(ArenaDebrisRenderState&{vx:number;vy:number;spin:number})[]=[];private environment:EnvironmentBody[]=[];private winner:"player"|"opponent"|null=null;
+ private elapsed=0;private enemyRound=0;private upgradePoints=0;private readonly upgradedWeapons=new Set<WeaponId>();private player:Fighter=this.create(-5,1,null);private opponent:Fighter=this.create(5,-1,"runner");private projectiles:Projectile[]=[];private explosions:ExplosionRenderState[]=[];private debris:{x:number;y:number;rotation:number;size:number;age:number;life:number;vx:number;vy:number;spin:number}[]=[];private environment:EnvironmentBody[]=[];private winner:"player"|"opponent"|null=null;
  constructor(private readonly input:InputSource){}
  setShakeEnabled(enabled:boolean){this.shakeEnabled=enabled;}
  private emitCue(kind:CombatCueKind,weapon:WeaponId,x:number,y:number,direction:number,intensity=1){
