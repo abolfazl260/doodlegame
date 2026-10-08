@@ -41,6 +41,7 @@ try{
  const canvas=document.querySelector<HTMLCanvasElement>("#game-canvas");
  const root=document.querySelector<HTMLElement>("#ui-root");
  if(!canvas||!root)throw new Error("DoodleGame root elements are missing.");
+ root.classList.add("game-ui-intro-pending");
 
  const input=new WebInput(canvas);
  const storage=new WebStorage();
@@ -104,9 +105,16 @@ try{
  input.start();
  game.initialize();
  const intro=new OpeningIntro(root,i18n.locale);
- // Remove the decorative menu scene before the actual match is rendered.
+ // Hide the living background during gameplay; restore it without replaying
+ // the long introduction if the player returns to the main menu.
+ let hasPlayed=false;
  const unsubscribeIntro=game.subscribe(state=>{
-  if(state===GameState.PLAYING)intro.dispose();
+  if(state===GameState.PLAYING){
+   hasPlayed=true;
+   intro.dispose();
+  }else if(state===GameState.MENU&&hasPlayed){
+   intro.restoreAmbient();
+  }
  });
 
  window.addEventListener("keydown",event=>{
