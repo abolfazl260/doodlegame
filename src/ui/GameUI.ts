@@ -11,7 +11,7 @@ type Actions={
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
- setTouchMove:(x:number,y:number)=>void;touchJump:()=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;
+ setTouchMove:(x:number,y:number)=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;
 };
 type UiAction="start"|"pause"|"resume"|"restart";
 
@@ -25,7 +25,6 @@ export class GameUI{
  private mobileControls=document.createElement("div");
  private joystick=document.createElement("div");
  private joystickThumb=document.createElement("div");
- private mobileJumpButton=document.createElement("button");
  private mobileAttackButton=document.createElement("button");
  private mobileWeaponSwitcher=document.createElement("div");
  private previousWeaponButton=document.createElement("button");
@@ -81,8 +80,6 @@ export class GameUI{
  private opponentHealthLabel=document.createElement("span");
  private playerHealthCurrent=document.createElement("span");
  private opponentHealthCurrent=document.createElement("span");
- private playerHealthMaximum=document.createElement("span");
- private opponentHealthMaximum=document.createElement("span");
  private missilePanel=document.createElement("div");
  private missileTitle=document.createElement("strong");
  private angleInput=document.createElement("input");
@@ -115,8 +112,6 @@ export class GameUI{
   this.mobileControls.className="game-ui__mobile-controls";
   this.joystick.className="game-ui__joystick";
   this.joystickThumb.className="game-ui__joystick-thumb";
-  this.mobileJumpButton.type="button";
-  this.mobileJumpButton.className="game-ui__mobile-button game-ui__mobile-button--jump";
   this.mobileAttackButton.type="button";
   this.mobileAttackButton.className="game-ui__mobile-button game-ui__mobile-button--attack";
   this.mobileWeaponSwitcher.className="game-ui__mobile-weapon-switcher";
@@ -137,7 +132,7 @@ export class GameUI{
   this.nextWeaponButton.className="game-ui__mobile-weapon-arrow";
   this.mobileWeaponSwitcher.append(weaponDisplay,this.previousWeaponButton,this.nextWeaponButton);
   this.joystick.append(this.joystickThumb);
-  this.mobileControls.append(this.mobileWeaponSwitcher,this.joystick,this.mobileJumpButton,this.mobileAttackButton);
+  this.mobileControls.append(this.mobileWeaponSwitcher,this.joystick,this.mobileAttackButton);
 
   this.help.className="game-ui__help game-ui__menu-dialog";
   this.help.hidden=true;
@@ -168,8 +163,8 @@ export class GameUI{
   this.opponentHealthLabel.className="health-label";
   this.playerHealthCurrent.className="health-label__current";
   this.opponentHealthCurrent.className="health-label__current";
-  this.playerHealthLabel.append(this.playerHealthCurrent,"/",this.playerHealthMaximum);
-  this.opponentHealthLabel.append(this.opponentHealthCurrent,"/",this.opponentHealthMaximum);
+  this.playerHealthLabel.append(this.playerHealthCurrent);
+  this.opponentHealthLabel.append(this.opponentHealthCurrent);
   this.playerHealth.append(this.playerHealthLabel);
   this.opponentHealth.append(this.opponentHealthLabel);
 
@@ -329,7 +324,6 @@ export class GameUI{
   this.joystick.addEventListener("lostpointercapture",releaseJoystick);
   this.previousWeaponButton.onclick=()=>{haptic(8);actions.weaponPrevious();};
   this.nextWeaponButton.onclick=()=>{haptic(8);actions.weaponNext();};
-  this.mobileJumpButton.addEventListener("pointerdown",event=>{event.preventDefault();haptic(12);actions.touchJump();});
   this.mobileAttackButton.addEventListener("pointerdown",event=>{event.preventDefault();haptic(16);actions.touchAttackStart();});
   this.mobileAttackButton.addEventListener("pointerup",event=>{event.preventDefault();actions.touchAttackEnd();});
   this.mobileAttackButton.addEventListener("pointercancel",event=>{event.preventDefault();actions.touchAttackEnd();});
@@ -433,10 +427,9 @@ export class GameUI{
   this.upgradeHint.textContent=s.upgradePoints>0&&selected?messages.upgrades[selected].description:messages.upgrade.earn;
   this.upgradePanel.hidden=!((state===GameState.MENU||state===GameState.GAME_OVER)&&(s.upgradePoints>0||upgraded.size>0));
 
-  this.playerHealthCurrent.textContent=String(Math.ceil(playerHealth));
-  this.playerHealthMaximum.textContent=String(Math.ceil(playerMax));
-  this.opponentHealthCurrent.textContent=String(Math.ceil(opponentHealth));
-  this.opponentHealthMaximum.textContent=String(Math.ceil(opponentMax));
+  const hpFormatter=new Intl.NumberFormat(this.i18n.locale==="fa"?"fa-IR":"en-US",{useGrouping:false,maximumFractionDigits:0});
+  this.playerHealthCurrent.textContent=hpFormatter.format(Math.ceil(playerHealth));
+  this.opponentHealthCurrent.textContent=hpFormatter.format(Math.ceil(opponentHealth));
   this.playerHealth.style.setProperty("--health",player+"%");
   this.opponentHealth.style.setProperty("--health",opponent+"%");
 
@@ -496,8 +489,6 @@ export class GameUI{
   this.privacyNetworkNote.textContent=messages.privacy.networkNote;
   this.privacyCloseButton.textContent=messages.privacy.close;
   this.mobileAttackButton.textContent=messages.buttons.attack;
-  this.mobileJumpButton.textContent=messages.buttons.jump;
-  this.mobileJumpButton.setAttribute("aria-label",messages.buttons.jump);
   this.mobileWeaponSwitcher.setAttribute("aria-label",messages.details.equipped);
   this.previousWeaponButton.setAttribute("aria-label",messages.buttons.previousWeapon);
   this.nextWeaponButton.setAttribute("aria-label",messages.buttons.nextWeapon);
