@@ -690,3 +690,25 @@ html[dir="rtl"] .opening-intro__skip{
 /* Desktop weapon picks intercept only their own hit areas; the bar stays click-through. */
 .game-ui.playing .game-ui__weapon-list button:not([hidden]):not(:disabled){pointer-events:auto}
 .game-ui.playing .game-ui__weapon-list button:is([hidden],:disabled){pointer-events:none}
+
+
+/* Compact secondary language control, visually subordinate to primary menu actions. */
+.game-ui__menu-header .game-ui__language{gap:0;flex:0 0 auto}
+.game-ui__menu-header .game-ui__language span{display:none}
+.game-ui:not(.playing) .game-ui__menu-header .game-ui__language button{
+ min-width:0;width:2.35rem;max-width:2.35rem;min-height:28px;height:28px;
+ padding:.1rem .18rem;border-radius:.4rem;font-size:.61rem;font-weight:650;letter-spacing:0;
+ color:#bbc0cc;background:#12141a;border-color:#484c55;
+}
+@media (max-height:520px){
+ .game-ui:not(.playing) .game-ui__menu-header .game-ui__language button{min-height:26px;height:26px}
+}
+/* One visible update control; no extra update copy in the menu. */
+.game-ui__menu-links .game-ui__update-button{
+ grid-column:1/-1;min-height:39px;padding:.32rem .6rem;
+ font-size:.78rem;font-weight:800;border-color:#aaa;background:#1b1e25;
+}
+.game-ui__menu-links .game-ui__update-button[hidden]{display:none!important}
+.game-ui__menu-links .game-ui__update-button:disabled{opacity:.6;cursor:progress}
+.game-ui__menu-links .game-ui__update-button[data-result="success"]{border-color:#81b69b}
+.game-ui__menu-links .game-ui__update-button[data-result="error"]{border-color:#d77878}

@@ -4,6 +4,8 @@ import {GameState} from "./core/GameState";
 import {GameSession} from "./gameplay/GameSession";
 import type {GameRenderState} from "./gameplay/GameSession";
 import {CombatAudio} from "./audio/CombatAudio";
+import {Capacitor} from "@capacitor/core";
+import {downloadLatestGameData,GAME_DATA_STORAGE_KEY,parseLiveGameData} from "./gameplay/LiveGameData";
 import {I18n} from "./i18n/I18n";
 import {WebFrameScheduler} from "./platform/web/WebFrameScheduler";
 import {WebInput} from "./platform/web/WebInput";
@@ -64,6 +66,10 @@ try{
  );
 
  const session=new GameSession(input);
+ let appliedGameData:(ReturnType<typeof parseLiveGameData>)=null;
+ try{appliedGameData=parseLiveGameData(storage.get<unknown>(GAME_DATA_STORAGE_KEY));}
+ catch(error){console.warn("Invalid cached game data; using bundled defaults.",error);}
+ if(appliedGameData)session.setLiveGameData(appliedGameData);
  session.setShakeEnabled(shakeEnabled);
  const presentationRenderer={
   resize:()=>renderer.resize(),
@@ -118,6 +124,15 @@ try{
   touchAttackStart:()=>input.touchAttack(true),
   touchAttackEnd:()=>input.touchAttackRelease(),
   touchAttackCancel:()=>{input.touchAttackCancel();game.cancelTouchAttack();},
+  updateData:async()=>{
+   // Update only compatible content; APK/bundled application code stays untouched.
+   const latest=await downloadLatestGameData();
+   if(appliedGameData&&latest.dataVersion<appliedGameData.dataVersion)throw new Error("GitHub game data is older than the installed copy");
+   storage.set(GAME_DATA_STORAGE_KEY,latest);
+   appliedGameData=latest;
+   session.setLiveGameData(latest);
+   ui.setUpdateOutcome("success");
+  },
   toggleCombatSound:()=>{
    soundEnabled=!soundEnabled;combatAudio.setMuted(!soundEnabled);
    saveSetting("doodlegame.combatSound",soundEnabled);
@@ -132,6 +147,7 @@ try{
  },i18n);
 
  ui.setCombatPreferences(soundEnabled,shakeEnabled);
+ ui.setUpdateVisible(Capacitor.getPlatform()==="android");
  ui.bind(listener=>game.subscribe(listener),()=>game.getHudState());
  input.start();
  game.initialize();

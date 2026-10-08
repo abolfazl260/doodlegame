@@ -1,6 +1,7 @@
 import type {InputSource,InputState,WeaponId} from "../input/Input";
 import {combatShake,cueLife,MAX_COMBAT_CUES,type CombatCue,type CombatCueKind} from "./CombatFeedback.js";
 import {bossPhaseFor,chooseEnemyPlan,ENEMY_PROFILES,hasClearShot,terrainAhead,type EnemyPlan} from "./EnemyAI.js";
+import type {LiveGameData} from "./LiveGameData.js";
 export type PlatformSurface="normal"|"ice"|"slippery"|"oneWay"|"conveyorLeft"|"conveyorRight";
 export interface Platform{readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly surface?:PlatformSurface;}
 export type EnemyType="runner"|"tank"|"shooter"|"jumper"|"bomber"|"ninja"|"boss";
@@ -137,6 +138,7 @@ const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:numb
 const ORDER:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
 export class GameSession{
  private arenaId:ArenaId="classic";private modeId:GameModeId="duel";private startingWeapon:WeaponId="blade";
+ private liveData:LiveGameData|null=null;private weaponStats:typeof WEAPONS=WEAPONS;
  private missileAngle=45;private missilePower=13;private hillPlayer=0;private hillOpponent=0;
  private combatCues:CombatCue[]=[];private cueSequence=0;private shakeEnabled=true;private visualFreezeTime=0;private visualFreezeUntil=0;
  private enemyBrain:EnemyBrain=this.freshEnemyBrain();
@@ -155,7 +157,9 @@ export class GameSession{
   }
  }
  private ageCues(dt:number){this.combatCues=this.combatCues.map(c=>({...c,age:c.age+dt})).filter(c=>c.age<c.life);}
- private get arena(){return ARENAS[this.arenaId];}
+ private get arena():ArenaDefinition{const base=ARENAS[this.arenaId],tuning=this.liveData?.arenas[this.arenaId];return tuning?{...base,...tuning}:base;}
+ /** Apply validated data for subsequent combat rounds; no remote code is executed. */
+ setLiveGameData(data:LiveGameData|null){this.liveData=data;this.weaponStats=Object.fromEntries(ORDER.map(id=>[id,{...WEAPONS[id],...data?.weapons[id]}])) as typeof WEAPONS;}
  private get missileRules(){return this.modeId==="missile-duel"||(this.arenaId==="fortress"&&this.modeId==="duel");}
  private get gravityScale(){return this.modeId==="low-gravity"?.55:1;}
  private get platforms(){return this.platformsAt(this.elapsed);}
@@ -178,7 +182,7 @@ export class GameSession{
  }
  setMissileAngle(angle:number){this.missileAngle=Math.max(MIN_MISSILE_ANGLE,Math.min(MAX_MISSILE_ANGLE,angle));}
  setMissilePower(power:number){this.missilePower=Math.max(MIN_MISSILE_POWER,Math.min(MAX_MISSILE_POWER,power));}
- fireWeapon(){if(this.winner)return;const w=WEAPONS[this.player.weapon];this.attack(this.player,this.opponent,Boolean(w));}
+ fireWeapon(){if(this.winner)return;const w=this.weaponStats[this.player.weapon];this.attack(this.player,this.opponent,Boolean(w));}
  cancelTouchAttack(){this.player.bowCharging=false;this.player.bowCharge=0;}
  getMissileAim(){return{angle:this.missileAngle,power:this.missilePower};}
  upgradeWeapon(id:WeaponId){if(this.upgradePoints<=0||this.upgradedWeapons.has(id))return false;this.upgradedWeapons.add(id);this.upgradePoints--;return true;}
@@ -204,7 +208,7 @@ export class GameSession{
   }
   this.input.endFrame();
  }
- private step(dt:number,input:InputState){if(this.winner){this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);return;}this.elapsed+=dt;this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);this.updateEnvironment(dt);this.updateDebris(dt);const previousPlayerX=this.player.x,previousOpponentX=this.opponent.x;this.updatePlayer(input,dt);this.updateOpponent(dt);this.resolveCharacterCollisions(previousPlayerX,previousOpponentX);this.resolveEnvironmentFighter(this.player);this.resolveEnvironmentFighter(this.opponent);const playerWeapon=WEAPONS[this.player.weapon];if(this.player.weapon==="bow")this.updateBow(input,dt);else this.attack(this.player,this.opponent,input.attackPressed||(Boolean(playerWeapon.automatic)&&input.attackHeld));this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0){this.winner="player";this.upgradePoints++;}else this.updateHill(dt);if(this.winner){const defeated=this.winner==="player"?this.opponent:this.player;this.emitCue("defeat",defeated.weapon,defeated.x,defeated.y+.3,defeated.facing,1.4);}if(!this.missileRules&&this.modeId!=="random-weapons"){if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);}}
+ private step(dt:number,input:InputState){if(this.winner){this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);return;}this.elapsed+=dt;this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);this.updateEnvironment(dt);this.updateDebris(dt);const previousPlayerX=this.player.x,previousOpponentX=this.opponent.x;this.updatePlayer(input,dt);this.updateOpponent(dt);this.resolveCharacterCollisions(previousPlayerX,previousOpponentX);this.resolveEnvironmentFighter(this.player);this.resolveEnvironmentFighter(this.opponent);const playerWeapon=this.weaponStats[this.player.weapon];if(this.player.weapon==="bow")this.updateBow(input,dt);else this.attack(this.player,this.opponent,input.attackPressed||(Boolean(playerWeapon.automatic)&&input.attackHeld));this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0){this.winner="player";this.upgradePoints++;}else this.updateHill(dt);if(this.winner){const defeated=this.winner==="player"?this.opponent:this.player;this.emitCue("defeat",defeated.weapon,defeated.x,defeated.y+.3,defeated.facing,1.4);}if(!this.missileRules&&this.modeId!=="random-weapons"){if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);}}
  private updatePlayer(input:InputState,dt:number){
   const d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;
   if(input.dashPressed)this.tryDash(this.player);
@@ -542,7 +546,7 @@ export class GameSession{
  }
  private fireBow(a:Fighter,charge:number){
   if(a.cooldown>0){a.bowCharging=false;a.bowCharge=0;return;}
-  const w=WEAPONS.bow,direction=a.facing,speed=w.projectileSpeed!*(.58+.62*charge),angle=(4+11*charge)*Math.PI/180;
+  const w=this.weaponStats.bow,direction=a.facing,speed=w.projectileSpeed!*(.58+.62*charge),angle=(4+11*charge)*Math.PI/180;
   const originX=a.x+direction*(.72+.08*charge),originY=a.y+.48;
   const upgraded=a===this.player&&this.upgradedWeapons.has("bow");
   for(const offset of upgraded?[-8,0,8]:[0]){
@@ -553,7 +557,7 @@ export class GameSession{
   this.emitCue("attack","bow",originX,originY,direction,.75);
  }
  private attack(a:Fighter,t:Fighter,pressed:boolean){
-  const w=WEAPONS[a.weapon];
+  const w=this.weaponStats[a.weapon];
   if(!pressed||a.cooldown>0)return;
   const upgraded=a===this.player&&this.upgradedWeapons.has(a.weapon);
   const wall=this.wallDirection(a);
@@ -877,8 +881,8 @@ export class GameSession{
       }
     }else{
       p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
-      const projectileDamage=WEAPONS[p.weapon].damage*(p.damageScale??1);
-      if(p.weapon==="missile"){if(this.hitEnvironment(p.x,p.y,projectileDamage,Math.sign(p.vx)*WEAPONS.missile.knockback,p.owner)){this.explodeMissile(p);this.projectiles.splice(i,1);continue;}}else if(this.hitEnvironment(p.x,p.y,projectileDamage,Math.sign(p.vx)*WEAPONS[p.weapon].knockback,p.owner)){this.projectiles.splice(i,1);continue;}
+      const projectileDamage=this.weaponStats[p.weapon].damage*(p.damageScale??1);
+      if(p.weapon==="missile"){if(this.hitEnvironment(p.x,p.y,projectileDamage,Math.sign(p.vx)*this.weaponStats.missile.knockback,p.owner)){this.explodeMissile(p);this.projectiles.splice(i,1);continue;}}else if(this.hitEnvironment(p.x,p.y,projectileDamage,Math.sign(p.vx)*this.weaponStats[p.weapon].knockback,p.owner)){this.projectiles.splice(i,1);continue;}
       for(const platform of this.platforms){
         const top=platform.y+platform.height;
         const crossedTop=p.vy<0&&prevY>=top&&p.y<=top&&p.x>platform.x&&p.x<platform.x+platform.width;
@@ -904,12 +908,12 @@ export class GameSession{
       const sx=p.x-prevX,sy=p.y-prevY,segLenSq=sx*sx+sy*sy,targetY=target.y+.35;
       const along=segLenSq>1e-8?Math.max(0,Math.min(1,((target.x-prevX)*sx+(targetY-prevY)*sy)/segLenSq)):0;
       const cx=prevX+sx*along,cy=prevY+sy*along;
-      if(Math.hypot(target.x-cx,targetY-cy)<.38){this.damage(target,WEAPONS.bow.damage*(p.damageScale??1),Math.sign(p.vx)*WEAPONS.bow.knockback,"bow");this.projectiles.splice(i,1);continue;}
+      if(Math.hypot(target.x-cx,targetY-cy)<.38){this.damage(target,this.weaponStats.bow.damage*(p.damageScale??1),Math.sign(p.vx)*this.weaponStats.bow.knockback,"bow");this.projectiles.splice(i,1);continue;}
     }
     if(p.weapon==="missile"&&Math.abs(p.x-target.x)<.72&&Math.abs(p.y-(target.y+.25))<.9){this.explodeMissile(p);this.projectiles.splice(i,1);continue;}
     if(p.weapon==="bomb"&&p.life<=.55&&Math.abs(p.x-target.x)<1.05&&Math.abs(p.y-(target.y+.35))<1){this.explode(p);this.projectiles.splice(i,1);continue;}
     if(p.weapon!=="bomb"&&Math.abs(p.x-target.x)<.65&&Math.abs(p.y-(target.y+.35))<1){
-      this.damage(target,WEAPONS[p.weapon].damage*(p.damageScale??1),Math.sign(p.vx)*WEAPONS[p.weapon].knockback,p.weapon);
+      this.damage(target,this.weaponStats[p.weapon].damage*(p.damageScale??1),Math.sign(p.vx)*this.weaponStats[p.weapon].knockback,p.weapon);
       this.projectiles.splice(i,1);continue;
     }
     if(p.weapon==="bomb"&&p.life<=0){this.explode(p);this.projectiles.splice(i,1);continue;}
@@ -917,7 +921,7 @@ export class GameSession{
   }
  }
  private explodeMissile(p:Projectile){
-  const w=WEAPONS.missile;
+  const w=this.weaponStats.missile;
   const damageScale=p.damageScale??1;
   const radius=p.clusterChild?1.05:1.9;
   this.explosions.push({x:p.x,y:p.y,age:0,life:.48,radius});
@@ -954,7 +958,7 @@ export class GameSession{
   }
  }
  private explode(p:Projectile){
-  const w=WEAPONS.bomb,damage=w.damage*(p.damageScale??1);
+  const w=this.weaponStats.bomb,damage=w.damage*(p.damageScale??1);
   this.explosions.push({x:p.x,y:p.y,age:0,life:.75,radius:w.radius!});
    this.emitCue("explosion","bomb",p.x,p.y,Math.sign(p.vx)||1,1.4);
   this.blastEnvironment(p.x,p.y,w.radius!*1.2,damage*.95,w.knockback);
