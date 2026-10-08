@@ -12,6 +12,7 @@ import {CanvasRenderer} from "./rendering/CanvasRenderer";
 import {ThreeRenderer} from "./rendering/ThreeRenderer";
 import {createRendererWithFallback} from "./rendering/RendererFactory";
 import {GameUI} from "./ui/GameUI";
+import {OpeningIntro} from "./ui/OpeningIntro";
 import type {ArenaId,GameModeId} from "./gameplay/GameSession";
 
 const bootFallback=document.querySelector<HTMLElement>("#boot-fallback");
@@ -79,6 +80,7 @@ try{
  ui.bind(listener=>game.subscribe(listener),()=>game.getHudState());
  input.start();
  game.initialize();
+ const intro=new OpeningIntro(root,i18n.locale);
 
  window.addEventListener("keydown",event=>{
   if(event.repeat)return;
@@ -110,10 +112,15 @@ try{
 
  window.clearTimeout(bootWatchdog);
  bootFallback?.remove();
+ try{intro.start();}catch(error){
+  console.warn("Opening animation could not start; showing the menu.",error);
+  intro.dispose();
+ }
  const resize=()=>game.resize();
  window.addEventListener("resize",resize);
  window.addEventListener("beforeunload",()=>{
   disposeWebVisibility();
+  intro.dispose();
   disposeNativeLifecycle();
   input.dispose();
   game.dispose();
