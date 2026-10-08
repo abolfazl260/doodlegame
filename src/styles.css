@@ -673,3 +673,16 @@ html[dir="rtl"] .opening-intro__skip{
  .game-ui.playing .game-ui__missile-aim-guide:not([hidden]){width:clamp(7.5rem,22vw,10rem);padding:.2rem .35rem}
  .game-ui__missile-aim-guide svg{max-height:4.5rem}
 }
+
+/* Issue #51: compact combat feedback preferences in both landscape and mobile menus. */
+.game-ui__menu-links .game-ui__combat-toggle{
+ min-height:38px;
+ padding:.25rem .4rem;
+ font-size:.68rem;
+ letter-spacing:.02em;
+ border-color:#777;
+}
+.game-ui__menu-links .game-ui__combat-toggle[aria-pressed="false"]{color:#aaa;border-color:#444}
+@media (max-height:520px){
+ .game-ui__menu-links .game-ui__combat-toggle{min-height:32px;padding:.12rem .3rem;font-size:.63rem}
+}
