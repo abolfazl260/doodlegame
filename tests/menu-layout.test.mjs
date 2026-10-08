@@ -1,17 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import ts from "typescript";
-
 const states={MENU:"MENU",PLAYING:"PLAYING",PAUSED:"PAUSED",GAME_OVER:"GAME_OVER"};
-const source=readFileSync("src/ui/GameUI.ts","utf8");
-const compiled=ts.transpileModule(source,{compilerOptions:{target:9,module:1}}).outputText;
-const module={exports:{}};
-new Function("module","exports","require",compiled)(module,module.exports,name=>{
- if(name.includes("GameState"))return {GameState:states};
- throw new Error("Unexpected import: "+name);
-});
-const {GameUI}=module.exports;
+const compiled=readFileSync(".test-build/ui/GameUI.js","utf8");
+const runnable=compiled
+ .replace(/import\\s*\\{\\s*GameState\\s*\\}\\s*from\\s*["'][^"']+["'];?/, "const GameState=states;")
+ .replace("export class GameUI","class GameUI");
+assert.equal(runnable.includes("export class GameUI"),false);
+assert.equal(/import\\s*\\{\\s*GameState/.test(runnable),false);
+const {GameUI}=new Function("states",runnable+";return {GameUI};")(states);
+
 const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const modes=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
 const weapons=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
