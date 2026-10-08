@@ -777,52 +777,45 @@ export class GameSession{
  }
  private hitEnvironment(x:number,y:number,damage:number,force:number,_owner:"player"|"opponent"){
   for(const e of this.environment){
-   if(!e.active||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity")continue;
-   if(Math.abs(x-e.x)<=e.width/2+.18&&Math.abs(y-e.y)<=e.height/2+.28){
-    this.emitCue("block","blade",e.x,e.y,Math.sign(force)||1,.9);
-     if(e.kind==="barrel")this.explodeBarrel(e,x>=e.x?1:-1);
-    else{
-      e.hp=Math.max(0,e.hp-damage);e.pulse=1;
-      if(e.kind==="box")e.vx=Math.max(-6,Math.min(6,e.vx+force*.55));
-      else e.vx=Math.max(-5,Math.min(5,e.vx+force*.15));
-      if(e.hp<=0)e.active=false;
-    }
-    return true;
-   }
+   if(!e.active||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity"||e.kind==="vent")continue;
+   if(Math.abs(x-e.x)>e.width/2+.18||Math.abs(y-e.y)>e.height/2+.28)continue;
+   this.emitCue("block","blade",e.x,e.y,Math.sign(force)||1,.9);
+   if(e.kind==="barrel")this.explodeBarrel(e,x>=e.x?1:-1);
+   else this.damageEnvironmentBody(e,damage,force);
+   return true;
   }
   return false;
  }
  private strikeEnvironment(a:Fighter,damage:number,force:number){this.hitEnvironment(a.x+a.facing*1.05,a.y+.25,damage,force,a===this.player?"player":"opponent");}
  private explodeBarrel(e:EnvironmentBody,direction:number){
   if(!e.active)return;
-  e.active=false;e.pulse=1;const radius=2.15;
-   this.emitCue("explosion","bomb",e.x,e.y,direction,1.15);
-  for(const t of [this.player,this.opponent]){const dx=t.x-e.x,dy=t.y-e.y,d=Math.hypot(dx,dy);if(d<=radius){const f=Math.max(.2,1-d/radius);this.damage(t,24*f,direction*7*f);t.velocityY=Math.max(t.velocityY,5*f);}}
+  e.active=false;e.pulse=1;this.spawnDebris(e);
+  const radius=2.15;
+  this.emitCue("explosion","bomb",e.x,e.y,direction,1.15);
+  for(const t of [this.player,this.opponent]){
+   const d=Math.hypot(t.x-e.x,t.y-e.y);
+   if(d>radius)continue;
+   const falloff=Math.max(.2,1-d/radius);
+   this.damage(t,24*falloff,direction*7*falloff,"bomb");
+   t.velocityY=Math.max(t.velocityY,5*falloff);
+  }
   for(const other of this.environment){
-   if(other===e||!other.active)continue;
-   const d=Math.hypot(other.x-e.x,other.y-e.y);if(d>radius)continue;
+   if(other===e||!other.active||["bounce","trap","fan","gravity","vent"].includes(other.kind))continue;
+   const d=Math.hypot(other.x-e.x,other.y-e.y);
+   if(d>radius)continue;
    if(other.kind==="barrel")this.explodeBarrel(other,Math.sign(other.x-e.x)||direction);
-   else if(other.kind!=="bounce"&&other.kind!=="trap"&&other.kind!=="fan"&&other.kind!=="gravity"){
-    other.hp=Math.max(0,other.hp-28);other.pulse=1;
-    if(other.kind==="box"){other.vx+=direction*5;other.vy=Math.max(other.vy,6);}
-    if(other.hp<=0)other.active=false;
-   }
+   else this.damageEnvironmentBody(other,28,direction*8);
   }
  }
  private blastEnvironment(x:number,y:number,radius:number,damage:number,force:number){
   for(const e of this.environment){
-   if(!e.active||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity")continue;
+   if(!e.active||["bounce","trap","fan","gravity","vent"].includes(e.kind))continue;
    const distance=Math.hypot(e.x-x,e.y-y),reach=radius+Math.hypot(e.width,e.height)*.22;
    if(distance>reach)continue;
    const falloff=Math.max(.28,1-distance/Math.max(.01,radius));
    const direction=Math.sign(e.x-x)||Math.sign(force)||1;
    if(e.kind==="barrel"){this.explodeBarrel(e,direction);continue;}
-   e.hp=Math.max(0,e.hp-damage*falloff);e.pulse=1;
-   if(e.kind==="box"){
-    e.vx=Math.max(-7,Math.min(7,e.vx+direction*force*.55*falloff));
-    e.vy=Math.max(e.vy,4.5*falloff);
-   }
-   if(e.hp<=0)e.active=false;
+   this.damageEnvironmentBody(e,damage*falloff,direction*force*falloff);
   }
  }
  private deflectProjectile(p:Projectile,f:Fighter,previousX:number,previousY:number){
