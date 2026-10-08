@@ -9,7 +9,7 @@ export type Messages={
  language:{label:string;english:string;persian:string};
  title:string;
  rotateHint:string;
- buttons:{start:string;pause:string;resume:string;restart:string;help:string;jump:string;attack:string;fireMissile:string;previousWeapon:string;nextWeapon:string};
+ buttons:{start:string;pause:string;resume:string;restart:string;help:string;jump:string;attack:string;fireMissile:string;previousWeapon:string;nextWeapon:string;update:string};
  privacy:{button:string;title:string;web:string;close:string;html:string};
  status:{win:string;lose:string;duel:string;hill:string};
  details:{equipped:string;angle:string;power:string};
@@ -29,7 +29,7 @@ const EN:Messages={
  language:{label:"Language",english:"English",persian:"فارسی"},
  title:"DOODLEGAME DUEL",
  rotateHint:"Rotate your device to landscape to play.",
- buttons:{start:"Start",pause:"Pause",resume:"Resume",restart:"Restart",help:"HOW TO PLAY",jump:"JUMP",attack:"ATTACK",fireMissile:"FIRE MISSILE",previousWeapon:"Previous weapon",nextWeapon:"Next weapon"},
+ buttons:{start:"Start",pause:"Pause",resume:"Resume",restart:"Restart",help:"HOW TO PLAY",jump:"JUMP",attack:"ATTACK",fireMissile:"FIRE MISSILE",previousWeapon:"Previous weapon",nextWeapon:"Next weapon",update:"UPDATE"},
  privacy:{"button":"PRIVACY","title":"YOUR PRIVACY","web":"READ THE WEB POLICY","close":"CLOSE","html":"<p><b>DoodleGame does not collect or share personal data.</b> There are no accounts, ads, analytics or trackers.</p><p><b>What is saved?</b> Only your language choice on this device. Matches and upgrades stay in memory while you play.</p><p><b>How to delete it:</b> Clear app/browser data or uninstall the game. There is no online account to delete.</p>"},
  status:{win:"YOU WIN",lose:"YOU LOSE",duel:"DUEL",hill:"HILL"},
  details:{equipped:"EQUIPPED",angle:"ANGLE",power:"POWER"},
@@ -56,7 +56,7 @@ const FA:Messages={
  language:{label:"زبان",english:"English",persian:"فارسی"},
  title:"دوئل دودل‌گیم",
  rotateHint:"برای اجرای بازی دستگاه را افقی بچرخانید.",
- buttons:{start:"شروع",pause:"توقف",resume:"ادامه",restart:"شروع دوباره",help:"راهنمای بازی",jump:"پرش",attack:"حمله",fireMissile:"شلیک موشک",previousWeapon:"سلاح قبلی",nextWeapon:"سلاح بعدی"},
+ buttons:{start:"شروع",pause:"توقف",resume:"ادامه",restart:"شروع دوباره",help:"راهنمای بازی",jump:"پرش",attack:"حمله",fireMissile:"شلیک موشک",previousWeapon:"سلاح قبلی",nextWeapon:"سلاح بعدی",update:"بروزرسانی"},
  privacy:{"button":"حریم خصوصی","title":"حریم خصوصی شما","web":"مشاهده سیاست در وب","close":"بستن","html":"<p><b>دودل‌گیم اطلاعات شخصی شما را جمع‌آوری نمی‌کند و به دیگران نمی‌دهد.</b> بازی حساب کاربری، تبلیغات و ابزار ردیابی ندارد.</p><p><b>چه چیزی ذخیره می‌شود؟</b> فقط زبان انتخابی شما روی همین دستگاه می‌ماند. اطلاعات مبارزه و ارتقای سلاح‌ها فقط هنگام بازی در حافظه است.</p><p><b>چطور پاکش کنیم؟</b> داده‌های برنامه یا مرورگر را پاک کنید یا بازی را حذف کنید. حساب آنلاینی وجود ندارد که نیاز به حذف داشته باشد.</p>"},
  status:{win:"بردی",lose:"باختی",duel:"دوئل",hill:"تپه"},
  details:{equipped:"سلاح",angle:"زاویه",power:"قدرت"},
