@@ -11,7 +11,7 @@ type Actions={
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
- setTouchMove:(x:number,y:number)=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;toggleCombatSound:()=>void;toggleCameraShake:()=>void;
+ setTouchMove:(x:number,y:number)=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;toggleCombatSound:()=>void;toggleCameraShake:()=>void;updateData:()=>Promise<void>;
 };
 type UiAction="start"|"pause"|"resume"|"restart";
 
@@ -56,6 +56,7 @@ export class GameUI{
  private menuLinks=document.createElement("div");
  private combatSoundButton=document.createElement("button");
  private combatShakeButton=document.createElement("button");
+ private updateButton=document.createElement("button");
  private combatSoundEnabled=true;private combatShakeEnabled=true;
  private menuResult=document.createElement("div");
  private modeField=document.createElement("label");
@@ -449,7 +450,19 @@ export class GameUI{
   this.combatShakeButton.className="game-ui__combat-toggle";
   this.combatSoundButton.onclick=actions.toggleCombatSound;
   this.combatShakeButton.onclick=actions.toggleCameraShake;
-  this.menuLinks.append(this.helpButton,this.privacyButton,this.combatSoundButton,this.combatShakeButton);
+  this.updateButton.type="button";
+  this.updateButton.className="game-ui__update-button";
+  this.updateButton.hidden=true;
+  this.updateButton.onclick=async()=>{
+   if(this.updateButton.disabled)return;
+   this.updateButton.disabled=true;
+   this.updateButton.dataset.result="loading";
+   this.updateButton.setAttribute("aria-busy","true");
+   try{await actions.updateData();}
+   catch(error){console.warn("Game data update failed:",error);this.setUpdateOutcome("error");}
+   finally{this.updateButton.disabled=false;this.updateButton.removeAttribute("aria-busy");}
+  };
+  this.menuLinks.append(this.helpButton,this.privacyButton,this.combatSoundButton,this.combatShakeButton,this.updateButton);
   this.menu.append(this.menuHeader,this.menuResult,this.menuSettings,this.upgradePanel,this.buttons,this.menuLinks);
   this.root.append(this.menu,this.help,this.privacy,this.status,this.details,this.playerHealth,this.opponentHealth,this.weaponList,this.missilePanel,this.bowPanel,this.mobileControls,this.rotateHint);
   container.append(this.root);
@@ -460,6 +473,8 @@ export class GameUI{
   });
  }
 
+ setUpdateVisible(visible:boolean){this.updateButton.hidden=!visible;}
+ setUpdateOutcome(result:"success"|"error"){this.updateButton.dataset.result=result;}
  bind(subscribe:(listener:(state:GameState)=>void)=>()=>void,read:()=>HudState){
   this.unsubscribe?.();
   this.stopHudLoop();
@@ -619,13 +634,14 @@ export class GameUI{
   this.refreshCombatLabels();
   this.languageLabel.textContent=messages.language.label;
   const currentLanguage=this.i18n.locale==="fa"?messages.language.persian:messages.language.english;
-  this.languageButton.textContent=currentLanguage;
+  this.languageButton.textContent=this.i18n.locale==="fa"?"فا":"EN";
   this.languageButton.setAttribute("aria-label",messages.language.label+": "+currentLanguage);
   this.title.textContent=messages.title;
   this.modeTitle.textContent=messages.sections.gameMode;
   this.arenaTitle.textContent=messages.sections.arena;
   this.startingWeaponTitle.textContent=messages.sections.weapon;
   this.rotateHint.textContent=messages.rotateHint;
+  this.updateButton.textContent=messages.buttons.update;
   this.helpButton.textContent=messages.buttons.help;
   this.helpContent.innerHTML=messages.helpHtml;
   this.help.setAttribute("aria-label",messages.buttons.help);
