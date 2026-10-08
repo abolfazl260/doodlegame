@@ -785,3 +785,10 @@ html[dir="rtl"] .opening-intro__skip{
 @media (prefers-reduced-motion:reduce){
  .game-ui.playing .health-bar,.game-ui.playing .game-ui__mobile-button--attack,.game-ui.playing .game-ui__joystick{transition:none}
 }
+
+
+/* Aim feedback must stay visible above the decorative skin when dragging missiles. */
+.game-ui.playing .game-ui__mobile-button--attack.aiming{
+ border-color:#fff;
+ box-shadow:0 0 0 3px #ffffff70,0 0 22px var(--arena-accent);
+}
