@@ -207,6 +207,10 @@ export class GameUI{
    option.value=id;
    this.upgradeSelect.append(option);
   }
+  this.upgradeSelect.onchange=()=>{
+   const id=this.upgradeSelect.value as WeaponId;
+   this.upgradeHint.textContent=this.i18n.messages.upgrades[id].description;
+  };
   this.upgradeChoices.append(this.upgradeSelect,this.upgradeButton);
   this.upgradePanel.append(this.upgradeTitle,this.upgradePointsLabel,this.upgradeChoices,this.upgradeHint,this.upgradeSummary);
 
@@ -353,7 +357,9 @@ export class GameUI{
   this.root.classList.toggle("playing",state===GameState.PLAYING);
   this.root.classList.toggle("paused",state===GameState.PAUSED);
   this.root.classList.toggle("game-over",state===GameState.GAME_OVER);
-  if(state===GameState.PLAYING)this.privacy.hidden=true;
+  if(state===GameState.PLAYING){this.privacy.hidden=true;this.help.hidden=true;}
+  this.root.classList.toggle("menu",state===GameState.MENU);
+  this.menuResult.hidden=state!==GameState.GAME_OVER;
   this.root.dataset.arena=s.arena;
   this.root.dataset.mode=s.mode;
 
@@ -370,20 +376,9 @@ export class GameUI{
   this.angleLabel.textContent=Math.round(s.missileAngle)+"°";
   this.powerLabel.textContent=s.missilePower.toFixed(1);
 
-  for(const item of this.arenaList.children){
-   const button=item as HTMLButtonElement;
-   const id=button.dataset.arena as ArenaId;
-   const selected=id===s.arena;
-   button.classList.toggle("active",selected);
-   button.setAttribute("aria-pressed",String(selected));
-   button.textContent=messages.arenas[id];
-  }
-  for(const item of this.modeList.children){
-   const button=item as HTMLButtonElement;
-   const selected=button.dataset.mode===s.mode;
-   button.classList.toggle("active",selected);
-   button.setAttribute("aria-pressed",String(selected));
-  }
+  this.arenaSelect.value=s.arena;
+  this.modeSelect.value=s.mode;
+  this.menuResult.textContent=this.status.textContent;
   const missileRules=s.mode==="missile-duel"||(s.arena==="fortress"&&s.mode==="duel");
   for(const item of this.weaponList.children){
    const button=item as HTMLButtonElement;
@@ -392,18 +387,18 @@ export class GameUI{
    button.textContent=messages.weapons[id]+(upgraded.has(id)?" ★":"");
    button.hidden=missileRules?id!=="missile":s.mode==="melee-only"?(id!=="blade"&&id!=="hammer"):s.mode==="random-weapons"?id!==s.weapon:id==="missile";
   }
-  for(const item of this.upgradeGrid.children){
-   const button=item as HTMLButtonElement;
-   const id=button.dataset.upgrade as WeaponId;
-   const done=upgraded.has(id);
-   button.classList.toggle("upgraded",done);
-   button.disabled=done||s.upgradePoints<=0;
-   const itemState=button.querySelector<HTMLElement>(".game-ui__upgrade-status");
-   if(itemState)itemState.textContent=done?messages.upgrade.upgraded:s.upgradePoints>0?messages.upgrade.upgrade:messages.upgrade.locked;
-  }
+  const available=WEAPON_IDS.filter(id=>!upgraded.has(id));
+  const selected=available.includes(this.upgradeSelect.value as WeaponId)?this.upgradeSelect.value as WeaponId:available[0];
+  if(selected)this.upgradeSelect.value=selected;
+  for(const option of this.upgradeSelect.options)option.disabled=upgraded.has(option.value as WeaponId);
+  this.upgradeSelect.disabled=s.upgradePoints<=0||available.length===0;
+  this.upgradeButton.disabled=this.upgradeSelect.disabled;
+  this.upgradeChoices.hidden=this.upgradeSelect.disabled;
+  this.upgradeSummary.hidden=upgraded.size===0||s.upgradePoints>0;
+  this.upgradeSummary.textContent=WEAPON_IDS.filter(id=>upgraded.has(id)).map(id=>messages.upgrades[id].name).join(" · ");
 
   this.upgradePointsLabel.textContent=messages.upgrade.points+"  "+s.upgradePoints;
-  this.upgradeHint.textContent=s.upgradePoints>0?messages.upgrade.choose:messages.upgrade.earn;
+  this.upgradeHint.textContent=s.upgradePoints>0&&selected?messages.upgrades[selected].description:messages.upgrade.earn;
   this.upgradePanel.hidden=!((state===GameState.MENU||state===GameState.GAME_OVER)&&(s.upgradePoints>0||upgraded.size>0));
 
   this.playerHealthCurrent.textContent=String(Math.ceil(playerHealth));
@@ -413,10 +408,7 @@ export class GameUI{
   this.playerHealth.style.setProperty("--health",player+"%");
   this.opponentHealth.style.setProperty("--health",opponent+"%");
 
-  this.arenaList.hidden=state!==GameState.MENU&&state!==GameState.GAME_OVER;
-  this.arenaTitle.hidden=this.arenaList.hidden;
-  this.modeList.hidden=state!==GameState.MENU&&state!==GameState.GAME_OVER;
-  this.modeTitle.hidden=this.modeList.hidden;
+  this.menuSettings.hidden=state!==GameState.MENU&&state!==GameState.GAME_OVER;
   this.weaponList.hidden=state!==GameState.PLAYING||s.winner!==null;
   this.mobileWeaponSwitcher.hidden=state!==GameState.PLAYING||s.winner!==null||missileRules||s.mode==="random-weapons";
   if(this.mobileWeaponName.textContent!==equipped)this.mobileWeaponName.textContent=equipped;
@@ -454,7 +446,10 @@ export class GameUI{
   this.arenaTitle.textContent=messages.sections.arena;
   this.rotateHint.textContent=messages.rotateHint;
   this.helpButton.textContent=messages.buttons.help;
-  this.help.innerHTML=messages.helpHtml;
+  this.helpContent.innerHTML=messages.helpHtml;
+  this.help.setAttribute("aria-label",messages.buttons.help);
+  this.privacy.setAttribute("aria-label",messages.privacy.title);
+  this.helpCloseButton.textContent=messages.privacy.close;
   this.privacyButton.textContent=messages.privacy.button;
   this.privacyTitle.textContent=messages.privacy.title;
   this.privacyContent.innerHTML=messages.privacy.html;
@@ -466,6 +461,8 @@ export class GameUI{
   this.previousWeaponButton.setAttribute("aria-label",messages.buttons.previousWeapon);
   this.nextWeaponButton.setAttribute("aria-label",messages.buttons.nextWeapon);
   this.upgradeTitle.textContent=messages.panels.weaponUpgrades;
+  this.upgradeButton.textContent=messages.upgrade.upgrade;
+  this.upgradeSelect.setAttribute("aria-label",messages.panels.weaponUpgrades);
   this.missileTitle.textContent=messages.panels.missileControl;
   this.bowTitle.textContent=messages.panels.bowDraw;
   this.angleName.textContent=messages.details.angle;
@@ -477,25 +474,15 @@ export class GameUI{
    const button=item as HTMLButtonElement;
    button.textContent=actionLabels[button.dataset.action as UiAction];
   }
-  for(const item of this.arenaList.children){
-   const button=item as HTMLButtonElement;
-   button.textContent=messages.arenas[button.dataset.arena as ArenaId];
-  }
-  for(const item of this.modeList.children){
-   const button=item as HTMLButtonElement;
-   button.textContent=messages.modes[button.dataset.mode as GameModeId];
+  for(const option of this.arenaSelect.options)option.textContent=messages.arenas[option.value as ArenaId];
+  for(const option of this.modeSelect.options)option.textContent=messages.modes[option.value as GameModeId];
+  for(const option of this.upgradeSelect.options){
+   const id=option.value as WeaponId;
+   option.textContent=messages.weapons[id]+" → "+messages.upgrades[id].name;
   }
   for(const item of this.weaponList.children){
    const button=item as HTMLButtonElement;
    button.textContent=messages.weapons[button.dataset.weapon as WeaponId];
-  }
-  for(const item of this.upgradeGrid.children){
-   const button=item as HTMLButtonElement;
-   const id=button.dataset.upgrade as WeaponId;
-   const name=button.querySelector<HTMLElement>(".game-ui__upgrade-name");
-   const description=button.querySelector<HTMLElement>("small");
-   if(name)name.textContent=messages.weapons[id]+" → "+messages.upgrades[id].name;
-   if(description)description.textContent=messages.upgrades[id].description;
   }
  }
 }
