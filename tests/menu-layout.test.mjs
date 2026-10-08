@@ -3,11 +3,10 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 const states={MENU:"MENU",PLAYING:"PLAYING",PAUSED:"PAUSED",GAME_OVER:"GAME_OVER"};
 const compiled=readFileSync(".test-build/ui/GameUI.js","utf8");
-const runnable=compiled
- .replace(/import\\s*\\{\\s*GameState\\s*\\}\\s*from\\s*["'][^"']+["'];?/, "const GameState=states;")
- .replace("export class GameUI","class GameUI");
+const gameStateImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("GameState"));
+assert.ok(gameStateImport,"compiled UI imports GameState");
+const runnable=compiled.replace(gameStateImport,"const GameState=states;").replace("export class GameUI","class GameUI");
 assert.equal(runnable.includes("export class GameUI"),false);
-assert.equal(/import\\s*\\{\\s*GameState/.test(runnable),false);
 const {GameUI}=new Function("states",runnable+";return {GameUI};")(states);
 
 const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
