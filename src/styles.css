@@ -245,7 +245,6 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
   font-size:.75rem;
   font-weight:800;
   text-align:start;
-  direction:auto;
  }
  .game-ui__mobile-weapon-index{
   flex:none;
@@ -254,7 +253,7 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
   color:#bbb;
   font-variant-numeric:tabular-nums;
  }
- .game-ui__mobile-weapon-arrow{
+ .game-ui .game-ui__mobile-weapon-arrow{
   display:flex;
   align-items:center;
   justify-content:center;
@@ -270,15 +269,17 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
   touch-action:manipulation;
   transition:background .12s ease,transform .12s ease;
  }
- .game-ui__mobile-weapon-arrow:active{
+ .game-ui .game-ui__mobile-weapon-arrow:active{
   background:#fff;
   color:#000;
   transform:scale(.95);
  }
- .game-ui__mobile-weapon-arrow:focus-visible{
+ .game-ui .game-ui__mobile-weapon-arrow:focus-visible{
   outline:2px solid #fff;
   outline-offset:2px;
  }
+ /* Restore the intended touch hit target sizes despite the generic .game-ui button min-width. */
+ .game-ui .game-ui__mobile-button{min-width:0;padding:0}
  /* Jump has a separate target next to attack; moving the stick never jumps. */
  .game-ui__mobile-button--jump{
   right:calc(var(--safe-right) + 1rem + clamp(74px,18vmin,96px));
