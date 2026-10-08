@@ -35,6 +35,8 @@ export class GameUI{
  private bowMeter=document.createElement("div");
  private bowValue=document.createElement("span");
  private help=document.createElement("div");
+ private helpContent=document.createElement("div");
+ private helpCloseButton=document.createElement("button");
  private helpButton=document.createElement("button");
  private privacy=document.createElement("div");
  private privacyButton=document.createElement("button");
@@ -43,6 +45,15 @@ export class GameUI{
  private privacyLink=document.createElement("a");
  private privacyNetworkNote=document.createElement("small");
  private privacyCloseButton=document.createElement("button");
+ private menu=document.createElement("div");
+ private menuHeader=document.createElement("div");
+ private menuSettings=document.createElement("div");
+ private menuLinks=document.createElement("div");
+ private menuResult=document.createElement("div");
+ private modeField=document.createElement("label");
+ private arenaField=document.createElement("label");
+ private modeSelect=document.createElement("select");
+ private arenaSelect=document.createElement("select");
  private title=document.createElement("h1");
  private status=document.createElement("p");
  private details=document.createElement("p");
@@ -51,13 +62,14 @@ export class GameUI{
  private buttons=document.createElement("div");
  private weaponList=document.createElement("div");
  private arenaTitle=document.createElement("div");
- private arenaList=document.createElement("div");
  private modeTitle=document.createElement("div");
- private modeList=document.createElement("div");
  private rotateHint=document.createElement("div");
  private upgradePanel=document.createElement("div");
  private upgradeTitle=document.createElement("strong");
- private upgradeGrid=document.createElement("div");
+ private upgradeChoices=document.createElement("div");
+ private upgradeSelect=document.createElement("select");
+ private upgradeButton=document.createElement("button");
+ private upgradeSummary=document.createElement("span");
  private upgradePointsLabel=document.createElement("span");
  private upgradeHint=document.createElement("span");
  private playerHealthLabel=document.createElement("span");
@@ -114,18 +126,27 @@ export class GameUI{
   this.joystick.append(this.joystickThumb);
   this.mobileControls.append(this.mobileWeaponSwitcher,this.joystick,this.mobileAttackButton);
 
-  this.help.className="game-ui__help";
+  this.help.className="game-ui__help game-ui__menu-dialog";
   this.help.hidden=true;
+  this.help.setAttribute("role","dialog");
+  this.help.setAttribute("aria-modal","true");
+  this.helpContent.className="game-ui__help-content";
+  this.helpCloseButton.type="button";
+  this.helpCloseButton.className="game-ui__dialog-close";
+  this.help.append(this.helpContent,this.helpCloseButton);
 
-  this.privacy.className="game-ui__privacy";
+  this.privacy.className="game-ui__privacy game-ui__menu-dialog";
   this.privacy.hidden=true;
+  this.privacy.setAttribute("role","dialog");
+  this.privacy.setAttribute("aria-modal","true");
   this.privacyContent.className="game-ui__privacy-content";
   this.privacyLink.href=PRIVACY_POLICY_URL;
   this.privacyLink.target="_blank";
   this.privacyLink.rel="noopener noreferrer";
   this.privacyNetworkNote.className="game-ui__privacy-network";
   this.privacyCloseButton.type="button";
-  this.privacyCloseButton.onclick=()=>{this.privacy.hidden=true;};
+  this.privacyCloseButton.className="game-ui__dialog-close";
+  this.privacyCloseButton.onclick=()=>{this.privacy.hidden=true;this.privacyButton.focus();};
   this.privacy.append(this.privacyTitle,this.privacyContent,this.privacyLink,this.privacyNetworkNote,this.privacyCloseButton);
 
   this.playerHealth.className="health-bar health-bar--player";
@@ -141,37 +162,53 @@ export class GameUI{
 
   this.buttons.className="game-ui__controls";
   this.weaponList.className="game-ui__weapon-list";
+  this.menu.className="game-ui__menu";
+  this.menuHeader.className="game-ui__menu-header";
+  this.menuSettings.className="game-ui__menu-settings";
+  this.menuLinks.className="game-ui__menu-links";
+  this.menuResult.className="game-ui__menu-result";
+  this.menuResult.hidden=true;
+  this.arenaField.className="game-ui__menu-field";
+  this.modeField.className="game-ui__menu-field";
   this.arenaTitle.className="game-ui__section-title";
-  this.arenaList.className="game-ui__arena-list";
   this.modeTitle.className="game-ui__section-title";
-  this.modeList.className="game-ui__mode-list";
+  this.arenaSelect.className="game-ui__menu-select";
+  this.modeSelect.className="game-ui__menu-select";
+  this.arenaSelect.onchange=()=>actions.arenaSelect(this.arenaSelect.value as ArenaId);
+  this.modeSelect.onchange=()=>actions.modeSelect(this.modeSelect.value as GameModeId);
+  for(const id of ARENA_IDS){
+   const option=document.createElement("option");
+   option.value=id;
+   this.arenaSelect.append(option);
+  }
+  for(const id of MODE_IDS){
+   const option=document.createElement("option");
+   option.value=id;
+   this.modeSelect.append(option);
+  }
+  this.arenaField.append(this.arenaTitle,this.arenaSelect);
+  this.modeField.append(this.modeTitle,this.modeSelect);
+  this.menuSettings.append(this.modeField,this.arenaField);
+  this.menuHeader.append(this.title,this.languageControl);
   this.rotateHint.className="game-ui__rotate-hint";
 
-  this.upgradePanel.className="game-ui__upgrade-panel";
-  this.upgradeGrid.className="game-ui__upgrade-grid";
+  this.upgradePanel.className="game-ui__upgrade-panel game-ui__upgrade-panel--compact";
+  this.upgradeChoices.className="game-ui__upgrade-choices";
   this.upgradePointsLabel.className="game-ui__upgrade-points";
   this.upgradeHint.className="game-ui__upgrade-hint";
-  for(const id of MODE_IDS){
-   const button=document.createElement("button");
-   button.type="button";
-   button.dataset.mode=id;
-   button.onclick=()=>actions.modeSelect(id);
-   this.modeList.append(button);
-  }
+  this.upgradeSummary.className="game-ui__upgrade-summary";
+  this.upgradeSelect.setAttribute("aria-label",this.i18n.messages.panels.weaponUpgrades);
+  this.upgradeButton.type="button";
+  this.upgradeButton.onclick=()=>{
+   if(!this.upgradeButton.disabled)actions.upgradeWeapon(this.upgradeSelect.value as WeaponId);
+  };
   for(const id of WEAPON_IDS){
-   const item=document.createElement("button");
-   item.type="button";
-   item.dataset.upgrade=id;
-   const name=document.createElement("span");
-   name.className="game-ui__upgrade-name";
-   const description=document.createElement("small");
-   const itemState=document.createElement("b");
-   itemState.className="game-ui__upgrade-status";
-   item.append(name,description,itemState);
-   item.onclick=()=>actions.upgradeWeapon(id);
-   this.upgradeGrid.append(item);
+   const option=document.createElement("option");
+   option.value=id;
+   this.upgradeSelect.append(option);
   }
-  this.upgradePanel.append(this.upgradeTitle,this.upgradePointsLabel,this.upgradeHint,this.upgradeGrid);
+  this.upgradeChoices.append(this.upgradeSelect,this.upgradeButton);
+  this.upgradePanel.append(this.upgradeTitle,this.upgradePointsLabel,this.upgradeChoices,this.upgradeHint,this.upgradeSummary);
 
   this.missilePanel.className="game-ui__missile-panel";
   this.bowPanel.className="game-ui__bow-panel";
@@ -195,13 +232,6 @@ export class GameUI{
   this.fireButton.type="button";
   this.fireButton.onclick=actions.fireWeapon;
 
-  for(const id of ARENA_IDS){
-   const button=document.createElement("button");
-   button.type="button";
-   button.dataset.arena=id;
-   button.onclick=()=>actions.arenaSelect(id);
-   this.arenaList.append(button);
-  }
   for(const id of WEAPON_IDS){
    const item=document.createElement("button");
    item.type="button";
@@ -220,11 +250,25 @@ export class GameUI{
 
   this.helpButton.type="button";
   this.helpButton.dataset.help="true";
-  this.helpButton.onclick=()=>{this.privacy.hidden=true;this.help.hidden=!this.help.hidden;};
+  this.helpButton.onclick=()=>{
+   this.privacy.hidden=true;
+   this.help.hidden=false;
+   this.helpCloseButton.focus();
+  };
+  this.helpCloseButton.onclick=()=>{this.help.hidden=true;this.helpButton.focus();};
 
   this.privacyButton.type="button";
   this.privacyButton.dataset.privacy="true";
-  this.privacyButton.onclick=()=>{this.help.hidden=true;this.privacy.hidden=!this.privacy.hidden;};
+  this.privacyButton.onclick=()=>{
+   this.help.hidden=true;
+   this.privacy.hidden=false;
+   this.privacyCloseButton.focus();
+  };
+  this.root.addEventListener("keydown",event=>{
+   if(event.key!=="Escape")return;
+   if(!this.help.hidden){event.preventDefault();event.stopPropagation();this.helpCloseButton.click();}
+   else if(!this.privacy.hidden){event.preventDefault();event.stopPropagation();this.privacyCloseButton.click();}
+  });
 
   this.bowMeter.innerHTML="<span></span>";
   this.bowPanel.append(this.bowTitle,this.bowMeter,this.bowValue);
@@ -262,7 +306,9 @@ export class GameUI{
   this.mobileAttackButton.addEventListener("pointerup",event=>{event.preventDefault();actions.touchAttackEnd();});
   this.mobileAttackButton.addEventListener("pointercancel",event=>{event.preventDefault();actions.touchAttackEnd();});
 
-  this.root.append(this.languageControl,this.title,this.helpButton,this.privacyButton,this.help,this.privacy,this.status,this.details,this.upgradePanel,this.modeTitle,this.modeList,this.arenaTitle,this.arenaList,this.playerHealth,this.opponentHealth,this.weaponList,this.missilePanel,this.bowPanel,this.buttons,this.mobileControls,this.rotateHint);
+  this.menuLinks.append(this.helpButton,this.privacyButton);
+  this.menu.append(this.menuHeader,this.menuResult,this.menuSettings,this.upgradePanel,this.buttons,this.menuLinks);
+  this.root.append(this.menu,this.help,this.privacy,this.status,this.details,this.playerHealth,this.opponentHealth,this.weaponList,this.missilePanel,this.bowPanel,this.mobileControls,this.rotateHint);
   container.append(this.root);
   this.applyLocale();
   this.unsubscribeLocale=this.i18n.subscribe(()=>{
