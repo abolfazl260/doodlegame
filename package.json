@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "tsc --ignoreConfig --target ES2022 --module ESNext --moduleResolution Bundler --skipLibCheck --outDir .test-build src/core/GameLoop.ts src/gameplay/GameSession.ts src/platform/web/WebVisibilityLifecycle.ts src/platform/web/WebInput.ts src/rendering/RendererFactory.ts src/rendering/WebGLContextLifecycle.ts src/rendering/FighterVisual.ts src/rendering/ThreeRenderer.ts src/rendering/CanvasRenderer.ts && node --test tests/*.test.mjs",
+    "test": "tsc --ignoreConfig --target ES2022 --module ESNext --moduleResolution Bundler --skipLibCheck --outDir .test-build src/core/GameLoop.ts src/gameplay/GameSession.ts src/platform/web/WebVisibilityLifecycle.ts src/platform/web/WebInput.ts src/ui/GameUI.ts src/rendering/RendererFactory.ts src/rendering/WebGLContextLifecycle.ts src/rendering/FighterVisual.ts src/rendering/ThreeRenderer.ts src/rendering/CanvasRenderer.ts && node --test tests/*.test.mjs",
     "build:android": "tsc -b && vite build --mode android --base ./",
     "android:init": "node scripts/android/bootstrap.mjs",
     "android:reset": "node scripts/android/bootstrap.mjs --force",

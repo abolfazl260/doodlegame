@@ -253,3 +253,238 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
  color:#ff4545;
  text-shadow:0 1px 1px #000,0 -1px 1px #000,1px 0 1px #000,-1px 0 1px #000;
 }
+
+
+/* Issue #37: viewport-fitting menu. Gameplay HUD retains its existing layout. */
+.game-ui:not(.playing){
+ display:block;
+ position:relative;
+ width:min(32rem,calc(100vw - var(--safe-left) - var(--safe-right) - 1rem));
+ min-width:0;
+ max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 1rem);
+ max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 1rem);
+ padding:0;
+ overflow:visible;
+ border:1px solid #545454;
+ border-radius:1rem;
+ background:#08090cf5;
+ box-shadow:0 18px 48px #0009;
+}
+.game-ui:not(.playing)>p{display:none}
+.game-ui.playing .game-ui__menu{display:none!important}
+.game-ui__menu{
+ display:grid;
+ gap:clamp(.35rem,1.5vh,.75rem);
+ width:100%;
+ min-width:0;
+ padding:clamp(.6rem,2vh,1rem);
+ text-align:center;
+}
+.game-ui__menu-header{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:.6rem;
+ min-width:0;
+}
+.game-ui__menu-header h1{
+ min-width:0;
+ margin:0;
+ font-size:clamp(1.05rem,2.7vw,1.5rem);
+ line-height:1.15;
+ letter-spacing:.04em;
+ text-align:start;
+}
+.game-ui__menu-header .game-ui__language{flex-shrink:0}
+.game-ui__menu-header .game-ui__language select{
+ min-height:44px;
+ max-width:8.5rem;
+}
+.game-ui__menu-settings{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:.65rem;
+ min-width:0;
+}
+.game-ui__menu-settings[hidden],.game-ui__upgrade-choices[hidden],
+.game-ui__upgrade-summary[hidden],.game-ui__menu-result[hidden],
+.game-ui__menu-dialog[hidden]{display:none!important}
+.game-ui__menu-field{
+ display:grid;
+ grid-template-rows:auto auto;
+ gap:.3rem;
+ min-width:0;
+ text-align:start;
+}
+.game-ui__menu-field .game-ui__section-title{
+ display:block;
+ width:auto;
+ margin:0;
+ font-size:.68rem;
+ line-height:1.2;
+ letter-spacing:.09em;
+ text-align:start;
+}
+.game-ui__menu-select,
+.game-ui__upgrade-choices select{
+ display:block;
+ width:100%;
+ min-width:0;
+ min-height:46px;
+ padding:.5rem .7rem;
+ border:1px solid #686b72;
+ border-radius:.6rem;
+ background:#161922;
+ color:#fff;
+ font:inherit;
+ font-size:.85rem;
+ cursor:pointer;
+}
+.game-ui__menu-select:focus-visible,.game-ui__upgrade-choices select:focus-visible,
+.game-ui__menu button:focus-visible,.game-ui__dialog-close:focus-visible{
+ outline:2px solid #f0f0f0;
+ outline-offset:2px;
+}
+.game-ui__menu-result{
+ padding:.45rem .6rem;
+ border:1px solid #5e626d;
+ border-radius:.6rem;
+ font-weight:800;
+ letter-spacing:.06em;
+}
+.game-ui:not(.playing) .game-ui__upgrade-panel--compact{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) auto;
+ align-items:center;
+ gap:.3rem .55rem;
+ width:100%;
+ min-width:0;
+ padding:.55rem .65rem;
+ border-radius:.65rem;
+}
+.game-ui__upgrade-panel--compact>strong{
+ min-width:0;
+ text-align:start;
+}
+.game-ui__upgrade-panel--compact .game-ui__upgrade-points{
+ text-align:end;
+}
+.game-ui__upgrade-choices{
+ grid-column:1/-1;
+ display:grid;
+ grid-template-columns:minmax(0,1fr) minmax(5.5rem,auto);
+ gap:.5rem;
+ min-width:0;
+}
+.game-ui__upgrade-choices button{
+ min-width:0;
+ min-height:44px;
+ padding:.4rem .7rem;
+ font-size:.78rem;
+ font-weight:800;
+ background:#eaeaea;
+ color:#080808;
+}
+.game-ui__upgrade-choices button:disabled{opacity:.55}
+.game-ui__upgrade-panel--compact .game-ui__upgrade-hint,
+.game-ui__upgrade-panel--compact .game-ui__upgrade-summary{
+ grid-column:1/-1;
+ min-width:0;
+ margin:0;
+ font-size:.7rem;
+ line-height:1.3;
+ color:#bbc0cc;
+ text-align:start;
+}
+.game-ui__upgrade-panel--compact .game-ui__upgrade-summary{
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+}
+.game-ui:not(.playing) .game-ui__controls{
+ display:flex;
+ justify-content:stretch;
+ gap:.5rem;
+ width:100%;
+}
+.game-ui:not(.playing) .game-ui__controls button:not([hidden]){
+ display:block;
+ width:100%;
+ min-width:0;
+ min-height:48px;
+ padding:.55rem .8rem;
+ border-color:#eee;
+ border-radius:.65rem;
+ background:#f2f2f2;
+ color:#080808;
+ font-weight:850;
+ font-size:1rem;
+}
+.game-ui:not(.playing) .game-ui__controls button[hidden]{display:none!important}
+.game-ui__menu-links{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:.5rem;
+}
+.game-ui__menu-links button{
+ display:block;
+ width:100%;
+ min-width:0;
+ min-height:44px;
+ padding:.45rem .6rem;
+ border-radius:.55rem;
+ border-color:#535660;
+ font-size:.72rem;
+}
+.game-ui__menu-dialog{
+ position:fixed;
+ inset:auto;
+ left:50%;
+ top:50%;
+ transform:translate(-50%,-50%);
+ z-index:100;
+ width:min(34rem,calc(100vw - var(--safe-left) - var(--safe-right) - 1.5rem));
+ max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 1.5rem);
+ padding:.85rem;
+ overflow-y:auto;
+ overscroll-behavior:contain;
+ border:1px solid #777;
+ border-radius:.7rem;
+ background:#090a0efb;
+ box-shadow:0 0 0 100vmax #000b,0 14px 35px #000;
+ pointer-events:auto;
+ text-align:start;
+}
+.game-ui__menu-dialog .game-ui__dialog-close{
+ display:block;
+ position:sticky;
+ bottom:0;
+ width:100%;
+ min-width:0;
+ min-height:44px;
+ margin-top:.7rem;
+ background:#242833;
+ font-weight:700;
+}
+.game-ui__help-content{line-height:1.6}
+@media (max-height:520px){
+ .game-ui__menu{gap:.35rem;padding:.55rem .7rem}
+ .game-ui__menu-header h1{font-size:1rem}
+ .game-ui__menu-header .game-ui__language select{min-height:38px;padding:.2rem .35rem}
+ .game-ui__menu-field{gap:.15rem}
+ .game-ui__menu-select,.game-ui__upgrade-choices select{min-height:40px;padding:.3rem .5rem}
+ .game-ui:not(.playing) .game-ui__upgrade-panel--compact{padding:.35rem .5rem;gap:.15rem .4rem}
+ .game-ui__upgrade-panel--compact .game-ui__upgrade-hint{display:none}
+ .game-ui__upgrade-choices button{min-height:40px}
+ .game-ui:not(.playing) .game-ui__controls button:not([hidden]){min-height:42px;padding:.35rem}
+ .game-ui__menu-links button{min-height:40px;padding:.35rem .45rem}
+}
+@media (max-height:360px){
+ .game-ui__menu{gap:.25rem;padding:.35rem .55rem}
+ .game-ui__menu-header .game-ui__language span{display:none}
+ .game-ui__menu-header h1{font-size:.9rem}
+ .game-ui__menu-field .game-ui__section-title{font-size:.6rem}
+ .game-ui__menu-select,.game-ui__upgrade-choices select{min-height:36px}
+ .game-ui:not(.playing) .game-ui__controls button:not([hidden]),
+ .game-ui__menu-links button,.game-ui__upgrade-choices button{min-height:38px}
+}
