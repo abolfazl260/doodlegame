@@ -1,4 +1,4 @@
-import {fighterVisual,toolSegments,type Segment} from './FighterVisual';
+import {fighterVisual,toolSegments,telegraphSegments,type Segment} from './FighterVisual';
 import type {Renderer} from "./Renderer";
 import type {GameRenderState,DuelistRenderState} from "../gameplay/GameSession";
 export class CanvasRenderer implements Renderer{
@@ -70,6 +70,7 @@ export class CanvasRenderer implements Renderer{
   c.beginPath();c.arc(pose.head[0]*scale,-pose.head[1]*scale,.24*scale*(1+pose.hit*.08),0,Math.PI*2);c.fill();
   c.fillStyle=enemy?'#fff':'#000';c.beginPath();c.arc((pose.head[0]+.08)*scale,-(pose.head[1]+.04)*scale,.035*scale,0,Math.PI*2);c.fill();
   if(enemy){c.strokeStyle='#d11f2f';const wave=Math.sin(s.animationTime*11)*(.04+Math.abs(s.velocityX)*.01);lines([[[ -.24,pose.head[1]+.06],[.24,pose.head[1]+.06]],[[ -.2,pose.head[1]+.06],[-.55,pose.head[1]+wave]],[[ -.55,pose.head[1]+wave],[-.76,pose.head[1]-.08+wave]]]);}
+  if(s.attackTelegraph>0){c.strokeStyle='#fff';c.globalAlpha=.95;lines(telegraphSegments(s));c.globalAlpha=1;}
   c.strokeStyle='#fff';
   c.save();c.translate(pose.hand[0]*scale,-pose.hand[1]*scale);c.rotate(-pose.toolAngle);lines(toolSegments(s));
   if(s.attackTime>0&&(s.weapon==='blaster'||s.weapon==='uzi')){const x=s.weapon==='uzi'?.54:.66;lines([[[x,0],[x+.22,.1]],[[x,0],[x+.22,-.1]],[[x,0],[x+.3,0]]]);}
