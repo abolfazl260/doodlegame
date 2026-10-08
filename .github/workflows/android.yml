@@ -4,7 +4,14 @@ on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
   workflow_dispatch:
+
+# Cancel obsolete checks when new commits arrive on a PR, but never cancel
+# post-merge or manually requested full Android verification runs.
+concurrency:
+  group: android-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -29,36 +36,55 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run game regression tests
+      # CI already runs the game tests for PRs and pushes to main.
+      # A manually dispatched Android run still performs those tests.
+      - name: Run game regression tests for manual runs
+        if: github.event_name == 'workflow_dispatch'
         run: npm test
 
+      # A debug APK is the only Android build required before merging a PR.
       - name: Build Android debug APK
         run: npm run android:build:debug
 
+      - name: Verify debug APK size
+        shell: bash
+        run: |
+          apk=android/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$apk"
+          test "$(stat -c%s "$apk")" -lt 25000000
+
       - name: Validate unsigned release APK and AAB
+        if: github.event_name != 'pull_request'
         run: node scripts/android/gradle.mjs assembleRelease bundleRelease
 
       - name: Verify Google Play technical compliance
+        if: github.event_name != 'pull_request'
         run: npm run android:verify:play
 
       - name: Audit Google Play privacy surface
+        if: github.event_name != 'pull_request'
         run: npm run android:audit:privacy
 
       - name: Verify monetization guardrail
+        if: github.event_name != 'pull_request'
         run: npm run ci:verify-monetization
 
       - name: Verify target audience guardrail
+        if: github.event_name != 'pull_request'
         env:
           DOODLEGAME_REQUIRE_ANDROID_MANIFEST: "1"
         run: npm run ci:verify-audience
 
       - name: Verify production hardening
+        if: github.event_name != 'pull_request'
         run: npm run android:verify:production
 
       - name: Verify Google Play reviewer readiness
+        if: github.event_name != 'pull_request'
         run: npm run android:verify:review
 
       - name: Upload reviewer readiness report
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: doodlegame-review-readiness
@@ -66,6 +92,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload production hardening report
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: doodlegame-production-hardening
@@ -73,6 +100,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload privacy audit report
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: doodlegame-privacy-audit
@@ -80,6 +108,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload monetization dependency inventory
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: doodlegame-monetization-guardrail
@@ -87,6 +116,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload target audience audit
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: doodlegame-audience-audit
@@ -94,6 +124,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload Google Play compliance report
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: doodlegame-play-compliance
@@ -101,6 +132,7 @@ jobs:
           if-no-files-found: error
 
       - name: Report Android artifact sizes
+        if: github.event_name != 'pull_request'
         shell: bash
         run: |
           ls -lh \
@@ -119,6 +151,8 @@ jobs:
           if-no-files-found: error
 
   emulator-smoke:
+    # Emulator provisioning is expensive; run only post-merge or on demand.
+    if: github.event_name != 'pull_request'
     needs: debug-apk
     runs-on: ubuntu-latest
     timeout-minutes: 25
