@@ -392,6 +392,26 @@ export class GameSession{
    f.velocityX=Math.abs(f.velocityX)<=amount?0:f.velocityX-Math.sign(f.velocityX)*amount;
   }
  }
+ /** Stable arena geometry determines fighter-center bounds in every physics path.
+  * Moving platforms do not change the playable arena perimeter frame-by-frame. */
+ private fighterHorizontalBounds(f:Fighter){
+  const edges=this.arena.platforms.reduce((b,p)=>({min:Math.min(b.min,p.x),max:Math.max(b.max,p.x+p.width)}),{min:Infinity,max:-Infinity});
+  let min=edges.min+PH/2,max=edges.max-PH/2;
+  if(this.arenaId==="fortress"&&this.modeId==="duel"){
+   if(f===this.player)max=Math.min(max,-2.6);
+   else min=Math.max(min,2.6);
+  }
+  return{min,max};
+ }
+ private constrainFighterX(f:Fighter){
+  const {min,max}=this.fighterHorizontalBounds(f);
+  const before=f.x;
+  f.x=Math.max(min,Math.min(max,f.x));
+  if(f.x!==before){
+   if(f.x<=min&&f.velocityX<0)f.velocityX=0;
+   if(f.x>=max&&f.velocityX>0)f.velocityX=0;
+  }
+ }
  private integrate(f:Fighter,dt:number){
   const previousX=f.x;
   const previousBottom=f.y-HH/2;
@@ -421,12 +441,7 @@ export class GameSession{
     f.doubleJumpAvailable=true;
     f.airDashAvailable=true;
   }
-  const bounds=this.platforms.reduce((b,p)=>({min:Math.min(b.min,p.x),max:Math.max(b.max,p.x+p.width)}),{min:Infinity,max:-Infinity});
-  f.x=Math.max(bounds.min+PH/2,Math.min(bounds.max-PH/2,f.x));
-  // Keep fighters inside the visible combat area rather than allowing them to run to off-screen platform edges.
-  const screenMin=-6,screenMax=6;
-  f.x=Math.max(screenMin+PH/2,Math.min(screenMax-PH/2,f.x));
-  if(this.arenaId==="fortress"&&this.modeId==="duel"){if(f===this.player)f.x=Math.max(screenMin+PH/2,Math.min(-2.6,f.x));else f.x=Math.max(2.6,Math.min(screenMax-PH/2,f.x));}
+  this.constrainFighterX(f);
   if(this.arena.fallLimit!==null&&f.y-HH/2<this.arena.fallLimit){f.health=0;return;}
   for(const p of this.platforms){
    if(p.surface==='oneWay')continue;
@@ -437,6 +452,7 @@ export class GameSession{
    if(f.velocityY>0&&previousTop<=p.y&&f.y+HH/2>=p.y&&f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width){f.y=p.y-HH/2;f.velocityY=0;}
   }
   this.resolveEnvironmentLanding(f,previousBottom,previousX);
+  this.constrainFighterX(f);
  }
  private resolveCharacterCollisions(previousPlayerX:number,previousOpponentX:number){
   const fighters=[this.player,this.opponent] as const;
@@ -496,13 +512,7 @@ export class GameSession{
   return true;
  }
  private resolveStaticHorizontalOverlap(f:Fighter,previousX:number){
-  const bounds=this.platforms.reduce((b,p)=>({min:Math.min(b.min,p.x),max:Math.max(b.max,p.x+p.width)}),{min:Infinity,max:-Infinity});
-  let min=Math.max(bounds.min+PH/2,-6+PH/2),max=Math.min(bounds.max-PH/2,6-PH/2);
-  if(this.arenaId==="fortress"&&this.modeId==="duel"){
-   if(f===this.player)max=Math.min(max,-2.6);
-   else min=Math.max(min,2.6);
-  }
-  f.x=Math.max(min,Math.min(max,f.x));
+  this.constrainFighterX(f);
 
   for(const p of this.platforms){
    if(p.surface==="oneWay")continue;
@@ -522,7 +532,7 @@ export class GameSession{
    else if(previousX-PH/2>=right&&f.x-PH/2<right){f.x=right+PH/2;if(f.velocityX<0)f.velocityX=0;}
   }
 
-  f.x=Math.max(min,Math.min(max,f.x));
+  this.constrainFighterX(f);
  }
  private updateBow(input:InputState,dt:number){
   if(input.attackPressed&&this.player.cooldown<=0&&!this.player.bowCharging){this.player.bowCharging=true;this.player.bowCharge=0;this.player.attackTime=.12;}
