@@ -322,7 +322,7 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
  overflow:visible;
  border:1px solid #545454;
  border-radius:1rem;
- background:#08090cf5;
+ background:#08090ce7;
  box-shadow:0 18px 48px #0009;
 }
 .game-ui:not(.playing)>p{display:none}
@@ -560,15 +560,40 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
  z-index:1;
  pointer-events:none;
 }
+/* Do not briefly flash the final menu while the cinematic initializes. */
+#ui-root.game-ui-intro-pending > .game-ui:not(.playing){
+ opacity:0;
+ visibility:hidden;
+}
+/* A deliberate, multi-stage cinematic reveal, not an instant pop-in. */
 #ui-root.game-ui-intro-revealed > .game-ui:not(.playing){
- animation:space-menu-reveal .75s ease-out both;
+ transform-origin:center;
+ animation:space-menu-reveal 1.85s cubic-bezier(.16,1,.3,1) both;
 }
 @keyframes space-menu-reveal{
- from{opacity:0;transform:translateY(12px)}
+ 0%{opacity:0;transform:translate3d(0,44px,0) scale(.90);filter:blur(8px)}
+ 48%{opacity:.88;filter:blur(2px)}
+ 100%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}
+}
+#ui-root.game-ui-intro-revealed .game-ui__menu > .game-ui__menu-header,
+#ui-root.game-ui-intro-revealed .game-ui__menu > .game-ui__menu-settings,
+#ui-root.game-ui-intro-revealed .game-ui__menu > .game-ui__upgrade-panel,
+#ui-root.game-ui-intro-revealed .game-ui__menu > .game-ui__controls,
+#ui-root.game-ui-intro-revealed .game-ui__menu > .game-ui__menu-links{
+ animation:space-menu-content-reveal .92s cubic-bezier(.2,.85,.24,1) both;
+}
+#ui-root.game-ui-intro-revealed .game-ui__menu > .game-ui__menu-header{animation-delay:.2s}
+#ui-root.game-ui-intro-revealed .game-ui__menu > .game-ui__menu-settings{animation-delay:.42s}
+#ui-root.game-ui-intro-revealed .game-ui__menu > .game-ui__upgrade-panel{animation-delay:.58s}
+#ui-root.game-ui-intro-revealed .game-ui__menu > .game-ui__controls{animation-delay:.76s}
+#ui-root.game-ui-intro-revealed .game-ui__menu > .game-ui__menu-links{animation-delay:.95s}
+@keyframes space-menu-content-reveal{
+ from{opacity:0;transform:translateY(18px)}
  to{opacity:1;transform:translateY(0)}
 }
 @media (prefers-reduced-motion:reduce){
- #ui-root.game-ui-intro-revealed > .game-ui:not(.playing){animation:none}
+ #ui-root.game-ui-intro-revealed > .game-ui:not(.playing),
+ #ui-root.game-ui-intro-revealed .game-ui__menu > *{animation:none}
 }
 .opening-intro__canvas{
  position:absolute;
