@@ -9,7 +9,7 @@ type HudState={
 };
 type Actions={
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
- weaponSelect:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
+ weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
  setTouchMove:(x:number,y:number)=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;
 };
@@ -52,8 +52,11 @@ export class GameUI{
  private menuResult=document.createElement("div");
  private modeField=document.createElement("label");
  private arenaField=document.createElement("label");
+ private weaponField=document.createElement("label");
  private modeSelect=document.createElement("select");
  private arenaSelect=document.createElement("select");
+ private startingWeaponSelect=document.createElement("select");
+ private startingWeaponTitle=document.createElement("div");
  private title=document.createElement("h1");
  private status=document.createElement("p");
  private details=document.createElement("p");
@@ -170,6 +173,10 @@ export class GameUI{
   this.menuResult.hidden=true;
   this.arenaField.className="game-ui__menu-field";
   this.modeField.className="game-ui__menu-field";
+  this.weaponField.className="game-ui__menu-field";
+  this.startingWeaponTitle.className="game-ui__section-title";
+  this.startingWeaponSelect.className="game-ui__menu-select";
+  this.startingWeaponSelect.onchange=()=>actions.selectStartingWeapon(this.startingWeaponSelect.value as WeaponId);
   this.arenaTitle.className="game-ui__section-title";
   this.modeTitle.className="game-ui__section-title";
   this.arenaSelect.className="game-ui__menu-select";
@@ -186,9 +193,15 @@ export class GameUI{
    option.value=id;
    this.modeSelect.append(option);
   }
+  for(const id of WEAPON_IDS){
+   const option=document.createElement("option");
+   option.value=id;
+   this.startingWeaponSelect.append(option);
+  }
   this.arenaField.append(this.arenaTitle,this.arenaSelect);
   this.modeField.append(this.modeTitle,this.modeSelect);
-  this.menuSettings.append(this.modeField,this.arenaField);
+  this.weaponField.append(this.startingWeaponTitle,this.startingWeaponSelect);
+  this.menuSettings.append(this.modeField,this.arenaField,this.weaponField);
   this.menuHeader.append(this.title,this.languageControl);
   this.rotateHint.className="game-ui__rotate-hint";
 
@@ -380,6 +393,14 @@ export class GameUI{
   this.modeSelect.value=s.mode;
   this.menuResult.textContent=this.status.textContent;
   const missileRules=s.mode==="missile-duel"||(s.arena==="fortress"&&s.mode==="duel");
+  this.startingWeaponSelect.value=s.weapon;
+  this.startingWeaponSelect.disabled=missileRules||s.mode==="random-weapons";
+  for(const option of this.startingWeaponSelect.options){
+   const id=option.value as WeaponId;
+   option.disabled=missileRules?id!=="missile":s.mode==="random-weapons"||(
+    s.mode==="melee-only"?id!=="blade"&&id!=="hammer":id==="missile"
+   );
+  }
   for(const item of this.weaponList.children){
    const button=item as HTMLButtonElement;
    const id=button.dataset.weapon as WeaponId;
@@ -444,6 +465,7 @@ export class GameUI{
   this.title.textContent=messages.title;
   this.modeTitle.textContent=messages.sections.gameMode;
   this.arenaTitle.textContent=messages.sections.arena;
+  this.startingWeaponTitle.textContent=messages.sections.weapon;
   this.rotateHint.textContent=messages.rotateHint;
   this.helpButton.textContent=messages.buttons.help;
   this.helpContent.innerHTML=messages.helpHtml;
@@ -476,6 +498,7 @@ export class GameUI{
   }
   for(const option of this.arenaSelect.options)option.textContent=messages.arenas[option.value as ArenaId];
   for(const option of this.modeSelect.options)option.textContent=messages.modes[option.value as GameModeId];
+  for(const option of this.startingWeaponSelect.options)option.textContent=messages.weapons[option.value as WeaponId];
   for(const option of this.upgradeSelect.options){
    const id=option.value as WeaponId;
    option.textContent=messages.weapons[id]+" → "+messages.upgrades[id].name;
