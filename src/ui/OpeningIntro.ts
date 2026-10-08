@@ -22,6 +22,9 @@ export class OpeningIntro{
  private height=1;
  private ratio=1;
  private active=false;
+ private ambient=false;
+ private ambientSince=0;
+ private reducedMotion=false;
 
  constructor(private readonly menuRoot:HTMLElement,locale:"en"|"fa"){
   this.overlay.className="opening-intro";
@@ -41,8 +44,8 @@ export class OpeningIntro{
   if(this.active)return;
   this.context=this.canvas.getContext("2d");
   if(!this.context)return; // Canvas unavailable: leave the normal menu visible.
-  this.duration=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-   ?REDUCED_MOTION_DURATION_MS:OPENING_DURATION_MS;
+  this.reducedMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches??false;
+  this.duration=this.reducedMotion?REDUCED_MOTION_DURATION_MS:OPENING_DURATION_MS;
   this.active=true;
   document.body.append(this.overlay);
   this.menuRoot.inert=true;
@@ -94,7 +97,7 @@ export class OpeningIntro{
   if(!this.active||document.hidden)return;
   if(this.lastTime!==0)this.elapsed+=Math.min(64,Math.max(0,now-this.lastTime));
   this.lastTime=now;
-  if(this.elapsed>=this.duration){this.finish();return;}
+  if(!this.ambient&&this.elapsed>=this.duration)this.finish();
   try{
    this.draw();
   }catch(error){
@@ -102,7 +105,8 @@ export class OpeningIntro{
    this.finish();
    return;
   }
-  this.frameId=window.requestAnimationFrame(this.tick);
+  // The menu keeps the same living space background until gameplay starts.
+  if(!this.ambient||!this.reducedMotion)this.frameId=window.requestAnimationFrame(this.tick);
  };
 
  private draw(){
@@ -124,8 +128,12 @@ export class OpeningIntro{
   }
   ctx.globalAlpha=1;
   this.drawPlanet(ctx,w,h,t);
-  this.drawFighter(ctx,w,h,t,pose.x,pose.y,pose.angle,pose.paddle);
-  this.overlay.style.opacity=String(pose.opacity);
+  // Drift towards the open edge once the menu is visible, so the figure
+  // remains visible rather than sitting entirely under the opaque panel.
+  const ambientBlend=this.ambient?Math.min(1,(this.elapsed-this.ambientSince)/2400):0;
+  const figureX=pose.x+((w>=760?.82:.77)-pose.x)*ambientBlend;
+  this.drawFighter(ctx,w,h,t,figureX,pose.y,pose.angle,pose.paddle);
+
  }
 
  private drawPlanet(ctx:CanvasRenderingContext2D,w:number,h:number,t:number){
@@ -231,8 +239,17 @@ export class OpeningIntro{
  }
 
  private finish(){
-  if(!this.active)return;
-  this.dispose();
+  if(!this.active||this.ambient)return;
+  this.ambient=true;
+  this.ambientSince=this.elapsed;
+  this.skip.hidden=true;
+  this.overlay.classList.add("opening-intro--ambient");
+  this.overlay.removeAttribute("role");
+  this.overlay.removeAttribute("aria-modal");
+  this.overlay.setAttribute("aria-hidden","true");
+  window.removeEventListener("keydown",this.handleKeyDown,true);
+  this.menuRoot.inert=false;
+  this.menuRoot.classList.add("game-ui-intro-revealed");
   this.menuRoot.querySelector<HTMLButtonElement>('button[data-action="start"]')
    ?.focus({preventScroll:true});
  }
@@ -247,5 +264,6 @@ export class OpeningIntro{
   document.removeEventListener("visibilitychange",this.handleVisibility);
   this.overlay.remove();
   this.menuRoot.inert=false;
+  this.menuRoot.classList.remove("game-ui-intro-revealed");
  }
 }
