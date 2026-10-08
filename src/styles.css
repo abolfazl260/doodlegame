@@ -643,3 +643,33 @@ html[dir="rtl"] .opening-intro__skip{
 #orientation-guard button{min-height:44px;padding:.65rem 1rem;border:1px solid #eee;border-radius:.6rem;background:#222;color:#fff;font:inherit;cursor:pointer}
 #orientation-guard button[hidden]{display:none}
 @media (orientation:portrait){#orientation-guard{display:flex}}
+
+/* Issue #50: touch missile aiming replaces the on-screen sliders. */
+.game-ui__missile-aim-guide[hidden]{display:none!important}
+@media (pointer:coarse){
+ .game-ui.playing .game-ui__missile-panel{display:none!important}
+ .game-ui.playing .game-ui__missile-aim-guide:not([hidden]){
+  position:absolute;
+  display:flex;
+  flex-direction:column;
+  right:calc(var(--safe-right) + .75rem);
+  bottom:calc(var(--safe-bottom) + clamp(60px,15vmin,78px) + 1.45rem);
+  width:clamp(8rem,27vw,11.5rem);
+  max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 1.5rem);
+  padding:.3rem .45rem;
+  border:1px solid #aaa;
+  border-radius:.65rem;
+  background:#050505ce;
+  color:#fff;
+  z-index:22;
+  pointer-events:none;
+  direction:ltr;
+ }
+ .game-ui__missile-aim-guide svg{display:block;width:100%;height:auto;max-height:7rem;overflow:hidden}
+ .game-ui__missile-aim-values{font-size:.65rem;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:center}
+ .game-ui__mobile-button--attack.aiming{opacity:1;border-color:#fff;box-shadow:0 0 0 3px #ffffff44}
+}
+@media (pointer:coarse) and (max-height:360px){
+ .game-ui.playing .game-ui__missile-aim-guide:not([hidden]){width:clamp(7.5rem,22vw,10rem);padding:.2rem .35rem}
+ .game-ui__missile-aim-guide svg{max-height:4.5rem}
+}
