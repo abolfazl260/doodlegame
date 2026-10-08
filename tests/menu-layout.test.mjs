@@ -23,6 +23,7 @@ class FakeNode{
  append(...children){this.children.push(...children);}
  setAttribute(key,value){this.attributes[key]=value;}
  getAttribute(key){return this.attributes[key];}
+ removeAttribute(key){delete this.attributes[key];}
  addEventListener(){}
  focus(){this.focused=true;}
  click(){this.onclick?.();}
@@ -125,7 +126,7 @@ test("clicking the language button immediately switches both directions without 
  assert.equal(ui.modeSelect.value,hud.mode,"switching language must not reset the selected mode");
  ui.languageButton.click();
  assert.equal(ui.i18n.locale,"en");
- assert.equal(ui.languageButton.textContent,"English");
+ assert.equal(ui.languageButton.textContent,"EN");
  assert.equal(ui.languageLabel.textContent,"Language");
  assert.equal(ui.title.textContent,"DOODLEGAME DUEL");
  assert.equal(ui.modeSelect.value,hud.mode);
