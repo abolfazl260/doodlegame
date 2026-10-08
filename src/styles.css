@@ -534,3 +534,7 @@ html[dir="rtl"] .opening-intro__skip{
  right:auto;
  left:calc(var(--safe-left,env(safe-area-inset-left,0px)) + 1rem);
 }
+
+/* Three equal-size, touch-friendly pre-fight selectors: mode, arena and starting weapon. */
+.game-ui__menu-settings{grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem}
+@media(max-width:420px){.game-ui__menu-select{font-size:.75rem;padding-inline:.35rem}}
