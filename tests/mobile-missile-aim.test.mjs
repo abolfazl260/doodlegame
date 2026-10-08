@@ -45,7 +45,6 @@ globalThis.document={
  createElementNS:(_ns,tag)=>new Node(tag),
  addEventListener(){},removeEventListener(){},visibilityState:"visible"
 };
-globalThis.navigator={vibrate(){}};
 
 const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const modes=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
