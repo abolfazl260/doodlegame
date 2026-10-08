@@ -109,7 +109,7 @@ The visual weapon system is intentionally detailed while retaining the monochrom
 | Previous weapon | Q / O |
 | Next weapon | E / P |
 
-Pointer input can also trigger jump and attack.
+On mobile, drag the movement joystick **upward to jump**, including diagonally while walking. Move the stick toward the center and push up again for a double jump or wall jump; holding it upward does not repeat jumps. There is **no separate JUMP button**. The ATTACK button and weapon arrows remain separate. The main menu starts in Persian unless a saved language preference is present. Both fighters start each round at 100 HP.
 
 ## Rendering
 

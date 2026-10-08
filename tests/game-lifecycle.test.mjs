@@ -31,33 +31,33 @@ test('arena and mode selection do not consume enemy rounds',()=>{
  assert.equal(game.getRenderState().opponent.enemyType,'tank');
 });
 
-test('render state exposes the actual enemy maximum health',()=>{
+test('every fighter starts at 100 HP and ends at zero',()=>{
  const game=setup();
- game.reset();
- game.reset();
- const state=game.getRenderState();
- assert.equal(state.opponent.enemyType,'tank');
- assert.equal(state.opponent.health,170);
- assert.equal(state.opponent.maxHealth,170);
- assert.equal(state.player.health,100);
- assert.equal(state.player.maxHealth,100);
+ for(let round=0;round<7;round++){
+  if(round>0)game.reset();
+  const {player,opponent}=game.getRenderState();
+  assert.equal(player.health,100);
+  assert.equal(player.maxHealth,100);
+  assert.equal(opponent.health,100);
+  assert.equal(opponent.maxHealth,100);
+ }
+ game.opponent.health=1;
+ game.damage(game.opponent,15,0);
+ assert.equal(game.opponent.health,0);
 });
 
-test('HUD wiring uses max health instead of a hard-coded 100',()=>{
- const gameSource=readFileSync(new URL('../src/core/Game.ts',import.meta.url),'utf8');
+test('HUD retains proportional bars and displays a single localized HP value',()=>{
  const uiSource=readFileSync(new URL('../src/ui/GameUI.ts',import.meta.url),'utf8');
- assert.match(gameSource,/getHudState\(\)\{return this\.session\.getHudState\(\);\}/);
  const sessionSource=readFileSync(new URL('../src/gameplay/GameSession.ts',import.meta.url),'utf8');
  assert.match(sessionSource,/opponentMaxHealth:this\.opponent\.maxHealth/);
  assert.match(sessionSource,/playerMaxHealth:this\.player\.maxHealth/);
  assert.match(uiSource,/opponentHealth\/opponentMax\*100/);
  assert.match(uiSource,/playerHealth\/playerMax\*100/);
-assert.match(uiSource,/playerHealthCurrent\.textContent=String\(Math\.ceil\(playerHealth\)\)/);
- assert.match(uiSource,/playerHealthMaximum\.textContent=String\(Math\.ceil\(playerMax\)\)/);
- assert.match(uiSource,/opponentHealthCurrent\.textContent=String\(Math\.ceil\(opponentHealth\)\)/);
- assert.match(uiSource,/opponentHealthMaximum\.textContent=String\(Math\.ceil\(opponentMax\)\)/);
- assert.match(uiSource,/playerHealthLabel\.append\(this\.playerHealthCurrent,"\/",this\.playerHealthMaximum\)/);
- assert.match(uiSource,/opponentHealthLabel\.append\(this\.opponentHealthCurrent,"\/",this\.opponentHealthMaximum\)/);
+ assert.match(uiSource,/hpFormatter\.format\(Math\.ceil\(playerHealth\)\)/);
+ assert.match(uiSource,/hpFormatter\.format\(Math\.ceil\(opponentHealth\)\)/);
+ assert.match(uiSource,/playerHealthLabel\.append\(this\.playerHealthCurrent\)/);
+ assert.match(uiSource,/opponentHealthLabel\.append\(this\.opponentHealthCurrent\)/);
+ assert.doesNotMatch(uiSource,/playerHealthMaximum|opponentHealthMaximum/);
 });
 
 test('HUD highlights only the current HP in red for both fighters',()=>{
