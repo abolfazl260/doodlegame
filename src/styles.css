@@ -280,14 +280,19 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
  }
  /* Restore the intended touch hit target sizes despite the generic .game-ui button min-width. */
  .game-ui .game-ui__mobile-button{min-width:0;padding:0}
- /* Jump has a separate target next to attack; moving the stick never jumps. */
- .game-ui__mobile-button--jump{
-  right:calc(var(--safe-right) + 1rem + clamp(74px,18vmin,96px));
-  bottom:calc(var(--safe-bottom) + 1.35rem);
-  width:clamp(52px,12vmin,62px);
-  height:clamp(52px,12vmin,62px);
-  border-color:#ddd;
-  background:#131313e6;
+ /* Swipe upward on the movement joystick to jump; no separate button. */
+ .game-ui__joystick::before{
+  content:"↑";
+  position:absolute;
+  top:4px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:1rem;
+  font-weight:800;
+  line-height:1;
+  opacity:.85;
+  color:#fff;
+  pointer-events:none;
  }
  /* Bow meter stays clear of the new left-thumb weapon controls. */
  .game-ui.playing .game-ui__bow-panel{
@@ -298,7 +303,7 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
  }
 }
 
-/* Issue #38: only the current HP digits turn red; /maximum stays unchanged. */
+/* Health bars show only remaining HP, with red numerals. */
 .health-label__current{
  color:#ff4545;
  text-shadow:0 1px 1px #000,0 -1px 1px #000,1px 0 1px #000,-1px 0 1px #000;
