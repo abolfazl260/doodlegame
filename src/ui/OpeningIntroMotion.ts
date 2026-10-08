@@ -1,10 +1,9 @@
 /** Deterministic timing and star placement for the opening space sequence. */
-export const OPENING_DURATION_MS=6200;
+export const OPENING_DURATION_MS=12000;
 export const REDUCED_MOTION_DURATION_MS=1000;
 
 export interface OpeningFrame{
  readonly progress:number;
- readonly opacity:number;
  readonly x:number;
  readonly y:number;
  readonly angle:number;
@@ -22,13 +21,12 @@ const clamp01=(value:number)=>Math.max(0,Math.min(1,value));
 /** Positive x moves toward the right; the body drifts while its limbs paddle. */
 export function openingFrame(elapsedMs:number,durationMs=OPENING_DURATION_MS):OpeningFrame{
  const duration=Math.max(1,durationMs);
- const elapsed=Math.max(0,Math.min(duration,elapsedMs));
+ const elapsed=Math.max(0,elapsedMs);
  const progress=clamp01(elapsed/duration);
+ // Keep the same starfield and weightless movement after the menu appears.
  const seconds=elapsed/1000;
- const fadeDuration=Math.min(1000,duration*.35);
  return{
   progress,
-  opacity:clamp01((duration-elapsed)/fadeDuration),
   x:.39+.18*progress+.014*Math.sin(seconds*.93),
   y:.43+.026*Math.sin(seconds*1.45)-.016*progress,
   angle:-.18+.19*Math.sin(seconds*.78)+.06*Math.sin(seconds*2.6),
