@@ -98,7 +98,8 @@ try{
   fireWeapon:()=>game.fireWeapon(),
   setTouchMove:(x,y)=>input.setTouchMove(x,y),
   touchAttackStart:()=>input.touchAttack(true),
-  touchAttackEnd:()=>input.touchAttackRelease()
+  touchAttackEnd:()=>input.touchAttackRelease(),
+  touchAttackCancel:()=>{input.touchAttackCancel();game.cancelTouchAttack();}
  },i18n);
 
  ui.bind(listener=>game.subscribe(listener),()=>game.getHudState());

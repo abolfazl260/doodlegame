@@ -25,6 +25,7 @@ export class WebInput implements InputSource {
  }
  touchAttack(held=true){this.state.attackPressed=true;this.touchAttackHeld=held;this.state.attackHeld=true;}
  touchAttackRelease(){this.touchAttackHeld=false;this.state.pointerReleased=true;this.state.attackHeld=Array.from(this.keys).some(code=>ATTACK.has(code));}
+ touchAttackCancel(){this.touchAttackHeld=false;this.state.attackPressed=false;this.state.pointerReleased=false;this.state.attackHeld=this.state.pointerDown||Array.from(this.keys).some(code=>ATTACK.has(code));}
  resetTransientState(){this.keys.clear();this.reset();}
  stop(){if(!this.active)return;this.active=false;window.removeEventListener("keydown",this.keyDown);window.removeEventListener("keyup",this.keyUp);window.removeEventListener("blur",this.blur);this.canvas.removeEventListener("pointerdown",this.down);this.canvas.removeEventListener("pointermove",this.move);this.canvas.removeEventListener("pointerup",this.up);this.canvas.removeEventListener("pointercancel",this.cancel);this.canvas.removeEventListener("contextmenu",this.context);this.resetTransientState();}
  getState(){return this.state;} endFrame(){this.state.pointerPressed=false;this.state.pointerReleased=false;this.state.jumpPressed=false;this.state.dashPressed=false;this.state.attackPressed=false;this.state.attackHeld=this.touchAttackHeld||this.state.pointerDown||Array.from(this.keys).some(code=>ATTACK.has(code));this.state.weaponNextPressed=false;this.state.weaponPreviousPressed=false;} dispose(){this.stop();}
