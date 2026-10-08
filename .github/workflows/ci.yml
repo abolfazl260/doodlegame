@@ -29,6 +29,12 @@ jobs:
       - name: Physics and motion regressions
         run: npm test
 
+      - name: Install Chromium for desktop interaction regressions
+        run: npx playwright install --with-deps chromium
+
+      - name: Desktop mouse and weapon selection regressions
+        run: npm run test:browser
+
       - name: Verify monetization guardrail
         run: npm run ci:verify-monetization
 
