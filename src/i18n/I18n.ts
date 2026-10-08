@@ -9,7 +9,7 @@ export type Messages={
  language:{label:string;english:string;persian:string};
  title:string;
  rotateHint:string;
- buttons:{start:string;pause:string;resume:string;restart:string;help:string;jump:string;attack:string;fireMissile:string};
+ buttons:{start:string;pause:string;resume:string;restart:string;help:string;jump:string;attack:string;fireMissile:string;previousWeapon:string;nextWeapon:string};
  privacy:{button:string;title:string;web:string;networkNote:string;close:string;html:string};
  status:{win:string;lose:string;duel:string;hill:string};
  details:{equipped:string;angle:string;power:string};
@@ -29,14 +29,14 @@ const EN:Messages={
  language:{label:"Language",english:"English",persian:"فارسی"},
  title:"DOODLEGAME DUEL",
  rotateHint:"ROTATE DEVICE FOR A BETTER VIEW",
- buttons:{start:"Start",pause:"Pause",resume:"Resume",restart:"Restart",help:"HOW TO PLAY",jump:"JUMP",attack:"ATTACK",fireMissile:"FIRE MISSILE"},
+ buttons:{start:"Start",pause:"Pause",resume:"Resume",restart:"Restart",help:"HOW TO PLAY",jump:"JUMP",attack:"ATTACK",fireMissile:"FIRE MISSILE",previousWeapon:"Previous weapon",nextWeapon:"Next weapon"},
  privacy:{button:"PRIVACY POLICY",title:"PRIVACY POLICY",web:"OPEN WEB COPY",networkNote:"The complete policy is shown here and works offline. The web copy may require an internet connection.",close:"CLOSE",html:"<p><b>DoodleGame does not collect or share personal or sensitive user data.</b></p><p>There are no accounts, analytics, ads, crash-reporting service, cloud save, location, contacts, camera or microphone features.</p><p>Only the selected language is stored locally on this device. Match and upgrade state stay in the current session and are not sent off-device.</p><p>The Android wrapper includes INTERNET permission for its WebView runtime, but current DoodleGame code does not transmit gameplay or personal data to a DoodleGame backend.</p><p>Local preferences remain until app/site data is cleared or the app is uninstalled. DoodleGame has no server-side user account or profile to delete.</p>"},
  status:{win:"YOU WIN",lose:"YOU LOSE",duel:"DUEL",hill:"HILL"},
  details:{equipped:"EQUIPPED",angle:"ANGLE",power:"POWER"},
  sections:{gameMode:"GAME MODE",arena:"ARENA"},
  panels:{weaponUpgrades:"WEAPON UPGRADES",missileControl:"MISSILE CONTROL",bowDraw:"BOW DRAW",releaseToFire:"RELEASE TO FIRE"},
  upgrade:{points:"UPGRADE POINTS",choose:"Choose a weapon upgrade before the next fight.",earn:"Win a duel to earn another point.",upgraded:"UPGRADED",upgrade:"UPGRADE",locked:"LOCKED"},
- helpHtml:"<strong>HOW TO PLAY</strong><br><br><b>MOVE</b> <span dir=\"ltr\">A / D or ← / →</span><br><b>JUMP</b> <span dir=\"ltr\">W / Space / ↑</span><br><b>ATTACK</b> <span dir=\"ltr\">Z / X</span><br><b>PREVIOUS WEAPON</b> <span dir=\"ltr\">Q / O</span><br><b>NEXT WEAPON</b> <span dir=\"ltr\">E / P</span><br><br><b>PROGRESSION</b><br>Win a duel to earn 1 Upgrade Point. Spend it between fights to permanently upgrade one weapon for this run.<br><br><b>WEAPONS</b><br>BLADE · HAMMER · BLASTER<br>UZI · BOOMERANG · BOW · BOMB · MISSILE",
+ helpHtml:"<strong>HOW TO PLAY</strong><br><br><b>MOVE</b> <span dir=\"ltr\">A / D or ← / →</span><br><b>JUMP</b> <span dir=\"ltr\">W / Space / ↑</span><br><b>ATTACK</b> <span dir=\"ltr\">Z / X</span><br><b>PREVIOUS WEAPON</b> <span dir=\"ltr\">Q / O</span><br><b>NEXT WEAPON</b> <span dir=\"ltr\">E / P</span><br><br><b>MOBILE</b><br>Tap ‹ / › above the arena to change weapons. Some modes lock the weapon.<br><br><b>PROGRESSION</b><br>Win a duel to earn 1 Upgrade Point. Spend it between fights to permanently upgrade one weapon for this run.<br><br><b>WEAPONS</b><br>BLADE · HAMMER · BLASTER<br>UZI · BOOMERANG · BOW · BOMB · MISSILE",
  arenas:{classic:"CLASSIC",towers:"TOWERS",pit:"PIT",steps:"STEPS",zigzag:"ZIGZAG",sky:"SKY",moving:"MOVING",fortress:"FORTRESS",bridge:"BRIDGE",crater:"CRATER",vertical:"VERTICAL",ruins:"RUINS",conveyor:"CONVEYOR",collapse:"COLLAPSE",storm:"STORM",reactor:"REACTOR"},
  modes:{duel:"DUEL","missile-duel":"MISSILE DUEL","melee-only":"MELEE ONLY","random-weapons":"RANDOM WEAPONS","sudden-death":"SUDDEN DEATH","low-gravity":"LOW GRAVITY","king-of-hill":"KING OF THE HILL"},
  weapons:{blade:"BLADE",hammer:"HAMMER",blaster:"BLASTER",uzi:"UZI",boomerang:"BOOMERANG",bow:"BOW",bomb:"BOMB",missile:"MISSILE"},
@@ -56,14 +56,14 @@ const FA:Messages={
  language:{label:"زبان",english:"English",persian:"فارسی"},
  title:"دوئل دودل‌گیم",
  rotateHint:"برای دید بهتر دستگاه را بچرخان",
- buttons:{start:"شروع",pause:"توقف",resume:"ادامه",restart:"شروع دوباره",help:"راهنمای بازی",jump:"پرش",attack:"حمله",fireMissile:"شلیک موشک"},
+ buttons:{start:"شروع",pause:"توقف",resume:"ادامه",restart:"شروع دوباره",help:"راهنمای بازی",jump:"پرش",attack:"حمله",fireMissile:"شلیک موشک",previousWeapon:"سلاح قبلی",nextWeapon:"سلاح بعدی"},
  privacy:{button:"حریم خصوصی",title:"سیاست حریم خصوصی",web:"نسخه وب",networkNote:"متن کامل سیاست همین‌جا و بدون اینترنت قابل خواندن است. نسخه وب ممکن است به اینترنت نیاز داشته باشد.",close:"بستن",html:"<p><b>DoodleGame هیچ داده شخصی یا حساس کاربر را جمع‌آوری یا به‌اشتراک نمی‌گذارد.</b></p><p>بازی حساب کاربری، analytics، تبلیغات، سرویس گزارش crash، ذخیره ابری، موقعیت مکانی، مخاطبین، دوربین یا میکروفن ندارد.</p><p>فقط زبان انتخاب‌شده به‌صورت محلی روی همین دستگاه ذخیره می‌شود. وضعیت مبارزه و ارتقاهای دور فعلی فقط در نشست جاری می‌ماند و از دستگاه خارج نمی‌شود.</p><p>بسته اندروید برای runtime مبتنی بر WebView مجوز INTERNET دارد، اما کد فعلی DoodleGame داده gameplay یا اطلاعات شخصی را به backend بازی ارسال نمی‌کند.</p><p>تنظیم محلی تا پاک‌کردن داده برنامه/سایت یا uninstall باقی می‌ماند. DoodleGame حساب یا پروفایل سمت سرور برای حذف ندارد.</p>"},
  status:{win:"بردی",lose:"باختی",duel:"دوئل",hill:"تپه"},
  details:{equipped:"سلاح",angle:"زاویه",power:"قدرت"},
  sections:{gameMode:"حالت بازی",arena:"میدان"},
  panels:{weaponUpgrades:"ارتقای سلاح‌ها",missileControl:"کنترل موشک",bowDraw:"کشش کمان",releaseToFire:"برای شلیک رها کن"},
  upgrade:{points:"امتیاز ارتقا",choose:"قبل از مبارزه بعدی یک ارتقای سلاح انتخاب کن.",earn:"برای گرفتن یک امتیاز دیگر، دوئل را ببر.",upgraded:"ارتقا یافته",upgrade:"ارتقا",locked:"قفل"},
- helpHtml:"<strong>راهنمای بازی</strong><br><br><b>حرکت</b> <span dir=\"ltr\">A / D یا ← / →</span><br><b>پرش</b> <span dir=\"ltr\">W / Space / ↑</span><br><b>حمله</b> <span dir=\"ltr\">Z / X</span><br><b>سلاح قبلی</b> <span dir=\"ltr\">Q / O</span><br><b>سلاح بعدی</b> <span dir=\"ltr\">E / P</span><br><br><b>پیشرفت</b><br>با بردن هر دوئل ۱ امتیاز ارتقا می‌گیری. بین مبارزه‌ها آن را خرج کن تا یکی از سلاح‌ها برای همین دور به‌صورت دائمی ارتقا پیدا کند.<br><br><b>سلاح‌ها</b><br>تیغه · چکش · بلستر<br>یوزی · بومرنگ · کمان · بمب · موشک",
+ helpHtml:"<strong>راهنمای بازی</strong><br><br><b>حرکت</b> <span dir=\"ltr\">A / D یا ← / →</span><br><b>پرش</b> <span dir=\"ltr\">W / Space / ↑</span><br><b>حمله</b> <span dir=\"ltr\">Z / X</span><br><b>سلاح قبلی</b> <span dir=\"ltr\">Q / O</span><br><b>سلاح بعدی</b> <span dir=\"ltr\">E / P</span><br><br><b>موبایل</b><br>برای تعویض سلاح از دکمه‌های ‹ و › بالای میدان استفاده کن. در بعضی حالت‌ها تغییر سلاح مجاز نیست.<br><br><b>پیشرفت</b><br>با بردن هر دوئل ۱ امتیاز ارتقا می‌گیری. بین مبارزه‌ها آن را خرج کن تا یکی از سلاح‌ها برای همین دور به‌صورت دائمی ارتقا پیدا کند.<br><br><b>سلاح‌ها</b><br>تیغه · چکش · بلستر<br>یوزی · بومرنگ · کمان · بمب · موشک",
  arenas:{classic:"کلاسیک",towers:"برج‌ها",pit:"گودال",steps:"پله‌ها",zigzag:"زیگزاگ",sky:"آسمان",moving:"متحرک",fortress:"دژ",bridge:"پل",crater:"دهانه",vertical:"عمودی",ruins:"ویرانه‌ها",conveyor:"نوار نقاله",collapse:"فروریزش",storm:"طوفان",reactor:"راکتور"},
  modes:{duel:"دوئل","missile-duel":"دوئل موشکی","melee-only":"فقط تن‌به‌تن","random-weapons":"سلاح تصادفی","sudden-death":"مرگ ناگهانی","low-gravity":"جاذبه کم","king-of-hill":"پادشاه تپه"},
  weapons:{blade:"تیغه",hammer:"چکش",blaster:"بلستر",uzi:"یوزی",boomerang:"بومرنگ",bow:"کمان",bomb:"بمب",missile:"موشک"},
