@@ -33,8 +33,11 @@ class FakeNode{
  get options(){return this.children.filter(child=>typeof child==="object"&&child.tag==="option");}
  get firstElementChild(){return this.children.find(child=>typeof child==="object")??null;}
  querySelector(selector){
-  const match=selector.match(/^option\\[value="([^"]+)"\\]$/);
-  if(match)return this.options.find(option=>option.value===match[1])??null;
+  const prefix='option[value="';
+  if(selector.startsWith(prefix)&&selector.endsWith('"]')){
+   const id=selector.slice(prefix.length,-2);
+   return this.options.find(option=>option.value===id)??null;
+  }
   return null;
  }
 }
