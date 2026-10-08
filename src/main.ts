@@ -66,6 +66,7 @@ try{
   weaponNext:()=>game.selectWeapon(1),
   weaponPrevious:()=>game.selectWeapon(-1),
   weaponSelect:(id)=>game.selectWeaponById(id),
+  selectStartingWeapon:(id)=>game.selectStartingWeapon(id),
   upgradeWeapon:(id)=>game.upgradeWeapon(id),
   arenaSelect:(id:ArenaId)=>game.selectArena(id),
   modeSelect:(id:GameModeId)=>game.selectMode(id),
