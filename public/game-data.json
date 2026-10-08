@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "dataVersion": 1,
+  "weapons": {
+    "blade": {
+      "damage": 8,
+      "cooldown": 0.32
+    },
+    "hammer": {
+      "damage": 14,
+      "cooldown": 0.75
+    },
+    "blaster": {
+      "damage": 7,
+      "cooldown": 0.5
+    },
+    "uzi": {
+      "damage": 4,
+      "cooldown": 0.12
+    },
+    "boomerang": {
+      "damage": 9,
+      "cooldown": 0.7
+    },
+    "bow": {
+      "damage": 12,
+      "cooldown": 0.9
+    },
+    "bomb": {
+      "damage": 18,
+      "cooldown": 1.15
+    },
+    "missile": {
+      "damage": 22,
+      "cooldown": 1.05
+    }
+  },
+  "arenas": {
+    "classic": {
+      "speedMultiplier": 1,
+      "jumpMultiplier": 1
+    },
+    "towers": {
+      "speedMultiplier": 1,
+      "jumpMultiplier": 1.15
+    },
+    "pit": {
+      "speedMultiplier": 1,
+      "jumpMultiplier": 1
+    },
+    "steps": {
+      "speedMultiplier": 1.2,
+      "jumpMultiplier": 1
+    },
+    "zigzag": {
+      "speedMultiplier": 1,
+      "jumpMultiplier": 1
+    },
+    "sky": {
+      "speedMultiplier": 1,
+      "jumpMultiplier": 1.25
+    },
+    "moving": {
+      "speedMultiplier": 1,
+      "jumpMultiplier": 1.05
+    },
+    "fortress": {
+      "speedMultiplier": 0.9,
+      "jumpMultiplier": 1
+    },
+    "bridge": {
+      "speedMultiplier": 1.05,
+      "jumpMultiplier": 1
+    },
+    "crater": {
+      "speedMultiplier": 1,
+      "jumpMultiplier": 1.08
+    },
+    "vertical": {
+      "speedMultiplier": 1.12,
+      "jumpMultiplier": 1.2
+    },
+    "ruins": {
+      "speedMultiplier": 0.98,
+      "jumpMultiplier": 1
+    },
+    "conveyor": {
+      "speedMultiplier": 1.03,
+      "jumpMultiplier": 1
+    },
+    "collapse": {
+      "speedMultiplier": 1,
+      "jumpMultiplier": 1.08
+    },
+    "storm": {
+      "speedMultiplier": 1.05,
+      "jumpMultiplier": 1.05
+    },
+    "reactor": {
+      "speedMultiplier": 1,
+      "jumpMultiplier": 1.05
+    }
+  }
+}
