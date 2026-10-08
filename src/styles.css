@@ -608,3 +608,13 @@ html[dir="rtl"] .opening-intro__skip{
 /* Three equal-size, touch-friendly pre-fight selectors: mode, arena and starting weapon. */
 .game-ui__menu-settings{grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem}
 @media(max-width:420px){.game-ui__menu-select{font-size:.75rem;padding-inline:.35rem}}
+
+/* Block menus, intro and gameplay whenever the viewport is portrait. */
+#orientation-guard{display:none;position:fixed;inset:0;z-index:20000;align-items:center;justify-content:center;overflow:auto;padding:max(1.5rem,env(safe-area-inset-top)) max(1.5rem,env(safe-area-inset-right)) max(1.5rem,env(safe-area-inset-bottom)) max(1.5rem,env(safe-area-inset-left));background:#050505;color:#fff;text-align:center;pointer-events:auto;touch-action:manipulation}
+.orientation-guard__content{max-width:26rem}
+.orientation-guard__icon{font-size:4.5rem;line-height:1.2;transform:rotate(90deg);margin-bottom:1rem}
+#orientation-guard h1{margin:.35rem 0;font-size:clamp(1.3rem,5vw,2rem)}
+#orientation-guard p{margin:.6rem 0 1.25rem;line-height:1.7}
+#orientation-guard button{min-height:44px;padding:.65rem 1rem;border:1px solid #eee;border-radius:.6rem;background:#222;color:#fff;font:inherit;cursor:pointer}
+#orientation-guard button[hidden]{display:none}
+@media (orientation:portrait){#orientation-guard{display:flex}}
