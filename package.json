@@ -23,7 +23,8 @@
     "android:verify:review": "node scripts/android/verify-review-readiness.mjs",
     "ci:bundle-budget": "node scripts/ci/check-bundle-size.mjs",
     "ci:verify-monetization": "node scripts/ci/verify-monetization.mjs",
-    "ci:verify-audience": "node scripts/ci/verify-audience.mjs"
+    "ci:verify-audience": "node scripts/ci/verify-audience.mjs",
+    "test:browser": "playwright test --config playwright.config.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^8.0.0",
@@ -35,6 +36,7 @@
     "@capacitor/cli": "^8.0.0",
     "typescript": "7.0.2",
     "vite": "8.3.2",
-    "@types/three": "0.186.0"
+    "@types/three": "0.186.0",
+    "@playwright/test": "1.56.1"
   }
 }
