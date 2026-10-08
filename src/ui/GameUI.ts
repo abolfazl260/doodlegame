@@ -533,6 +533,7 @@ export class GameUI{
    button.classList.toggle("active",id===s.weapon);
    button.textContent=messages.weapons[id]+(upgraded.has(id)?" ★":"");
    button.hidden=missileRules?id!=="missile":s.mode==="melee-only"?(id!=="blade"&&id!=="hammer"):s.mode==="random-weapons"?id!==s.weapon:id==="missile";
+   button.disabled=button.hidden||s.mode==="random-weapons";
   }
   const available=WEAPON_IDS.filter(id=>!upgraded.has(id));
   const selected=available.includes(this.upgradeSelect.value as WeaponId)?this.upgradeSelect.value as WeaponId:available[0];

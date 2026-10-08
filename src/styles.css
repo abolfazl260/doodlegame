@@ -686,3 +686,7 @@ html[dir="rtl"] .opening-intro__skip{
 @media (max-height:520px){
  .game-ui__menu-links .game-ui__combat-toggle{min-height:32px;padding:.12rem .3rem;font-size:.63rem}
 }
+
+/* Desktop weapon picks intercept only their own hit areas; the bar stays click-through. */
+.game-ui.playing .game-ui__weapon-list button:not([hidden]):not(:disabled){pointer-events:auto}
+.game-ui.playing .game-ui__weapon-list button:is([hidden],:disabled){pointer-events:none}
