@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {WebInput} from "../.test-build/platform/web/WebInput.js";
+import {GameSession} from "../.test-build/gameplay/GameSession.js";
 
 const makeInput=()=>new WebInput({});
 
@@ -67,4 +68,23 @@ test("mobile controls have no separate jump button or touchJump action",()=>{
  assert.match(ui,/this\.joystick\.addEventListener\("pointermove"/);
  assert.match(css,/\.game-ui\.playing \.game-ui__mobile-weapon-switcher:not\(\[hidden\]\)\s*\{[^}]*left:calc\(var\(--safe-left\)/);
  assert.match(css,/\.game-ui__mobile-weapon-arrow\s*\{[^}]*height:44px/);
+});
+
+test("joystick upward and repeated upward entry produce real in-game jumps",()=>{
+ const input=makeInput();
+ const game=new GameSession(input);
+ const grounded=game.getRenderState().player;
+ assert.equal(grounded.grounded,true);
+ input.setTouchMove(.4,-.85);
+ game.update(1/60);
+ const airborne=game.getRenderState().player;
+ assert.equal(airborne.grounded,false);
+ assert.ok(airborne.velocityY>0,"joystick causes first jump in physics");
+ input.setTouchMove(.4,0);
+ input.setTouchMove(.4,-.85);
+ assert.equal(input.getState().jumpPressed,true);
+ game.update(1/60);
+ const afterDoubleJump=game.getRenderState().player;
+ assert.ok(afterDoubleJump.velocityY>0,"second upward crossing triggers airborne double jump");
+ game.dispose();
 });
