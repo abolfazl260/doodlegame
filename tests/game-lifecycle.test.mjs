@@ -52,5 +52,19 @@ test('HUD wiring uses max health instead of a hard-coded 100',()=>{
  assert.match(sessionSource,/playerMaxHealth:this\.player\.maxHealth/);
  assert.match(uiSource,/opponentHealth\/opponentMax\*100/);
  assert.match(uiSource,/playerHealth\/playerMax\*100/);
- assert.match(uiSource,/opponentHealthLabel\.textContent=Math\.ceil\(opponentHealth\)\+"\/"\+Math\.ceil\(opponentMax\)/);
+assert.match(uiSource,/playerHealthCurrent\.textContent=String\(Math\.ceil\(playerHealth\)\)/);
+ assert.match(uiSource,/playerHealthMaximum\.textContent=String\(Math\.ceil\(playerMax\)\)/);
+ assert.match(uiSource,/opponentHealthCurrent\.textContent=String\(Math\.ceil\(opponentHealth\)\)/);
+ assert.match(uiSource,/opponentHealthMaximum\.textContent=String\(Math\.ceil\(opponentMax\)\)/);
+ assert.match(uiSource,/playerHealthLabel\.append\(this\.playerHealthCurrent,"\/",this\.playerHealthMaximum\)/);
+ assert.match(uiSource,/opponentHealthLabel\.append\(this\.opponentHealthCurrent,"\/",this\.opponentHealthMaximum\)/);
+});
+
+test('HUD highlights only the current HP in red for both fighters',()=>{
+ const uiSource=readFileSync(new URL('../src/ui/GameUI.ts',import.meta.url),'utf8');
+ const cssSource=readFileSync(new URL('../src/styles.css',import.meta.url),'utf8');
+ assert.match(uiSource,/playerHealthCurrent\.className="health-label__current"/);
+ assert.match(uiSource,/opponentHealthCurrent\.className="health-label__current"/);
+ assert.match(cssSource,/\.health-label__current\s*\{[^}]*color:\s*#ff4545\s*;/);
+ assert.doesNotMatch(cssSource,/\.health-label\s*\{[^}]*color:\s*#ff4545\s*;/);
 });
