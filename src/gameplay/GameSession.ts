@@ -278,12 +278,9 @@ export class GameSession{
   const shouldLeap=travel.canLeap||obstacle||hazard||wall||upAhead||(plan.leap&&distance>2.2);
   const safeMove=!enemy.grounded||move===0||travel.supported||travel.canLeap;
   const actualMove=safeMove?move:0;
-  if(enemy.grounded&&actualMove!==0&&Math.abs(enemy.x-brain.lastX)<.018){
-   brain.stuckTime+=dt;
-  }else if(actualMove===0||Math.abs(enemy.x-brain.lastX)>.03){
-   brain.stuckTime=Math.max(0,brain.stuckTime-dt*2);
-  }
-  if(brain.jumpCooldown<=0&&(shouldLeap||(brain.stuckTime>.65&&safeMove))){
+  const previousX=enemy.x;
+  if(actualMove===0)brain.stuckTime=Math.max(0,brain.stuckTime-dt*2);
+  if((!enemy.grounded||travel.supported||travel.canLeap)&&brain.jumpCooldown<=0&&(shouldLeap||(brain.stuckTime>.65&&safeMove))){
    if(enemy.grounded||wall||(!enemy.grounded&&enemy.doubleJumpAvailable&&upAhead)){
     this.tryJump(enemy);brain.jumpCooldown=type==="jumper"?.46:.68;brain.stuckTime=0;
    }
@@ -296,6 +293,8 @@ export class GameSession{
   const speed=type==="runner"?1.15:type==="tank"?.72:type==="shooter"?.8:type==="ninja"?1.05:1;
   this.move(enemy,actualMove*speed,dt);
   this.integrate(enemy,dt);
+  if(enemy.grounded&&actualMove!==0&&Math.abs(enemy.x-previousX)<.004)brain.stuckTime+=dt;
+  else if(actualMove!==0)brain.stuckTime=Math.max(0,brain.stuckTime-dt*2);
   brain.lastX=enemy.x;
   if(plan.attack&&brain.recoverTime<=0&&enemy.cooldown<=0){
    const facing=Math.sign(this.player.x-enemy.x);
