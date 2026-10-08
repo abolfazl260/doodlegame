@@ -4,6 +4,7 @@ import {readFileSync} from "node:fs";
 import {
  OPENING_DURATION_MS,
  REDUCED_MOTION_DURATION_MS,
+ ambientFighterPlacement,
  openingFrame,
  openingStars
 } from "../.test-build/ui/OpeningIntroMotion.js";
@@ -21,6 +22,18 @@ test("long intro keeps the weightless figure moving after the menu appears",()=>
  assert.ok(end.x>beginning.x,"fighter drifts across the screen");
  assert.notDeepEqual([ambient.x,ambient.y,ambient.angle],[end.x,end.y,end.angle],
   "the space scene must continue animating after the intro ends");
+});
+
+test("ambient fighter remains visible beside wide and phone landscape menus",()=>{
+ for(const [viewport,panel] of [[960,512],[740,512],[600,512]]){
+  const placement=ambientFighterPlacement(viewport,panel);
+  const menuRight=(viewport+panel)/2/viewport;
+  assert.ok(placement.x>menuRight,"fighter stays outside the menu panel");
+  assert.ok(placement.x<=1&&placement.x>=0);
+  assert.ok(placement.scale>0&&placement.scale<=1);
+ }
+ assert.ok(ambientFighterPlacement(560,544).scale<1,
+  "the figure is scaled down when the side gutter is narrow");
 });
 
 test("weightless fighter paddles instead of following a static image",()=>{
@@ -63,7 +76,12 @@ test("intro starts only after initializing the game and can be skipped",()=>{
  assert.ok(intro.includes("this.menuRoot.inert=true"));
  assert.ok(intro.includes("this.menuRoot.inert=false"));
  assert.ok(intro.includes('this.overlay.classList.add("opening-intro--ambient")'));
- assert.ok(main.includes("if(state===GameState.PLAYING)intro.dispose()"));
+ assert.ok(main.includes("intro.dispose();"));
+ assert.ok(main.includes("intro.restoreAmbient();"));
+ assert.ok(main.includes('root.classList.add("game-ui-intro-pending")'));
+ assert.match(css,/space-menu-reveal 1\.85s/);
+ assert.ok(css.includes("space-menu-content-reveal"));
+ assert.ok(css.includes("game-ui-intro-pending"));
  assert.ok(intro.includes("fighterVisual(state)"));
  assert.ok(intro.includes("this.drawPlanet("));
  assert.ok(css.includes(".opening-intro__skip"));
@@ -77,9 +95,9 @@ test("skipping the intro reveals menu while the background stays alive until gam
  assert.ok(start>=0);
  const source=compiled.slice(start).replace("export class OpeningIntro","class OpeningIntro");
  const OpeningIntro=new Function(
-  "fighterVisual","openingFrame","openingStars","OPENING_DURATION_MS","REDUCED_MOTION_DURATION_MS",
+  "fighterVisual","openingFrame","openingStars","OPENING_DURATION_MS","REDUCED_MOTION_DURATION_MS","ambientFighterPlacement",
   source+";return OpeningIntro;"
- )(()=>({joints:[[[0,0],[0,.7]]],head:[0,1]}),openingFrame,openingStars,OPENING_DURATION_MS,REDUCED_MOTION_DURATION_MS);
+ )(()=>({joints:[[[0,0],[0,.7]]],head:[0,1]}),openingFrame,openingStars,OPENING_DURATION_MS,REDUCED_MOTION_DURATION_MS,ambientFighterPlacement);
  const oldDocument=globalThis.document,oldWindow=globalThis.window;
  const makeNode=(tag)=>{
   const classes=new Set();
@@ -124,6 +142,12 @@ test("skipping the intro reveals menu while the background stays alive until gam
   intro.dispose();
   assert.equal(intro.overlay.removed,true);
   assert.equal(menu.classList.contains("game-ui-intro-revealed"),false);
+  intro.restoreAmbient();
+  assert.equal(intro.active,true);
+  assert.equal(intro.ambient,true);
+  assert.equal(menu.inert,false);
+  assert.equal(menu.classList.contains("game-ui-intro-revealed"),true);
+  intro.dispose();
  }finally{
   globalThis.document=oldDocument;
   globalThis.window=oldWindow;

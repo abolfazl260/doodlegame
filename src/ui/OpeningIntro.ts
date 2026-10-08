@@ -3,6 +3,7 @@ import type {DuelistRenderState} from "../gameplay/GameSession";
 import {
  OPENING_DURATION_MS,
  REDUCED_MOTION_DURATION_MS,
+ ambientFighterPlacement,
  openingFrame,
  openingStars
 } from "./OpeningIntroMotion";
@@ -24,6 +25,7 @@ export class OpeningIntro{
  private active=false;
  private ambient=false;
  private ambientSince=0;
+ private ambientPlacement={x:.84,scale:1};
  private reducedMotion=false;
 
  constructor(private readonly menuRoot:HTMLElement,locale:"en"|"fa"){
@@ -43,7 +45,19 @@ export class OpeningIntro{
  start(){
   if(this.active)return;
   this.context=this.canvas.getContext("2d");
-  if(!this.context)return; // Canvas unavailable: leave the normal menu visible.
+  if(!this.context){
+   this.menuRoot.classList.remove("game-ui-intro-pending");
+   return; // Canvas unavailable: leave the normal menu visible.
+  }
+  this.ambient=false;
+  this.ambientSince=0;
+  this.elapsed=0;
+  this.lastTime=0;
+  this.skip.hidden=false;
+  this.overlay.classList.remove("opening-intro--ambient");
+  this.overlay.setAttribute("role","dialog");
+  this.overlay.setAttribute("aria-modal","true");
+  this.overlay.removeAttribute("aria-hidden");
   this.reducedMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches??false;
   this.duration=this.reducedMotion?REDUCED_MOTION_DURATION_MS:OPENING_DURATION_MS;
   this.active=true;
@@ -90,7 +104,14 @@ export class OpeningIntro{
   this.ratio=Math.min(window.devicePixelRatio||1,2);
   this.canvas.width=Math.max(1,Math.round(this.width*this.ratio));
   this.canvas.height=Math.max(1,Math.round(this.height*this.ratio));
+  if(this.ambient)this.updateAmbientPlacement();
  };
+
+ private updateAmbientPlacement(){
+  const panel=this.menuRoot.querySelector<HTMLElement>(".game-ui:not(.playing)");
+  const panelWidth=panel?.offsetWidth??Math.min(512,Math.max(0,this.width-16));
+  this.ambientPlacement=ambientFighterPlacement(this.width,panelWidth);
+ }
 
  private readonly tick=(now:number)=>{
   this.frameId=null;
@@ -128,11 +149,14 @@ export class OpeningIntro{
   }
   ctx.globalAlpha=1;
   this.drawPlanet(ctx,w,h,t);
-  // Drift towards the open edge once the menu is visible, so the figure
-  // remains visible rather than sitting entirely under the opaque panel.
-  const ambientBlend=this.ambient?Math.min(1,(this.elapsed-this.ambientSince)/2400):0;
-  const figureX=pose.x+((w>=760?.82:.77)-pose.x)*ambientBlend;
-  this.drawFighter(ctx,w,h,t,figureX,pose.y,pose.angle,pose.paddle);
+  // Continue paddling in zero gravity beside the menu instead of disappearing
+  // beneath its opaque panel. The starfield and planet also keep animating.
+  const ambientBlend=this.ambient?Math.min(1,Math.max(0,(this.elapsed-this.ambientSince)/2400)):0;
+  const sway=.01*Math.sin(t*.68);
+  const figureX=pose.x+(this.ambientPlacement.x+sway-pose.x)*ambientBlend;
+  const figureY=pose.y+(-.035+.018*Math.sin(t*.53))*ambientBlend;
+  const figureScale=1-(1-this.ambientPlacement.scale)*ambientBlend;
+  this.drawFighter(ctx,w,h,t,figureX,figureY,pose.angle,pose.paddle,figureScale);
 
  }
 
@@ -182,7 +206,7 @@ export class OpeningIntro{
  }
 
  private drawFighter(ctx:CanvasRenderingContext2D,w:number,h:number,t:number,
-  nx:number,ny:number,rotation:number,paddle:number){
+  nx:number,ny:number,rotation:number,paddle:number,scaleMultiplier=1){
   // Use the same articulated torso and head design as the in-game fighter.
   const state:DuelistRenderState={
    x:0,y:0,enemyType:null,bowCharge:0,missileAngle:45,missilePower:12,
@@ -191,7 +215,7 @@ export class OpeningIntro{
    animationTime:t,gaitPhase:t*3,landingTime:0,hitTime:0
   };
   const figure=fighterVisual(state);
-  const scale=Math.max(25,Math.min(60,h*.068,w*.145));
+  const scale=Math.max(25,Math.min(60,h*.068,w*.145))*scaleMultiplier;
   ctx.save();
   ctx.translate(nx*w,ny*h);
   ctx.rotate(rotation);
@@ -249,13 +273,27 @@ export class OpeningIntro{
   this.overlay.setAttribute("aria-hidden","true");
   window.removeEventListener("keydown",this.handleKeyDown,true);
   this.menuRoot.inert=false;
+  this.menuRoot.classList.remove("game-ui-intro-pending");
   this.menuRoot.classList.add("game-ui-intro-revealed");
+  this.updateAmbientPlacement();
   this.menuRoot.querySelector<HTMLButtonElement>('button[data-action="start"]')
    ?.focus({preventScroll:true});
  }
 
- dispose(){
+ /** Restore the living starfield immediately if the player returns to the menu. */
+ restoreAmbient(){
+  if(this.active)return;
+  this.start();
   if(!this.active)return;
+  this.elapsed=this.duration;
+  this.finish();
+ }
+
+ dispose(){
+  if(!this.active){
+   this.menuRoot.classList.remove("game-ui-intro-pending");
+   return;
+  }
   this.active=false;
   if(this.frameId!==null)window.cancelAnimationFrame(this.frameId);
   this.frameId=null;
@@ -264,6 +302,7 @@ export class OpeningIntro{
   document.removeEventListener("visibilitychange",this.handleVisibility);
   this.overlay.remove();
   this.menuRoot.inert=false;
+  this.menuRoot.classList.remove("game-ui-intro-pending");
   this.menuRoot.classList.remove("game-ui-intro-revealed");
  }
 }
