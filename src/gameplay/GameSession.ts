@@ -1,5 +1,5 @@
 import type {InputSource,InputState,WeaponId} from "../input/Input";
-import {combatShake,cueLife,MAX_COMBAT_CUES,type CombatCue,type CombatCueKind} from "./CombatFeedback";
+import {combatShake,cueLife,MAX_COMBAT_CUES,type CombatCue,type CombatCueKind} from "./CombatFeedback.js";
 export type PlatformSurface="normal"|"ice"|"slippery"|"oneWay"|"conveyorLeft"|"conveyorRight";
 export interface Platform{readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly surface?:PlatformSurface;}
 export type EnemyType="runner"|"tank"|"shooter"|"jumper"|"bomber"|"ninja"|"boss";
