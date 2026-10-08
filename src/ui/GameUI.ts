@@ -11,7 +11,7 @@ type Actions={
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
- setTouchMove:(x:number,y:number)=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;
+ setTouchMove:(x:number,y:number)=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;toggleCombatSound:()=>void;toggleCameraShake:()=>void;
 };
 type UiAction="start"|"pause"|"resume"|"restart";
 
@@ -55,6 +55,9 @@ export class GameUI{
  private menuHeader=document.createElement("div");
  private menuSettings=document.createElement("div");
  private menuLinks=document.createElement("div");
+ private combatSoundButton=document.createElement("button");
+ private combatShakeButton=document.createElement("button");
+ private combatSoundEnabled=true;private combatShakeEnabled=true;
  private menuResult=document.createElement("div");
  private modeField=document.createElement("label");
  private arenaField=document.createElement("label");
@@ -442,7 +445,13 @@ export class GameUI{
    if(typeof document.removeEventListener==="function")document.removeEventListener("visibilitychange",onVisibility);
   };
 
-  this.menuLinks.append(this.helpButton,this.privacyButton);
+  this.combatSoundButton.type="button";
+  this.combatShakeButton.type="button";
+  this.combatSoundButton.className="game-ui__combat-toggle";
+  this.combatShakeButton.className="game-ui__combat-toggle";
+  this.combatSoundButton.onclick=actions.toggleCombatSound;
+  this.combatShakeButton.onclick=actions.toggleCameraShake;
+  this.menuLinks.append(this.helpButton,this.privacyButton,this.combatSoundButton,this.combatShakeButton);
   this.menu.append(this.menuHeader,this.menuResult,this.menuSettings,this.upgradePanel,this.buttons,this.menuLinks);
   this.root.append(this.menu,this.help,this.privacy,this.status,this.details,this.playerHealth,this.opponentHealth,this.weaponList,this.missilePanel,this.bowPanel,this.mobileControls,this.rotateHint);
   container.append(this.root);
@@ -573,6 +582,16 @@ export class GameUI{
   }
  }
 
+ setCombatPreferences(sound:boolean,shake:boolean){
+  this.combatSoundEnabled=sound;this.combatShakeEnabled=shake;this.refreshCombatLabels();
+ }
+ private refreshCombatLabels(){
+  const fa=this.i18n.locale==="fa";
+  this.combatSoundButton.textContent=fa?(this.combatSoundEnabled?"صدا: روشن":"صدا: خاموش"):(this.combatSoundEnabled?"SOUND: ON":"SOUND: OFF");
+  this.combatShakeButton.textContent=fa?(this.combatShakeEnabled?"لرزش: روشن":"لرزش: خاموش"):(this.combatShakeEnabled?"SHAKE: ON":"SHAKE: OFF");
+  this.combatSoundButton.setAttribute("aria-pressed",String(this.combatSoundEnabled));
+  this.combatShakeButton.setAttribute("aria-pressed",String(this.combatShakeEnabled));
+ }
  private updateMissileAimGuide(angle:number,power:number){
   const details=this.i18n.messages.details;
   this.missileAimValues.textContent=details.angle+" "+Math.round(angle)+"°  ·  "+details.power+" "+power.toFixed(1);
@@ -598,6 +617,7 @@ export class GameUI{
 
  private applyLocale(){
   const messages=this.i18n.messages;
+  this.refreshCombatLabels();
   this.languageLabel.textContent=messages.language.label;
   const currentLanguage=this.i18n.locale==="fa"?messages.language.persian:messages.language.english;
   this.languageButton.textContent=currentLanguage;
