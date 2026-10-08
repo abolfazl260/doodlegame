@@ -1,4 +1,4 @@
-import {fighterVisual,toolSegments,segmentPositions} from './FighterVisual';
+import {fighterVisual,toolSegments,segmentPositions,telegraphSegments} from './FighterVisual';
 import * as THREE from "three";
 import type {Renderer} from "./Renderer";
 import type {GameRenderState,DuelistRenderState,EnvironmentRenderState} from "../gameplay/GameSession";
@@ -121,7 +121,7 @@ export class ThreeRenderer implements Renderer{
     [[-.55,pose.head[1]+wave],[-.76,pose.head[1]-.08+wave]]
    ]));
   }
-  const effect=[] as import('./FighterVisual').Segment[];
+  const effect=[...telegraphSegments(s)] as import('./FighterVisual').Segment[];
   if(s.attackTime>0&&(s.weapon==='blaster'||s.weapon==='uzi')){
    const x=pose.hand[0]+(s.weapon==='uzi'?.54:.66),y=pose.hand[1];
    effect.push([[x,y],[x+.22,y+.1]],[[x,y],[x+.22,y-.1]],[[x,y],[x+.3,y]]);
@@ -129,7 +129,7 @@ export class ThreeRenderer implements Renderer{
   if(Math.abs(s.velocityX)>9)for(const y of [-.3,0,.3])effect.push([[-.45,y],[-1.1,y]]);
   if(pose.land>0)effect.push([[-.3,-.88],[-.6-pose.land*.2,-.82]],[[.3,-.88],[.6+pose.land*.2,-.82]]);
   this.setLines(view.effect,segmentPositions(effect));
-  (view.effect.material as THREE.LineBasicMaterial).opacity=effect.length?.6:0;
+  (view.effect.material as THREE.LineBasicMaterial).opacity=effect.length?(s.attackTelegraph>0?.95:.6):0;
   view.head.scale.setScalar(1+pose.hit*.08);
  }
  dispose(){this.contextLifecycle.dispose();for(const m of this.missileTrails)this.scene.remove(m);for(const m of this.missileFlashes)this.scene.remove(m);for(const m of this.bowProjectiles)this.scene.remove(m);this.renderer.dispose();this.renderer.forceContextLoss();this.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});this.scene.clear();this.projectileGeometry.dispose();this.platformMaterial.dispose();this.icePlatformMaterial.dispose();this.slipperyPlatformMaterial.dispose();this.oneWayPlatformMaterial.dispose();this.conveyorLeftPlatformMaterial.dispose();this.conveyorRightPlatformMaterial.dispose();this.environmentVisuals.forEach(g=>g.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}}));}
