@@ -162,3 +162,20 @@ test("starting weapon selector honors missile, melee, and random mode restrictio
  hud.mode="random-weapons";hud.weapon="bow";ui.render(states.MENU,hud);
  assert.equal(ui.startingWeaponSelect.disabled,true);
 });
+
+test("health display is a single number from 100 to 0 in either locale",()=>{
+ const {ui,hud}=setup({playerHealth:45,opponentHealth:100});
+ assert.equal(ui.playerHealthCurrent.textContent,"45");
+ assert.equal(ui.opponentHealthCurrent.textContent,"100");
+ assert.equal(ui.playerHealthLabel.children.length,1);
+ assert.equal(ui.opponentHealthLabel.children.length,1);
+ hud.playerHealth=0;
+ hud.opponentHealth=45;
+ ui.render(states.PLAYING,hud);
+ assert.equal(ui.playerHealthCurrent.textContent,"0");
+ assert.equal(ui.opponentHealthCurrent.textContent,"45");
+ ui.i18n.locale="fa";
+ ui.render(states.PLAYING,hud);
+ assert.equal(ui.opponentHealthCurrent.textContent,"۴۵");
+ assert.equal(ui.playerHealthCurrent.textContent,"۰");
+});
