@@ -627,6 +627,34 @@ export class GameSession{
 }
  private damage(t:Fighter,damage:number,knockback:number,weapon:WeaponId="blade"){if(t.health<=0||damage<=0)return;this.emitCue("hit",weapon,t.x,t.y+.3,Math.sign(knockback)||t.facing,Math.max(.45,Math.min(1.65,damage/15)));const mass=t.enemyType==="tank"?1.8:t.enemyType==="boss"?2.2:1;t.health=Math.max(0,t.health-(this.modeId==="sudden-death"&&damage>0?t.health:damage));t.velocityX+=knockback/mass;t.velocityY=Math.max(t.velocityY,2/mass);t.grounded=false;t.hitTime=.22;}
  private updateHill(dt:number){if(this.modeId!=="king-of-hill")return;const playerIn=Math.abs(this.player.x)<=HILL_HALF_WIDTH,opponentIn=Math.abs(this.opponent.x)<=HILL_HALF_WIDTH;if(playerIn===opponentIn)return;if(playerIn)this.hillPlayer=Math.min(HILL_TARGET,this.hillPlayer+dt);else this.hillOpponent=Math.min(HILL_TARGET,this.hillOpponent+dt);if(this.hillPlayer>=HILL_TARGET){this.winner="player";this.upgradePoints++;}else if(this.hillOpponent>=HILL_TARGET)this.winner="opponent";}
+ private spawnDebris(e:EnvironmentBody){
+  for(let i=0;i<4;i++){
+   const side=i%2===0?-1:1;
+   this.debris.push({x:e.x+side*e.width*.18,y:e.y,vx:side*(1.5+(i%3)*1.3),
+    vy:2.4+i*.75,rotation:i*.82,spin:side*(2+i),
+    size:Math.max(.09,Math.min(.24,e.width*.22)),age:0,life:.5+i*.085});
+  }
+  if(this.debris.length>36)this.debris.splice(0,this.debris.length-36);
+ }
+ private updateDebris(dt:number){
+  for(const d of this.debris){d.age+=dt;d.x+=d.vx*dt;d.y+=d.vy*dt;d.vy+=G*.5*dt;d.rotation+=d.spin*dt;}
+  this.debris=this.debris.filter(d=>d.age<d.life);
+ }
+ private destroyEnvironment(e:EnvironmentBody){
+  if(!e.active)return;
+  if(this.arenaId==="bridge"&&e.kind==="wall"){
+   if(e.timer>0)return;
+   e.hp=0;e.warning=1;e.pulse=1;e.timer=.62;return;
+  }
+  e.active=false;e.warning=0;this.spawnDebris(e);
+  this.emitCue("block","hammer",e.x,e.y,1,1.2);
+ }
+ private damageEnvironmentBody(e:EnvironmentBody,damage:number,force:number){
+  if(!e.active||e.hp<=0||damage<=0)return;
+  e.hp=Math.max(0,e.hp-damage);e.pulse=1;
+  if(e.kind==="box"){e.vx=Math.max(-7,Math.min(7,e.vx+force*.55));e.vy=Math.max(e.vy,Math.min(6,Math.abs(force)*.3));}
+  if(e.hp===0)this.destroyEnvironment(e);
+ }
  private resetEnvironment(){
   this.environment=ENVIRONMENT_TEMPLATES[this.arenaId].map((t,i)=>({kind:t.kind,x:t.x,y:t.y,width:t.width,height:t.height,hp:t.hp,maxHp:t.hp,active:true,rotation:0,pulse:0,warning:0,falling:false,vx:0,vy:0,grounded:false,cooldown:0,timer:t.kind==="fallingRock"?1.1+(i%2)*1.6:t.kind==="vent"?1.9+(i%2)*1.1:0}));
   for(const e of this.environment)this.snapEnvironmentToPlatform(e);
@@ -640,12 +668,55 @@ export class GameSession{
  private updateEnvironment(dt:number){
   for(const e of this.environment){
    if(!e.active)continue;
+   if(e.kind==="vent"){
+    e.cooldown=Math.max(0,e.cooldown-dt);
+    if(e.pulse>0){
+     e.pulse=Math.max(0,e.pulse-dt/.54);
+     if(e.pulse<=0){e.timer=3.25;e.warning=0;}
+    }else{
+     e.timer=Math.max(0,e.timer-dt);
+     e.warning=e.timer>0&&e.timer<.95?1-e.timer/.95:0;
+     if(e.timer===0){e.pulse=1;e.warning=0;this.emitCue("attack","bomb",e.x,e.y,1,.8);}
+    }
+    continue;
+   }
+   if(e.kind==="fallingRock"){
+    if(!e.falling){
+     e.timer=Math.max(0,e.timer-dt);
+     e.warning=e.timer<1?Math.max(.3,1-e.timer):0;
+     if(e.timer===0){e.falling=true;e.warning=0;e.vy=-1;}
+     continue;
+    }
+    const previousBottom=e.y-e.height/2;
+    e.vy+=this.arena.gravity*.74*this.gravityScale*dt;
+    e.y+=e.vy*dt;e.rotation+=dt*e.vy*.11;
+    for(const f of [this.player,this.opponent]){
+     if(f.health>0&&Math.abs(f.x-e.x)<e.width/2+PH/2-.06&&
+      f.y+HH/2>e.y-e.height/2&&f.y-HH/2<e.y+e.height/2){
+      this.damage(f,16,Math.sign(f.x-e.x||f.facing)*6,"hammer");
+      f.velocityY=Math.max(f.velocityY,5);
+      this.destroyEnvironment(e);break;
+     }
+    }
+    if(!e.active)continue;
+    if(this.platforms.some(p=>e.x+e.width/2>p.x&&e.x-e.width/2<p.x+p.width&&
+     previousBottom>=p.y+p.height-.04&&e.y-e.height/2<=p.y+p.height)){
+     this.destroyEnvironment(e);
+    }else if(e.y< -5)this.destroyEnvironment(e);
+    continue;
+   }
+   if(this.arenaId==="bridge"&&e.kind==="wall"&&e.hp===0&&e.timer>0){
+    e.timer=Math.max(0,e.timer-dt);
+    e.warning=e.timer/.62;e.pulse=Math.max(.4,e.warning);
+    if(e.timer===0){e.active=false;e.warning=0;this.spawnDebris(e);}
+    continue;
+   }
    e.pulse=Math.max(0,e.pulse-dt*4);e.cooldown=Math.max(0,e.cooldown-dt);
    if(e.kind==="crumble"){
     if(e.timer>0){
      e.timer=Math.max(0,e.timer-dt);
      e.pulse=Math.max(e.pulse,.25+(1-e.timer/.68)*.75);
-     if(e.timer<=0)e.active=false;
+     if(e.timer<=0)this.destroyEnvironment(e);
     }
     continue;
    }
@@ -666,7 +737,7 @@ export class GameSession{
  private supportPlatform(f:Fighter){const bottom=f.y-HH/2;return this.platforms.find(p=>Math.abs(bottom-(p.y+p.height))<.12&&f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width)||null;}
  private resolveEnvironmentLanding(f:Fighter,previousBottom:number,previousX:number){
   for(const e of this.environment){
-   if(!e.active||e.kind==="barrel"||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity")continue;
+   if(!e.active||e.kind==="barrel"||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity"||e.kind==="vent"||e.kind==="fallingRock")continue;
    const left=e.x-e.width/2,right=e.x+e.width/2,top=e.y+e.height/2,bottom=e.y-e.height/2;
    const overlap=f.x+PH/2>left&&f.x-PH/2<right;
    const crossed=previousBottom>=top-.08&&f.y-HH/2<=top+.08;
@@ -689,6 +760,12 @@ export class GameSession{
    if(e.kind==="bounce"){
     const touching=Math.abs(f.x-e.x)<e.width/2+PH/2&&f.y-HH/2<=e.y+e.height/2+.16&&f.y-HH/2>=e.y-e.height/2-.22;
     if(touching&&e.cooldown<=0&&f.velocityY<=1){f.velocityY=14.2;f.grounded=false;f.doubleJumpAvailable=true;f.airDashAvailable=true;e.cooldown=.35;e.pulse=1;}
+   }else if(e.kind==="vent"){
+    const touching=Math.abs(f.x-e.x)<e.width/2+PH/2-.05&&Math.abs((f.y-HH/2)-(e.y+e.height/2))<.46;
+    if(touching&&e.pulse>.2&&e.cooldown<=0){
+     this.damage(f,11,Math.sign(f.x-e.x||f.facing)*3,"bomb");
+     f.velocityY=Math.max(f.velocityY,4.2);e.cooldown=.78;
+    }
    }else if(e.kind==="trap"){
     const touching=Math.abs(f.x-e.x)<e.width/2+PH/2&&Math.abs((f.y-HH/2)-(e.y+e.height/2))<.28;
     if(touching&&e.cooldown<=0&&f.velocityY<=1){f.health=Math.max(0,f.health-(this.modeId==="sudden-death"?f.health:18));f.velocityY=10;e.cooldown=.55;e.pulse=1;}
