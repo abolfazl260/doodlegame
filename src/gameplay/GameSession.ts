@@ -4,8 +4,9 @@ import {bossPhaseFor,chooseEnemyPlan,ENEMY_PROFILES,hasClearShot,terrainAhead,ty
 export type PlatformSurface="normal"|"ice"|"slippery"|"oneWay"|"conveyorLeft"|"conveyorRight";
 export interface Platform{readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly surface?:PlatformSurface;}
 export type EnemyType="runner"|"tank"|"shooter"|"jumper"|"bomber"|"ninja"|"boss";
-export type EnvironmentKind="barrel"|"box"|"wall"|"bounce"|"trap"|"rock"|"crumble"|"fan"|"gravity";
-export interface EnvironmentRenderState{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;readonly maxHp:number;readonly active:boolean;readonly rotation:number;readonly pulse:number;}
+export type EnvironmentKind="barrel"|"box"|"wall"|"bounce"|"trap"|"rock"|"crumble"|"fan"|"gravity"|"vent"|"fallingRock";
+export interface EnvironmentRenderState{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;readonly maxHp:number;readonly active:boolean;readonly rotation:number;readonly pulse:number;readonly warning:number;}
+export interface ArenaDebrisRenderState{readonly x:number;readonly y:number;readonly rotation:number;readonly size:number;readonly age:number;readonly life:number;}
 export interface DuelistRenderState{readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly maxHealth:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;readonly gaitPhase:number;readonly landingTime:number;readonly hitTime:number;readonly bossPhase:number;readonly attackTelegraph:number;}
 export interface ProjectileRenderState{readonly x:number;readonly y:number;readonly vx:number;readonly vy:number;readonly life:number;readonly weapon:WeaponId;readonly rotation:number;readonly age:number;}
 export interface ExplosionRenderState{readonly x:number;readonly y:number;age:number;readonly life:number;readonly radius:number;}
@@ -13,12 +14,12 @@ export type ArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fo
 export type GameModeId="duel"|"missile-duel"|"melee-only"|"random-weapons"|"sudden-death"|"low-gravity"|"king-of-hill";
 export interface HillState{readonly player:number;readonly opponent:number;readonly target:number;readonly halfWidth:number;}
 export interface ArenaDefinition{readonly id:ArenaId;readonly name:string;readonly platforms:readonly Platform[];readonly spawnX:[number,number];readonly speedMultiplier:number;readonly jumpMultiplier:number;readonly gravity:number;readonly fallLimit:number|null;readonly movingPlatforms:boolean;readonly windStrength?:number;readonly gravityWell?:{readonly x:number;readonly y:number;readonly radius:number;readonly strength:number;};}
-export interface GameRenderState{readonly player:DuelistRenderState;readonly opponent:DuelistRenderState;readonly projectiles:readonly ProjectileRenderState[];readonly explosions:readonly ExplosionRenderState[];readonly platforms:readonly Platform[];readonly environment:readonly EnvironmentRenderState[];readonly winner:"player"|"opponent"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];readonly combatCues:readonly CombatCue[];readonly cameraShake:Readonly<{x:number;y:number}>;}
+export interface GameRenderState{readonly player:DuelistRenderState;readonly opponent:DuelistRenderState;readonly projectiles:readonly ProjectileRenderState[];readonly explosions:readonly ExplosionRenderState[];readonly platforms:readonly Platform[];readonly environment:readonly EnvironmentRenderState[];readonly debris:readonly ArenaDebrisRenderState[];readonly winner:"player"|"opponent"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];readonly combatCues:readonly CombatCue[];readonly cameraShake:Readonly<{x:number;y:number}>;}
 export interface GameHudState{readonly playerHealth:number;readonly playerMaxHealth:number;readonly opponentHealth:number;readonly opponentMaxHealth:number;readonly weapon:WeaponId;readonly winner:"player"|"opponent"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];}
 interface Fighter{x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;gaitPhase:number;landingTime:number;hitTime:number;bossPhase:number;attackTelegraph:number;}
 interface EnemyBrain{plan:EnemyPlan;thinkClock:number;chargeTime:number;chargeTotal:number;recoverTime:number;dodgeCooldown:number;jumpCooldown:number;transitionTime:number;phase:number;phaseAttacks:number;lastX:number;stuckTime:number;}
 interface Projectile{x:number;y:number;vx:number;vy:number;life:number;weapon:WeaponId;owner:"player"|"opponent";originX:number;returning:boolean;spin:number;age:number;bounce:number;ricochets:number;deflectCooldown?:number;damageScale?:number;sticky?:boolean;stuck?:boolean;clusterChild?:boolean;}
-interface EnvironmentBody{kind:EnvironmentKind;x:number;y:number;width:number;height:number;hp:number;maxHp:number;active:boolean;rotation:number;pulse:number;vx:number;vy:number;grounded:boolean;cooldown:number;timer:number;}
+interface EnvironmentBody{kind:EnvironmentKind;x:number;y:number;width:number;height:number;hp:number;maxHp:number;active:boolean;rotation:number;pulse:number;warning:number;falling:boolean;vx:number;vy:number;grounded:boolean;cooldown:number;timer:number;}
 const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2,DASH_SPEED=14,DASH_TIME=.12,DASH_COOLDOWN=.65,WALL_JUMP_SPEED=9.6,MIN_MISSILE_ANGLE=12,MAX_MISSILE_ANGLE=78,MIN_MISSILE_POWER=8,MAX_MISSILE_POWER=18,HILL_TARGET=8,HILL_HALF_WIDTH=1.6;
 const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
  classic:{id:"classic",name:"CLASSIC",speedMultiplier:1,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-5,5],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-4,y:2,width:3.5,height:.35,surface:"ice"},{x:.5,y:3.7,width:3.5,height:.35,surface:"slippery"}]},
@@ -69,8 +70,10 @@ const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate
   {kind:"box",x:5.2,y:.8,width:1,height:1,hp:16}
  ],
  fortress:[
-  {kind:"wall",x:-1.95,y:1.2,width:1.05,height:1.9,hp:46},
-  {kind:"wall",x:1.95,y:1.2,width:1.05,height:1.9,hp:46},
+  {kind:"wall",x:-1.95,y:1.2,width:1.05,height:1.9,hp:39},
+  {kind:"wall",x:1.95,y:1.2,width:1.05,height:1.9,hp:39},
+  {kind:"wall",x:-4.2,y:1.05,width:.75,height:1.5,hp:24},
+  {kind:"wall",x:4.2,y:1.05,width:.75,height:1.5,hp:24},
   {kind:"barrel",x:0,y:.8,width:.75,height:1.1,hp:1}
  ],
  bridge:[
@@ -82,7 +85,9 @@ const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate
  crater:[
   {kind:"rock",x:-1.35,y:.15,width:1.2,height:1.2,hp:30},
   {kind:"barrel",x:0,y:.05,width:.75,height:1.1,hp:1},
-  {kind:"rock",x:1.35,y:.15,width:1.2,height:1.2,hp:30}
+  {kind:"rock",x:1.35,y:.15,width:1.2,height:1.2,hp:30},
+  {kind:"vent",x:-1.65,y:1.64,width:1.05,height:.24,hp:0},
+  {kind:"vent",x:1.65,y:1.64,width:1.05,height:.24,hp:0}
  ],
  vertical:[
   {kind:"wall",x:-2.15,y:1.0,width:.72,height:1.5,hp:26},
@@ -91,7 +96,9 @@ const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate
  ],
  ruins:[
   {kind:"box",x:-10.1,y:.8,width:1,height:1,hp:16},
-  {kind:"barrel",x:-8.55,y:.8,width:.75,height:1.1,hp:1}
+  {kind:"barrel",x:-8.55,y:.8,width:.75,height:1.1,hp:1},
+  {kind:"fallingRock",x:-3.15,y:6.6,width:.95,height:.95,hp:18},
+  {kind:"fallingRock",x:3.1,y:6.6,width:1.05,height:1.05,hp:20}
  ],
  conveyor:[
   {kind:"box",x:0,y:.82,width:1,height:1,hp:18},
@@ -136,7 +143,7 @@ export class GameSession{
  private freshEnemyBrain():EnemyBrain{
   return{plan:{intent:"approach",move:0,attack:false,dodge:false,leap:false},thinkClock:.12,chargeTime:0,chargeTotal:0,recoverTime:0,dodgeCooldown:0,jumpCooldown:0,transitionTime:0,phase:0,phaseAttacks:0,lastX:0,stuckTime:0};
  }
- private elapsed=0;private enemyRound=0;private upgradePoints=0;private readonly upgradedWeapons=new Set<WeaponId>();private player:Fighter=this.create(-5,1,null);private opponent:Fighter=this.create(5,-1,"runner");private projectiles:Projectile[]=[];private explosions:ExplosionRenderState[]=[];private environment:EnvironmentBody[]=[];private winner:"player"|"opponent"|null=null;
+ private elapsed=0;private enemyRound=0;private upgradePoints=0;private readonly upgradedWeapons=new Set<WeaponId>();private player:Fighter=this.create(-5,1,null);private opponent:Fighter=this.create(5,-1,"runner");private projectiles:Projectile[]=[];private explosions:ExplosionRenderState[]=[];private debris:{x:number;y:number;rotation:number;size:number;age:number;life:number;vx:number;vy:number;spin:number}[]=[];private environment:EnvironmentBody[]=[];private winner:"player"|"opponent"|null=null;
  constructor(private readonly input:InputSource){}
  setShakeEnabled(enabled:boolean){this.shakeEnabled=enabled;}
  private emitCue(kind:CombatCueKind,weapon:WeaponId,x:number,y:number,direction:number,intensity=1){
@@ -175,13 +182,13 @@ export class GameSession{
  cancelTouchAttack(){this.player.bowCharging=false;this.player.bowCharge=0;}
  getMissileAim(){return{angle:this.missileAngle,power:this.missilePower};}
  upgradeWeapon(id:WeaponId){if(this.upgradePoints<=0||this.upgradedWeapons.has(id))return false;this.upgradedWeapons.add(id);this.upgradePoints--;return true;}
- reset(advanceEnemy=true){this.combatCues=[];this.visualFreezeUntil=0;this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];if(advanceEnemy)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,types[enemyIndex]);if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER.filter(id=>id!=="missile");this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(this.modeId!=="random-weapons"&&!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;this.projectiles=[];this.resetEnvironment();this.enemyBrain=this.freshEnemyBrain();this.enemyBrain.lastX=this.opponent.x;this.winner=null;}
+ reset(advanceEnemy=true){this.combatCues=[];this.visualFreezeUntil=0;this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];this.debris=[];if(advanceEnemy)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,types[enemyIndex]);if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER.filter(id=>id!=="missile");this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(this.modeId!=="random-weapons"&&!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;this.projectiles=[];this.resetEnvironment();this.enemyBrain=this.freshEnemyBrain();this.enemyBrain.lastX=this.opponent.x;this.winner=null;}
  private availableWeapons():WeaponId[]{if(this.missileRules)return["missile"];if(this.modeId==="melee-only")return["blade","hammer"];if(this.modeId==="random-weapons")return[this.player.weapon];return ORDER.filter(id=>id!=="missile");}
  selectWeapon(direction:1|-1){if(this.modeId==="random-weapons")return;const available=this.availableWeapons();const i=Math.max(0,available.indexOf(this.player.weapon));this.player.weapon=available[(i+direction+available.length)%available.length];this.player.bowCharging=false;this.player.bowCharge=0;}
  selectWeaponById(id:WeaponId){if(this.modeId==="random-weapons")return;const available=this.availableWeapons();if(!available.includes(id))return;this.player.weapon=id;this.player.bowCharging=false;this.player.bowCharge=0;}
  update(dt:number){
   if(!Number.isFinite(dt)||dt<=0){this.input.endFrame();return;}
-  this.ageCues(Math.min(dt,.1));if(this.winner){this.explosions=this.explosions.filter(e=>(e.age+=Math.min(dt,.1))<e.life);this.input.endFrame();return;}
+  this.ageCues(Math.min(dt,.1));if(this.winner){this.updateDebris(Math.min(dt,.1));}if(this.winner){this.explosions=this.explosions.filter(e=>(e.age+=Math.min(dt,.1))<e.life);this.input.endFrame();return;}
   const input=this.input.getState(),duration=Math.min(dt,.1),steps=Math.ceil(duration/(1/120));
   for(let i=0;i<steps;i++) {
    const frame=i===0?input:{...input,jumpPressed:false,dashPressed:false,attackPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};
@@ -197,7 +204,7 @@ export class GameSession{
   }
   this.input.endFrame();
  }
- private step(dt:number,input:InputState){if(this.winner){this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);return;}this.elapsed+=dt;this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);this.updateEnvironment(dt);const previousPlayerX=this.player.x,previousOpponentX=this.opponent.x;this.updatePlayer(input,dt);this.updateOpponent(dt);this.resolveCharacterCollisions(previousPlayerX,previousOpponentX);this.resolveEnvironmentFighter(this.player);this.resolveEnvironmentFighter(this.opponent);const playerWeapon=WEAPONS[this.player.weapon];if(this.player.weapon==="bow")this.updateBow(input,dt);else this.attack(this.player,this.opponent,input.attackPressed||(Boolean(playerWeapon.automatic)&&input.attackHeld));this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0){this.winner="player";this.upgradePoints++;}else this.updateHill(dt);if(this.winner){const defeated=this.winner==="player"?this.opponent:this.player;this.emitCue("defeat",defeated.weapon,defeated.x,defeated.y+.3,defeated.facing,1.4);}if(!this.missileRules&&this.modeId!=="random-weapons"){if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);}}
+ private step(dt:number,input:InputState){if(this.winner){this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);return;}this.elapsed+=dt;this.explosions=this.explosions.filter(e=>(e.age+=dt)<e.life);this.updateEnvironment(dt);this.updateDebris(dt);const previousPlayerX=this.player.x,previousOpponentX=this.opponent.x;this.updatePlayer(input,dt);this.updateOpponent(dt);this.resolveCharacterCollisions(previousPlayerX,previousOpponentX);this.resolveEnvironmentFighter(this.player);this.resolveEnvironmentFighter(this.opponent);const playerWeapon=WEAPONS[this.player.weapon];if(this.player.weapon==="bow")this.updateBow(input,dt);else this.attack(this.player,this.opponent,input.attackPressed||(Boolean(playerWeapon.automatic)&&input.attackHeld));this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0){this.winner="player";this.upgradePoints++;}else this.updateHill(dt);if(this.winner){const defeated=this.winner==="player"?this.opponent:this.player;this.emitCue("defeat",defeated.weapon,defeated.x,defeated.y+.3,defeated.facing,1.4);}if(!this.missileRules&&this.modeId!=="random-weapons"){if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);}}
  private updatePlayer(input:InputState,dt:number){
   const d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;
   if(input.dashPressed)this.tryDash(this.player);
@@ -620,12 +627,40 @@ export class GameSession{
 }
  private damage(t:Fighter,damage:number,knockback:number,weapon:WeaponId="blade"){if(t.health<=0||damage<=0)return;this.emitCue("hit",weapon,t.x,t.y+.3,Math.sign(knockback)||t.facing,Math.max(.45,Math.min(1.65,damage/15)));const mass=t.enemyType==="tank"?1.8:t.enemyType==="boss"?2.2:1;t.health=Math.max(0,t.health-(this.modeId==="sudden-death"&&damage>0?t.health:damage));t.velocityX+=knockback/mass;t.velocityY=Math.max(t.velocityY,2/mass);t.grounded=false;t.hitTime=.22;}
  private updateHill(dt:number){if(this.modeId!=="king-of-hill")return;const playerIn=Math.abs(this.player.x)<=HILL_HALF_WIDTH,opponentIn=Math.abs(this.opponent.x)<=HILL_HALF_WIDTH;if(playerIn===opponentIn)return;if(playerIn)this.hillPlayer=Math.min(HILL_TARGET,this.hillPlayer+dt);else this.hillOpponent=Math.min(HILL_TARGET,this.hillOpponent+dt);if(this.hillPlayer>=HILL_TARGET){this.winner="player";this.upgradePoints++;}else if(this.hillOpponent>=HILL_TARGET)this.winner="opponent";}
+ private spawnDebris(e:EnvironmentBody){
+  for(let i=0;i<4;i++){
+   const side=i%2===0?-1:1;
+   this.debris.push({x:e.x+side*e.width*.18,y:e.y,vx:side*(1.5+(i%3)*1.3),
+    vy:2.4+i*.75,rotation:i*.82,spin:side*(2+i),
+    size:Math.max(.09,Math.min(.24,e.width*.22)),age:0,life:.5+i*.085});
+  }
+  if(this.debris.length>36)this.debris.splice(0,this.debris.length-36);
+ }
+ private updateDebris(dt:number){
+  for(const d of this.debris){d.age+=dt;d.x+=d.vx*dt;d.y+=d.vy*dt;d.vy+=G*.5*dt;d.rotation+=d.spin*dt;}
+  this.debris=this.debris.filter(d=>d.age<d.life);
+ }
+ private destroyEnvironment(e:EnvironmentBody){
+  if(!e.active)return;
+  if(this.arenaId==="bridge"&&e.kind==="wall"){
+   if(e.timer>0)return;
+   e.hp=0;e.warning=1;e.pulse=1;e.timer=.62;return;
+  }
+  e.active=false;e.warning=0;this.spawnDebris(e);
+  this.emitCue("block","hammer",e.x,e.y,1,1.2);
+ }
+ private damageEnvironmentBody(e:EnvironmentBody,damage:number,force:number){
+  if(!e.active||e.hp<=0||damage<=0)return;
+  e.hp=Math.max(0,e.hp-damage);e.pulse=1;
+  if(e.kind==="box"){e.vx=Math.max(-7,Math.min(7,e.vx+force*.55));e.vy=Math.max(e.vy,Math.min(6,Math.abs(force)*.3));}
+  if(e.hp===0)this.destroyEnvironment(e);
+ }
  private resetEnvironment(){
-  this.environment=ENVIRONMENT_TEMPLATES[this.arenaId].map(t=>({kind:t.kind,x:t.x,y:t.y,width:t.width,height:t.height,hp:t.hp,maxHp:t.hp,active:true,rotation:0,pulse:0,vx:0,vy:0,grounded:false,cooldown:0,timer:0}));
+  this.environment=ENVIRONMENT_TEMPLATES[this.arenaId].map((t,i)=>({kind:t.kind,x:t.x,y:t.y,width:t.width,height:t.height,hp:t.hp,maxHp:t.hp,active:true,rotation:0,pulse:0,warning:0,falling:false,vx:0,vy:0,grounded:false,cooldown:0,timer:t.kind==="fallingRock"?1.1+(i%2)*1.6:t.kind==="vent"?1.9+(i%2)*1.1:0}));
   for(const e of this.environment)this.snapEnvironmentToPlatform(e);
  }
  private snapEnvironmentToPlatform(e:EnvironmentBody){
-  if(e.kind==="trap"||e.kind==="crumble"||e.kind==="fan"||e.kind==="gravity"){return;}
+  if(e.kind==="trap"||e.kind==="crumble"||e.kind==="fan"||e.kind==="gravity"||e.kind==="vent"||e.kind==="fallingRock"){return;}
   const desiredBottom=e.y-e.height/2;
   const support=this.platforms.filter(p=>e.x+e.width/2>p.x&&e.x-e.width/2<p.x+p.width).reduce<Platform|null>((best,p)=>!best||Math.abs((p.y+p.height)-desiredBottom)<Math.abs((best.y+best.height)-desiredBottom)?p:best,null);
   if(support)e.y=support.y+support.height+e.height/2-(e.kind==="bounce"?.02:0);
@@ -633,12 +668,55 @@ export class GameSession{
  private updateEnvironment(dt:number){
   for(const e of this.environment){
    if(!e.active)continue;
+   if(e.kind==="vent"){
+    e.cooldown=Math.max(0,e.cooldown-dt);
+    if(e.pulse>0){
+     e.pulse=Math.max(0,e.pulse-dt/.54);
+     if(e.pulse<=0){e.timer=3.25;e.warning=0;}
+    }else{
+     e.timer=Math.max(0,e.timer-dt);
+     e.warning=e.timer>0&&e.timer<.95?1-e.timer/.95:0;
+     if(e.timer===0){e.pulse=1;e.warning=0;this.emitCue("attack","bomb",e.x,e.y,1,.8);}
+    }
+    continue;
+   }
+   if(e.kind==="fallingRock"){
+    if(!e.falling){
+     e.timer=Math.max(0,e.timer-dt);
+     e.warning=e.timer<1?Math.max(.3,1-e.timer):0;
+     if(e.timer===0){e.falling=true;e.warning=0;e.vy=-1;}
+     continue;
+    }
+    const previousBottom=e.y-e.height/2;
+    e.vy+=this.arena.gravity*.74*this.gravityScale*dt;
+    e.y+=e.vy*dt;e.rotation+=dt*e.vy*.11;
+    for(const f of [this.player,this.opponent]){
+     if(f.health>0&&Math.abs(f.x-e.x)<e.width/2+PH/2-.06&&
+      f.y+HH/2>e.y-e.height/2&&f.y-HH/2<e.y+e.height/2){
+      this.damage(f,16,Math.sign(f.x-e.x||f.facing)*6,"hammer");
+      f.velocityY=Math.max(f.velocityY,5);
+      this.destroyEnvironment(e);break;
+     }
+    }
+    if(!e.active)continue;
+    if(this.platforms.some(p=>e.x+e.width/2>p.x&&e.x-e.width/2<p.x+p.width&&
+     previousBottom>=p.y+p.height-.04&&e.y-e.height/2<=p.y+p.height)){
+     this.destroyEnvironment(e);
+    }else if(e.y< -5)this.destroyEnvironment(e);
+    continue;
+   }
+   if(this.arenaId==="bridge"&&e.kind==="wall"&&e.hp===0&&e.timer>0){
+    e.timer=Math.max(0,e.timer-dt);
+    e.warning=e.timer/.62;e.pulse=Math.max(.4,e.warning);
+    if(e.timer===0){e.active=false;e.warning=0;this.spawnDebris(e);}
+    continue;
+   }
    e.pulse=Math.max(0,e.pulse-dt*4);e.cooldown=Math.max(0,e.cooldown-dt);
    if(e.kind==="crumble"){
     if(e.timer>0){
      e.timer=Math.max(0,e.timer-dt);
      e.pulse=Math.max(e.pulse,.25+(1-e.timer/.68)*.75);
-     if(e.timer<=0)e.active=false;
+     if(e.timer<=0)this.destroyEnvironment(e);
     }
     continue;
    }
@@ -659,7 +737,7 @@ export class GameSession{
  private supportPlatform(f:Fighter){const bottom=f.y-HH/2;return this.platforms.find(p=>Math.abs(bottom-(p.y+p.height))<.12&&f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width)||null;}
  private resolveEnvironmentLanding(f:Fighter,previousBottom:number,previousX:number){
   for(const e of this.environment){
-   if(!e.active||e.kind==="barrel"||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity")continue;
+   if(!e.active||e.kind==="barrel"||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity"||e.kind==="vent"||e.kind==="fallingRock")continue;
    const left=e.x-e.width/2,right=e.x+e.width/2,top=e.y+e.height/2,bottom=e.y-e.height/2;
    const overlap=f.x+PH/2>left&&f.x-PH/2<right;
    const crossed=previousBottom>=top-.08&&f.y-HH/2<=top+.08;
@@ -682,6 +760,12 @@ export class GameSession{
    if(e.kind==="bounce"){
     const touching=Math.abs(f.x-e.x)<e.width/2+PH/2&&f.y-HH/2<=e.y+e.height/2+.16&&f.y-HH/2>=e.y-e.height/2-.22;
     if(touching&&e.cooldown<=0&&f.velocityY<=1){f.velocityY=14.2;f.grounded=false;f.doubleJumpAvailable=true;f.airDashAvailable=true;e.cooldown=.35;e.pulse=1;}
+   }else if(e.kind==="vent"){
+    const touching=Math.abs(f.x-e.x)<e.width/2+PH/2-.05&&Math.abs((f.y-HH/2)-(e.y+e.height/2))<.46;
+    if(touching&&e.pulse>.2&&e.cooldown<=0){
+     this.damage(f,11,Math.sign(f.x-e.x||f.facing)*3,"bomb");
+     f.velocityY=Math.max(f.velocityY,4.2);e.cooldown=.78;
+    }
    }else if(e.kind==="trap"){
     const touching=Math.abs(f.x-e.x)<e.width/2+PH/2&&Math.abs((f.y-HH/2)-(e.y+e.height/2))<.28;
     if(touching&&e.cooldown<=0&&f.velocityY<=1){f.health=Math.max(0,f.health-(this.modeId==="sudden-death"?f.health:18));f.velocityY=10;e.cooldown=.55;e.pulse=1;}
@@ -693,52 +777,45 @@ export class GameSession{
  }
  private hitEnvironment(x:number,y:number,damage:number,force:number,_owner:"player"|"opponent"){
   for(const e of this.environment){
-   if(!e.active||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity")continue;
-   if(Math.abs(x-e.x)<=e.width/2+.18&&Math.abs(y-e.y)<=e.height/2+.28){
-    this.emitCue("block","blade",e.x,e.y,Math.sign(force)||1,.9);
-     if(e.kind==="barrel")this.explodeBarrel(e,x>=e.x?1:-1);
-    else{
-      e.hp=Math.max(0,e.hp-damage);e.pulse=1;
-      if(e.kind==="box")e.vx=Math.max(-6,Math.min(6,e.vx+force*.55));
-      else e.vx=Math.max(-5,Math.min(5,e.vx+force*.15));
-      if(e.hp<=0)e.active=false;
-    }
-    return true;
-   }
+   if(!e.active||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity"||e.kind==="vent")continue;
+   if(Math.abs(x-e.x)>e.width/2+.18||Math.abs(y-e.y)>e.height/2+.28)continue;
+   this.emitCue("block","blade",e.x,e.y,Math.sign(force)||1,.9);
+   if(e.kind==="barrel")this.explodeBarrel(e,x>=e.x?1:-1);
+   else this.damageEnvironmentBody(e,damage,force);
+   return true;
   }
   return false;
  }
  private strikeEnvironment(a:Fighter,damage:number,force:number){this.hitEnvironment(a.x+a.facing*1.05,a.y+.25,damage,force,a===this.player?"player":"opponent");}
  private explodeBarrel(e:EnvironmentBody,direction:number){
   if(!e.active)return;
-  e.active=false;e.pulse=1;const radius=2.15;
-   this.emitCue("explosion","bomb",e.x,e.y,direction,1.15);
-  for(const t of [this.player,this.opponent]){const dx=t.x-e.x,dy=t.y-e.y,d=Math.hypot(dx,dy);if(d<=radius){const f=Math.max(.2,1-d/radius);this.damage(t,24*f,direction*7*f);t.velocityY=Math.max(t.velocityY,5*f);}}
+  e.active=false;e.pulse=1;this.spawnDebris(e);
+  const radius=2.15;
+  this.emitCue("explosion","bomb",e.x,e.y,direction,1.15);
+  for(const t of [this.player,this.opponent]){
+   const d=Math.hypot(t.x-e.x,t.y-e.y);
+   if(d>radius)continue;
+   const falloff=Math.max(.2,1-d/radius);
+   this.damage(t,24*falloff,direction*7*falloff,"bomb");
+   t.velocityY=Math.max(t.velocityY,5*falloff);
+  }
   for(const other of this.environment){
-   if(other===e||!other.active)continue;
-   const d=Math.hypot(other.x-e.x,other.y-e.y);if(d>radius)continue;
+   if(other===e||!other.active||["bounce","trap","fan","gravity","vent"].includes(other.kind))continue;
+   const d=Math.hypot(other.x-e.x,other.y-e.y);
+   if(d>radius)continue;
    if(other.kind==="barrel")this.explodeBarrel(other,Math.sign(other.x-e.x)||direction);
-   else if(other.kind!=="bounce"&&other.kind!=="trap"&&other.kind!=="fan"&&other.kind!=="gravity"){
-    other.hp=Math.max(0,other.hp-28);other.pulse=1;
-    if(other.kind==="box"){other.vx+=direction*5;other.vy=Math.max(other.vy,6);}
-    if(other.hp<=0)other.active=false;
-   }
+   else this.damageEnvironmentBody(other,28,direction*8);
   }
  }
  private blastEnvironment(x:number,y:number,radius:number,damage:number,force:number){
   for(const e of this.environment){
-   if(!e.active||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity")continue;
+   if(!e.active||["bounce","trap","fan","gravity","vent"].includes(e.kind))continue;
    const distance=Math.hypot(e.x-x,e.y-y),reach=radius+Math.hypot(e.width,e.height)*.22;
    if(distance>reach)continue;
    const falloff=Math.max(.28,1-distance/Math.max(.01,radius));
    const direction=Math.sign(e.x-x)||Math.sign(force)||1;
    if(e.kind==="barrel"){this.explodeBarrel(e,direction);continue;}
-   e.hp=Math.max(0,e.hp-damage*falloff);e.pulse=1;
-   if(e.kind==="box"){
-    e.vx=Math.max(-7,Math.min(7,e.vx+direction*force*.55*falloff));
-    e.vy=Math.max(e.vy,4.5*falloff);
-   }
-   if(e.hp<=0)e.active=false;
+   this.damageEnvironmentBody(e,damage*falloff,direction*force*falloff);
   }
  }
  private deflectProjectile(p:Projectile,f:Fighter,previousX:number,previousY:number){
@@ -887,6 +964,6 @@ export class GameSession{
   }
  }
  getHudState():GameHudState{return{playerHealth:this.player.health,playerMaxHealth:this.player.maxHealth,opponentHealth:this.opponent.health,opponentMaxHealth:this.opponent.maxHealth,weapon:this.player.weapon,winner:this.winner,arena:this.arenaId,mode:this.modeId,hill:{player:this.hillPlayer,opponent:this.hillOpponent,target:HILL_TARGET,halfWidth:HILL_HALF_WIDTH},bowCharge:this.player.bowCharge,missileAngle:this.missileAngle,missilePower:this.missilePower,upgradePoints:this.upgradePoints,upgradedWeapons:[...this.upgradedWeapons]};}
- getRenderState():GameRenderState{return{player:{...this.player,missileAngle:this.missileAngle,missilePower:this.missilePower,animationTime:this.shakeEnabled&&this.elapsed<this.visualFreezeUntil?this.visualFreezeTime:this.elapsed},opponent:{...this.opponent,missileAngle:this.missileAngle,missilePower:this.missilePower,animationTime:this.shakeEnabled&&this.elapsed<this.visualFreezeUntil?this.visualFreezeTime:this.elapsed},projectiles:this.projectiles.map(p=>({...p,rotation:p.spin})),explosions:this.explosions.map(e=>({...e})),platforms:this.platforms,environment:this.environment.map(e=>({...e})),winner:this.winner,arena:this.arenaId,mode:this.modeId,hill:{player:this.hillPlayer,opponent:this.hillOpponent,target:HILL_TARGET,halfWidth:HILL_HALF_WIDTH},upgradePoints:this.upgradePoints,upgradedWeapons:[...this.upgradedWeapons],combatCues:this.combatCues,cameraShake:combatShake(this.combatCues,this.shakeEnabled)};}
+ getRenderState():GameRenderState{return{player:{...this.player,missileAngle:this.missileAngle,missilePower:this.missilePower,animationTime:this.shakeEnabled&&this.elapsed<this.visualFreezeUntil?this.visualFreezeTime:this.elapsed},opponent:{...this.opponent,missileAngle:this.missileAngle,missilePower:this.missilePower,animationTime:this.shakeEnabled&&this.elapsed<this.visualFreezeUntil?this.visualFreezeTime:this.elapsed},projectiles:this.projectiles.map(p=>({...p,rotation:p.spin})),explosions:this.explosions.map(e=>({...e})),platforms:this.platforms,environment:this.environment.map(e=>({...e})),debris:this.debris.map(({x,y,rotation,size,age,life})=>({x,y,rotation,size,age,life})),winner:this.winner,arena:this.arenaId,mode:this.modeId,hill:{player:this.hillPlayer,opponent:this.hillOpponent,target:HILL_TARGET,halfWidth:HILL_HALF_WIDTH},upgradePoints:this.upgradePoints,upgradedWeapons:[...this.upgradedWeapons],combatCues:this.combatCues,cameraShake:combatShake(this.combatCues,this.shakeEnabled)};}
  dispose(){}
 }
