@@ -1,4 +1,5 @@
 import {GameState} from "../core/GameState";
+import {getArenaTheme} from "../themes/ArenaThemes";
 import type {ArenaId,GameModeId,HillState} from "../gameplay/GameSession";
 import type {I18n} from "../i18n/I18n";
 import type {WeaponId} from "../input/Input";
@@ -516,6 +517,16 @@ export class GameUI{
   this.menuResult.hidden=state!==GameState.GAME_OVER;
   this.root.dataset.arena=s.arena;
   this.root.dataset.mode=s.mode;
+  // Update DOM skin only on arena changes, not on every HUD tick.
+  if(this.root.dataset.visualArena!==s.arena){
+   const theme=getArenaTheme(s.arena);
+   this.root.dataset.visualArena=s.arena;
+   this.root.dataset.themeSkin=theme.skin;
+   this.root.style.setProperty("--arena-accent",theme.accent);
+   this.root.style.setProperty("--arena-secondary",theme.secondary);
+   this.root.style.setProperty("--arena-hud-bg",theme.hudBackground);
+   this.root.style.setProperty("--arena-platform-edge",theme.platformEdge);
+  }
 
   const upgraded=new Set(s.upgradedWeapons);
   const equipped=upgraded.has(s.weapon)?messages.upgrades[s.weapon].name:messages.weapons[s.weapon];
