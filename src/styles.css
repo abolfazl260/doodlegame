@@ -208,3 +208,49 @@ html[dir="rtl"] .game-ui__missile-panel label{text-align:right}
 .game-ui__privacy button{width:100%;min-width:0}
 .game-ui.playing .game-ui__privacy,.game-ui.playing button[data-privacy]{display:none!important}
 html[dir="rtl"] .game-ui__privacy{text-align:right}
+
+/* Small touch-only weapon switcher: keep combat buttons unobstructed. */
+.game-ui__mobile-weapon-switcher{display:none}
+.game-ui__mobile-weapon-switcher[hidden],
+.game-ui__mobile-controls[hidden]{display:none!important}
+
+@media (pointer:coarse){
+ /* The full weapon list is too dense to tap reliably on a phone. */
+ .game-ui.playing .game-ui__weapon-list{display:none!important}
+ .game-ui.playing .game-ui__mobile-weapon-switcher:not([hidden]){
+  position:absolute;
+  left:50%;
+  top:calc(var(--safe-top) + 3.55rem);
+  transform:translateX(-50%);
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) 44px;
+  align-items:center;
+  gap:.2rem;
+  width:clamp(9.5rem,34vw,14rem);
+  max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 1rem);
+  padding:.2rem;
+  border:1px solid #666;
+  border-radius:.6rem;
+  background:#000c;
+  direction:ltr;
+  pointer-events:auto;
+ }
+ .game-ui__mobile-weapon-switcher button{
+  width:44px;
+  height:44px;
+  min-width:0;
+  padding:0;
+  border-radius:.4rem;
+  font-size:1.4rem;
+  font-weight:800;
+  touch-action:manipulation;
+ }
+ .game-ui__mobile-weapon-name{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  font-size:.72rem;
+  font-weight:800;
+  text-align:center;
+ }
+}
