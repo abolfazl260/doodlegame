@@ -170,3 +170,24 @@ upward passage. Active blade/hammer swings can deflect incoming bullets/arrows;
 projectiles continue aging and can never remain indefinitely in a collision.
 
 Run `npm test` for motion/physics regressions, then `npm run build`.
+
+
+## Android on-demand game data updates
+
+The Android main menu displays one **Update / بروزرسانی** button. It fetches the
+current `public/game-data.json` from GitHub's `main` branch over HTTPS, validates
+the strict schema and safe balance ranges, saves the result to local app storage,
+and applies it to new rounds. Once downloaded, the saved balance continues to
+work offline. A malformed, failed, oversized or older remote update leaves the
+installed/cached balance unchanged.
+
+To publish new data, edit `public/game-data.json`, increase `dataVersion`, and
+merge to `main`. Supported data updates: each weapon's `damage` and `cooldown`,
+and each arena's `speedMultiplier` and `jumpMultiplier`. No JavaScript, HTML,
+plugin, APK, or binary code is downloaded or executed. Updates must be explicitly
+requested by the player; there is no background polling or analytics.
+
+**Android APK/app-code updates are separate:** this data-only updater cannot
+install new application code. Publishing a signed Android release/Google Play
+update is required for changes to the bundled app itself. The repository currently
+has no GitHub Releases containing signed installable APKs.
