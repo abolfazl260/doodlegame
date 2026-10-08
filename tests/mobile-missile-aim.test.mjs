@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import {getArenaTheme} from "../.test-build/themes/ArenaThemes.js";
 import {WebInput} from "../.test-build/platform/web/WebInput.js";
 import {GameSession} from "../.test-build/gameplay/GameSession.js";
 
@@ -8,8 +9,10 @@ const states={MENU:"MENU",PLAYING:"PLAYING",PAUSED:"PAUSED",GAME_OVER:"GAME_OVER
 const compiled=readFileSync(".test-build/ui/GameUI.js","utf8");
 const gameStateImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("GameState"));
 assert.ok(gameStateImport);
-const runnable=compiled.replace(gameStateImport,"const GameState=states;").replace("export class GameUI","class GameUI");
-const {GameUI}=new Function("states",runnable+";return {GameUI};")(states);
+const themeImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("ArenaThemes"));
+assert.ok(themeImport,"compiled UI imports arena themes");
+const runnable=compiled.replace(gameStateImport,"const GameState=states;").replace(themeImport,"").replace("export class GameUI","class GameUI");
+const {GameUI}=new Function("states","getArenaTheme",runnable+";return {GameUI};")(states,getArenaTheme);
 
 class Node{
  constructor(tag="div"){
