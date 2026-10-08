@@ -53,7 +53,14 @@ test("privacy wording is short, transparent, and consistently bilingual",()=>{
  const locale=readFileSync("src/i18n/I18n.ts","utf8");
  const policy=readFileSync("public/privacy.html","utf8");
  assert.match(locale,/چه چیزی ذخیره می‌شود/);
- assert.match(locale,/دسترسی اینترنت/);
+ const faPrivacy=new I18n(makeStorage()).messages.privacy.html;
+ const english=new I18n(makeStorage());
+ english.setLocale("en");
+ const enPrivacy=english.messages.privacy.html;
+ assert.doesNotMatch(faPrivacy,/دسترسی اینترنت|WebView|GitHub Pages/);
+ assert.doesNotMatch(enPrivacy,/<b>Internet:|WebView|GitHub Pages/);
+ assert.match(faPrivacy,/چطور پاکش کنیم/);
+ assert.match(enPrivacy,/How to delete it/);
  assert.match(locale,/How to delete it/);
  assert.match(locale,/اطلاعات شخصی شما را جمع‌آوری نمی‌کند/);
  assert.match(policy,/DoodleGame does not collect or share personal or sensitive user data/i);
