@@ -72,7 +72,6 @@ try{
   setMissilePower:(power)=>game.setMissilePower(power),
   fireWeapon:()=>game.fireWeapon(),
   setTouchMove:(x,y)=>input.setTouchMove(x,y),
-  touchJump:()=>input.touchJump(),
   touchAttackStart:()=>input.touchAttack(true),
   touchAttackEnd:()=>input.touchAttackRelease()
  },i18n);
