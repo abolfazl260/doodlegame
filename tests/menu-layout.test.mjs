@@ -67,7 +67,18 @@ function setup(hudOverride={}){
   setMissileAngle(){},setMissilePower(){},fireWeapon(){},
   setTouchMove(){},touchAttackStart(){},touchAttackEnd(){}
  };
- const i18n={messages,locale:"en",setLocale(){},subscribe(){return ()=>{};}};
+ const listeners=new Set();
+ const persianMessages={...messages,title:"دوئل دودل",language:{label:"زبان",english:"English",persian:"فارسی"},buttons:{...messages.buttons,start:"شروع"}};
+ const i18n={
+  messages,locale:"en",
+  setLocale(locale){
+   if(locale===this.locale)return;
+   this.locale=locale;
+   this.messages=locale==="fa"?persianMessages:messages;
+   for(const listener of listeners)listener(locale);
+  },
+  subscribe(listener){listeners.add(listener);return ()=>listeners.delete(listener);}
+ };
  const hud={playerHealth:100,playerMaxHealth:100,opponentHealth:100,opponentMaxHealth:100,
   weapon:"blade",winner:null,arena:"classic",mode:"duel",hill:{player:0,opponent:0,target:8},
   bowCharge:0,missileAngle:40,missilePower:12,upgradePoints:0,upgradedWeapons:[],...hudOverride};
@@ -93,6 +104,30 @@ test("menu uses localized native selectors for all 16 arenas and 7 modes",()=>{
  assert.equal(ui.menu.children.includes(ui.buttons),true,"primary action stays in menu");
  ui.buttons.children.find(button=>button.dataset.action==="start").click();
  assert.deepEqual(calls.at(-1),["start"]);
+});
+
+test("clicking the language button immediately switches both directions without a dropdown",()=>{
+ const {ui,hud}=setup();
+ assert.equal(ui.languageControl.tag,"div");
+ assert.equal(ui.languageControl.children.some(child=>child.tag==="select"),false);
+ assert.equal(ui.languageButton.tag,"button");
+ assert.equal(ui.languageButton.type,"button");
+ assert.equal(ui.languageButton.textContent,"English");
+ assert.equal(ui.languageButton.getAttribute("aria-label"),"Language: English");
+ ui.languageButton.click();
+ assert.equal(ui.i18n.locale,"fa");
+ assert.equal(ui.languageButton.textContent,"فارسی");
+ assert.equal(ui.languageButton.getAttribute("aria-label"),"زبان: فارسی");
+ assert.equal(ui.languageLabel.textContent,"زبان");
+ assert.equal(ui.title.textContent,"دوئل دودل");
+ assert.equal(ui.buttons.children.find(button=>button.dataset.action==="start").textContent,"شروع");
+ assert.equal(ui.modeSelect.value,hud.mode,"switching language must not reset the selected mode");
+ ui.languageButton.click();
+ assert.equal(ui.i18n.locale,"en");
+ assert.equal(ui.languageButton.textContent,"English");
+ assert.equal(ui.languageLabel.textContent,"Language");
+ assert.equal(ui.title.textContent,"DOODLEGAME DUEL");
+ assert.equal(ui.modeSelect.value,hud.mode);
 });
 
 test("compact upgrade selector preserves purchase and availability rules",()=>{
