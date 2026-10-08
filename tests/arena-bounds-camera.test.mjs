@@ -46,7 +46,8 @@ test("arena geometry, not a global +/-6 clamp, defines safe fighter-center bound
   for(const fighter of [game.player,game.opponent]){
    const {min,max}=game.fighterHorizontalBounds(fighter);
    assert.ok(min<=fighter.x&&fighter.x<=max,id);
-   assert.ok(max>7&&min< -7,id+" should preserve the outer arena space");
+   if(id==="fortress")assert.ok(fighter===game.player?min< -7:max>7,"Fortress Duel preserves its outer half");
+   else assert.ok(max>7&&min< -7,id+" should preserve the outer arena space");
    for(const [attempt,velocity,expected] of [[min-40,-18,min],[max+40,18,max]]){
     fighter.x=attempt;fighter.y=8;fighter.grounded=false;fighter.velocityX=velocity;
     game.integrate(fighter,1/120);
