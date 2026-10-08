@@ -538,3 +538,53 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
  .game-ui:not(.playing) .game-ui__controls button:not([hidden]),
  .game-ui__menu-links button,.game-ui__upgrade-choices button{min-height:38px}
 }
+
+
+/* Code-rendered opening cinematic: overlays the menu only on initial launch. */
+.opening-intro{
+ position:fixed;
+ inset:0;
+ z-index:10010;
+ background:#010204;
+ overflow:hidden;
+ isolation:isolate;
+ touch-action:manipulation;
+}
+.opening-intro__canvas{
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+ display:block;
+ pointer-events:none;
+}
+.opening-intro__skip{
+ position:absolute;
+ z-index:1;
+ top:calc(var(--safe-top,env(safe-area-inset-top,0px)) + 1rem);
+ right:calc(var(--safe-right,env(safe-area-inset-right,0px)) + 1rem);
+ min-width:96px;
+ min-height:44px;
+ padding:.55rem 1rem;
+ border:1px solid #858990;
+ border-radius:999px;
+ background:#111821ce;
+ color:#fff;
+ font:700 .85rem system-ui,sans-serif;
+ cursor:pointer;
+ touch-action:manipulation;
+}
+.opening-intro__skip:hover,
+.opening-intro__skip:focus-visible{
+ background:#303641;
+ outline:2px solid #fff;
+ outline-offset:2px;
+}
+html[dir="rtl"] .opening-intro__skip{
+ right:auto;
+ left:calc(var(--safe-left,env(safe-area-inset-left,0px)) + 1rem);
+}
+
+/* Three equal-size, touch-friendly pre-fight selectors: mode, arena and starting weapon. */
+.game-ui__menu-settings{grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem}
+@media(max-width:420px){.game-ui__menu-select{font-size:.75rem;padding-inline:.35rem}}

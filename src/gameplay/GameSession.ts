@@ -126,7 +126,7 @@ const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:numb
 };
 const ORDER:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
 export class GameSession{
- private arenaId:ArenaId="classic";private modeId:GameModeId="duel";
+ private arenaId:ArenaId="classic";private modeId:GameModeId="duel";private startingWeapon:WeaponId="blade";
  private missileAngle=45;private missilePower=13;private hillPlayer=0;private hillOpponent=0;
  private elapsed=0;private enemyRound=0;private upgradePoints=0;private readonly upgradedWeapons=new Set<WeaponId>();private player:Fighter=this.create(-5,1,null);private opponent:Fighter=this.create(5,-1,"runner");private projectiles:Projectile[]=[];private explosions:ExplosionRenderState[]=[];private environment:EnvironmentBody[]=[];private winner:"player"|"opponent"|null=null;
  constructor(private readonly input:InputSource){}
@@ -145,12 +145,18 @@ export class GameSession{
  setMode(id:GameModeId){this.modeId=id;this.reset(false);}
  getArena(){return this.arena;}
  getMode(){return this.modeId;}
+ setStartingWeapon(id:WeaponId){
+  if(this.modeId==="random-weapons"||!this.availableWeapons().includes(id))return false;
+  if(id!=="missile")this.startingWeapon=id;
+  this.selectWeaponById(id);
+  return true;
+ }
  setMissileAngle(angle:number){this.missileAngle=Math.max(MIN_MISSILE_ANGLE,Math.min(MAX_MISSILE_ANGLE,angle));}
  setMissilePower(power:number){this.missilePower=Math.max(MIN_MISSILE_POWER,Math.min(MAX_MISSILE_POWER,power));}
  fireWeapon(){if(this.winner)return;const w=WEAPONS[this.player.weapon];this.attack(this.player,this.opponent,Boolean(w));}
  getMissileAim(){return{angle:this.missileAngle,power:this.missilePower};}
  upgradeWeapon(id:WeaponId){if(this.upgradePoints<=0||this.upgradedWeapons.has(id))return false;this.upgradedWeapons.add(id);this.upgradePoints--;return true;}
- reset(advanceEnemy=true){this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];if(advanceEnemy)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,types[enemyIndex]);if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER.filter(id=>id!=="missile");this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}this.projectiles=[];this.resetEnvironment();this.winner=null;}
+ reset(advanceEnemy=true){this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];if(advanceEnemy)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,types[enemyIndex]);if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER.filter(id=>id!=="missile");this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(this.modeId!=="random-weapons"&&!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;this.projectiles=[];this.resetEnvironment();this.winner=null;}
  private availableWeapons():WeaponId[]{if(this.missileRules)return["missile"];if(this.modeId==="melee-only")return["blade","hammer"];if(this.modeId==="random-weapons")return[this.player.weapon];return ORDER.filter(id=>id!=="missile");}
  selectWeapon(direction:1|-1){if(this.modeId==="random-weapons")return;const available=this.availableWeapons();const i=Math.max(0,available.indexOf(this.player.weapon));this.player.weapon=available[(i+direction+available.length)%available.length];this.player.bowCharging=false;this.player.bowCharge=0;}
  selectWeaponById(id:WeaponId){if(this.modeId==="random-weapons")return;const available=this.availableWeapons();if(!available.includes(id))return;this.player.weapon=id;this.player.bowCharging=false;this.player.bowCharge=0;}

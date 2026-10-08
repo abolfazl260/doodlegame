@@ -46,7 +46,7 @@ const messages={
  privacy:{button:"Privacy",title:"Privacy",close:"Close",web:"Web",networkNote:"Offline",html:"<p>Privacy</p>"},
  status:{win:"WIN",lose:"LOSE",hill:"HILL"},
  details:{equipped:"EQUIPPED",angle:"ANGLE",power:"POWER"},
- sections:{gameMode:"MODE",arena:"ARENA"},
+ sections:{gameMode:"MODE",arena:"ARENA",weapon:"WEAPON"},
  panels:{weaponUpgrades:"UPGRADES",missileControl:"MISSILE",bowDraw:"BOW",releaseToFire:"RELEASE"},
  upgrade:{points:"POINTS",choose:"Choose",earn:"Earn",upgraded:"UPGRADED",upgrade:"Upgrade",locked:"Locked"},
  helpHtml:"<strong>How to play</strong>",
@@ -60,6 +60,7 @@ function setup(hudOverride={}){
  const actions={
   start:()=>calls.push(["start"]),pause(){},resume(){},restart(){},
   weaponNext(){},weaponPrevious(){},weaponSelect(){},
+  selectStartingWeapon:id=>calls.push(["startingWeapon",id]),
   upgradeWeapon:id=>calls.push(["upgrade",id]),
   arenaSelect:id=>calls.push(["arena",id]),
   modeSelect:id=>calls.push(["mode",id]),
@@ -80,12 +81,14 @@ test("menu uses localized native selectors for all 16 arenas and 7 modes",()=>{
  const {ui,calls}=setup();
  assert.equal(ui.arenaSelect.options.length,16);
  assert.equal(ui.modeSelect.options.length,7);
+ assert.equal(ui.startingWeaponSelect.options.length,8);
  assert.equal(ui.arenaSelect.value,"classic");
  assert.equal(ui.modeSelect.value,"duel");
  assert.equal(ui.menuSettings.hidden,false);
  ui.arenaSelect.value="reactor";ui.arenaSelect.onchange();
  ui.modeSelect.value="low-gravity";ui.modeSelect.onchange();
- assert.deepEqual(calls,[["arena","reactor"],["mode","low-gravity"]]);
+ ui.startingWeaponSelect.value="bow";ui.startingWeaponSelect.onchange();
+ assert.deepEqual(calls,[["arena","reactor"],["mode","low-gravity"],["startingWeapon","bow"]]);
  assert.equal(ui.title.textContent,"DOODLEGAME DUEL");
  assert.equal(ui.menu.children.includes(ui.buttons),true,"primary action stays in menu");
  ui.buttons.children.find(button=>button.dataset.action==="start").click();
@@ -144,4 +147,18 @@ test("menu CSS has no scroll container and applies compact safe-area layout",()=
  assert.ok(menu.includes("@media (max-height:520px)"));
  assert.ok(menu.includes("@media (max-height:360px)"));
  assert.ok(menu.includes("min-height:44px"));
+});
+
+test("starting weapon selector honors missile, melee, and random mode restrictions",()=>{
+ const {ui,hud}=setup();
+ assert.equal(ui.startingWeaponSelect.disabled,false);
+ assert.equal(ui.startingWeaponSelect.options.find(option=>option.value==="missile").disabled,true);
+ hud.mode="melee-only";ui.render(states.MENU,hud);
+ assert.equal(ui.startingWeaponSelect.options.find(option=>option.value==="blaster").disabled,true);
+ assert.equal(ui.startingWeaponSelect.options.find(option=>option.value==="hammer").disabled,false);
+ hud.mode="missile-duel";hud.weapon="missile";ui.render(states.MENU,hud);
+ assert.equal(ui.startingWeaponSelect.disabled,true);
+ assert.equal(ui.startingWeaponSelect.value,"missile");
+ hud.mode="random-weapons";hud.weapon="bow";ui.render(states.MENU,hud);
+ assert.equal(ui.startingWeaponSelect.disabled,true);
 });
