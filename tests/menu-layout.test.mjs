@@ -64,6 +64,7 @@ function setup(hudOverride={}){
   upgradeWeapon:id=>calls.push(["upgrade",id]),
   arenaSelect:id=>calls.push(["arena",id]),
   modeSelect:id=>calls.push(["mode",id]),
+  updateData:async()=>{calls.push(["update"]);},
   setMissileAngle(){},setMissilePower(){},fireWeapon(){},
   setTouchMove(){},touchAttackStart(){},touchAttackEnd(){}
  };
@@ -112,11 +113,11 @@ test("clicking the language button immediately switches both directions without 
  assert.equal(ui.languageControl.children.some(child=>child.tag==="select"),false);
  assert.equal(ui.languageButton.tag,"button");
  assert.equal(ui.languageButton.type,"button");
- assert.equal(ui.languageButton.textContent,"English");
+ assert.equal(ui.languageButton.textContent,"EN");
  assert.equal(ui.languageButton.getAttribute("aria-label"),"Language: English");
  ui.languageButton.click();
  assert.equal(ui.i18n.locale,"fa");
- assert.equal(ui.languageButton.textContent,"فارسی");
+ assert.equal(ui.languageButton.textContent,"فا");
  assert.equal(ui.languageButton.getAttribute("aria-label"),"زبان: فارسی");
  assert.equal(ui.languageLabel.textContent,"زبان");
  assert.equal(ui.title.textContent,"دوئل دودل");
@@ -213,4 +214,21 @@ test("health display is a single number from 100 to 0 in either locale",()=>{
  ui.render(states.PLAYING,hud);
  assert.equal(ui.opponentHealthCurrent.textContent,"۴۵");
  assert.equal(ui.playerHealthCurrent.textContent,"۰");
+});
+
+test("Android update control is a single hidden-by-default action with no extra menu text",async()=>{
+ const {ui,calls}=setup();
+ assert.equal(ui.updateButton.hidden,true);
+ ui.setUpdateVisible(true);
+ assert.equal(ui.updateButton.hidden,false);
+ assert.equal(ui.updateButton.type,"button");
+ assert.equal(ui.updateButton.className,"game-ui__update-button");
+ await ui.updateButton.onclick();
+ assert.deepEqual(calls.at(-1),["update"]);
+ assert.equal(ui.updateButton.disabled,false);
+ assert.equal(ui.updateButton.getAttribute("aria-busy"),undefined);
+ ui.setUpdateOutcome("success");
+ assert.equal(ui.updateButton.dataset.result,"success");
+ ui.setUpdateVisible(false);
+ assert.equal(ui.updateButton.hidden,true);
 });
