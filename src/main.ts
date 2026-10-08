@@ -2,6 +2,8 @@ import "./styles.css";
 import {Game} from "./core/Game";
 import {GameState} from "./core/GameState";
 import {GameSession} from "./gameplay/GameSession";
+import type {GameRenderState} from "./gameplay/GameSession";
+import {CombatAudio} from "./audio/CombatAudio";
 import {I18n} from "./i18n/I18n";
 import {WebFrameScheduler} from "./platform/web/WebFrameScheduler";
 import {WebInput} from "./platform/web/WebInput";
@@ -46,13 +48,29 @@ try{
  const input=new WebInput(canvas);
  const storage=new WebStorage();
  const i18n=new I18n(storage);
+ const reducedMotion=typeof window.matchMedia==="function"&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+ const readSetting=(key:string,defaultValue:boolean)=>{
+  try{const value=storage.get<unknown>(key);return typeof value==="boolean"?value:defaultValue;}catch{return defaultValue;}
+ };
+ const saveSetting=(key:string,value:boolean)=>{try{storage.set(key,value);}catch(error){console.warn("Could not save combat setting.",error);}};
+ let soundEnabled=readSetting("doodlegame.combatSound",true);
+ let shakeEnabled=!reducedMotion&&readSetting("doodlegame.cameraShake",true);
+ const combatAudio=new CombatAudio();
+ if(!soundEnabled)combatAudio.setMuted(true);
  const renderer=createRendererWithFallback(
   ()=>new ThreeRenderer(canvas),
   ()=>new CanvasRenderer(canvas),
   error=>console.warn("WebGL renderer unavailable; using canvas fallback.",error)
  );
 
- const game=new Game(renderer,new GameSession(input),new WebFrameScheduler(),error=>console.error("DoodleGame error:",error));
+ const session=new GameSession(input);
+ session.setShakeEnabled(shakeEnabled);
+ const presentationRenderer={
+  resize:()=>renderer.resize(),
+  render:(state:GameRenderState)=>{renderer.render(state);combatAudio.render(state.combatCues);},
+  dispose:()=>{combatAudio.dispose();renderer.dispose();}
+ };
+ const game=new Game(presentationRenderer,session,new WebFrameScheduler(),error=>console.error("DoodleGame error:",error));
  let landscape:ReturnType<typeof installLandscapeOrientation>|null=null;
  let pausedForPortrait=false;
  const pauseGame=()=>{input.resetTransientState();game.pause();};
@@ -99,9 +117,21 @@ try{
   setTouchMove:(x,y)=>input.setTouchMove(x,y),
   touchAttackStart:()=>input.touchAttack(true),
   touchAttackEnd:()=>input.touchAttackRelease(),
-  touchAttackCancel:()=>{input.touchAttackCancel();game.cancelTouchAttack();}
+  touchAttackCancel:()=>{input.touchAttackCancel();game.cancelTouchAttack();},
+  toggleCombatSound:()=>{
+   soundEnabled=!soundEnabled;combatAudio.setMuted(!soundEnabled);
+   saveSetting("doodlegame.combatSound",soundEnabled);
+   ui.setCombatPreferences(soundEnabled,shakeEnabled);
+  },
+  toggleCameraShake:()=>{
+   if(reducedMotion)return;
+   shakeEnabled=!shakeEnabled;session.setShakeEnabled(shakeEnabled);
+   saveSetting("doodlegame.cameraShake",shakeEnabled);
+   ui.setCombatPreferences(soundEnabled,shakeEnabled);
+  }
  },i18n);
 
+ ui.setCombatPreferences(soundEnabled,shakeEnabled);
  ui.bind(listener=>game.subscribe(listener),()=>game.getHudState());
  input.start();
  game.initialize();
