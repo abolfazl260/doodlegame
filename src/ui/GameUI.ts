@@ -27,6 +27,10 @@ export class GameUI{
  private joystickThumb=document.createElement("div");
  private jumpButton=document.createElement("button");
  private mobileAttackButton=document.createElement("button");
+ private mobileWeaponSwitcher=document.createElement("div");
+ private previousWeaponButton=document.createElement("button");
+ private mobileWeaponName=document.createElement("span");
+ private nextWeaponButton=document.createElement("button");
  private bowPanel=document.createElement("div");
  private bowTitle=document.createElement("strong");
  private bowMeter=document.createElement("div");
@@ -95,8 +99,19 @@ export class GameUI{
   this.jumpButton.className="game-ui__mobile-button game-ui__mobile-button--jump";
   this.mobileAttackButton.type="button";
   this.mobileAttackButton.className="game-ui__mobile-button game-ui__mobile-button--attack";
+  this.mobileWeaponSwitcher.className="game-ui__mobile-weapon-switcher";
+  this.mobileWeaponSwitcher.setAttribute("role","group");
+  this.previousWeaponButton.type="button";
+  this.previousWeaponButton.textContent="‹";
+  this.mobileWeaponName.className="game-ui__mobile-weapon-name";
+  this.mobileWeaponName.dir="auto";
+  this.mobileWeaponName.setAttribute("aria-live","polite");
+  this.mobileWeaponName.setAttribute("aria-atomic","true");
+  this.nextWeaponButton.type="button";
+  this.nextWeaponButton.textContent="›";
+  this.mobileWeaponSwitcher.append(this.previousWeaponButton,this.mobileWeaponName,this.nextWeaponButton);
   this.joystick.append(this.joystickThumb);
-  this.mobileControls.append(this.joystick,this.jumpButton,this.mobileAttackButton);
+  this.mobileControls.append(this.mobileWeaponSwitcher,this.joystick,this.jumpButton,this.mobileAttackButton);
 
   this.help.className="game-ui__help";
   this.help.hidden=true;
@@ -235,6 +250,8 @@ export class GameUI{
   };
   this.joystick.addEventListener("pointerup",releaseJoystick);
   this.joystick.addEventListener("pointercancel",releaseJoystick);
+  this.previousWeaponButton.onclick=()=>{haptic(8);actions.weaponPrevious();};
+  this.nextWeaponButton.onclick=()=>{haptic(8);actions.weaponNext();};
   this.jumpButton.addEventListener("pointerdown",event=>{event.preventDefault();haptic(12);actions.touchJump();});
   this.mobileAttackButton.addEventListener("pointerdown",event=>{event.preventDefault();haptic(16);actions.touchAttackStart();});
   this.mobileAttackButton.addEventListener("pointerup",event=>{event.preventDefault();actions.touchAttackEnd();});
@@ -348,6 +365,8 @@ export class GameUI{
   this.modeList.hidden=state!==GameState.MENU&&state!==GameState.GAME_OVER;
   this.modeTitle.hidden=this.modeList.hidden;
   this.weaponList.hidden=state!==GameState.PLAYING||s.winner!==null;
+  this.mobileWeaponSwitcher.hidden=state!==GameState.PLAYING||s.winner!==null||missileRules||s.mode==="random-weapons";
+  if(this.mobileWeaponName.textContent!==equipped)this.mobileWeaponName.textContent=equipped;
   this.missilePanel.hidden=state!==GameState.PLAYING||s.winner!==null||s.weapon!=="missile";
   this.bowPanel.hidden=state!==GameState.PLAYING||s.winner!==null||s.weapon!=="bow";
   this.bowMeter.firstElementChild?.setAttribute("style","width:"+Math.round(s.bowCharge*100)+"%");
@@ -391,6 +410,9 @@ export class GameUI{
   this.privacyCloseButton.textContent=messages.privacy.close;
   this.jumpButton.textContent=messages.buttons.jump;
   this.mobileAttackButton.textContent=messages.buttons.attack;
+  this.mobileWeaponSwitcher.setAttribute("aria-label",messages.details.equipped);
+  this.previousWeaponButton.setAttribute("aria-label",messages.buttons.previousWeapon);
+  this.nextWeaponButton.setAttribute("aria-label",messages.buttons.nextWeapon);
   this.upgradeTitle.textContent=messages.panels.weaponUpgrades;
   this.missileTitle.textContent=messages.panels.missileControl;
   this.bowTitle.textContent=messages.panels.bowDraw;
