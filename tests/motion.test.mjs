@@ -144,7 +144,11 @@ test('crates and bridge sections take direct and explosive damage',()=>{
  assert.equal(crate.active,false);
  const bridge=setup('bridge').game,section=bridge.environment[0];assert.ok(section.active);
  bridge.explode({x:section.x,y:section.y,vx:0,vy:0,life:0,weapon:'bomb',owner:'player',originX:section.x,returning:false,spin:0,age:0,bounce:0,ricochets:0});
- assert.equal(section.active,false);
+ assert.equal(section.hp,0);
+ assert.equal(section.active,true,'bridge cover remains for a brief escape warning');
+ assert.ok(section.warning>0);
+ for(let i=0;i<85;i++)bridge.updateEnvironment(1/120);
+ assert.equal(section.active,false,'destroyed section finally collapses after warning');
 });
 test('destructible bridge sections support fighters until destroyed',()=>{
  const {game}=setup('bridge'),section=game.environment[1],top=section.y+section.height/2;
