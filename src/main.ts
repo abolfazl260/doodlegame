@@ -8,6 +8,7 @@ import {WebInput} from "./platform/web/WebInput";
 import {WebStorage} from "./platform/web/WebStorage";
 import {installNativeAppLifecycle} from "./platform/mobile/NativeAppLifecycle";
 import {installWebVisibilityLifecycle} from "./platform/web/WebVisibilityLifecycle";
+import {installLandscapeOrientation} from "./platform/web/LandscapeOrientation";
 import {CanvasRenderer} from "./rendering/CanvasRenderer";
 import {ThreeRenderer} from "./rendering/ThreeRenderer";
 import {createRendererWithFallback} from "./rendering/RendererFactory";
@@ -51,18 +52,39 @@ try{
  );
 
  const game=new Game(renderer,new GameSession(input),new WebFrameScheduler(),error=>console.error("DoodleGame error:",error));
+ let landscape:ReturnType<typeof installLandscapeOrientation>|null=null;
+ let pausedForPortrait=false;
  const pauseGame=()=>{input.resetTransientState();game.pause();};
- const resumeGame=()=>{input.resetTransientState();game.resume();};
- const stopToMenu=()=>{input.resetTransientState();game.stop();};
+ const resumeGame=()=>{if(landscape?.isPortrait())return;input.resetTransientState();game.resume();};
+ const stopToMenu=()=>{pausedForPortrait=false;input.resetTransientState();game.stop();};
+ const startGame=()=>{
+  if(landscape?.isPortrait())return;
+  landscape?.requestLandscape();
+  game.start();
+ };
+ const restartGame=()=>{if(!landscape?.isPortrait())game.restart();};
  const disposeWebVisibility=installWebVisibilityLifecycle(document,()=>{
   if(game.getState()===GameState.PLAYING)pauseGame();
  });
 
+ landscape=installLandscapeOrientation(i18n,{
+  onPortrait:()=>{
+   if(game.getState()===GameState.PLAYING){pausedForPortrait=true;pauseGame();}
+  },
+  onLandscape:()=>{
+   if(pausedForPortrait){
+    pausedForPortrait=false;
+    if(game.getState()===GameState.PAUSED&&document.visibilityState==="visible")resumeGame();
+   }
+   game.resize();
+  }
+ });
+
  const ui=new GameUI(root,{
-  start:()=>game.start(),
+  start:startGame,
   pause:pauseGame,
   resume:resumeGame,
-  restart:()=>game.restart(),
+  restart:restartGame,
   weaponNext:()=>game.selectWeapon(1),
   weaponPrevious:()=>game.selectWeapon(-1),
   weaponSelect:(id)=>game.selectWeaponById(id),
@@ -92,7 +114,7 @@ try{
   const state=game.getState();
   if(event.code==="Enter"&&state===GameState.MENU){
    event.preventDefault();
-   game.start();
+   startGame();
    return;
   }
   if(event.code!=="Escape")return;
@@ -126,6 +148,7 @@ try{
  window.addEventListener("beforeunload",()=>{
   unsubscribeIntro();
   disposeWebVisibility();
+  landscape?.dispose();
   intro.dispose();
   disposeNativeLifecycle();
   input.dispose();

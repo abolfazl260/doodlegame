@@ -102,12 +102,19 @@ if (!manifest.includes('android:usesCleartextTraffic="false"')) {
     '<application\n        android:usesCleartextTraffic="false"'
   );
 }
-if (!manifest.includes('android:screenOrientation="landscape"')) {
-  manifest = manifest.replace(
-    'android:name=".MainActivity"',
-    'android:name=".MainActivity"\n            android:screenOrientation="landscape"'
-  );
+// Force the actual launch activity to landscape, including when a generated
+// Android project already has a different screenOrientation attribute.
+const mainActivityMatch = manifest.match(/<activity\b[^>]*android:name="\.MainActivity"[^>]*>/);
+if (!mainActivityMatch) {
+  throw new Error("Android MainActivity was not found; cannot enforce landscape orientation.");
 }
+const activityTag = mainActivityMatch[0];
+manifest = manifest.replace(
+  activityTag,
+  /android:screenOrientation="[^"]*"/.test(activityTag)
+    ? activityTag.replace(/android:screenOrientation="[^"]*"/, 'android:screenOrientation="landscape"')
+    : activityTag.replace("<activity", '<activity\n            android:screenOrientation="landscape"')
+);
 manifest = manifest
   .replace(/android:icon="@mipmap\/ic_launcher"/, 'android:icon="@mipmap/doodlegame_launcher"')
   .replace(/android:roundIcon="@mipmap\/ic_launcher_round"/, 'android:roundIcon="@mipmap/doodlegame_launcher_round"');
