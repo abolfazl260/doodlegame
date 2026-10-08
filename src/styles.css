@@ -199,54 +199,104 @@ html[dir="rtl"] .game-ui__missile-panel label{text-align:right}
 .game-ui.playing .game-ui__privacy,.game-ui.playing button[data-privacy]{display:none!important}
 html[dir="rtl"] .game-ui__privacy{text-align:right}
 
-/* Small touch-only weapon switcher: keep combat buttons unobstructed. */
+/* Thumb-friendly weapon picker beside the movement joystick (not over combat controls). */
 .game-ui__mobile-weapon-switcher{display:none}
 .game-ui__mobile-weapon-switcher[hidden],
 .game-ui__mobile-controls[hidden]{display:none!important}
 
 @media (pointer:coarse){
- /* The full weapon list is too dense to tap reliably on a phone. */
+ /* The compact picker replaces the tiny top-of-screen weapon list. */
  .game-ui.playing .game-ui__weapon-list{display:none!important}
  .game-ui.playing .game-ui__mobile-weapon-switcher:not([hidden]){
   position:absolute;
-  left:50%;
-  top:calc(var(--safe-top) + 3.55rem);
-  transform:translateX(-50%);
+  left:calc(var(--safe-left) + 1rem);
+  bottom:calc(var(--safe-bottom) + 1rem + clamp(84px,22vmin,112px) + .5rem);
   display:grid;
-  grid-template-columns:44px minmax(0,1fr) 44px;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:auto 44px;
   align-items:center;
-  gap:.2rem;
-  width:clamp(9.5rem,34vw,14rem);
-  max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 1rem);
-  padding:.2rem;
-  border:1px solid #666;
-  border-radius:.6rem;
-  background:#000c;
+  gap:.25rem;
+  width:clamp(8.6rem,28vw,10.5rem);
+  max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 2rem);
+  padding:.3rem;
+  border:1px solid #898989;
+  border-radius:.85rem;
+  background:#050505e8;
+  box-shadow:0 3px 14px #000a;
   direction:ltr;
   pointer-events:auto;
+  user-select:none;
+  -webkit-user-select:none;
  }
- .game-ui__mobile-weapon-switcher button{
-  width:44px;
-  height:44px;
+ .game-ui__mobile-weapon-display{
+  grid-column:1/-1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.4rem;
   min-width:0;
-  padding:0;
-  border-radius:.4rem;
-  font-size:1.4rem;
-  font-weight:800;
-  touch-action:manipulation;
+  padding:.15rem .35rem .05rem;
  }
  .game-ui__mobile-weapon-name{
+  min-width:0;
   overflow:hidden;
   white-space:nowrap;
   text-overflow:ellipsis;
-  font-size:.72rem;
+  font-size:.75rem;
   font-weight:800;
-  text-align:center;
+  text-align:start;
+ }
+ .game-ui__mobile-weapon-index{
+  flex:none;
+  font-size:.61rem;
+  font-weight:700;
+  color:#bbb;
+  font-variant-numeric:tabular-nums;
+ }
+ .game-ui .game-ui__mobile-weapon-arrow{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:44px;
+  min-width:0;
+  padding:0;
+  border:1px solid #888;
+  border-radius:.6rem;
+  background:#252525;
+  font-size:1.7rem;
+  font-weight:800;
+  touch-action:manipulation;
+  transition:background .12s ease,transform .12s ease;
+ }
+ .game-ui .game-ui__mobile-weapon-arrow:active{
+  background:#fff;
+  color:#000;
+  transform:scale(.95);
+ }
+ .game-ui .game-ui__mobile-weapon-arrow:focus-visible{
+  outline:2px solid #fff;
+  outline-offset:2px;
+ }
+ /* Restore the intended touch hit target sizes despite the generic .game-ui button min-width. */
+ .game-ui .game-ui__mobile-button{min-width:0;padding:0}
+ /* Jump has a separate target next to attack; moving the stick never jumps. */
+ .game-ui__mobile-button--jump{
+  right:calc(var(--safe-right) + 1rem + clamp(74px,18vmin,96px));
+  bottom:calc(var(--safe-bottom) + 1.35rem);
+  width:clamp(52px,12vmin,62px);
+  height:clamp(52px,12vmin,62px);
+  border-color:#ddd;
+  background:#131313e6;
+ }
+ /* Bow meter stays clear of the new left-thumb weapon controls. */
+ .game-ui.playing .game-ui__bow-panel{
+  left:auto;
+  right:calc(var(--safe-right) + .75rem);
+  transform:none;
+  width:min(41vw,12rem);
  }
 }
-
-/* Visual cue: pulling the joystick upward jumps. */
-.game-ui__joystick::before{content:"↑";position:absolute;left:50%;top:5px;transform:translateX(-50%);color:#fff;font-size:1rem;font-weight:800;line-height:1;opacity:.72;pointer-events:none}
 
 /* Issue #38: only the current HP digits turn red; /maximum stays unchanged. */
 .health-label__current{
