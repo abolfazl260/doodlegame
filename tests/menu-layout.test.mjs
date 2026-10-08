@@ -5,7 +5,7 @@ import ts from "typescript";
 
 const states={MENU:"MENU",PLAYING:"PLAYING",PAUSED:"PAUSED",GAME_OVER:"GAME_OVER"};
 const source=readFileSync("src/ui/GameUI.ts","utf8");
-const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
+const compiled=ts.transpileModule(source,{compilerOptions:{target:9,module:1}}).outputText;
 const module={exports:{}};
 new Function("module","exports","require",compiled)(module,module.exports,name=>{
  if(name.includes("GameState"))return {GameState:states};
