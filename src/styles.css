@@ -105,7 +105,7 @@
 }
 
 .game-ui__language{display:flex;align-items:center;justify-content:center;gap:.45rem;font-size:.72rem}
-.game-ui__language select{padding:.35rem .55rem;border:1px solid #666;border-radius:.45rem;background:#000;color:#fff;font:inherit;cursor:pointer}
+.game-ui__language button{min-width:5.5rem;padding:.35rem .65rem;border:1px solid #686b72;border-radius:.55rem;background:#161922;color:#fff;font:inherit;font-weight:700;cursor:pointer}
 .game-ui.playing .game-ui__language{display:none}
 .game-ui__missile-value,.health-label{direction:ltr;unicode-bidi:isolate}
 html[dir="rtl"] .game-ui__help,html[dir="rtl"] .game-ui__upgrade-grid button{text-align:right}
@@ -351,7 +351,7 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
  text-align:start;
 }
 .game-ui__menu-header .game-ui__language{flex-shrink:0}
-.game-ui__menu-header .game-ui__language select{
+.game-ui__menu-header .game-ui__language button{
  min-height:44px;
  max-width:8.5rem;
 }
@@ -525,7 +525,7 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
 @media (max-height:520px){
  .game-ui__menu{gap:.35rem;padding:.55rem .7rem}
  .game-ui__menu-header h1{font-size:1rem}
- .game-ui__menu-header .game-ui__language select{min-height:38px;padding:.2rem .35rem}
+ .game-ui__menu-header .game-ui__language button{min-height:38px;padding:.2rem .35rem}
  .game-ui__menu-field{gap:.15rem}
  .game-ui__menu-select,.game-ui__upgrade-choices select{min-height:40px;padding:.3rem .5rem}
  .game-ui:not(.playing) .game-ui__upgrade-panel--compact{padding:.35rem .5rem;gap:.15rem .4rem}
