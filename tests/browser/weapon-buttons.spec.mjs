@@ -35,8 +35,10 @@ test("weapon-bar gaps and the battlefield remain click-through to WebInput",asyn
  const first=page.locator(button("blade")),second=page.locator(button("hammer"));
  const a=await first.boundingBox(),b=await second.boundingBox();
  expect(a).toBeTruthy();expect(b).toBeTruthy();
- expect(b.x).toBeGreaterThan(a.x+a.width);
- const gapX=(a.x+a.width+b.x)/2,gapY=a.y+a.height/2;
+ // Flex visual order reverses in RTL (Persian): choose the gap geometrically.
+ const left=a.x<b.x?a:b,right=a.x<b.x?b:a;
+ expect(right.x).toBeGreaterThan(left.x+left.width);
+ const gapX=(left.x+left.width+right.x)/2,gapY=a.y+a.height/2;
  const underGap=await page.evaluate(({x,y})=>document.elementFromPoint(x,y)?.id,{x:gapX,y:gapY});
  expect(underGap).toBe("game-canvas");
  await page.mouse.click(gapX,gapY);
@@ -66,7 +68,9 @@ test("melee-only hides and disables ranged weapons while the two melee buttons r
 
 test("missile-duel and Fortress duel restrict all other weapons",async({page})=>{
  await changeMode(page,"missile-duel");
- await expect(page.locator(".game-ui.playing .game-ui__weapon-list")).toBeHidden();
+ // Desktop keeps the bar available for the single permitted Missile button.
+ await expect(page.locator(button("missile"))).toBeVisible();
+ await expect(page.locator(button("missile"))).toBeEnabled();
  expect(await selected(page)).toBe("missile");
  for(const id of ["blade","hammer","blaster","uzi","boomerang","bow","bomb"]){
   await expect(page.locator(button(id))).toBeDisabled();
