@@ -8,6 +8,7 @@ type LandscapeCallbacks={
 
 export function installLandscapeOrientation(i18n:I18n,callbacks:LandscapeCallbacks){
  const portrait=window.matchMedia("(orientation: portrait)");
+ const app=document.querySelector<HTMLElement>("#app");
  const title=document.querySelector<HTMLElement>("#orientation-guard-title");
  const message=document.querySelector<HTMLElement>("#orientation-guard-message");
  const button=document.querySelector<HTMLButtonElement>("#orientation-guard-button");
@@ -42,6 +43,7 @@ export function installLandscapeOrientation(i18n:I18n,callbacks:LandscapeCallbac
  };
 
  const handleChange=()=>{
+  app?.toggleAttribute("inert",portrait.matches);
   if(portrait.matches)callbacks.onPortrait();
   else callbacks.onLandscape();
  };
