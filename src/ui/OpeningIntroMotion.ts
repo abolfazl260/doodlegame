@@ -34,6 +34,23 @@ export function openingFrame(elapsedMs:number,durationMs=OPENING_DURATION_MS):Op
  };
 }
 
+
+export interface AmbientFighterPlacement{
+ readonly x:number;
+ readonly scale:number;
+}
+
+/** Place the floating fighter in the space beside the centered menu, not beneath it. */
+export function ambientFighterPlacement(viewportWidth:number,menuWidth:number):AmbientFighterPlacement{
+ const width=Math.max(1,viewportWidth);
+ const panelWidth=Math.min(width,Math.max(0,menuWidth));
+ const gutter=(width-panelWidth)/2;
+ return{
+  x:Math.min(.97,Math.max(.55,(width-gutter*.52)/width)),
+  scale:Math.min(1,Math.max(.42,(gutter-6)/32))
+ };
+}
+
 /** Stars have stable positions between frames and launches. */
 export function openingStars(count=100,seed=0xdecafbad):OpeningStar[]{
  let value=seed>>>0;
