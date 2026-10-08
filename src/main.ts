@@ -82,6 +82,10 @@ try{
  input.start();
  game.initialize();
  const intro=new OpeningIntro(root,i18n.locale);
+ // Remove the decorative menu scene before the actual match is rendered.
+ const unsubscribeIntro=game.subscribe(state=>{
+  if(state===GameState.PLAYING)intro.dispose();
+ });
 
  window.addEventListener("keydown",event=>{
   if(event.repeat)return;
@@ -120,6 +124,7 @@ try{
  const resize=()=>game.resize();
  window.addEventListener("resize",resize);
  window.addEventListener("beforeunload",()=>{
+  unsubscribeIntro();
   disposeWebVisibility();
   intro.dispose();
   disposeNativeLifecycle();
