@@ -448,6 +448,7 @@ export class GameSession{
    this.projectiles.push({x:originX,y:originY,vx:direction*Math.cos(flightAngle)*speed+a.velocityX*.2,vy:Math.sin(flightAngle)*speed+Math.max(0,a.velocityY*.12),life:2.8,weapon:"bow",owner:a===this.player?"player":"opponent",originX:a.x,returning:false,spin:flightAngle,age:0,bounce:0,ricochets:0,damageScale:upgraded?.65:1});
   }
   a.cooldown=w.cooldown;a.attackTime=.22;a.bowCharge=0;a.bowCharging=false;
+  this.emitCue("attack","bow",originX,originY,direction,.75);
  }
  private attack(a:Fighter,t:Fighter,pressed:boolean){
   const w=WEAPONS[a.weapon];
@@ -464,7 +465,8 @@ export class GameSession{
   }
   if(this.missileRules&&a.weapon!=="missile")a.weapon="missile";
   a.cooldown=w.cooldown;
-  if(a.weapon==="missile"&&a===this.player){
+  this.emitCue("attack",a.weapon,a.x+a.facing*.65,a.y+.35,a.facing,a.weapon==="hammer"||a.weapon==="missile"?1.25:.65);
+   if(a.weapon==="missile"&&a===this.player){
     const radians=this.missileAngle*Math.PI/180;
     const direction=a.facing;
     this.projectiles.push({x:a.x+direction*.75,y:a.y+1.05,vx:Math.cos(radians)*this.missilePower*direction,vy:Math.sin(radians)*this.missilePower,life:4,weapon:"missile",owner:"player",originX:a.x,returning:false,spin:radians,age:0,bounce:0,ricochets:0});
@@ -484,7 +486,7 @@ export class GameSession{
       const slamRadius=2.35;
       if(Math.abs(distance)<=slamRadius&&Math.abs(t.y-a.y)<1.55){
         const direction=Math.sign(distance)||a.facing;
-        this.damage(t,w.damage*1.15,direction*w.knockback*1.35);
+        this.damage(t,w.damage*1.15,direction*w.knockback*1.35,"hammer");
         t.velocityY=Math.max(t.velocityY,7);
       }
       this.hitEnvironment(a.x+a.facing*1.4,a.y-.55,w.damage*1.8,a.facing*w.knockback*1.6,a===this.player?"player":"opponent");
@@ -494,7 +496,7 @@ export class GameSession{
       return;
     }
     if(Math.sign(distance)===a.facing&&Math.abs(distance)<=w.range*1.08&&Math.abs(t.y-a.y)<1.2){
-      this.damage(t,w.damage,a.facing*w.knockback*1.15);
+      this.damage(t,w.damage,a.facing*w.knockback*1.15,"hammer");
       t.velocityY=Math.max(t.velocityY,a.grounded?5.2:3.6);
       if(a.grounded)a.velocityX*=.55;
     }
@@ -503,7 +505,7 @@ export class GameSession{
   }
   if(a.weapon==="blade"){
     const distance=t.x-a.x,range=w.range*(upgraded?1.12:1),damage=w.damage*(upgraded?1.65:1),knockback=w.knockback*(upgraded?1.12:1);
-    if(Math.sign(distance)===a.facing&&Math.abs(distance)<=range&&Math.abs(t.y-a.y)<1.2)this.damage(t,damage,a.facing*knockback);
+    if(Math.sign(distance)===a.facing&&Math.abs(distance)<=range&&Math.abs(t.y-a.y)<1.2)this.damage(t,damage,a.facing*knockback,"blade");
     this.strikeEnvironment(a,damage*.9,a.facing*knockback);
     return;
   }
@@ -531,7 +533,7 @@ export class GameSession{
   if(a.weapon==="boomerang"&&upgraded){spawn(4,.72);spawn(1.2,.72);return;}
   spawn(a.weapon==="boomerang"?2.8:a.weapon==="bomb"?2.4:a.weapon==="bow"?1.8:0,1,a.weapon==="uzi"&&upgraded?2:0);
 }
- private damage(t:Fighter,damage:number,knockback:number){const mass=t.enemyType==="tank"?1.8:t.enemyType==="boss"?2.2:1;t.health=Math.max(0,t.health-(this.modeId==="sudden-death"&&damage>0?t.health:damage));t.velocityX+=knockback/mass;t.velocityY=Math.max(t.velocityY,2/mass);t.grounded=false;t.hitTime=.22;}
+ private damage(t:Fighter,damage:number,knockback:number,weapon:WeaponId="blade"){if(t.health<=0||damage<=0)return;this.emitCue("hit",weapon,t.x,t.y+.3,Math.sign(knockback)||t.facing,Math.max(.45,Math.min(1.65,damage/15)));const mass=t.enemyType==="tank"?1.8:t.enemyType==="boss"?2.2:1;t.health=Math.max(0,t.health-(this.modeId==="sudden-death"&&damage>0?t.health:damage));t.velocityX+=knockback/mass;t.velocityY=Math.max(t.velocityY,2/mass);t.grounded=false;t.hitTime=.22;}
  private updateHill(dt:number){if(this.modeId!=="king-of-hill")return;const playerIn=Math.abs(this.player.x)<=HILL_HALF_WIDTH,opponentIn=Math.abs(this.opponent.x)<=HILL_HALF_WIDTH;if(playerIn===opponentIn)return;if(playerIn)this.hillPlayer=Math.min(HILL_TARGET,this.hillPlayer+dt);else this.hillOpponent=Math.min(HILL_TARGET,this.hillOpponent+dt);if(this.hillPlayer>=HILL_TARGET){this.winner="player";this.upgradePoints++;}else if(this.hillOpponent>=HILL_TARGET)this.winner="opponent";}
  private resetEnvironment(){
   this.environment=ENVIRONMENT_TEMPLATES[this.arenaId].map(t=>({kind:t.kind,x:t.x,y:t.y,width:t.width,height:t.height,hp:t.hp,maxHp:t.hp,active:true,rotation:0,pulse:0,vx:0,vy:0,grounded:false,cooldown:0,timer:0}));
@@ -608,7 +610,8 @@ export class GameSession{
   for(const e of this.environment){
    if(!e.active||e.kind==="bounce"||e.kind==="trap"||e.kind==="fan"||e.kind==="gravity")continue;
    if(Math.abs(x-e.x)<=e.width/2+.18&&Math.abs(y-e.y)<=e.height/2+.28){
-    if(e.kind==="barrel")this.explodeBarrel(e,x>=e.x?1:-1);
+    this.emitCue("block","blade",e.x,e.y,Math.sign(force)||1,.9);
+     if(e.kind==="barrel")this.explodeBarrel(e,x>=e.x?1:-1);
     else{
       e.hp=Math.max(0,e.hp-damage);e.pulse=1;
       if(e.kind==="box")e.vx=Math.max(-6,Math.min(6,e.vx+force*.55));
@@ -624,6 +627,7 @@ export class GameSession{
  private explodeBarrel(e:EnvironmentBody,direction:number){
   if(!e.active)return;
   e.active=false;e.pulse=1;const radius=2.15;
+   this.emitCue("explosion","bomb",e.x,e.y,direction,1.15);
   for(const t of [this.player,this.opponent]){const dx=t.x-e.x,dy=t.y-e.y,d=Math.hypot(dx,dy);if(d<=radius){const f=Math.max(.2,1-d/radius);this.damage(t,24*f,direction*7*f);t.velocityY=Math.max(t.velocityY,5*f);}}
   for(const other of this.environment){
    if(other===e||!other.active)continue;
@@ -660,7 +664,8 @@ export class GameSession{
   if(distance>.3||p.vx*f.facing>=0)return false;
   p.vx=f.facing*Math.max(8,Math.abs(p.vx)*.8);p.vy=Math.max(1,Math.abs(p.vy)*.5);
   p.x=cx+f.facing*.35;p.y=cy;p.owner=f===this.player?'player':'opponent';p.deflectCooldown=.12;
-  f.velocityX-=f.facing*.6;return true;
+  f.velocityX-=f.facing*.6;
+   this.emitCue("deflect",f.weapon,cx,cy,f.facing,1);return true;
  }
  private updateProjectiles(dt:number){
   for(let i=this.projectiles.length-1;i>=0;i--){
@@ -727,12 +732,12 @@ export class GameSession{
       const sx=p.x-prevX,sy=p.y-prevY,segLenSq=sx*sx+sy*sy,targetY=target.y+.35;
       const along=segLenSq>1e-8?Math.max(0,Math.min(1,((target.x-prevX)*sx+(targetY-prevY)*sy)/segLenSq)):0;
       const cx=prevX+sx*along,cy=prevY+sy*along;
-      if(Math.hypot(target.x-cx,targetY-cy)<.38){this.damage(target,WEAPONS.bow.damage*(p.damageScale??1),Math.sign(p.vx)*WEAPONS.bow.knockback);this.projectiles.splice(i,1);continue;}
+      if(Math.hypot(target.x-cx,targetY-cy)<.38){this.damage(target,WEAPONS.bow.damage*(p.damageScale??1),Math.sign(p.vx)*WEAPONS.bow.knockback,"bow");this.projectiles.splice(i,1);continue;}
     }
     if(p.weapon==="missile"&&Math.abs(p.x-target.x)<.72&&Math.abs(p.y-(target.y+.25))<.9){this.explodeMissile(p);this.projectiles.splice(i,1);continue;}
     if(p.weapon==="bomb"&&p.life<=.55&&Math.abs(p.x-target.x)<1.05&&Math.abs(p.y-(target.y+.35))<1){this.explode(p);this.projectiles.splice(i,1);continue;}
     if(p.weapon!=="bomb"&&Math.abs(p.x-target.x)<.65&&Math.abs(p.y-(target.y+.35))<1){
-      this.damage(target,WEAPONS[p.weapon].damage*(p.damageScale??1),Math.sign(p.vx)*WEAPONS[p.weapon].knockback);
+      this.damage(target,WEAPONS[p.weapon].damage*(p.damageScale??1),Math.sign(p.vx)*WEAPONS[p.weapon].knockback,p.weapon);
       this.projectiles.splice(i,1);continue;
     }
     if(p.weapon==="bomb"&&p.life<=0){this.explode(p);this.projectiles.splice(i,1);continue;}
@@ -744,6 +749,7 @@ export class GameSession{
   const damageScale=p.damageScale??1;
   const radius=p.clusterChild?1.05:1.9;
   this.explosions.push({x:p.x,y:p.y,age:0,life:.48,radius});
+   this.emitCue("explosion","missile",p.x,p.y,Math.sign(p.vx)||1,p.clusterChild?.75:1.55);
   this.blastEnvironment(p.x,p.y,radius*1.08,w.damage*.85*damageScale,w.knockback);
   const blastTargets=[this.player,this.opponent];
   for(const target of blastTargets){
@@ -751,7 +757,8 @@ export class GameSession{
     if(dist>radius)continue;
     const falloff=Math.max(.15,1-dist/radius);
     const dirX=Math.abs(dx)>.05?Math.sign(dx):Math.sign(p.vx)||1;
-    target.health=Math.max(0,target.health-(this.modeId==="sudden-death"?target.health:w.damage*damageScale*falloff));
+    if(target.health>0)this.emitCue("hit","missile",target.x,target.y+.3,dirX,1.2);
+     target.health=Math.max(0,target.health-(this.modeId==="sudden-death"?target.health:w.damage*damageScale*falloff));
     target.velocityX+=dirX*(7.5+5*falloff);
     target.velocityY=Math.max(target.velocityY,6+8*falloff);
     target.grounded=false;
@@ -777,13 +784,14 @@ export class GameSession{
  private explode(p:Projectile){
   const w=WEAPONS.bomb,damage=w.damage*(p.damageScale??1);
   this.explosions.push({x:p.x,y:p.y,age:0,life:.75,radius:w.radius!});
+   this.emitCue("explosion","bomb",p.x,p.y,Math.sign(p.vx)||1,1.4);
   this.blastEnvironment(p.x,p.y,w.radius!*1.2,damage*.95,w.knockback);
   const target=p.owner==="player"?this.opponent:this.player;
   const owner=p.owner==="player"?this.player:this.opponent;
   const targetDistance=Math.hypot(target.x-p.x,target.y-p.y);
   if(targetDistance<=w.radius!){
     const force=Math.max(.35,1-targetDistance/w.radius!);
-    this.damage(target,damage*force,Math.sign(target.x-p.x)*w.knockback*force);
+    this.damage(target,damage*force,Math.sign(target.x-p.x)*w.knockback*force,"bomb");
     target.velocityY=Math.max(target.velocityY,5.5*force);
   }
   const ownerDistance=Math.hypot(owner.x-p.x,owner.y-p.y);
