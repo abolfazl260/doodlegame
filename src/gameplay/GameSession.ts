@@ -1,11 +1,12 @@
 import type {InputSource,InputState,WeaponId} from "../input/Input";
 import {combatShake,cueLife,MAX_COMBAT_CUES,type CombatCue,type CombatCueKind} from "./CombatFeedback.js";
+import {bossPhaseFor,chooseEnemyPlan,ENEMY_PROFILES,hasClearShot,terrainAhead,type EnemyPlan} from "./EnemyAI.js";
 export type PlatformSurface="normal"|"ice"|"slippery"|"oneWay"|"conveyorLeft"|"conveyorRight";
 export interface Platform{readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly surface?:PlatformSurface;}
 export type EnemyType="runner"|"tank"|"shooter"|"jumper"|"bomber"|"ninja"|"boss";
 export type EnvironmentKind="barrel"|"box"|"wall"|"bounce"|"trap"|"rock"|"crumble"|"fan"|"gravity";
 export interface EnvironmentRenderState{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;readonly maxHp:number;readonly active:boolean;readonly rotation:number;readonly pulse:number;}
-export interface DuelistRenderState{readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly maxHealth:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;readonly gaitPhase:number;readonly landingTime:number;readonly hitTime:number;}
+export interface DuelistRenderState{readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly maxHealth:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;readonly gaitPhase:number;readonly landingTime:number;readonly hitTime:number;readonly bossPhase:number;readonly attackTelegraph:number;}
 export interface ProjectileRenderState{readonly x:number;readonly y:number;readonly vx:number;readonly vy:number;readonly life:number;readonly weapon:WeaponId;readonly rotation:number;readonly age:number;}
 export interface ExplosionRenderState{readonly x:number;readonly y:number;age:number;readonly life:number;readonly radius:number;}
 export type ArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fortress"|"bridge"|"crater"|"vertical"|"ruins"|"conveyor"|"collapse"|"storm"|"reactor";
@@ -14,7 +15,8 @@ export interface HillState{readonly player:number;readonly opponent:number;reado
 export interface ArenaDefinition{readonly id:ArenaId;readonly name:string;readonly platforms:readonly Platform[];readonly spawnX:[number,number];readonly speedMultiplier:number;readonly jumpMultiplier:number;readonly gravity:number;readonly fallLimit:number|null;readonly movingPlatforms:boolean;readonly windStrength?:number;readonly gravityWell?:{readonly x:number;readonly y:number;readonly radius:number;readonly strength:number;};}
 export interface GameRenderState{readonly player:DuelistRenderState;readonly opponent:DuelistRenderState;readonly projectiles:readonly ProjectileRenderState[];readonly explosions:readonly ExplosionRenderState[];readonly platforms:readonly Platform[];readonly environment:readonly EnvironmentRenderState[];readonly winner:"player"|"opponent"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];readonly combatCues:readonly CombatCue[];readonly cameraShake:Readonly<{x:number;y:number}>;}
 export interface GameHudState{readonly playerHealth:number;readonly playerMaxHealth:number;readonly opponentHealth:number;readonly opponentMaxHealth:number;readonly weapon:WeaponId;readonly winner:"player"|"opponent"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];}
-interface Fighter{x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;gaitPhase:number;landingTime:number;hitTime:number;}
+interface Fighter{x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;gaitPhase:number;landingTime:number;hitTime:number;bossPhase:number;attackTelegraph:number;}
+interface EnemyBrain{plan:EnemyPlan;thinkClock:number;chargeTime:number;chargeTotal:number;recoverTime:number;dodgeCooldown:number;jumpCooldown:number;transitionTime:number;phase:number;phaseAttacks:number;lastX:number;stuckTime:number;}
 interface Projectile{x:number;y:number;vx:number;vy:number;life:number;weapon:WeaponId;owner:"player"|"opponent";originX:number;returning:boolean;spin:number;age:number;bounce:number;ricochets:number;deflectCooldown?:number;damageScale?:number;sticky?:boolean;stuck?:boolean;clusterChild?:boolean;}
 interface EnvironmentBody{kind:EnvironmentKind;x:number;y:number;width:number;height:number;hp:number;maxHp:number;active:boolean;rotation:number;pulse:number;vx:number;vy:number;grounded:boolean;cooldown:number;timer:number;}
 const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2,DASH_SPEED=14,DASH_TIME=.12,DASH_COOLDOWN=.65,WALL_JUMP_SPEED=9.6,MIN_MISSILE_ANGLE=12,MAX_MISSILE_ANGLE=78,MIN_MISSILE_POWER=8,MAX_MISSILE_POWER=18,HILL_TARGET=8,HILL_HALF_WIDTH=1.6;
@@ -130,6 +132,10 @@ export class GameSession{
  private arenaId:ArenaId="classic";private modeId:GameModeId="duel";private startingWeapon:WeaponId="blade";
  private missileAngle=45;private missilePower=13;private hillPlayer=0;private hillOpponent=0;
  private combatCues:CombatCue[]=[];private cueSequence=0;private shakeEnabled=true;private visualFreezeTime=0;private visualFreezeUntil=0;
+ private enemyBrain:EnemyBrain=this.freshEnemyBrain();
+ private freshEnemyBrain():EnemyBrain{
+  return{plan:{intent:"approach",move:0,attack:false,dodge:false,leap:false},thinkClock:.12,chargeTime:0,chargeTotal:0,recoverTime:0,dodgeCooldown:0,jumpCooldown:0,transitionTime:0,phase:0,phaseAttacks:0,lastX:0,stuckTime:0};
+ }
  private elapsed=0;private enemyRound=0;private upgradePoints=0;private readonly upgradedWeapons=new Set<WeaponId>();private player:Fighter=this.create(-5,1,null);private opponent:Fighter=this.create(5,-1,"runner");private projectiles:Projectile[]=[];private explosions:ExplosionRenderState[]=[];private environment:EnvironmentBody[]=[];private winner:"player"|"opponent"|null=null;
  constructor(private readonly input:InputSource){}
  setShakeEnabled(enabled:boolean){this.shakeEnabled=enabled;}
@@ -151,7 +157,7 @@ export class GameSession{
  private create(x:number,facing:number,enemyType:EnemyType|null):Fighter{
   const p=this.platformAtSpawn(x);
   const stats=enemyType===null?{health:100,weapon:"blade" as WeaponId,speed:1,jump:1}:{health:100,weapon:{runner:"blade",tank:"hammer",shooter:"blaster",jumper:"boomerang",bomber:"bomb",ninja:"uzi",boss:"hammer"}[enemyType] as WeaponId,speed:{runner:1.35,tank:.68,shooter:.82,jumper:1.05,bomber:.9,ninja:1.2,boss:.92}[enemyType],jump:{runner:1.1,tank:.8,shooter:.9,jumper:1.35,bomber:1,ninja:1.15,boss:1.1}[enemyType]};
-  return{x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.missileRules?"missile":stats.weapon,attackTime:0,cooldown:0,bowCharge:0,bowCharging:false,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0,gaitPhase:0,landingTime:0,hitTime:0};
+  return{x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.missileRules?"missile":stats.weapon,attackTime:0,cooldown:0,bowCharge:0,bowCharging:false,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0,gaitPhase:0,landingTime:0,hitTime:0,bossPhase:0,attackTelegraph:0};
 }
  setArena(id:ArenaId){this.arenaId=id;this.reset(false);}
  setMode(id:GameModeId){this.modeId=id;this.reset(false);}
@@ -169,7 +175,7 @@ export class GameSession{
  cancelTouchAttack(){this.player.bowCharging=false;this.player.bowCharge=0;}
  getMissileAim(){return{angle:this.missileAngle,power:this.missilePower};}
  upgradeWeapon(id:WeaponId){if(this.upgradePoints<=0||this.upgradedWeapons.has(id))return false;this.upgradedWeapons.add(id);this.upgradePoints--;return true;}
- reset(advanceEnemy=true){this.combatCues=[];this.visualFreezeUntil=0;this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];if(advanceEnemy)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,types[enemyIndex]);if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER.filter(id=>id!=="missile");this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(this.modeId!=="random-weapons"&&!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;this.projectiles=[];this.resetEnvironment();this.winner=null;}
+ reset(advanceEnemy=true){this.combatCues=[];this.visualFreezeUntil=0;this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];if(advanceEnemy)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,types[enemyIndex]);if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER.filter(id=>id!=="missile");this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(this.modeId!=="random-weapons"&&!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;this.projectiles=[];this.resetEnvironment();this.enemyBrain=this.freshEnemyBrain();this.enemyBrain.lastX=this.opponent.x;this.winner=null;}
  private availableWeapons():WeaponId[]{if(this.missileRules)return["missile"];if(this.modeId==="melee-only")return["blade","hammer"];if(this.modeId==="random-weapons")return[this.player.weapon];return ORDER.filter(id=>id!=="missile");}
  selectWeapon(direction:1|-1){if(this.modeId==="random-weapons")return;const available=this.availableWeapons();const i=Math.max(0,available.indexOf(this.player.weapon));this.player.weapon=available[(i+direction+available.length)%available.length];this.player.bowCharging=false;this.player.bowCharge=0;}
  selectWeaponById(id:WeaponId){if(this.modeId==="random-weapons")return;const available=this.availableWeapons();if(!available.includes(id))return;this.player.weapon=id;this.player.bowCharging=false;this.player.bowCharge=0;}
@@ -202,24 +208,103 @@ export class GameSession{
   this.integrate(this.player,dt);
 }
  private updateOpponent(dt:number){
-  const dx=this.player.x-this.opponent.x;
-  const type=this.opponent.enemyType!;
-  const distance=Math.abs(dx);
-  const objectiveDx=this.modeId==="king-of-hill"&&Math.abs(this.opponent.x)>HILL_HALF_WIDTH?-this.opponent.x:dx;
-  const d=Math.abs(objectiveDx)>.9?Math.sign(objectiveDx):0;
-  if(this.opponent.dashCooldown>0)this.opponent.dashCooldown=Math.max(0,this.opponent.dashCooldown-dt);
-  if(this.opponent.wallJumpCooldown>0)this.opponent.wallJumpCooldown=Math.max(0,this.opponent.wallJumpCooldown-dt);
-  const jumpThreshold=type==="jumper"?0.8:type==="runner"?1.7:1.5;
-  if(this.opponent.grounded&&this.player.y-this.opponent.y>jumpThreshold)this.tryJump(this.opponent);
-  if((type==="jumper"||type==="ninja"||type==="boss")&&!this.opponent.grounded&&distance>2.2&&this.opponent.dashCooldown<=0&&Math.random()<dt*.8)this.tryDash(this.opponent);
-  let moveDirection=d;
-  if(type==="shooter"||type==="bomber"){if(distance<3.2)moveDirection=-d;else if(distance>6)moveDirection=d;else moveDirection=0;}
-  if(type==="tank"&&distance<2)moveDirection=d;
-  this.move(this.opponent,moveDirection*(type==="runner"?1.15:type==="tank"?.72:type==="shooter"?.8:type==="ninja"?1.05:1),dt);
-  this.integrate(this.opponent,dt);
-  const attackRange=this.missileRules?Infinity:type==="shooter"?7:type==="bomber"?6:type==="jumper"?4.5:type==="boss"?2.4:2;
-  if(this.missileRules){if(this.opponent.cooldown<=0&&distance>4.5)this.attack(this.opponent,this.player,true);}else if(distance<attackRange&&this.opponent.cooldown<=0){this.attack(this.opponent,this.player,true);}
-}
+  const enemy=this.opponent,type=enemy.enemyType!;
+  const brain=this.enemyBrain,profile=ENEMY_PROFILES[type];
+  const dx=this.player.x-enemy.x,dy=this.player.y-enemy.y,distance=Math.abs(dx);
+  const toward=Math.sign(dx)||enemy.facing;
+  enemy.dashCooldown=Math.max(0,enemy.dashCooldown-dt);
+  enemy.wallJumpCooldown=Math.max(0,enemy.wallJumpCooldown-dt);
+  brain.thinkClock-=dt;brain.jumpCooldown=Math.max(0,brain.jumpCooldown-dt);
+  brain.dodgeCooldown=Math.max(0,brain.dodgeCooldown-dt);
+  brain.recoverTime=Math.max(0,brain.recoverTime-dt);
+
+  if(type==="boss"){
+   const phase=bossPhaseFor(enemy.health,enemy.maxHealth);
+   if(phase>brain.phase){
+    brain.phase=phase;brain.phaseAttacks=0;brain.chargeTime=0;
+    brain.transitionTime=.78;brain.thinkClock=0;brain.recoverTime=0;
+    brain.plan={intent:"recover",move:0,attack:false,dodge:false,leap:false};
+    this.emitCue("deflect","hammer",enemy.x,enemy.y+1.3,enemy.facing,1.35);
+   }
+   enemy.bossPhase=brain.phase;
+   // Regular modes permit boss weapon variation; challenge modes keep their enforced weapons.
+   if(!this.missileRules&&this.modeId!=="melee-only"&&this.modeId!=="random-weapons"&&brain.chargeTime<=0&&enemy.cooldown<=0){
+    enemy.weapon=brain.phase===0||brain.phaseAttacks%2!==0?"hammer":brain.phase===1?"boomerang":"bomb";
+   }
+  }
+
+  if(brain.transitionTime>0){
+   brain.transitionTime=Math.max(0,brain.transitionTime-dt);
+   enemy.attackTelegraph=.5+.5*brain.transitionTime/.78;
+   this.move(enemy,0,dt);this.integrate(enemy,dt);
+   return;
+  }
+  if(brain.chargeTime>0){
+   brain.chargeTime=Math.max(0,brain.chargeTime-dt);
+   enemy.attackTelegraph=.25+.75*brain.chargeTime/Math.max(.01,brain.chargeTotal);
+   this.move(enemy,0,dt);this.integrate(enemy,dt);
+   if(brain.chargeTime<=0){
+    // A committed attack can miss: do not read player input or snap-aim after the tell.
+    this.attack(enemy,this.player,true);
+    brain.phaseAttacks++;brain.recoverTime=profile.recovery;
+    brain.thinkClock=profile.reaction;
+    enemy.attackTelegraph=0;
+   }
+   return;
+  }
+  enemy.attackTelegraph=0;
+  if(brain.thinkClock<=0){
+   const projectileThreat=this.projectiles.some(p=>p.owner==="player"&&p.life>.05&&
+    (enemy.x-p.x)*p.vx>0&&Math.abs(enemy.x-p.x)<3.25&&Math.abs(enemy.y+.3-p.y)<1.45);
+   const weaponIsRanged=!["blade","hammer"].includes(enemy.weapon);
+   const clearShot=hasClearShot(enemy.x,enemy.y+.35,this.player.x,this.player.y+.35,this.platforms,this.environment);
+   const hillDx=this.modeId==="king-of-hill"&&Math.abs(enemy.x)>HILL_HALF_WIDTH? -enemy.x:null;
+   brain.plan=chooseEnemyPlan({type,dx,dy,distance,clearShot,threat:projectileThreat&&brain.dodgeCooldown<=0,hillDx,bossPhase:brain.phase,weaponIsRanged,recovering:brain.recoverTime>0});
+   if(this.missileRules){
+    brain.plan={intent:distance>4.5?"attack":"reposition",move:distance>4.5?0:-toward as -1|0|1,attack:distance>4.5,dodge:false,leap:false};
+   }
+   brain.thinkClock=profile.reaction;
+  }
+
+  const plan=brain.plan,move=plan.move;
+  const foot=enemy.y-HH/2;
+  const travel=enemy.grounded&&move!==0?terrainAhead(enemy.x,foot,move,this.platforms):{supported:true,canLeap:false};
+  const obstacle=this.environment.some(e=>e.active&&(e.kind==="wall"||e.kind==="box"||e.kind==="rock")&&
+   (e.x-enemy.x)*move>0&&Math.abs(e.x-enemy.x)<1.4&&Math.abs(e.y-enemy.y)<1.35);
+  const hazard=this.environment.some(e=>e.active&&(e.kind==="trap"||e.kind==="barrel"||e.kind==="crumble")&&
+   (e.x-enemy.x)*move>0&&Math.abs(e.x-enemy.x)<1.25&&Math.abs(e.y-foot)<1.1);
+  const upAhead=this.player.y-enemy.y>(type==="jumper"?.65:1.15)&&distance<5.2;
+  const wall=move!==0&&this.wallDirection(enemy)===move;
+  const shouldLeap=travel.canLeap||obstacle||hazard||wall||upAhead||(plan.leap&&distance>2.2);
+  const safeMove=!enemy.grounded||move===0||travel.supported||travel.canLeap;
+  const actualMove=safeMove?move:0;
+  const previousX=enemy.x;
+  if(actualMove===0)brain.stuckTime=Math.max(0,brain.stuckTime-dt*2);
+  if((!enemy.grounded||travel.supported||travel.canLeap)&&brain.jumpCooldown<=0&&(shouldLeap||(brain.stuckTime>.65&&safeMove))){
+   if(enemy.grounded||wall||(!enemy.grounded&&enemy.doubleJumpAvailable&&upAhead)){
+    this.tryJump(enemy);brain.jumpCooldown=type==="jumper"?.46:.68;brain.stuckTime=0;
+   }
+  }
+  if(plan.dodge&&brain.dodgeCooldown<=0&&enemy.dashCooldown<=0){
+   enemy.facing=move||-toward;
+   this.tryDash(enemy);brain.dodgeCooldown=1.45;
+  }
+  // Use measured progress and safe-foot probes; never blindly walk into an unrecoverable gap.
+  const speed=type==="runner"?1.15:type==="tank"?.72:type==="shooter"?.8:type==="ninja"?1.05:1;
+  this.move(enemy,actualMove*speed,dt);
+  this.integrate(enemy,dt);
+  if(enemy.grounded&&actualMove!==0&&Math.abs(enemy.x-previousX)<.004)brain.stuckTime+=dt;
+  else if(actualMove!==0)brain.stuckTime=Math.max(0,brain.stuckTime-dt*2);
+  brain.lastX=enemy.x;
+  if(plan.attack&&brain.recoverTime<=0&&enemy.cooldown<=0){
+   const facing=Math.sign(this.player.x-enemy.x);
+   if(facing)enemy.facing=facing;
+   brain.chargeTotal=this.missileRules?.42:profile.windup;
+   brain.chargeTime=brain.chargeTotal;
+   brain.plan={...brain.plan,intent:"attack",move:0};
+   enemy.attackTelegraph=1;
+  }
+ }
  private arenaForceAt(x:number,y:number){
   let ax=0,ay=0;
   if(this.arena.windStrength){
