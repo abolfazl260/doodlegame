@@ -49,7 +49,6 @@ export class GameUI{
  private privacyTitle=document.createElement("strong");
  private privacyContent=document.createElement("div");
  private privacyLink=document.createElement("a");
- private privacyNetworkNote=document.createElement("small");
  private privacyCloseButton=document.createElement("button");
  private menu=document.createElement("div");
  private menuHeader=document.createElement("div");
@@ -176,11 +175,10 @@ export class GameUI{
   this.privacyLink.href=PRIVACY_POLICY_URL;
   this.privacyLink.target="_blank";
   this.privacyLink.rel="noopener noreferrer";
-  this.privacyNetworkNote.className="game-ui__privacy-network";
   this.privacyCloseButton.type="button";
   this.privacyCloseButton.className="game-ui__dialog-close";
   this.privacyCloseButton.onclick=()=>{this.privacy.hidden=true;this.privacyButton.focus();};
-  this.privacy.append(this.privacyTitle,this.privacyContent,this.privacyLink,this.privacyNetworkNote,this.privacyCloseButton);
+  this.privacy.append(this.privacyTitle,this.privacyContent,this.privacyLink,this.privacyCloseButton);
 
   this.playerHealth.className="health-bar health-bar--player";
   this.opponentHealth.className="health-bar health-bar--opponent";
@@ -636,7 +634,6 @@ export class GameUI{
   this.privacyTitle.textContent=messages.privacy.title;
   this.privacyContent.innerHTML=messages.privacy.html;
   this.privacyLink.textContent=messages.privacy.web;
-  this.privacyNetworkNote.textContent=messages.privacy.networkNote;
   this.privacyCloseButton.textContent=messages.privacy.close;
   this.mobileAttackButton.textContent=messages.buttons.attack;
   this.mobileWeaponSwitcher.setAttribute("aria-label",messages.details.equipped);
