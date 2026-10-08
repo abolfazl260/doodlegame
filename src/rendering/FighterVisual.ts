@@ -5,6 +5,23 @@ const clamp=(v:number)=>Math.max(0,Math.min(1,v));
 export function attackDuration(weapon:DuelistRenderState['weapon']) {
  return weapon==='hammer'?.24:weapon==='blade'||weapon==='bow'||weapon==='missile'?.22:.14;
 }
+/** Shared, legible overhead tell for committed attacks and boss phase changes. */
+export function telegraphSegments(s:DuelistRenderState):Segment[]{
+ if(s.attackTelegraph<=0)return[];
+ const size=.18+.11*s.attackTelegraph,top=1.45;
+ const result:Segment[]=[
+  [[-size,top],[0,top+size]],
+  [[0,top+size],[size,top]],
+  [[size,top],[0,top-size]],
+  [[0,top-size],[-size,top]]
+ ];
+ if(s.enemyType==="boss"){
+  result.push([[-.45,top+.38],[.45,top+.38]]);
+  if(s.bossPhase>=1)result.push([[-.30,top+.50],[.30,top+.50]]);
+  if(s.bossPhase>=2)result.push([[-.18,top+.62],[.18,top+.62]]);
+ }
+ return result;
+}
 /** World-space, articulated monochrome pose shared by WebGL and Canvas. */
 export function fighterVisual(s:DuelistRenderState) {
  const speed=clamp(Math.abs(s.velocityX)/8), air=!s.grounded;
