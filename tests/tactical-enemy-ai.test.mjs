@@ -60,7 +60,7 @@ test("boss phases use explicit health thresholds and overhead warnings grow by p
  assert.equal(bossPhaseFor(35,100),2);
  assert.equal(bossPhaseFor(36,100),1);
  const game=make();
- for(let i=0;i<6;i++)game.reset();
+ for(let i=0;i<7;i++)game.reset();
  assert.equal(game.opponent.enemyType,"boss");
  const initially=game.getRenderState().opponent;
  assert.equal(initially.bossPhase,0);
@@ -83,7 +83,7 @@ test("boss phases use explicit health thresholds and overhead warnings grow by p
 test("mode-specific weapon limits remain enforced even with boss phases",()=>{
  for(const mode of ["missile-duel","melee-only","random-weapons"]){
   const game=make();game.setMode(mode);
-  for(let i=0;i<6;i++)game.reset();
+  for(let i=0;i<7;i++)game.reset();
   assert.equal(game.opponent.enemyType,"boss");
   const original=game.opponent.weapon;
   game.opponent.health=30;
@@ -99,7 +99,7 @@ test("opponents remain finite and never loop over the full arena set",()=>{
  const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
  for(const arena of arenas){
   const game=make();game.setArena(arena);
-  for(let kind=0;kind<7;kind++){
+  for(let kind=0;kind<8;kind++){
    if(kind>0)game.reset();
    for(let frame=0;frame<80;frame++)game.update(1/120);
    const enemy=game.getRenderState().opponent;
