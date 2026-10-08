@@ -9,8 +9,10 @@ function step(workflow,name){
  const header="      - name: "+name+"\n";
  const start=workflow.indexOf(header);
  assert.ok(start>=0,"missing workflow step: "+name);
- const end=workflow.indexOf("\n      - ",start+header.length);
- return workflow.slice(start,end<0?workflow.length:end);
+ const nextStep=workflow.indexOf("\n      - ",start+header.length);
+ const nextJob=workflow.indexOf("\n  emulator-smoke:",start+header.length);
+ const boundaries=[nextStep,nextJob].filter(index=>index>=0);
+ return workflow.slice(start,boundaries.length?Math.min(...boundaries):workflow.length);
 }
 
 test("every PR runs fast CI, while obsolete PR runs can be cancelled",()=>{
