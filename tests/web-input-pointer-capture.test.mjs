@@ -159,3 +159,32 @@ test("mouse cancellation does not clear a separately held keyboard or mobile att
   assert.equal(input.getState().attackHeld,false);
  });
 });
+
+test("blur and repeated pause/resume resets cannot release a charged bow",()=>{
+ withInput(({canvas,input,fakeWindow})=>{
+  const game=new GameSession(input);
+  try{
+   game.selectWeaponById("bow");
+   canvas.emit("pointerdown",{pointerId:61});
+   game.update(1/60);
+   assert.ok(game.getHudState().bowCharge>0);
+   fakeWindow.dispatchEvent(new Event("blur"));
+   assert.equal(input.getState().attackCancelled,true);
+   input.resetTransientState(); // pause/resume performs an additional reset
+   assert.equal(input.getState().attackCancelled,true);
+   game.update(1/60);
+   assert.equal(game.getRenderState().projectiles.length,0);
+   assert.equal(game.getHudState().bowCharge,0);
+   assert.equal(input.getState().attackCancelled,false);
+
+   // A fresh attack after resetting transients must still work.
+   input.resetTransientState();
+   input.touchAttack(true);
+   assert.equal(input.getState().attackCancelled,false);
+   game.update(1/60);
+   input.touchAttackRelease();
+   game.update(1/60);
+   assert.equal(game.getRenderState().projectiles.length,1);
+  }finally{game.dispose();}
+ });
+});
