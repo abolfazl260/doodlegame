@@ -100,3 +100,27 @@ test("random-weapons permits no manual weapon changes",async({page})=>{
   await expect(page.locator(button(id))).toBeHidden();
  }
 });
+
+test("mouse release over a blocking overlay still ends the captured canvas attack",async({page})=>{
+ const canvas=await page.locator("#game-canvas").boundingBox();
+ expect(canvas).toBeTruthy();
+ const x=canvas.x+50,y=canvas.y+canvas.height/2;
+ await page.mouse.move(x,y);
+ await page.mouse.down();
+ expect(await page.evaluate(()=>window.__weaponFixture.pointerDown())).toBe(true);
+ expect(await page.evaluate(()=>window.__weaponFixture.attackHeld())).toBe(true);
+ await page.evaluate(()=>{
+  const overlay=document.createElement("div");
+  overlay.id="pointer-interception-test";
+  Object.assign(overlay.style,{position:"fixed",inset:"0",zIndex:"99999",pointerEvents:"auto"});
+  document.body.append(overlay);
+ });
+ try{
+  await page.mouse.move(x+120,y+50);
+  await page.mouse.up();
+  expect(await page.evaluate(()=>window.__weaponFixture.pointerDown())).toBe(false);
+  expect(await page.evaluate(()=>window.__weaponFixture.attackHeld())).toBe(false);
+ }finally{
+  await page.evaluate(()=>document.querySelector("#pointer-interception-test")?.remove());
+ }
+});
