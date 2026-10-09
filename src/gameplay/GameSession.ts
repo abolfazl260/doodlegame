@@ -539,6 +539,7 @@ export class GameSession{
   this.constrainFighterX(f);
  }
  private updateBow(input:InputState,dt:number){
+  if(input.attackCancelled){this.player.bowCharging=false;this.player.bowCharge=0;this.player.attackTime=0;return;}
   if(input.attackPressed&&this.player.cooldown<=0&&!this.player.bowCharging){this.player.bowCharging=true;this.player.bowCharge=0;this.player.attackTime=.12;}
   if(!this.player.bowCharging)return;
   if(input.attackHeld){this.player.bowCharge=Math.min(1,this.player.bowCharge+dt/.9);this.player.attackTime=.12+this.player.bowCharge*.12;return;}

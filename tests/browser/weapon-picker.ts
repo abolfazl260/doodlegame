@@ -45,6 +45,8 @@ const fixture={
  setMode:(mode:GameModeId)=>{session.setMode(mode);render();},
  setArena:(arena:ArenaId)=>{session.setArena(arena);render();},
  attackPressed:()=>input.getState().attackPressed,
+ attackHeld:()=>input.getState().attackHeld,
+ pointerDown:()=>input.getState().pointerDown,
  clearAttack:()=>input.endFrame()
 };
 (window as typeof window & {__weaponFixture:typeof fixture}).__weaponFixture=fixture;
