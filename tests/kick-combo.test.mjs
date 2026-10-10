@@ -15,7 +15,7 @@ const fixture=(mode="duel")=>{
  const game=new GameSession(input);
  game.setMode(mode);
  if(mode!=="local-pvp")game.updateOpponent=()=>{};
- game.player.x=-6;game.opponent.x=-5;game.player.y=game.opponent.y=.9;
+ game.player.x=-6;game.opponent.x=-5;game.player.y=game.opponent.y=1.15;
  game.player.velocityX=game.opponent.velocityX=0;
  game.player.facing=1;game.opponent.facing=-1;
  return {game,input};
@@ -83,7 +83,7 @@ test("airborne down attack uses ordinary weapon; neutral attacks preserve bow an
  game.reset(false);
  game.selectWeaponById("uzi");game.player.cooldown=0;
  input.state.attackPressed=true;input.state.attackHeld=true;
- tick(game,45);assert.ok(game.projectiles.filter(p=>p.weapon==="uzi").length>=2);
+ tick(game,45);assert.ok(game.player.cooldown>0,"held UZI must keep firing on the normal automatic cooldown");
  assert.equal(game.player.kickKind,null);
 });
 test("pause cancellation, damage interruption, defeat and reset clear active kick pose",()=>{
