@@ -43,3 +43,35 @@ test("background drawing balances Canvas state and supports 2D renderer fallback
  }
  assert.ok(draws>arenas.length*2);
 });
+
+test("premium environment art is deterministic, balanced and bounded for every arena",()=>{
+ function capture(id,width,height){
+  const events=[];
+  let depth=0,draws=0;
+  const context={
+   save(){depth++;},restore(){depth--;assert.ok(depth>=0);},
+   createLinearGradient(...params){events.push(["linear",...params]);return{addColorStop(...stop){events.push(["stop",...stop]);}};},
+   createRadialGradient(...params){events.push(["radial",...params]);return{addColorStop(...stop){events.push(["stop",...stop]);}};},
+   fillRect(...params){draws++;events.push(["rect",...params]);},
+   ellipse(...params){draws++;events.push(["ellipse",...params]);},
+   beginPath(){},moveTo(...params){events.push(["move",...params]);},
+   lineTo(...params){events.push(["line",...params]);},
+   closePath(){},fill(){draws++;},stroke(){draws++;}
+  };
+  paintArenaBackdrop(context,width,height,getArenaTheme(id));
+  assert.equal(depth,0);
+  assert.ok(draws>40,`rich enough for ${id}`);
+  assert.ok(draws<1000,`small enough for cached mobile art: ${id}`);
+  for(const item of events){
+   for(const value of item.slice(1))if(typeof value==="number")assert.ok(Number.isFinite(value));
+  }
+  return JSON.stringify(events);
+ }
+ for(const id of arenas){
+  assert.equal(capture(id,640,360),capture(id,640,360),
+   `background must not change without an arena/viewport change (${id})`);
+  capture(id,320,180);
+ }
+ assert.equal(new Set(arenas.map(id=>capture(id,640,360))).size,arenas.length,
+  "all sixteen arenas should have distinguishable procedural geometry");
+});
