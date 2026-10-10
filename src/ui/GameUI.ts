@@ -1,4 +1,5 @@
 import {GameState} from "../core/GameState";
+import {grabGesture} from "../gameplay/GrabCombat.js";
 import {getArenaTheme} from "../themes/ArenaThemes";
 import type {ArenaId,GameModeId,HillState} from "../gameplay/GameSession";
 import type {I18n} from "../i18n/I18n";
@@ -15,8 +16,8 @@ type Actions={
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;stopToMenu?:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
- setTouchMove:(x:number,y:number)=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;
- setPlayer2TouchMove?:(x:number,y:number)=>void;player2AttackStart?:()=>void;player2AttackEnd?:()=>void;player2AttackCancel?:()=>void;player2WeaponNext?:()=>void;player2WeaponPrevious?:()=>void;
+ setTouchMove:(x:number,y:number)=>void;touchGrab:()=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;
+ setPlayer2TouchMove?:(x:number,y:number)=>void;player2Grab?:()=>void;player2AttackStart?:()=>void;player2AttackEnd?:()=>void;player2AttackCancel?:()=>void;player2WeaponNext?:()=>void;player2WeaponPrevious?:()=>void;
  toggleCombatSound:()=>void;toggleCameraShake:()=>void;updateData:()=>Promise<void>;
 };
 type UiAction="start"|"pause"|"resume"|"restart"|"menu";
@@ -513,20 +514,22 @@ export class GameUI{
   // Missile gestures fire only on pointerup; cancellation never launches a missile.
   let attackPointer=-1;
   let attackWeapon:WeaponId|null=null;
-  let startX=0,startY=0,baseAngle=45,basePower=13;
+  let startX=0,startY=0,baseAngle=45,basePower=13,attackAt=0,attackStarted=false,grabTriggered=false;
+  let attackTimer:ReturnType<typeof setTimeout>|null=null;
   const clearAttack=()=>{
+   if(attackTimer!==null){clearTimeout(attackTimer);attackTimer=null;}
    const id=attackPointer;
    attackPointer=-1;
-   attackWeapon=null;
+   attackWeapon=null;attackStarted=false;grabTriggered=false;
    this.missileAimGuide.hidden=true;
    this.mobileAttackButton.classList.remove("aiming");
    if(id!==-1&&this.mobileAttackButton.hasPointerCapture?.(id))this.mobileAttackButton.releasePointerCapture(id);
   };
   const cancelAttack=()=>{
    if(attackPointer===-1)return;
-   const weapon=attackWeapon;
+   const weapon=attackWeapon,wasStarted=attackStarted;
    clearAttack();
-   if(weapon!=="missile")actions.touchAttackCancel();
+   if(weapon!=="missile"&&wasStarted)actions.touchAttackCancel();
   };
   const cancelControls=()=>{
    cancelAttack();
@@ -574,29 +577,51 @@ export class GameUI{
   });
   for(const kind of ["pointerup","pointercancel","lostpointercapture"])
    this.p2Joystick.addEventListener(kind,event=>releaseP2Stick(event as PointerEvent));
+  let p2StartX=0,p2StartY=0,p2StartAt=0,p2Started=false,p2Grabbed=false;
+  let p2Timer:ReturnType<typeof setTimeout>|null=null;
   const clearP2Attack=()=>{
+   if(p2Timer!==null){clearTimeout(p2Timer);p2Timer=null;}
    const id=p2AttackPointer;p2AttackPointer=-1;
+   p2Started=false;p2Grabbed=false;
    if(id!==-1&&this.p2Attack.hasPointerCapture?.(id))this.p2Attack.releasePointerCapture(id);
   };
   const cancelP2Attack=()=>{
    if(p2AttackPointer===-1)return;
-   clearP2Attack();
-   actions.player2AttackCancel?.();
+   const began=p2Started;clearP2Attack();
+   if(began)actions.player2AttackCancel?.();
   };
   this.cancelP2Attack=cancelP2Attack;
   this.p2Attack.addEventListener("pointerdown",event=>{
    if(p2AttackPointer!==-1||this.currentState!==GameState.PLAYING)return;
    if(this.readHud?.().winner!==null)return;
    event.preventDefault();p2AttackPointer=event.pointerId;
+   p2StartX=event.clientX;p2StartY=event.clientY;p2StartAt=Date.now();
    try{this.p2Attack.setPointerCapture(event.pointerId);}
    catch{p2AttackPointer=-1;return;}
-   actions.player2AttackStart?.();
+   p2Timer=setTimeout(()=>{
+    p2Timer=null;
+    if(p2AttackPointer===event.pointerId&&!p2Grabbed&&this.currentState===GameState.PLAYING){
+     p2Started=true;actions.player2AttackStart?.();
+    }
+   },155);
+  });
+  this.p2Attack.addEventListener("pointermove",event=>{
+   if(event.pointerId!==p2AttackPointer||p2Started||p2Grabbed)return;
+   if(grabGesture(p2StartX,p2StartY,event.clientX,event.clientY,Date.now()-p2StartAt)){
+    p2Grabbed=true;
+    if(p2Timer!==null){clearTimeout(p2Timer);p2Timer=null;}
+    actions.player2Grab?.();haptic(20);
+   }
   });
   this.p2Attack.addEventListener("pointerup",event=>{
    if(event.pointerId!==p2AttackPointer)return;
-   event.preventDefault();clearP2Attack();
-   if(this.currentState!==GameState.PLAYING||this.readHud?.().winner!==null)actions.player2AttackCancel?.();
-   else actions.player2AttackEnd?.();
+   event.preventDefault();
+   const valid=this.currentState===GameState.PLAYING&&this.readHud?.().winner===null;
+   const swiped=p2Grabbed||(!p2Started&&grabGesture(p2StartX,p2StartY,event.clientX,event.clientY,Date.now()-p2StartAt));
+   const began=p2Started;clearP2Attack();
+   if(!valid){if(began)actions.player2AttackCancel?.();}
+   else if(swiped){if(!p2Grabbed)actions.player2Grab?.();}
+   else{if(!began)actions.player2AttackStart?.();actions.player2AttackEnd?.();}
   });
   for(const kind of ["pointercancel","lostpointercapture"])
    this.p2Attack.addEventListener(kind,event=>{
@@ -615,6 +640,7 @@ export class GameUI{
    attackWeapon=hud.weapon;
    startX=event.clientX;
    startY=event.clientY;
+   attackAt=Date.now();attackStarted=false;grabTriggered=false;
    baseAngle=hud.missileAngle;
    basePower=hud.missilePower;
    try{this.mobileAttackButton.setPointerCapture?.(event.pointerId);}
@@ -629,11 +655,25 @@ export class GameUI{
     this.mobileAttackButton.classList.add("aiming");
     this.missileAimGuide.hidden=false;
     this.updateMissileAimGuide(baseAngle,basePower,hud.playerFacing);
-   }else actions.touchAttackStart();
+   }else{
+    attackTimer=setTimeout(()=>{
+     attackTimer=null;
+     if(attackPointer===event.pointerId&&!grabTriggered&&this.currentState===GameState.PLAYING){
+      attackStarted=true;actions.touchAttackStart();
+     }
+    },155);
+   }
   });
   this.mobileAttackButton.addEventListener("pointermove",event=>{
-   if(attackPointer!==event.pointerId||attackWeapon!=="missile")return;
+   if(attackPointer!==event.pointerId||grabTriggered)return;
    const hud=this.readHud?.();
+   if(!attackStarted&&grabGesture(startX,startY,event.clientX,event.clientY,Date.now()-attackAt)){
+    grabTriggered=true;
+    if(attackTimer!==null){clearTimeout(attackTimer);attackTimer=null;}
+    this.missileAimGuide.hidden=true;
+    actions.touchGrab();haptic(20);return;
+   }
+   if(attackWeapon!=="missile")return;
    if(this.currentState!==GameState.PLAYING||!hud||hud.winner!==null||hud.weapon!=="missile"){cancelAttack();return;}
    event.preventDefault();
    const dx=event.clientX-startX,dy=startY-event.clientY;
@@ -649,11 +689,14 @@ export class GameUI{
    if(attackPointer!==event.pointerId)return;
    event.preventDefault();
    const weapon=attackWeapon,hud=this.readHud?.();
+   const swiped=grabTriggered||(!attackStarted&&grabGesture(startX,startY,event.clientX,event.clientY,Date.now()-attackAt));
+   const began=attackStarted,alreadyGrabbed=grabTriggered;
    const mayFire=this.currentState===GameState.PLAYING&&hud?.winner===null&&hud.weapon===weapon;
    clearAttack();
-   if(!mayFire){if(weapon!=="missile")actions.touchAttackCancel();return;}
+   if(!mayFire){if(weapon!=="missile"&&began)actions.touchAttackCancel();return;}
+   if(swiped){if(!alreadyGrabbed)actions.touchGrab();return;}
    if(weapon==="missile")actions.fireWeapon();
-   else actions.touchAttackEnd();
+   else{if(!began)actions.touchAttackStart();actions.touchAttackEnd();}
   });
   this.mobileAttackButton.addEventListener("pointercancel",event=>{
    if(event.pointerId!==attackPointer)return;
@@ -1156,7 +1199,10 @@ export class GameUI{
   this.rotateHint.textContent=messages.rotateHint;
   this.updateButton.textContent=messages.buttons.update;
   this.helpButton.textContent=messages.buttons.help;
-  this.helpContent.innerHTML=messages.helpHtml;
+  this.helpContent.innerHTML=messages.helpHtml+
+   (this.i18n.locale==="fa"
+    ? "<p>گرفتن حریف: کلید C (بازیکن دوم: Numpad1) یا کشیدن سریع انگشت از دکمه حمله به سمت بالا. حریف باید نزدیک و روبه‌رو باشد.</p>"
+    : "<p>Grab &amp; Throw: Press C (P2: Numpad1) or swipe up quickly from ATTACK. The target must be close and in front.</p>");
   this.help.setAttribute("aria-label",messages.buttons.help);
   this.privacy.setAttribute("aria-label",messages.privacy.title);
   this.helpCloseButton.textContent=messages.privacy.close;
@@ -1166,8 +1212,9 @@ export class GameUI{
   this.privacyLink.textContent=messages.privacy.web;
   this.privacyCloseButton.textContent=messages.privacy.close;
   this.mobileAttackButton.textContent=messages.buttons.attack;
+  this.mobileAttackButton.setAttribute("aria-label",messages.buttons.attack+" · "+(this.i18n.locale==="fa"?"کشیدن به بالا: گرفتن":"Swipe up: Grab"));
   this.p2Attack.textContent=messages.buttons.attack;
-  this.p2Attack.setAttribute("aria-label",messages.pvp?.p2+" · "+messages.buttons.attack);
+  this.p2Attack.setAttribute("aria-label",messages.pvp?.p2+" · "+messages.buttons.attack+" · "+(this.i18n.locale==="fa"?"کشیدن به بالا: گرفتن":"Swipe up: Grab"));
   this.p2Joystick.setAttribute("aria-label",messages.pvp?.p2);
   this.p2Prev.setAttribute("aria-label",messages.pvp?.p2+" · "+messages.buttons.previousWeapon);
   this.p2Next.setAttribute("aria-label",messages.pvp?.p2+" · "+messages.buttons.nextWeapon);
