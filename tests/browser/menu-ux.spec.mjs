@@ -90,6 +90,8 @@ test("short landscape wizard keeps NEXT and START hittable while arena gallery s
 
 test("pause shows Resume without match setup and Run remains reachable from the main menu",async({page})=>{
  const run=page.locator(".game-ui__run-panel");
+ await expect(run).not.toBeVisible();
+ await page.locator(".game-ui__menu-progress-details > summary").tap();
  await expect(run).toBeVisible();
  await expect(run.locator(".game-ui__run-new")).toBeVisible();
  await page.locator('button[data-action="next"]').tap();
@@ -100,4 +102,57 @@ test("pause shows Resume without match setup and Run remains reachable from the 
  await page.locator('button[data-action="menu"]').tap();
  await expect(page.locator(".game-ui__menu-setup")).toBeVisible();
  await expect(run).toBeVisible();
+});
+
+test("reference-screen layout keeps every RTL card inside the menu and shows labeled CTA",async({page})=>{
+ await page.setViewportSize({width:1488,height:1055});
+ const next=page.locator('button[data-action="next"]');
+ await expect(next).toHaveText(/مرحله بعد/);
+ await expect(page.locator(".game-ui__menu-progress-details")).not.toHaveAttribute("open","");
+ await expect(page.locator(".game-ui__menu-arena-panel")).toBeHidden();
+ const measures=await page.evaluate(()=>{
+  const panel=document.querySelector(".game-ui.menu").getBoundingClientRect();
+  const targets=[...document.querySelectorAll(".game-ui__quick-mode,.game-ui__mode-card:not([hidden])")];
+  const rects=targets.map(node=>node.getBoundingClientRect());
+  const heading=document.querySelector(".game-ui__menu-mode-panel .game-ui__section-title").getBoundingClientRect();
+  return{
+   left:panel.left,right:panel.right,
+   cardLeft:Math.min(...rects.map(r=>r.left)),
+   cardRight:Math.max(...rects.map(r=>r.right)),
+   headingLeft:heading.left,headingRight:heading.right,
+   documentWidth:document.documentElement.scrollWidth,windowWidth:innerWidth
+  };
+ });
+ expect(measures.cardLeft).toBeGreaterThanOrEqual(measures.left-1);
+ expect(measures.cardRight).toBeLessThanOrEqual(measures.right+1);
+ expect(measures.headingLeft).toBeGreaterThanOrEqual(measures.left-1);
+ expect(measures.headingRight).toBeLessThanOrEqual(measures.right+1);
+ expect(measures.documentWidth).toBeLessThanOrEqual(measures.windowWidth);
+ await next.tap();
+ await expect(page.locator(".game-ui__menu-arena-panel")).toBeVisible();
+ await expect(page.locator(".game-ui__menu-mode-panel")).toBeHidden();
+ await expect(page.locator(".game-ui__menu-progress-details")).toBeHidden();
+ await expect(page.locator(".game-ui__menu-extras")).toBeHidden();
+ await expect(page.locator('button[data-action="back"]')).toHaveText("بازگشت");
+ await expect(page.locator('button[data-action="start"]')).toHaveText("شروع");
+ await page.locator('button[data-action="back"]').tap();
+ await expect(next).toHaveText(/مرحله بعد/);
+});
+
+test("wizard navigation labels persist after changing language and only one step is visible",async({page})=>{
+ const next=page.locator('button[data-action="next"]');
+ const back=page.locator('button[data-action="back"]');
+ await expect(next).toHaveText(/مرحله بعد/);
+ await page.locator(".game-ui__language button").tap();
+ await expect(next).toHaveText("NEXT · CHOOSE ARENA");
+ await next.tap();
+ await expect(back).toHaveText("BACK");
+ await expect(page.locator(".game-ui__menu-arena-panel")).toBeVisible();
+ await expect(page.locator(".game-ui__menu-mode-panel")).toBeHidden();
+ await expect(page.locator(".game-ui__quick-mode")).toHaveCount(2);
+ await expect(page.locator(".game-ui__quick-mode").first()).toBeHidden();
+ await page.locator(".game-ui__language button").tap();
+ await expect(back).toHaveText("بازگشت");
+ await back.tap();
+ await expect(next).toHaveText(/مرحله بعد/);
 });
