@@ -64,7 +64,7 @@ const messages={
 function setup(hudOverride={}){
  const calls=[];
  const actions={
-  start:()=>calls.push(["start"]),pause(){},resume(){},restart(){},
+  start:()=>calls.push(["start"]),pause(){},resume(){},restart(){},stopToMenu(){},
   weaponNext(){},weaponPrevious(){},weaponSelect(){},
   selectStartingWeapon:id=>calls.push(["startingWeapon",id]),
   upgradeWeapon:id=>calls.push(["upgrade",id]),
