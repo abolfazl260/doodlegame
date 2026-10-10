@@ -8,8 +8,8 @@ Local play was selected rather than LAN or internet matchmaking because it avoid
 
 ## Selecting a match
 
-1. From the main menu choose **Two Players (Local)** / **دو نفره (محلی)** in Game Mode.
-2. Pick any arena and press Start. Both fighters spawn with 100 HP; Player 2 has no AI.
+1. From the main menu choose **Two Players (Local)** / **دو نفره (محلی)** in the player-count cards, then choose the **Local PvP** game-mode card.
+2. Tap **Next: Choose Arena**, select one of the 16 arena cards, and tap **Start**. Both fighters spawn with 100 HP; Player 2 has no AI.
 3. Each player controls their own movement, jump, attack, and weapon selection.
 4. When a fighter reaches zero HP, the other wins. If both reach zero during the same simulation update, the result is a draw. Restart begins a fresh local two-player match in the selected arena; Main Menu exits the match.
 
