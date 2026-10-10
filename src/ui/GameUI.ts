@@ -1,5 +1,5 @@
 import {GameState} from "../core/GameState";
-import {grabGesture} from "../gameplay/GrabCombat.js";
+
 import {getArenaTheme} from "../themes/ArenaThemes";
 import type {ArenaId,GameModeId,HillState} from "../gameplay/GameSession";
 import type {I18n} from "../i18n/I18n";
@@ -19,6 +19,11 @@ type Actions={
  setTouchMove:(x:number,y:number)=>void;touchGrab:()=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;
  setPlayer2TouchMove?:(x:number,y:number)=>void;player2Grab?:()=>void;player2AttackStart?:()=>void;player2AttackEnd?:()=>void;player2AttackCancel?:()=>void;player2WeaponNext?:()=>void;player2WeaponPrevious?:()=>void;
  toggleCombatSound:()=>void;toggleCameraShake:()=>void;updateData:()=>Promise<void>;
+};
+/** UI-local to preserve standalone GameUI test harness; matches GrabCombat rules. */
+const grabGesture=(startX:number,startY:number,x:number,y:number,elapsedMs:number)=>{
+ const dx=x-startX,up=startY-y;
+ return elapsedMs>=0&&elapsedMs<=380&&up>=52&&Math.abs(dx)<=Math.max(30,up*.5);
 };
 type UiAction="start"|"pause"|"resume"|"restart"|"menu";
 type MenuStep="mode"|"arena";
