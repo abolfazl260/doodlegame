@@ -311,3 +311,19 @@ test("new menu has localized live match summary and responsive touch-safe primar
  assert.equal(ui.matchSummary.getAttribute("aria-live"),"polite");
  assert.equal(ui.matchSummary.getAttribute("aria-atomic"),"true");
 });
+
+test("wizard cannot start early, supports keyboard focus and contains zero native selects",()=>{
+ const {ui}=setup();
+ assert.equal(ui.canStartMatch(),false);
+ const scan=node=>[node,...node.children.flatMap(child=>typeof child==="object"?scan(child):[])];
+ assert.equal(scan(ui.menu).filter(node=>node.tag==="select").length,0);
+ assert.equal(ui.menuProgress.getAttribute("aria-live"),"polite");
+ assert.equal(ui.menuSettings.getAttribute("role"),"group");
+ assert.equal(ui.quickModes.getAttribute("role"),"group");
+ ui.stepNextButton.click();
+ assert.equal(ui.canStartMatch(),true);
+ assert.equal(ui.menuStepIndex,1);
+ ui.stepBackButton.click();
+ assert.equal(ui.canStartMatch(),false);
+ assert.equal(ui.menuStepIndex,0);
+});
