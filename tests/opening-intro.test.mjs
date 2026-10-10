@@ -110,6 +110,7 @@ test("skipping the intro reveals menu while the background stays alive until gam
    append(...children){this.children.push(...children)},
    remove(){this.removed=true},
    addEventListener(type,listener){this.listeners??={};this.listeners[type]=listener},
+   removeEventListener(type){delete this.listeners?.[type]},
    querySelector(){return {focus(){}}},
    getContext(){return new Proxy({
     createRadialGradient(){return {addColorStop(){}}}
@@ -219,6 +220,7 @@ function introSimulator(reduced=false,width=960,height=540){
    setAttribute(k,v){this.attributes[k]=v},removeAttribute(k){delete this.attributes[k]},
    append(...v){this.children.push(...v)},remove(){this.removed=true},
    addEventListener(k,fn){this.events??={};this.events[k]=fn},
+   removeEventListener(k){delete this.events?.[k]},
    querySelector(q){return q.includes("game-ui")?{offsetWidth:Math.min(512,width-16)}:{focus(){} }},
    getContext(){return context}
   };
@@ -319,5 +321,29 @@ test("reduced motion finishes as a legible static two-fighter scene without a ba
   assert.equal(sim.raf.size,0);
   assert.equal(sim.intro.ambient,true);
   sim.intro.dispose();
+ }finally{sim.restoreGlobals();}
+});
+
+test("2D context-loss stops the background until the mobile canvas is restored",()=>{
+ const sim=introSimulator();
+ try{
+  sim.intro.start();
+  sim.intro.skip.events.click();
+  assert.equal(sim.raf.size,1);
+  const canvas=sim.intro.canvas;
+  let prevented=false;
+  canvas.events.contextlost({preventDefault(){prevented=true}});
+  assert.equal(prevented,true);
+  assert.equal(sim.raf.size,0,"no useless redraws during context loss");
+  const previous=sim.draws;
+  sim.visibility(false);
+  assert.equal(sim.raf.size,0);
+  canvas.events.contextrestored();
+  assert.ok(sim.draws>previous,"surface must be repainted after restoration");
+  assert.equal(sim.raf.size,1);
+  sim.intro.dispose();
+  assert.equal(sim.raf.size,0);
+  assert.equal(canvas.events.contextlost,undefined,"canvas handlers must be cleaned up");
+  assert.equal(canvas.events.contextrestored,undefined);
  }finally{sim.restoreGlobals();}
 });
