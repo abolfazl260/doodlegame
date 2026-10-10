@@ -484,7 +484,7 @@ export class GameUI{
    finally{this.updateButton.disabled=false;this.updateButton.removeAttribute("aria-busy");}
   };
   this.menuLinks.append(this.helpButton,this.privacyButton,this.combatSoundButton,this.combatShakeButton,this.updateButton);
-  this.menu.append(this.menuHeader,this.menuResult,this.menuSettings,this.upgradePanel,this.buttons,this.menuLinks);
+  this.menu.append(this.menuHeader,this.menuResult,this.menuSettings,this.upgradePanel,this.menuLinks,this.buttons);
   this.topHud.append(this.playerHealth,this.status,this.opponentHealth,this.details);
   this.root.append(this.menu,this.help,this.privacy,this.topHud,this.weaponList,this.missilePanel,this.bowPanel,this.mobileControls,this.rotateHint);
   container.append(this.root);
