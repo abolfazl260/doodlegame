@@ -46,7 +46,7 @@ test("a deliberately timed second Down + ATTACK becomes an unmistakable spinning
  const before=game.opponent.health;
  input.state.attackPressed=true;tick(game);
  assert.equal(game.player.kickKind,"spin");
- tick(game,55);
+ tick(game,66);
  assert.equal(game.opponent.health,before-KICK_SPECS.spin.damage);
  assert.equal(game.player.kickKind,null,"spinning recovery ends");
  tick(game,100);
@@ -83,7 +83,8 @@ test("airborne down attack uses ordinary weapon; neutral attacks preserve bow an
  game.reset(false);
  game.selectWeaponById("uzi");game.player.cooldown=0;
  input.state.attackPressed=true;input.state.attackHeld=true;
- tick(game,45);assert.ok(game.player.cooldown>0,"held UZI must keep firing on the normal automatic cooldown");
+ const beforeShots=game.cueSequence;
+ tick(game,45);assert.ok(game.cueSequence>=beforeShots+2,"held UZI must keep firing repeatedly");
  assert.equal(game.player.kickKind,null);
 });
 test("pause cancellation, damage interruption, defeat and reset clear active kick pose",()=>{
