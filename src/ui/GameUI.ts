@@ -473,7 +473,7 @@ export class GameUI{
    if(event.pointerId===p2StickPointer)moveP2(event);
   });
   for(const kind of ["pointerup","pointercancel","lostpointercapture"])
-   this.p2Joystick.addEventListener(kind,releaseP2Stick);
+   this.p2Joystick.addEventListener(kind,event=>releaseP2Stick(event as PointerEvent));
   const clearP2Attack=()=>{
    const id=p2AttackPointer;p2AttackPointer=-1;
    if(id!==-1&&this.p2Attack.hasPointerCapture?.(id))this.p2Attack.releasePointerCapture(id);
@@ -500,7 +500,7 @@ export class GameUI{
   });
   for(const kind of ["pointercancel","lostpointercapture"])
    this.p2Attack.addEventListener(kind,event=>{
-    if(event.pointerId===p2AttackPointer)cancelP2Attack();
+    if((event as PointerEvent).pointerId===p2AttackPointer)cancelP2Attack();
    });
   this.cancelP2TouchControls=()=>{
    cancelP2Attack();
