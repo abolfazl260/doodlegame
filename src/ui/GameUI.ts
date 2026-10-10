@@ -106,6 +106,16 @@ export class GameUI{
  private readHud:(()=>HudState)|null=null;
  private hudFrame:number|null=null;
  private currentState=GameState.MENU;
+ private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[]}|null=null;
+ private lastHealth:{playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;locale:string}|null=null;
+ private lastAim:{angle:number;power:number}|null=null;
+ private lastBowPercent=NaN;
+ private lastBowCharging=false;
+ private lastHill:{player:number;opponent:number;target:number}|null=null;
+ private hpFormatter:Intl.NumberFormat|null=null;
+ private hpFormatterLocale="";
+ private setText(node:HTMLElement,value:string){if(node.textContent!==value)node.textContent=value;}
+ private setHidden(node:HTMLElement,hidden:boolean){if(node.hidden!==hidden)node.hidden=hidden;}
 
  constructor(container:HTMLElement,actions:Actions,private readonly i18n:I18n){
   this.root.className="game-ui";
@@ -508,102 +518,166 @@ export class GameUI{
  }
 
  render(state:GameState,s:HudState){
-  const messages=this.i18n.messages;
-  this.root.classList.toggle("playing",state===GameState.PLAYING);
-  this.root.classList.toggle("paused",state===GameState.PAUSED);
-  this.root.classList.toggle("game-over",state===GameState.GAME_OVER);
-  if(state===GameState.PLAYING){this.privacy.hidden=true;this.help.hidden=true;}
-  this.root.classList.toggle("menu",state===GameState.MENU);
-  this.menuResult.hidden=state!==GameState.GAME_OVER;
-  this.root.dataset.arena=s.arena;
-  this.root.dataset.mode=s.mode;
-  // Update DOM skin only on arena changes, not on every HUD tick.
-  if(this.root.dataset.visualArena!==s.arena){
-   const theme=getArenaTheme(s.arena);
-   this.root.dataset.visualArena=s.arena;
-   this.root.dataset.themeSkin=theme.skin;
-   this.root.style.setProperty("--arena-accent",theme.accent);
-   this.root.style.setProperty("--arena-secondary",theme.secondary);
-   this.root.style.setProperty("--arena-hud-bg",theme.hudBackground);
-   this.root.style.setProperty("--arena-platform-edge",theme.platformEdge);
-  }
-
-  const upgraded=new Set(s.upgradedWeapons);
-  const equipped=upgraded.has(s.weapon)?messages.upgrades[s.weapon].name:messages.weapons[s.weapon];
-  this.status.textContent=s.winner?(s.winner==="player"?messages.status.win:messages.status.lose):s.mode==="king-of-hill"?messages.status.hill+"  "+s.hill.player.toFixed(1)+" — "+s.hill.opponent.toFixed(1)+" / "+s.hill.target.toFixed(0):messages.modes[s.mode];
-  const playerMax=Math.max(1,s.playerMaxHealth),opponentMax=Math.max(1,s.opponentMaxHealth);
-  const playerHealth=Math.max(0,Math.min(playerMax,s.playerHealth)),opponentHealth=Math.max(0,Math.min(opponentMax,s.opponentHealth));
-  const player=playerHealth/playerMax*100,opponent=opponentHealth/opponentMax*100;
-  this.details.textContent=messages.modes[s.mode]+"  •  "+messages.details.equipped+" "+equipped+(s.weapon==="missile"?"  •  "+messages.details.angle+" "+Math.round(s.missileAngle)+"°  •  "+messages.details.power+" "+s.missilePower.toFixed(1):"");
-
-  this.angleInput.value=String(s.missileAngle);
-  this.powerInput.value=String(s.missilePower);
-  this.angleLabel.textContent=Math.round(s.missileAngle)+"°";
-  this.powerLabel.textContent=s.missilePower.toFixed(1);
-
-  this.arenaSelect.value=s.arena;
-  this.modeSelect.value=s.mode;
-  this.menuResult.textContent=this.status.textContent;
+  this.currentState=state;
+  const messages=this.i18n.messages,locale=this.i18n.locale,old=this.lastView;
+  const stateChanged=!old||old.state!==state;
+  const localeChanged=!old||old.locale!==locale;
+  const arenaChanged=!old||old.arena!==s.arena,modeChanged=!old||old.mode!==s.mode;
+  const weaponChanged=!old||old.weapon!==s.weapon,winnerChanged=!old||old.winner!==s.winner;
+  const pointsChanged=!old||old.upgradePoints!==s.upgradePoints;
+  const upgradesChanged=!old||old.upgradedWeapons.length!==s.upgradedWeapons.length||
+   s.upgradedWeapons.some((id,index)=>id!==old.upgradedWeapons[index]);
+  const staticChanged=stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged;
+  const aimChanged=!this.lastAim||this.lastAim.angle!==s.missileAngle||this.lastAim.power!==s.missilePower;
   const missileRules=s.mode==="missile-duel"||(s.arena==="fortress"&&s.mode==="duel");
-  this.startingWeaponSelect.value=s.weapon;
-  this.startingWeaponSelect.disabled=missileRules||s.mode==="random-weapons";
-  for(const option of this.startingWeaponSelect.options){
-   const id=option.value as WeaponId;
-   option.disabled=missileRules?id!=="missile":s.mode==="random-weapons"||(
-    s.mode==="melee-only"?id!=="blade"&&id!=="hammer":id==="missile"
-   );
+
+  if(staticChanged){
+   if(stateChanged){
+    this.root.classList.toggle("playing",state===GameState.PLAYING);
+    this.root.classList.toggle("paused",state===GameState.PAUSED);
+    this.root.classList.toggle("game-over",state===GameState.GAME_OVER);
+    this.root.classList.toggle("menu",state===GameState.MENU);
+    if(state===GameState.PLAYING){this.setHidden(this.privacy,true);this.setHidden(this.help,true);}
+    this.setHidden(this.menuResult,state!==GameState.GAME_OVER);
+    this.setHidden(this.menuSettings,state!==GameState.MENU&&state!==GameState.GAME_OVER);
+    this.setHidden(this.playerHealth,state!==GameState.PLAYING);
+    this.setHidden(this.opponentHealth,state!==GameState.PLAYING);
+    for(const item of this.buttons.children){
+     const button=item as HTMLButtonElement,action=button.dataset.action as UiAction;
+     this.setHidden(button,(action==="start"&&state!==GameState.MENU)||
+      (action==="pause"&&state!==GameState.PLAYING)||
+      (action==="resume"&&state!==GameState.PAUSED)||
+      (action==="restart"&&state===GameState.MENU));
+    }
+   }
+   if(arenaChanged){
+    const theme=getArenaTheme(s.arena);
+    this.root.dataset.arena=s.arena;
+    this.root.dataset.visualArena=s.arena;
+    this.root.dataset.themeSkin=theme.skin;
+    this.root.style.setProperty("--arena-accent",theme.accent);
+    this.root.style.setProperty("--arena-secondary",theme.secondary);
+    this.root.style.setProperty("--arena-hud-bg",theme.hudBackground);
+    this.root.style.setProperty("--arena-platform-edge",theme.platformEdge);
+   }
+   if(modeChanged)this.root.dataset.mode=s.mode;
+   const upgraded=new Set(s.upgradedWeapons);
+   const equipped=upgraded.has(s.weapon)?messages.upgrades[s.weapon].name:messages.weapons[s.weapon];
+   if(state===GameState.MENU||state===GameState.GAME_OVER){
+    if(this.arenaSelect.value!==s.arena)this.arenaSelect.value=s.arena;
+    if(this.modeSelect.value!==s.mode)this.modeSelect.value=s.mode;
+    if(this.startingWeaponSelect.value!==s.weapon)this.startingWeaponSelect.value=s.weapon;
+    this.startingWeaponSelect.disabled=missileRules||s.mode==="random-weapons";
+    if(modeChanged||arenaChanged){
+     for(const option of this.startingWeaponSelect.options){
+      const id=option.value as WeaponId;
+      const disabled=missileRules?id!=="missile":s.mode==="random-weapons"||
+       (s.mode==="melee-only"?id!=="blade"&&id!=="hammer":id==="missile");
+      if(option.disabled!==disabled)option.disabled=disabled;
+     }
+    }
+    const available=WEAPON_IDS.filter(id=>!upgraded.has(id));
+    const selected=available.includes(this.upgradeSelect.value as WeaponId)?
+     this.upgradeSelect.value as WeaponId:available[0];
+    if(selected&&this.upgradeSelect.value!==selected)this.upgradeSelect.value=selected;
+    if(upgradesChanged){
+     for(const option of this.upgradeSelect.options){
+      const disabled=upgraded.has(option.value as WeaponId);
+      if(option.disabled!==disabled)option.disabled=disabled;
+     }
+    }
+    const disabled=s.upgradePoints<=0||available.length===0;
+    this.upgradeSelect.disabled=disabled;
+    this.upgradeButton.disabled=disabled;
+    this.setHidden(this.upgradeChoices,disabled);
+    this.setHidden(this.upgradeSummary,upgraded.size===0||s.upgradePoints>0);
+    this.setText(this.upgradeSummary,WEAPON_IDS.filter(id=>upgraded.has(id)).map(id=>messages.upgrades[id].name).join(" · "));
+    this.setText(this.upgradePointsLabel,messages.upgrade.points+"  "+s.upgradePoints);
+    this.setText(this.upgradeHint,s.upgradePoints>0&&selected?messages.upgrades[selected].description:messages.upgrade.earn);
+   }
+   this.setHidden(this.upgradePanel,!((state===GameState.MENU||state===GameState.GAME_OVER)&&
+    (s.upgradePoints>0||upgraded.size>0)));
+   if(localeChanged||weaponChanged||modeChanged||arenaChanged||upgradesChanged){
+    for(const item of this.weaponList.children){
+     const button=item as HTMLButtonElement,id=button.dataset.weapon as WeaponId;
+     button.classList.toggle("active",id===s.weapon);
+     this.setText(button,messages.weapons[id]+(upgraded.has(id)?" ★":""));
+     const hidden=missileRules?id!=="missile":s.mode==="melee-only"?(id!=="blade"&&id!=="hammer"):
+      s.mode==="random-weapons"?id!==s.weapon:id==="missile";
+     this.setHidden(button,hidden);
+     button.disabled=hidden||s.mode==="random-weapons";
+    }
+    const availableWeapons=WEAPON_IDS.filter(id=>id!=="missile"&&(s.mode!=="melee-only"||id==="blade"||id==="hammer"));
+    this.setText(this.mobileWeaponName,messages.weapons[s.weapon]+(upgraded.has(s.weapon)?" ★":""));
+    if(this.mobileWeaponName.title!==equipped)this.mobileWeaponName.title=equipped;
+    const position=availableWeapons.indexOf(s.weapon);
+    this.setText(this.mobileWeaponIndex,(position<0?0:position+1)+"/"+availableWeapons.length);
+   }
+   if(stateChanged||weaponChanged||winnerChanged||modeChanged||arenaChanged){
+    const playing=state===GameState.PLAYING&&s.winner===null;
+    this.setHidden(this.weaponList,!playing);
+    this.setHidden(this.mobileWeaponSwitcher,!playing||missileRules||s.mode==="random-weapons");
+    this.setHidden(this.missilePanel,!playing||s.weapon!=="missile");
+    this.setHidden(this.bowPanel,!playing||s.weapon!=="bow");
+    this.setHidden(this.mobileControls,!playing);
+    if(!playing&&(stateChanged||winnerChanged))this.cancelTouchControls();
+   }
+   this.lastView={state,locale,arena:s.arena,mode:s.mode,weapon:s.weapon,winner:s.winner,
+    upgradePoints:s.upgradePoints,upgradedWeapons:[...s.upgradedWeapons]};
   }
-  for(const item of this.weaponList.children){
-   const button=item as HTMLButtonElement;
-   const id=button.dataset.weapon as WeaponId;
-   button.classList.toggle("active",id===s.weapon);
-   button.textContent=messages.weapons[id]+(upgraded.has(id)?" ★":"");
-   button.hidden=missileRules?id!=="missile":s.mode==="melee-only"?(id!=="blade"&&id!=="hammer"):s.mode==="random-weapons"?id!==s.weapon:id==="missile";
-   button.disabled=button.hidden||s.mode==="random-weapons";
+
+  if(!this.hpFormatter||this.hpFormatterLocale!==locale){
+   this.hpFormatter=new Intl.NumberFormat(locale==="fa"?"fa-IR":"en-US",{useGrouping:false,maximumFractionDigits:0});
+   this.hpFormatterLocale=locale;
   }
-  const available=WEAPON_IDS.filter(id=>!upgraded.has(id));
-  const selected=available.includes(this.upgradeSelect.value as WeaponId)?this.upgradeSelect.value as WeaponId:available[0];
-  if(selected)this.upgradeSelect.value=selected;
-  for(const option of this.upgradeSelect.options)option.disabled=upgraded.has(option.value as WeaponId);
-  this.upgradeSelect.disabled=s.upgradePoints<=0||available.length===0;
-  this.upgradeButton.disabled=this.upgradeSelect.disabled;
-  this.upgradeChoices.hidden=this.upgradeSelect.disabled;
-  this.upgradeSummary.hidden=upgraded.size===0||s.upgradePoints>0;
-  this.upgradeSummary.textContent=WEAPON_IDS.filter(id=>upgraded.has(id)).map(id=>messages.upgrades[id].name).join(" · ");
+  const hp=this.lastHealth;
+  if(!hp||hp.locale!==locale||hp.playerHealth!==s.playerHealth||hp.playerMaxHealth!==s.playerMaxHealth||
+   hp.opponentHealth!==s.opponentHealth||hp.opponentMaxHealth!==s.opponentMaxHealth){
+   const playerMax=Math.max(1,s.playerMaxHealth),opponentMax=Math.max(1,s.opponentMaxHealth);
+   const playerHealth=Math.max(0,Math.min(playerMax,s.playerHealth));
+   const opponentHealth=Math.max(0,Math.min(opponentMax,s.opponentHealth));
+   this.setText(this.playerHealthCurrent,this.hpFormatter.format(Math.ceil(playerHealth)));
+   this.setText(this.opponentHealthCurrent,this.hpFormatter.format(Math.ceil(opponentHealth)));
+   this.playerHealth.style.setProperty("--health",playerHealth/playerMax*100+"%");
+   this.opponentHealth.style.setProperty("--health",opponentHealth/opponentMax*100+"%");
+   this.lastHealth={playerHealth:s.playerHealth,playerMaxHealth:s.playerMaxHealth,
+    opponentHealth:s.opponentHealth,opponentMaxHealth:s.opponentMaxHealth,locale};
+  }
 
-  this.upgradePointsLabel.textContent=messages.upgrade.points+"  "+s.upgradePoints;
-  this.upgradeHint.textContent=s.upgradePoints>0&&selected?messages.upgrades[selected].description:messages.upgrade.earn;
-  this.upgradePanel.hidden=!((state===GameState.MENU||state===GameState.GAME_OVER)&&(s.upgradePoints>0||upgraded.size>0));
+  if(aimChanged){
+   const angle=String(s.missileAngle),power=String(s.missilePower);
+   if(this.angleInput.value!==angle)this.angleInput.value=angle;
+   if(this.powerInput.value!==power)this.powerInput.value=power;
+   this.setText(this.angleLabel,Math.round(s.missileAngle)+"°");
+   this.setText(this.powerLabel,s.missilePower.toFixed(1));
+   this.lastAim={angle:s.missileAngle,power:s.missilePower};
+  }
+  if(staticChanged||(aimChanged&&s.weapon==="missile")){
+   const equipped=s.upgradedWeapons.includes(s.weapon)?messages.upgrades[s.weapon].name:messages.weapons[s.weapon];
+   this.setText(this.details,messages.modes[s.mode]+"  •  "+messages.details.equipped+" "+equipped+
+    (s.weapon==="missile"?"  •  "+messages.details.angle+" "+Math.round(s.missileAngle)+"°  •  "+
+     messages.details.power+" "+s.missilePower.toFixed(1):""));
+  }
+  const hillChanged=!this.lastHill||this.lastHill.player!==s.hill.player||
+   this.lastHill.opponent!==s.hill.opponent||this.lastHill.target!==s.hill.target;
+  if(staticChanged||(s.mode==="king-of-hill"&&hillChanged)){
+   const status=s.winner?(s.winner==="player"?messages.status.win:messages.status.lose):
+    s.mode==="king-of-hill"?messages.status.hill+"  "+s.hill.player.toFixed(1)+" — "+
+     s.hill.opponent.toFixed(1)+" / "+s.hill.target.toFixed(0):messages.modes[s.mode];
+   this.setText(this.status,status);
+   if(state===GameState.GAME_OVER)this.setText(this.menuResult,status);
+  }
+  if(s.mode==="king-of-hill"&&hillChanged)
+   this.lastHill={player:s.hill.player,opponent:s.hill.opponent,target:s.hill.target};
 
-  const hpFormatter=new Intl.NumberFormat(this.i18n.locale==="fa"?"fa-IR":"en-US",{useGrouping:false,maximumFractionDigits:0});
-  this.playerHealthCurrent.textContent=hpFormatter.format(Math.ceil(playerHealth));
-  this.opponentHealthCurrent.textContent=hpFormatter.format(Math.ceil(opponentHealth));
-  this.playerHealth.style.setProperty("--health",player+"%");
-  this.opponentHealth.style.setProperty("--health",opponent+"%");
-
-  this.menuSettings.hidden=state!==GameState.MENU&&state!==GameState.GAME_OVER;
-  this.weaponList.hidden=state!==GameState.PLAYING||s.winner!==null;
-  this.mobileWeaponSwitcher.hidden=state!==GameState.PLAYING||s.winner!==null||missileRules||s.mode==="random-weapons";
-  const availableWeapons=WEAPON_IDS.filter(id=>id!=="missile"&&(s.mode!=="melee-only"||id==="blade"||id==="hammer"));
-  const mobileWeaponName=messages.weapons[s.weapon]+(upgraded.has(s.weapon)?" ★":"");
-  if(this.mobileWeaponName.textContent!==mobileWeaponName)this.mobileWeaponName.textContent=mobileWeaponName;
-  this.mobileWeaponName.title=equipped;
-  const position=availableWeapons.indexOf(s.weapon);
-  const weaponIndex=(position<0?0:position+1)+"/"+availableWeapons.length;
-  if(this.mobileWeaponIndex.textContent!==weaponIndex)this.mobileWeaponIndex.textContent=weaponIndex;
-  this.missilePanel.hidden=state!==GameState.PLAYING||s.winner!==null||s.weapon!=="missile";
-  this.bowPanel.hidden=state!==GameState.PLAYING||s.winner!==null||s.weapon!=="bow";
-  this.bowMeter.firstElementChild?.setAttribute("style","width:"+Math.round(s.bowCharge*100)+"%");
-  this.bowValue.textContent=s.bowCharge>0?messages.panels.releaseToFire:"";
-  this.playerHealth.hidden=state!==GameState.PLAYING;
-  this.opponentHealth.hidden=state!==GameState.PLAYING;
-  this.mobileControls.hidden=state!==GameState.PLAYING||s.winner!==null;
-  if(state!==GameState.PLAYING||s.winner!==null)this.cancelTouchControls();
-
-  for(const item of this.buttons.children){
-   const button=item as HTMLButtonElement;
-   const action=button.dataset.action as UiAction;
-   button.hidden=(action==="start"&&state!==GameState.MENU)||(action==="pause"&&state!==GameState.PLAYING)||(action==="resume"&&state!==GameState.PAUSED)||(action==="restart"&&state===GameState.MENU);
+  const bowPercent=Math.round(s.bowCharge*100),bowCharging=s.bowCharge>0;
+  if(bowPercent!==this.lastBowPercent){
+   this.bowMeter.firstElementChild?.setAttribute("style","width:"+bowPercent+"%");
+   this.lastBowPercent=bowPercent;
+  }
+  if(this.lastBowCharging!==bowCharging||localeChanged){
+   this.setText(this.bowValue,bowCharging?messages.panels.releaseToFire:"");
+   this.lastBowCharging=bowCharging;
   }
  }
 
