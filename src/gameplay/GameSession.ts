@@ -136,6 +136,7 @@ const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:numb
  missile:{damage:22,range:0,cooldown:1.05,knockback:10,projectileSpeed:1,radius:1.15}
 };
 const ORDER:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
+const IDLE_P2_INPUT:Readonly<InputState>={moveX:0,moveY:0,pointerX:0,pointerY:0,pointerDown:false,pointerPressed:false,pointerReleased:false,attackHeld:false,attackCancelled:false,jumpPressed:false,dashPressed:false,attackPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};
 export class GameSession{
  private runStage:1|2|3|4|null=null;
  private readonly runEncounters=[
@@ -231,7 +232,7 @@ export class GameSession{
  update(dt:number){
   if(!Number.isFinite(dt)||dt<=0){this.input.endFrame();return;}
   this.ageCues(Math.min(dt,.1));if(this.winner){this.updateDebris(Math.min(dt,.1));}if(this.winner){this.explosions=this.explosions.filter(e=>(e.age+=Math.min(dt,.1))<e.life);this.input.endFrame();return;}
-  const input=this.input.getState(),secondInput=this.modeId==="local-pvp"?this.input.getPlayer2State?.()??input:null,duration=Math.min(dt,.1),steps=Math.ceil(duration/(1/120));
+  const input=this.input.getState(),secondInput=this.modeId==="local-pvp"?this.input.getPlayer2State?.()??IDLE_P2_INPUT:null,duration=Math.min(dt,.1),steps=Math.ceil(duration/(1/120));
   for(let i=0;i<steps;i++) {
    const frame=i===0?input:{...input,jumpPressed:false,dashPressed:false,attackPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};
    for(const f of [this.player,this.opponent]){f.landingTime=Math.max(0,f.landingTime-duration/steps);f.hitTime=Math.max(0,f.hitTime-duration/steps);}
@@ -609,7 +610,7 @@ export class GameSession{
   if(a.cooldown>0){a.bowCharging=false;a.bowCharge=0;return;}
   const w=this.weaponStats.bow,direction=a.facing,speed=w.projectileSpeed!*(.58+.62*charge),angle=(4+11*charge)*Math.PI/180;
   const originX=a.x+direction*(.72+.08*charge),originY=a.y+.48;
-  const upgraded=a===this.player&&this.upgradedWeapons.has("bow");
+  const upgraded=this.modeId!=="local-pvp"&&a===this.player&&this.upgradedWeapons.has("bow");
   for(const offset of upgraded?[-8,0,8]:[0]){
    const flightAngle=angle+offset*Math.PI/180;
    this.projectiles.push({x:originX,y:originY,vx:direction*Math.cos(flightAngle)*speed+a.velocityX*.2,vy:Math.sin(flightAngle)*speed+Math.max(0,a.velocityY*.12),life:2.8,weapon:"bow",owner:a===this.player?"player":"opponent",originX:a.x,returning:false,spin:flightAngle,age:0,bounce:0,ricochets:0,damageScale:upgraded?.65:1});
@@ -620,7 +621,7 @@ export class GameSession{
  private attack(a:Fighter,t:Fighter,pressed:boolean){
   const w=this.weaponStats[a.weapon];
   if(!pressed||a.cooldown>0)return;
-  const upgraded=a===this.player&&this.upgradedWeapons.has(a.weapon);
+  const upgraded=this.modeId!=="local-pvp"&&a===this.player&&this.upgradedWeapons.has(a.weapon);
   const wall=this.wallDirection(a);
   const melee=a.weapon==="blade"||a.weapon==="hammer";
   if(melee&&!a.grounded&&wall!==0){
