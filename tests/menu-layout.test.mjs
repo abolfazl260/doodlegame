@@ -375,16 +375,18 @@ test("the progress drawer switches between Run and upgrades instead of stacking 
  const {ui,hud}=setup({progression,upgradePoints:1});
  assert.equal(ui.menuProgressDetails.hidden,false);
  assert.equal(ui.menuProgressTabs.hidden,false);
+ assert.equal(ui.menuUpgradeTab.getAttribute("aria-pressed"),"true",
+  "an earned upgrade is prioritized after returning to the menu");
+ assert.equal(ui.runPanel.hidden,true);
+ assert.equal(ui.upgradePanel.hidden,false);
+ ui.menuRunTab.click();
+ assert.equal(ui.menuRunTab.getAttribute("aria-pressed"),"true");
  assert.equal(ui.runPanel.hidden,false);
  assert.equal(ui.upgradePanel.hidden,true);
  ui.menuUpgradeTab.click();
  assert.equal(ui.menuUpgradeTab.getAttribute("aria-pressed"),"true");
  assert.equal(ui.upgradePanel.hidden,false);
  assert.equal(ui.runPanel.hidden,true);
- ui.menuRunTab.click();
- assert.equal(ui.menuRunTab.getAttribute("aria-pressed"),"true");
- assert.equal(ui.runPanel.hidden,false);
- assert.equal(ui.upgradePanel.hidden,true);
  hud.inRun=true;hud.progression.run={status:"victory",points:1,stage:1,upgradedWeapons:[]};
  ui.render(states.GAME_OVER,{...hud,winner:"player"});
  assert.equal(ui.menuSetupSection.hidden,true);
