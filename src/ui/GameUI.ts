@@ -3,12 +3,15 @@ import {getArenaTheme} from "../themes/ArenaThemes";
 import type {ArenaId,GameModeId,HillState} from "../gameplay/GameSession";
 import type {I18n} from "../i18n/I18n";
 import type {WeaponId} from "../input/Input";
+import type {ProgressionView} from "../progression/Progression";
 
 type HudState={
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;missileAngle:number;missilePower:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
+ progression?:ProgressionView|null;inRun?:boolean;
 };
 type Actions={
+ newRun?:()=>void;continueRun?:()=>void;leaveRun?:()=>void;
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
@@ -62,6 +65,15 @@ export class GameUI{
  private updateButton=document.createElement("button");
  private combatSoundEnabled=true;private combatShakeEnabled=true;
  private menuResult=document.createElement("div");
+ private runPanel=document.createElement("div");
+ private runHeading=document.createElement("strong");
+ private runProgress=document.createElement("div");
+ private runMessage=document.createElement("div");
+ private runMedals=document.createElement("div");
+ private runControls=document.createElement("div");
+ private runNewButton=document.createElement("button");
+ private runContinueButton=document.createElement("button");
+ private runLeaveButton=document.createElement("button");
  private modeField=document.createElement("label");
  private arenaField=document.createElement("label");
  private weaponField=document.createElement("label");
@@ -109,7 +121,7 @@ export class GameUI{
  private readHud:(()=>HudState)|null=null;
  private hudFrame:number|null=null;
  private currentState=GameState.MENU;
- private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[]}|null=null;
+ private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean}|null=null;
  private lastHealth:{playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;locale:string}|null=null;
  private lastAim:{angle:number;power:number}|null=null;
  private lastBowPercent=NaN;
@@ -483,8 +495,26 @@ export class GameUI{
    catch(error){console.warn("Game data update failed:",error);this.setUpdateOutcome("error");}
    finally{this.updateButton.disabled=false;this.updateButton.removeAttribute("aria-busy");}
   };
+  this.runPanel.className="game-ui__run-panel";
+  this.runPanel.hidden=true;
+  this.runHeading.className="game-ui__run-heading";
+  this.runProgress.className="game-ui__run-progress";
+  this.runMessage.className="game-ui__run-message";
+  this.runMedals.className="game-ui__run-medals";
+  this.runControls.className="game-ui__run-controls";
+  this.runNewButton.type="button";
+  this.runNewButton.className="game-ui__run-new";
+  this.runNewButton.onclick=()=>actions.newRun?.();
+  this.runContinueButton.type="button";
+  this.runContinueButton.className="game-ui__run-continue";
+  this.runContinueButton.onclick=()=>actions.continueRun?.();
+  this.runLeaveButton.type="button";
+  this.runLeaveButton.className="game-ui__run-leave";
+  this.runLeaveButton.onclick=()=>actions.leaveRun?.();
+  this.runControls.append(this.runContinueButton,this.runNewButton,this.runLeaveButton);
+  this.runPanel.append(this.runHeading,this.runProgress,this.runMessage,this.runMedals,this.runControls);
   this.menuLinks.append(this.helpButton,this.privacyButton,this.combatSoundButton,this.combatShakeButton,this.updateButton);
-  this.menu.append(this.menuHeader,this.menuResult,this.menuSettings,this.upgradePanel,this.menuLinks,this.buttons);
+  this.menu.append(this.menuHeader,this.menuResult,this.menuSettings,this.upgradePanel,this.runPanel,this.menuLinks,this.buttons);
   this.topHud.append(this.playerHealth,this.status,this.opponentHealth,this.details);
   this.root.append(this.menu,this.help,this.privacy,this.topHud,this.weaponList,this.missilePanel,this.bowPanel,this.mobileControls,this.rotateHint);
   container.append(this.root);
@@ -535,10 +565,12 @@ export class GameUI{
   const localeChanged=!old||old.locale!==locale;
   const arenaChanged=!old||old.arena!==s.arena,modeChanged=!old||old.mode!==s.mode;
   const weaponChanged=!old||old.weapon!==s.weapon,winnerChanged=!old||old.winner!==s.winner;
+  const progressKey=s.progression?JSON.stringify(s.progression):"";
+  const progressChanged=!old||old.progressKey!==progressKey||old.inRun!==Boolean(s.inRun);
   const pointsChanged=!old||old.upgradePoints!==s.upgradePoints;
   const upgradesChanged=!old||old.upgradedWeapons.length!==s.upgradedWeapons.length||
    s.upgradedWeapons.some((id,index)=>id!==old.upgradedWeapons[index]);
-  const staticChanged=stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged;
+  const staticChanged=stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged;
   const aimChanged=!this.lastAim||this.lastAim.angle!==s.missileAngle||this.lastAim.power!==s.missilePower;
   const missileRules=s.mode==="missile-duel"||(s.arena==="fortress"&&s.mode==="duel");
 
@@ -587,17 +619,21 @@ export class GameUI{
       if(option.disabled!==disabled)option.disabled=disabled;
      }
     }
-    const available=WEAPON_IDS.filter(id=>!upgraded.has(id));
+    const runIntermission=Boolean(s.inRun&&s.progression?.run?.status==="victory");
+    const available=runIntermission?s.progression!.choices.filter(id=>!upgraded.has(id)):
+     WEAPON_IDS.filter(id=>!upgraded.has(id));
     const selected=available.includes(this.upgradeSelect.value as WeaponId)?
      this.upgradeSelect.value as WeaponId:available[0];
     if(selected&&this.upgradeSelect.value!==selected)this.upgradeSelect.value=selected;
-    if(upgradesChanged){
+    if(upgradesChanged||progressChanged){
      for(const option of this.upgradeSelect.options){
-      const disabled=upgraded.has(option.value as WeaponId);
+      const disabled=upgraded.has(option.value as WeaponId)||
+       (runIntermission&&!available.includes(option.value as WeaponId));
       if(option.disabled!==disabled)option.disabled=disabled;
      }
     }
-    const disabled=s.upgradePoints<=0||available.length===0;
+    const disabled=s.upgradePoints<=0||available.length===0||
+     (Boolean(s.inRun)&&!runIntermission);
     this.upgradeSelect.disabled=disabled;
     this.upgradeButton.disabled=disabled;
     this.setHidden(this.upgradeChoices,disabled);
@@ -605,6 +641,38 @@ export class GameUI{
     this.setText(this.upgradeSummary,WEAPON_IDS.filter(id=>upgraded.has(id)).map(id=>messages.upgrades[id].name).join(" · "));
     this.setText(this.upgradePointsLabel,messages.upgrade.points+"  "+s.upgradePoints);
     this.setText(this.upgradeHint,s.upgradePoints>0&&selected?messages.upgrades[selected].description:messages.upgrade.earn);
+   }
+   if(progressChanged||stateChanged||localeChanged){
+    const availableRun=Boolean(s.progression);
+    const menuVisible=state===GameState.MENU||state===GameState.GAME_OVER;
+    this.setHidden(this.runPanel,!menuVisible||!availableRun);
+    if(availableRun){
+     const run=s.progression!.run,copy=messages.run;
+     const stage=run?.stage??1;
+     const fightTitle=stage===4?copy.boss:copy.wave+" "+stage+"/4";
+     this.setText(this.runHeading,copy.title);
+     this.setText(this.runProgress,(run?fightTitle+" · ":"")+copy.career+" "+s.progression!.totalWins+
+      " · "+copy.points+" "+(run?.points??0));
+     const phase=run?.status;
+     const message=phase==="victory"?copy.victory+" "+copy.choose:
+      phase==="defeat"?copy.defeat:
+      phase==="complete"?copy.complete:phase==="ready"?copy.ready:"";
+     this.setText(this.runMessage,message);
+     const all:["rookie","veteran","champion"]=["rookie","veteran","champion"];
+     this.setText(this.runMedals,all.map(id=>(
+      s.progression!.medals.includes(id)?"★ "+copy.medals[id]:"◇ "+copy.medals[id])+
+      " ("+copy.requirements[id]+")").join("  ·  "));
+     const showContinue=Boolean(run)&&phase!=="complete";
+     this.setHidden(this.runContinueButton,!showContinue);
+     this.runContinueButton.disabled=phase==="victory"&&s.progression!.choices.length>0&&run!.points>0;
+     this.setText(this.runContinueButton,phase==="victory"?copy.next:
+      phase==="defeat"?copy.retry:copy.continueRun);
+     this.setText(this.runNewButton,copy.newRun);
+     this.setHidden(this.runLeaveButton,!s.inRun);
+     this.setText(this.runLeaveButton,copy.leave);
+     this.runPanel.dataset.runStatus=phase??"none";
+     this.runPanel.dataset.medal=s.progression!.medals.at(-1)??"none";
+    }
    }
    this.setHidden(this.upgradePanel,!((state===GameState.MENU||state===GameState.GAME_OVER)&&
     (s.upgradePoints>0||upgraded.size>0)));
@@ -634,7 +702,7 @@ export class GameUI{
     if(!playing&&(stateChanged||winnerChanged))this.cancelTouchControls();
    }
    this.lastView={state,locale,arena:s.arena,mode:s.mode,weapon:s.weapon,winner:s.winner,
-    upgradePoints:s.upgradePoints,upgradedWeapons:[...s.upgradedWeapons]};
+    upgradePoints:s.upgradePoints,upgradedWeapons:[...s.upgradedWeapons],progressKey,inRun:Boolean(s.inRun)};
   }
 
   if(!this.hpFormatter||this.hpFormatterLocale!==locale){
