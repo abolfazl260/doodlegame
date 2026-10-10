@@ -24,7 +24,7 @@ export class Game{
   }
   this.state.transitionTo(GameState.GAME_OVER);
  }}
- stop(){if(this.disposed)return;this.loop.stop();if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);}
+ stop(){if(this.disposed)return;this.loop.stop();if(this.inRun){this.progression?.suspend(this.session.getUpgradeSnapshot());this.leaveRun();return;}if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);}
  restart(){this.ready();this.loop.stop();this.state.reset();this.start();}
  selectWeapon(direction:1|-1){this.ready();this.session.selectWeapon(direction);}
  selectStartingWeapon(id:import("../input/Input").WeaponId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return false;const selected=this.session.setStartingWeapon(id);if(selected)this.state.notify();return selected;}
@@ -59,6 +59,16 @@ export class Game{
   if(!this.progression||(state!==GameState.MENU&&state!==GameState.GAME_OVER))return false;
   const view=this.progression.getView(),run=view.run;
   if(!run||run.status==="complete")return false;
+  // Coming back from the main menu with a pending reward opens intermission first.
+  if(run.status==="victory"&&!this.inRun){
+   this.normalSnapshot={arena:this.session.getHudState().arena,mode:this.session.getMode(),
+    upgrades:this.session.getUpgradeSnapshot()};
+   this.inRun=true;
+   this.session.setUpgradeSnapshot({points:run.points,upgradedWeapons:run.upgradedWeapons});
+   this.session.startRunEncounter(run.stage);
+   this.state.notify();
+   return true;
+  }
   if(run.status==="victory"&&!this.progression.advance())return false;
   if(!this.progression.canLaunch())return false;
   if(!this.inRun){
