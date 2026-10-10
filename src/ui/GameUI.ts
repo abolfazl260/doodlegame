@@ -278,6 +278,7 @@ export class GameUI{
   this.menuHeader.className="game-ui__menu-header";
   this.menuSetupSection.className="game-ui__menu-setup";
   this.menuLead.className="game-ui__menu-lead";
+  this.menuLead.setAttribute("tabindex","-1");
   this.menuSetupTitle.className="game-ui__menu-setup-title";
   this.quickModes.className="game-ui__quick-modes";
   this.quickModes.setAttribute("role","group");
@@ -298,11 +299,13 @@ export class GameUI{
   this.menuExtrasTitle.className="game-ui__menu-extras-title";
   this.menuExtras.append(this.menuExtrasTitle);
   this.menuSettings.className="game-ui__menu-settings game-ui__mode-grid";
+  this.menuSettings.setAttribute("role","group");
   this.pvpHint.className="game-ui__pvp-hint";this.pvpHint.hidden=true;
   this.menuLinks.className="game-ui__menu-links";
   this.menuResult.className="game-ui__menu-result";this.menuResult.hidden=true;
   this.modeTitle.className="game-ui__section-title";
   this.arenaTitle.className="game-ui__section-title";
+  this.arenaTitle.setAttribute("tabindex","-1");
   this.startingWeaponTitle.className="game-ui__section-title";
   this.menuProgress.className="game-ui__menu-progress";
   this.menuProgress.setAttribute("aria-live","polite");
@@ -727,6 +730,7 @@ export class GameUI{
     (s.upgradePoints===0&&s.upgradedWeapons.length===0));
   }
   const labels=this.i18n.messages.menu;
+  this.setText(this.menuLead,onArena?(labels?.chooseArena??"CHOOSE ARENA"):(labels?.kickoff??"CHOOSE YOUR FIGHT"));
   const stepLabel=onArena?this.i18n.messages.sections.arena:(labels?.selectMode??this.i18n.messages.sections.gameMode);
   this.setText(this.menuProgress,(labels?.step??"STEP")+" "+(this.menuStepIndex+1)+" / "+MENU_STEPS.length+" · "+stepLabel);
  }
@@ -1064,7 +1068,10 @@ export class GameUI{
   this.menuSetupTitle.textContent=messages.menu?.selectMode??"CHOOSE GAME MODE";
   this.quickDuelButton.textContent=messages.menu?.quickDuel??"SOLO DUEL";
   this.quickPvpButton.textContent=messages.menu?.quickPvp??"2 PLAYERS · LOCAL";
-  this.quickModes.setAttribute("aria-label",messages.sections.gameMode);
+  this.quickModes.setAttribute("aria-label",messages.menu?.players??"PLAYERS");
+  this.menuSettings.setAttribute("aria-label",messages.menu?.selectMode??messages.sections.gameMode);
+  this.arenaCards.setAttribute("role","group");
+  this.arenaCards.setAttribute("aria-label",messages.sections.arena);
   this.menuExtrasTitle.textContent=messages.menu?.options??"SETTINGS & HELP";
   this.modeTitle.textContent=messages.sections.gameMode;
   this.arenaTitle.textContent=messages.sections.arena;
