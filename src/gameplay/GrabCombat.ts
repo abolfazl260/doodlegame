@@ -7,7 +7,7 @@ export interface GrabCandidate{
  readonly grabPhase:GrabPhase;readonly grabImmunity:number;
 }
 export function isGrabTarget(a:GrabCandidate,t:GrabCandidate,pathClear:boolean):boolean{
- if(!pathClear||a.health<=0||t.health<=0||a.grabPhase!==null||t.grabPhase!==null||t.grabImmunity>0||t.enemyType==="boss")return false;
+ if(!pathClear||a.health<=0||t.health<=0||(a.grabPhase!==null&&a.grabPhase!=="attempt")||t.grabPhase!==null||t.grabImmunity>0||t.enemyType==="boss")return false;
  const forward=(t.x-a.x)*a.facing;
  const reach=t.enemyType==="tank"?GRAB.tankReach:GRAB.reach;
  return forward>.55&&forward<=reach&&Math.abs(t.y-a.y)<=GRAB.maxElevation;
