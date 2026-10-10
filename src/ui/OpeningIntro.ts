@@ -238,7 +238,7 @@ export class OpeningIntro{
   }
   // Slow, restrained orbital glow stays well clear of the central menu panel.
   for(const side of [-1,1]){
-   const x=side<0?-w*.095:w*1.095,y=h*.31;
+   const x=(side<0?-.095:1.095)*w+Math.sin(t*.05+side)*w*.006,y=h*.31;
    ctx.strokeStyle=side<0?"#5388b8":"#497cba";
    ctx.lineWidth=Math.max(.7,w*.0009);
    ctx.globalAlpha=.19;
