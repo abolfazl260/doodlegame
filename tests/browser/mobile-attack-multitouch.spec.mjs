@@ -32,11 +32,11 @@ test("second ATTACK finger cannot release the owned UZI hold; regular release en
   expect((await metrics(page)).held).toBe(true);
   await touch(client,"touchStart",[first,second]);
   expect((await metrics(page)).held).toBe(true);
-  await touch(client,"touchEnd",[first]); // Only the unrelated second finger lifted.
+  await touch(client,"touchEnd",[second]); // CDP touchEnd names the contact being lifted.
   expect((await metrics(page)).held).toBe(true);
   await page.evaluate(()=>window.__weaponFixture.tick(25));
   expect((await metrics(page)).projectiles).toBeGreaterThan(0);
-  await touch(client,"touchEnd",[]);
+  await touch(client,"touchEnd",[first]);
   expect((await metrics(page)).held).toBe(false);
   expect((await metrics(page)).cancelled).toBe(false);
  }finally{await client.detach();}
@@ -54,11 +54,11 @@ test("joystick and ATTACK keep separate simultaneous touch ownership",async({pag
   let m=await metrics(page);
   expect(m.move).toBeGreaterThan(0);
   expect(m.held).toBe(true);
-  await touch(client,"touchEnd",[joystick]);
+  await touch(client,"touchEnd",[attack]);
   m=await metrics(page);
   expect(m.held).toBe(false);
   expect(m.move).toBeGreaterThan(0);
-  await touch(client,"touchEnd",[]);
+  await touch(client,"touchEnd",[joystick]);
   expect((await metrics(page)).move).toBe(0);
  }finally{await client.detach();}
 });
