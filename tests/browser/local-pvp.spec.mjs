@@ -129,3 +129,38 @@ test("simultaneous elimination renders an explicit draw without awarding Run pro
  expect((await snapshot(page)).winner).toBe("draw");
  await expect(page.locator(".game-ui__menu-result")).toContainText(/مساوی|DRAW/);
 });
+
+
+test("compact 568×260 landscape keeps all four touch controls and Pause separately hittable",async({page})=>{
+ await page.setViewportSize({width:568,height:260});
+ await page.evaluate(()=>window.__runFixture.startPvP());
+ const selectors=[
+  ".game-ui__joystick",
+  ".game-ui__mobile-button--attack",
+  ".game-ui__p2-joystick",
+  ".game-ui__p2-attack",
+  ".game-ui__mobile-pause"
+ ];
+ const boxes=await Promise.all(selectors.map(async selector=>{
+  const element=page.locator(selector),b=await element.boundingBox();
+  expect(b).toBeTruthy();
+  expect(b.x).toBeGreaterThanOrEqual(0);
+  expect(b.y).toBeGreaterThanOrEqual(0);
+  expect(b.x+b.width).toBeLessThanOrEqual(568);
+  expect(b.y+b.height).toBeLessThanOrEqual(260);
+  const hit=await page.evaluate(({selector,x,y})=>Boolean(document.elementFromPoint(x,y)?.closest(selector)),{
+   selector,x:b.x+b.width/2,y:b.y+b.height/2
+  });
+  expect(hit,selector+" must own its hit-test center").toBe(true);
+  return b;
+ }));
+ for(let i=0;i<boxes.length;i++){
+  for(let j=i+1;j<boxes.length;j++){
+   const a=boxes[i],b=boxes[j];
+   const overlap=Math.max(0,Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x))*
+    Math.max(0,Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y));
+   expect(overlap,selectors[i]+" overlaps "+selectors[j]).toBe(0);
+  }
+ }
+ await expect(page.locator(".game-ui__p2-weapons button")).toHaveCount(2);
+});
