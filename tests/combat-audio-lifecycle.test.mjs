@@ -7,6 +7,8 @@ class FakeAudioContext {
  state="suspended";
  currentTime=1;
  destination={};
+ ambientStops=0;
+ ambientDisconnects=0;
  resumeCalls=0;
  closeCalls=0;
  oscillatorStarts=0;
@@ -24,17 +26,18 @@ class FakeAudioContext {
   return Promise.resolve();
  }
  close(){this.closeCalls++;this.state="closed";return Promise.resolve();}
+ createBiquadFilter(){return {type:"lowpass",frequency:{value:0},Q:{value:0},connect(){},disconnect(){}};}
  createOscillator(){
   return {
    type:"triangle",
-   frequency:{setValueAtTime(){},exponentialRampToValueAtTime(){}},
-   connect(){},disconnect(){},stop(){},
+   frequency:{value:0,setValueAtTime(){},exponentialRampToValueAtTime(){}},
+   connect(){},disconnect(){},stop:()=>{this.ambientStops++;},
    start:()=>{this.oscillatorStarts++;}
   };
  }
  createGain(){
   return {
-   gain:{setValueAtTime(){},exponentialRampToValueAtTime(){}},
+   gain:{value:0,setValueAtTime(){},exponentialRampToValueAtTime(){},setTargetAtTime(){},cancelScheduledValues(){}},
    connect(){},disconnect(){}
   };
  }
@@ -185,4 +188,31 @@ test("WebKit AudioContext is supported and dispose removes listeners idempotentl
   audio.setMuted(false);
   assert.equal(instances.length,1,"disposed audio cannot recreate a context");
  },true);
+});
+
+test("quiet space ambience starts after permission gesture, stops in gameplay, and respects mute",async()=>{
+ await withAudio(async({audio,events,instances})=>{
+  audio.setAmbientActive(true);
+  assert.equal(instances.length,0,"no audio before user interaction");
+  pointer(events);
+  await Promise.resolve();
+  const ctx=instances[0];
+  assert.equal(ctx.oscillatorStarts,4,"space music uses four quiet synthesized voices");
+  pointer(events);
+  assert.equal(ctx.oscillatorStarts,4,"repeated touches do not duplicate ambient music");
+  audio.setAmbientActive(false);
+  assert.equal(ctx.ambientStops,4,"all menu voices must stop during combat");
+  audio.setAmbientActive(true);
+  assert.equal(ctx.oscillatorStarts,8,"menu restoration starts a fresh quiet pad");
+  audio.setMuted(true);
+  assert.equal(ctx.ambientStops,8,"sound toggle stops ambience");
+  audio.setAmbientActive(true);
+  pointer(events);
+  assert.equal(ctx.oscillatorStarts,8,"muted menu must remain silent");
+  audio.setMuted(false);
+  await Promise.resolve();
+  assert.equal(ctx.oscillatorStarts,12,"unmuting resumes the menu sound");
+  audio.dispose();
+  assert.equal(ctx.ambientStops,12,"app cleanup stops the soundtrack");
+ });
 });
