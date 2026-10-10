@@ -1,5 +1,5 @@
 import type {ArenaId,PlatformSurface} from "../gameplay/GameSession";
-import {paintProfessionalBackdrop} from "./BackgroundArt";
+import {paintProfessionalBackdrop} from "./BackgroundArt.js";
 
 export type ArenaUiSkin = "doodle" | "neon" | "fantasy";
 export type ArenaBackdrop = "sketch" | "city" | "clouds" | "mountains" | "cavern" | "industrial";
