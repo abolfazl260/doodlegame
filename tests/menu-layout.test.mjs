@@ -107,6 +107,7 @@ test("menu uses localized native selectors for all 16 arenas and 7 modes",()=>{
  assert.deepEqual(calls,[["arena","reactor"],["mode","low-gravity"],["startingWeapon","bow"]]);
  assert.equal(ui.title.textContent,"DOODLEGAME DUEL");
  assert.equal(ui.menu.children.includes(ui.buttons),true,"primary action stays in menu");
+ assert.equal(ui.menu.children.at(-1),ui.buttons,"primary action is the sticky last row");
  ui.buttons.children.find(button=>button.dataset.action==="start").click();
  assert.deepEqual(calls.at(-1),["start"]);
 });
@@ -178,11 +179,13 @@ test("game-over menu retains mode/arena selection and win message",()=>{
  assert.equal(ui.menuSettings.hidden,true);
 });
 
-test("menu CSS has no scroll container and applies compact safe-area layout",()=>{
+test("menu provides a safe-area-aware scroll region and sticky primary action",()=>{
  const css=readFileSync("src/styles.css","utf8");
  const menu=css.slice(css.indexOf("/* Issue #37: viewport-fitting menu."));
- assert.ok(menu.includes("overflow:visible"));
  assert.ok(menu.includes("max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom)"));
+ assert.match(menu,/\.game-ui:not\(\.playing\) \.game-ui__menu\s*\{[^}]*overflow-y:auto/s);
+ assert.match(menu,/\.game-ui:not\(\.playing\) \.game-ui__controls\s*\{[^}]*position:sticky/s);
+ assert.match(css,/body\{touch-action:pan-y\}/);
  assert.ok(menu.includes("grid-template-columns:repeat(2,minmax(0,1fr))"));
  assert.ok(menu.includes("@media (max-height:520px)"));
  assert.ok(menu.includes("@media (max-height:360px)"));
