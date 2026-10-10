@@ -4,13 +4,32 @@ import type {CombatCue} from "../gameplay/CombatFeedback";
 export class CombatAudio{
  private context:AudioContext|null=null;
  private muted=false;
+ private disposed=false;
  private lastCueId=0;
  private lastPlayTime=-1;
- private readonly unlock=()=>{
-  if(this.muted||this.context||typeof window==="undefined")return;
-  const Ctor=window.AudioContext||(window as Window & {webkitAudioContext?:typeof AudioContext}).webkitAudioContext;
-  if(!Ctor)return;
-  try{this.context=new Ctor();void this.context.resume().catch(()=>{});}catch{this.context=null;}
+ private readonly unlock=(event?:Event)=>{
+  if(this.muted||this.disposed||typeof window==="undefined")return;
+  // Key auto-repeat is not a new user gesture. Retry on subsequent real
+  // interactions even if an earlier resume() promise has not settled.
+  if(event?.type==="keydown"&&(event as KeyboardEvent).repeat)return;
+  let context=this.context;
+  if(!context||context.state==="closed"){
+   const Ctor=window.AudioContext||(window as Window & {webkitAudioContext?:typeof AudioContext}).webkitAudioContext;
+   if(!Ctor)return;
+   try{
+    context=new Ctor();
+    this.context=context;
+    // A replacement context starts its clock from zero.
+    this.lastPlayTime=-1;
+   }catch{return;}
+  }
+  if(context.state==="running")return;
+  try{
+   // A suspended/interrupted context must be resumed by another user gesture.
+   // Some browsers leave resume promises pending until audio is permitted,
+   // so do not permanently block later attempts.
+   void context.resume().catch(()=>{});
+  }catch{/* Audio availability must not interrupt gameplay. */}
  };
  constructor(){
   if(typeof document!=="undefined"){
@@ -47,6 +66,8 @@ export class CombatAudio{
   }catch{/* Unsupported/paused audio must never interrupt the game. */}
  }
  dispose(){
+  if(this.disposed)return;
+  this.disposed=true;
   if(typeof document!=="undefined"){document.removeEventListener("pointerdown",this.unlock);document.removeEventListener("keydown",this.unlock);}
   if(this.context){void this.context.close().catch(()=>{});this.context=null;}
  }
