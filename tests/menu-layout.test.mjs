@@ -54,6 +54,7 @@ const messages={
  pvp:{p1:"P1",p2:"P2",hint:"Shared-screen controls",winner1:"P1 wins",winner2:"P2 wins",draw:"Draw"},
  panels:{weaponUpgrades:"UPGRADES",missileControl:"MISSILE",bowDraw:"BOW",releaseToFire:"RELEASE"},
  upgrade:{points:"POINTS",choose:"Choose",earn:"Earn",upgraded:"UPGRADED",upgrade:"Upgrade",locked:"Locked"},
+ run:{title:"FOUR-FIGHT RUN",newRun:"NEW",continueRun:"CONTINUE",next:"NEXT",retry:"RETRY",leave:"LEAVE",wave:"WAVE",boss:"BOSS",ready:"READY",victory:"VICTORY",defeat:"DEFEAT",complete:"COMPLETE",choose:"CHOOSE",career:"WINS",points:"POINTS",medals:{rookie:"ROOKIE",veteran:"VETERAN",champion:"CHAMPION"},requirements:{rookie:"1",veteran:"3",champion:"4"}},
  helpHtml:"<strong>How to play</strong>",
  arenas:Object.fromEntries(arenas.map(key=>[key,key])),
  modes:Object.fromEntries(modes.map(key=>[key,key])),
