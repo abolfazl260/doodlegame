@@ -14,9 +14,9 @@ export class Game{
   }
  }
  initialize(){this.assertNotDisposed();if(this.initialized)return;this.initialized=true;this.renderer.resize();this.renderer.render(this.session.getRenderState());}
- start(){this.ready();if(this.inRun)this.leaveRun();const s=this.state.getState();if(s===GameState.MENU||s===GameState.GAME_OVER){this.session.reset();this.state.transitionTo(GameState.PLAYING);}else if(s===GameState.PAUSED)this.state.transitionTo(GameState.PLAYING);this.loop.start();}
- pause(){this.ready();if(this.state.getState()===GameState.PLAYING){this.loop.stop();this.state.transitionTo(GameState.PAUSED);}}
- resume(){this.ready();if(this.state.getState()===GameState.PAUSED){this.state.transitionTo(GameState.PLAYING);this.loop.start();}}
+ start(){this.ready();this.session.cancelTransientActions();if(this.inRun)this.leaveRun();const s=this.state.getState();if(s===GameState.MENU||s===GameState.GAME_OVER){this.session.reset();this.state.transitionTo(GameState.PLAYING);}else if(s===GameState.PAUSED)this.state.transitionTo(GameState.PLAYING);this.loop.start();}
+ pause(){this.ready();if(this.state.getState()===GameState.PLAYING){this.loop.stop();this.session.cancelTransientActions();this.state.transitionTo(GameState.PAUSED);}}
+ resume(){this.ready();if(this.state.getState()===GameState.PAUSED){this.session.cancelTransientActions();this.state.transitionTo(GameState.PLAYING);this.loop.start();}}
  endGame(){this.ready();if(this.state.getState()===GameState.PLAYING){
   if(this.inRun&&this.progression){
    const winner=this.session.getHudState().winner;
@@ -24,8 +24,8 @@ export class Game{
   }
   this.state.transitionTo(GameState.GAME_OVER);
  }}
- stop(){if(this.disposed)return;this.loop.stop();if(this.inRun){this.progression?.suspend(this.session.getUpgradeSnapshot());this.leaveRun();return;}if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);}
- restart(){this.ready();this.loop.stop();this.state.reset();this.start();}
+ stop(){if(this.disposed)return;this.loop.stop();this.session.cancelTransientActions();if(this.inRun){this.progression?.suspend(this.session.getUpgradeSnapshot());this.leaveRun();return;}if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);}
+ restart(){this.ready();this.loop.stop();this.session.cancelTransientActions();this.state.reset();this.start();}
  selectWeapon(direction:1|-1){this.ready();this.session.selectWeapon(direction);}
  selectStartingWeapon(id:import("../input/Input").WeaponId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return false;const selected=this.session.setStartingWeapon(id);if(selected)this.state.notify();return selected;}
  selectWeaponById(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectWeaponById(id);}
@@ -89,6 +89,7 @@ export class Game{
   this.ready();
   if(!this.inRun)return false;
   this.loop.stop();
+  this.session.cancelTransientActions();
   this.inRun=false;
   this.session.leaveRun();
   if(this.normalSnapshot){
