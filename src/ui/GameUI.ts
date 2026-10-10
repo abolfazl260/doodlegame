@@ -726,7 +726,7 @@ export class GameUI{
   this.setHidden(this.stepBackButton,!active||!onArena);
   this.setHidden(this.stepNextButton,!active||onArena);
   this.setHidden(this.menuProgressDetails,!active||onArena);
-  this.setHidden(this.menuExtras,!active||onArena);
+  this.setHidden(this.menuExtras,active&&onArena);
   for(const item of this.buttons.children){
    const button=item as HTMLButtonElement;
    if(button.dataset.action==="start")this.setHidden(button,state!==GameState.MENU||!onArena);
