@@ -8,25 +8,37 @@ import type {ProgressionView} from "../progression/Progression";
 type HudState={
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;missileAngle:number;missilePower:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
- progression?:ProgressionView|null;inRun?:boolean;
+ progression?:ProgressionView|null;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;
 };
 type Actions={
  newRun?:()=>void;continueRun?:()=>void;leaveRun?:()=>void;
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;stopToMenu?:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
- setTouchMove:(x:number,y:number)=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;toggleCombatSound:()=>void;toggleCameraShake:()=>void;updateData:()=>Promise<void>;
+ setTouchMove:(x:number,y:number)=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;
+ setPlayer2TouchMove?:(x:number,y:number)=>void;player2AttackStart?:()=>void;player2AttackEnd?:()=>void;player2AttackCancel?:()=>void;player2WeaponNext?:()=>void;player2WeaponPrevious?:()=>void;
+ toggleCombatSound:()=>void;toggleCameraShake:()=>void;updateData:()=>Promise<void>;
 };
 type UiAction="start"|"pause"|"resume"|"restart"|"menu";
 
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
-const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
+const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill","local-pvp"];
 const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";
 
 export class GameUI{
  private root=document.createElement("section");
  private mobileControls=document.createElement("div");
+ private p2Controls=document.createElement("div");
+ private p2Joystick=document.createElement("div");
+ private p2Thumb=document.createElement("div");
+ private p2Attack=document.createElement("button");
+ private p2WeaponControls=document.createElement("div");
+ private p2WeaponName=document.createElement("span");
+ private p2Prev=document.createElement("button");
+ private p2Next=document.createElement("button");
+ private cancelP2TouchControls:()=>void=()=>{};
+ private cancelP2Attack:()=>void=()=>{};
  private joystick=document.createElement("div");
  private joystickThumb=document.createElement("div");
  private mobileAttackButton=document.createElement("button");
@@ -122,7 +134,7 @@ export class GameUI{
  private readHud:(()=>HudState)|null=null;
  private hudFrame:number|null=null;
  private currentState=GameState.MENU;
- private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean}|null=null;
+ private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId}|null=null;
  private lastHealth:{playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;locale:string}|null=null;
  private lastAim:{angle:number;power:number}|null=null;
  private lastBowPercent=NaN;
@@ -142,6 +154,20 @@ export class GameUI{
   this.languageControl.append(this.languageLabel,this.languageButton);
 
   this.mobileControls.className="game-ui__mobile-controls";
+  this.p2Controls.className="game-ui__p2-controls";
+  this.p2Joystick.className="game-ui__p2-joystick";
+  this.p2Thumb.className="game-ui__p2-thumb";
+  this.p2Joystick.append(this.p2Thumb);
+  this.p2Attack.className="game-ui__p2-attack";
+  this.p2Attack.type="button";
+  this.p2WeaponControls.className="game-ui__p2-weapons";
+  this.p2Prev.type="button";this.p2Next.type="button";
+  this.p2Prev.textContent="‹";this.p2Next.textContent="›";
+  this.p2WeaponControls.append(this.p2Prev,this.p2WeaponName,this.p2Next);
+  this.p2Controls.append(this.p2Joystick,this.p2Attack,this.p2WeaponControls);
+  this.p2Controls.hidden=true;
+  this.p2Prev.onclick=()=>actions.player2WeaponPrevious?.();
+  this.p2Next.onclick=()=>actions.player2WeaponNext?.();
   this.joystick.className="game-ui__joystick";
   this.joystickThumb.className="game-ui__joystick-thumb";
   this.mobileAttackButton.type="button";
@@ -168,7 +194,7 @@ export class GameUI{
   this.nextWeaponButton.className="game-ui__mobile-weapon-arrow";
   this.mobileWeaponSwitcher.append(weaponDisplay,this.previousWeaponButton,this.nextWeaponButton);
   this.joystick.append(this.joystickThumb);
-  this.mobileControls.append(this.mobileWeaponSwitcher,this.joystick,this.mobileAttackButton,this.mobilePauseButton);
+  this.mobileControls.append(this.mobileWeaponSwitcher,this.joystick,this.mobileAttackButton,this.mobilePauseButton,this.p2Controls);
   this.missileAimGuide.className="game-ui__missile-aim-guide";
   this.missileAimGuide.hidden=true;
   this.missileAimGuide.setAttribute("aria-live","off");
@@ -404,6 +430,7 @@ export class GameUI{
   };
   const cancelControls=()=>{
    cancelAttack();
+   this.cancelP2TouchControls();
    if(joystickPointer!==-1){
     const id=joystickPointer;
     joystickPointer=-1;
@@ -574,18 +601,20 @@ export class GameUI{
   const localeChanged=!old||old.locale!==locale;
   const arenaChanged=!old||old.arena!==s.arena,modeChanged=!old||old.mode!==s.mode;
   const weaponChanged=!old||old.weapon!==s.weapon,winnerChanged=!old||old.winner!==s.winner;
+  const secondWeaponChanged=!old||old.secondWeapon!==s.secondWeapon;
   const progressKey=s.progression?JSON.stringify(s.progression):"";
   const progressChanged=!old||old.progressKey!==progressKey||old.inRun!==Boolean(s.inRun);
   const pointsChanged=!old||old.upgradePoints!==s.upgradePoints;
   const upgradesChanged=!old||old.upgradedWeapons.length!==s.upgradedWeapons.length||
    s.upgradedWeapons.some((id,index)=>id!==old.upgradedWeapons[index]);
-  const staticChanged=stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged;
+  const staticChanged=stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged||secondWeaponChanged;
   const aimChanged=!this.lastAim||this.lastAim.angle!==s.missileAngle||this.lastAim.power!==s.missilePower;
   const missileRules=s.mode==="missile-duel"||(s.arena==="fortress"&&s.mode==="duel");
 
   if(staticChanged){
    // A held UZI/Bow touch belongs to the originally selected weapon, not its replacement.
    if(weaponChanged&&state===GameState.PLAYING)this.cancelActiveTouchAttack();
+   if(secondWeaponChanged&&state===GameState.PLAYING)this.cancelP2Attack();
    if(stateChanged){
     this.root.classList.toggle("playing",state===GameState.PLAYING);
     this.root.classList.toggle("paused",state===GameState.PAUSED);
@@ -688,7 +717,7 @@ export class GameUI{
    }
    this.setHidden(this.upgradePanel,!((state===GameState.MENU||state===GameState.GAME_OVER)&&
     (s.upgradePoints>0||upgraded.size>0)));
-   if(localeChanged||weaponChanged||modeChanged||arenaChanged||upgradesChanged){
+   if(localeChanged||weaponChanged||secondWeaponChanged||modeChanged||arenaChanged||upgradesChanged){
     for(const item of this.weaponList.children){
      const button=item as HTMLButtonElement,id=button.dataset.weapon as WeaponId;
      button.classList.toggle("active",id===s.weapon);
@@ -699,7 +728,8 @@ export class GameUI{
      button.disabled=hidden||s.mode==="random-weapons";
     }
     const availableWeapons=WEAPON_IDS.filter(id=>id!=="missile"&&(s.mode!=="melee-only"||id==="blade"||id==="hammer"));
-    this.setText(this.mobileWeaponName,messages.weapons[s.weapon]+(upgraded.has(s.weapon)?" ★":""));
+    this.setText(this.mobileWeaponName,(s.mode==="local-pvp"?messages.pvp.p1+" · ":"")+messages.weapons[s.weapon]+(upgraded.has(s.weapon)?" ★":""));
+    this.setText(this.p2WeaponName,messages.pvp?.p2+" · "+messages.weapons[s.secondWeapon??"blade"]);
     if(this.mobileWeaponName.title!==equipped)this.mobileWeaponName.title=equipped;
     const position=availableWeapons.indexOf(s.weapon);
     this.setText(this.mobileWeaponIndex,(position<0?0:position+1)+"/"+availableWeapons.length);
@@ -711,10 +741,11 @@ export class GameUI{
     this.setHidden(this.missilePanel,!playing||s.weapon!=="missile");
     this.setHidden(this.bowPanel,!playing||s.weapon!=="bow");
     this.setHidden(this.mobileControls,!playing);
+    this.setHidden(this.p2Controls,!playing||s.mode!=="local-pvp");
     if(!playing&&(stateChanged||winnerChanged))this.cancelTouchControls();
    }
    this.lastView={state,locale,arena:s.arena,mode:s.mode,weapon:s.weapon,winner:s.winner,
-    upgradePoints:s.upgradePoints,upgradedWeapons:[...s.upgradedWeapons],progressKey,inRun:Boolean(s.inRun)};
+    upgradePoints:s.upgradePoints,upgradedWeapons:[...s.upgradedWeapons],progressKey,inRun:Boolean(s.inRun),secondWeapon:s.secondWeapon};
   }
 
   if(!this.hpFormatter||this.hpFormatterLocale!==locale){
@@ -755,8 +786,8 @@ export class GameUI{
    const status=s.winner?(s.winner==="player"?messages.status.win:messages.status.lose):
     s.mode==="king-of-hill"?messages.status.hill+"  "+s.hill.player.toFixed(1)+" — "+
      s.hill.opponent.toFixed(1)+" / "+s.hill.target.toFixed(0):messages.modes[s.mode];
-   this.setText(this.status,status);
-   if(state===GameState.GAME_OVER)this.setText(this.menuResult,status);
+   this.setText(this.status,s.mode==="local-pvp"&&s.winner?(s.winner==="player"?messages.pvp.winner1:messages.pvp.winner2):status);
+   if(state===GameState.GAME_OVER)this.setText(this.menuResult,s.mode==="local-pvp"?(s.winner==="player"?messages.pvp.winner1:messages.pvp.winner2):status);
   }
   if(s.mode==="king-of-hill"&&hillChanged)
    this.lastHill={player:s.hill.player,opponent:s.hill.opponent,target:s.hill.target};
@@ -837,6 +868,11 @@ export class GameUI{
   this.privacyLink.textContent=messages.privacy.web;
   this.privacyCloseButton.textContent=messages.privacy.close;
   this.mobileAttackButton.textContent=messages.buttons.attack;
+  this.p2Attack.textContent=messages.buttons.attack;
+  this.p2Attack.setAttribute("aria-label",messages.pvp?.p2+" · "+messages.buttons.attack);
+  this.p2Joystick.setAttribute("aria-label",messages.pvp?.p2);
+  this.p2Prev.setAttribute("aria-label",messages.pvp?.p2+" · "+messages.buttons.previousWeapon);
+  this.p2Next.setAttribute("aria-label",messages.pvp?.p2+" · "+messages.buttons.nextWeapon);
   this.mobilePauseButton.setAttribute("aria-label",messages.buttons.pause);
   this.mobilePauseButton.title=messages.buttons.pause;
   this.mobileWeaponSwitcher.setAttribute("aria-label",messages.details.equipped);
