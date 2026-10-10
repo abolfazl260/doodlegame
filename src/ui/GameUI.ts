@@ -734,6 +734,7 @@ export class GameUI{
   const stepLabel=onArena?this.i18n.messages.sections.arena:(labels?.selectMode??this.i18n.messages.sections.gameMode);
   this.setText(this.menuProgress,(labels?.step??"STEP")+" "+(this.menuStepIndex+1)+" / "+MENU_STEPS.length+" · "+stepLabel);
  }
+ canStartMatch(){return this.currentState===GameState.MENU&&this.menuStepIndex===MENU_STEPS.length-1;}
  setUpdateVisible(visible:boolean){this.updateButton.hidden=!visible;}
  setUpdateOutcome(result:"success"|"error"){this.updateButton.dataset.result=result;}
  bind(subscribe:(listener:(state:GameState)=>void)=>()=>void,read:()=>HudState){
