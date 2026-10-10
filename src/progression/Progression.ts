@@ -82,6 +82,15 @@ export class Progression{
   this.persist();
   return true;
  }
+ suspend(snapshot:UpgradeSnapshot){
+  const run=this.data.run;
+  if(!run||run.status!=="fighting")return false;
+  run.points=Math.min(4,count(snapshot.points,4));
+  run.upgradedWeapons=weaponList(snapshot.upgradedWeapons);
+  run.status="ready";
+  this.persist();
+  return true;
+ }
  result(winner:"player"|"opponent",snapshot:UpgradeSnapshot){
   const run=this.data.run;
   if(!run||run.status!=="fighting")return false;
