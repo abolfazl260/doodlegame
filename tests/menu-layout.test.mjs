@@ -398,3 +398,35 @@ test("the progress drawer switches between Run and upgrades instead of stacking 
  assert.equal(ui.stepNextButton.hidden,true);
  assert.equal(ui.buttons.children.find(b=>b.dataset.action==="restart").hidden,true);
 });
+
+
+test("all sixteen maps remain selectable through a visible main-menu shortcut",()=>{
+ const {ui,calls,hud}=setup();
+ const expected=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge",
+  "crater","vertical","ruins","conveyor","collapse","storm","reactor"];
+ assert.deepEqual(ui.arenaCards.children.map(card=>card.dataset.arena),expected);
+ assert.equal(ui.arenaShortcut.hidden,false);
+ assert.match(ui.arenaShortcut.textContent,/classic/i);
+ ui.arenaShortcut.click();
+ assert.equal(ui.menuStepIndex,1);
+ assert.equal(ui.menuArenaPanel.hidden,false);
+ assert.equal(ui.arenaCards.children.length,16);
+ for(const id of expected){
+  const card=ui.arenaCards.children.find(c=>c.dataset.arena===id);
+  assert.ok(card,`arena ${id} must remain available`);
+  card.click();
+  assert.deepEqual(calls.at(-1),["arena",id]);
+  hud.arena=id;ui.render(states.MENU,hud);
+  assert.equal(card.getAttribute("aria-pressed"),"true");
+  assert.match(ui.arenaSelectionSummary.textContent,new RegExp(id,"i"));
+ }
+ ui.stepBackButton.click();
+ assert.equal(ui.menuStepIndex,0);
+ assert.match(ui.arenaShortcut.textContent,/reactor/i);
+ ui.arenaShortcut.click();
+ assert.equal(ui.menuStepIndex,1);
+ assert.equal(ui.arenaCards.children.find(c=>c.dataset.arena==="reactor").getAttribute("aria-pressed"),"true");
+ ui.quickPvpButton.click();
+ hud.mode="local-pvp";ui.render(states.MENU,hud);
+ assert.equal(ui.arenaCards.children.length,16,"2P must retain all arena choices");
+});
