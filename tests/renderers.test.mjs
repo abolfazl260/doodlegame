@@ -63,3 +63,48 @@ test('new arena mechanics have finite WebGL environment geometry',async()=>{
   group.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
  }
 });
+
+test('Canvas backdrop reuses its pixels until arena or viewport changes',async()=>{
+ const {CanvasRenderer}=await rendererModule('CanvasRenderer');
+ const oldDocument=globalThis.document,oldWindow=globalThis.window;
+ let rasterPaints=0,blits=0,allocations=0,canvas;
+ const ctx=(overrides={})=>new Proxy({
+  createLinearGradient(){return {addColorStop(){}};},
+  ...overrides
+ },{get(target,key){return key in target?target[key]:()=>{}},
+    set(target,key,value){target[key]=value;return true}});
+ const displayContext=ctx({drawImage(){blits++;}});
+ globalThis.document={createElement(tag){
+  assert.equal(tag,"canvas");
+  allocations++;
+  return {width:0,height:0,getContext(){return ctx({fillRect(){rasterPaints++;}});}};
+ }};
+ globalThis.window={devicePixelRatio:2};
+ try{
+  canvas={clientWidth:640,clientHeight:360,getContext(){return displayContext;}};
+  const renderer=new CanvasRenderer(canvas);
+  const initial=state();
+  renderer.render(initial);
+  const firstPaintCount=rasterPaints;
+  assert.ok(firstPaintCount>0,"the initial static background should be rasterized");
+  renderer.render(initial);
+  assert.equal(rasterPaints,firstPaintCount,"unchanged frames should only blit cached pixels");
+  assert.equal(allocations,1);
+  assert.equal(blits,2);
+  renderer.render({...initial,arena:"crater"});
+  assert.ok(rasterPaints>firstPaintCount,"changing arenas invalidates background pixels");
+  const afterArena=rasterPaints;
+  canvas.clientWidth=800;
+  renderer.resize();
+  renderer.render({...initial,arena:"crater"});
+  assert.ok(rasterPaints>afterArena,"resizing invalidates the backdrop");
+  assert.equal(canvas.width,1600,"the cache follows device pixel ratio");
+  assert.equal(renderer.backdropCanvas.width,1600);
+  assert.equal(allocations,1,"a single backing canvas should be reused");
+  renderer.dispose();
+  assert.equal(renderer.backdropCanvas,null);
+ }finally{
+  if(oldDocument===undefined)delete globalThis.document;else globalThis.document=oldDocument;
+  if(oldWindow===undefined)delete globalThis.window;else globalThis.window=oldWindow;
+ }
+});
