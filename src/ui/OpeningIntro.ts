@@ -219,11 +219,13 @@ export class OpeningIntro{
   */
  private drawSpaceAtmosphere(ctx:CanvasRenderingContext2D,w:number,h:number,t:number){
   ctx.save();
-  const sky=ctx.createLinearGradient(0,0,0,h);
-  sky.addColorStop(0,"#030714");
-  sky.addColorStop(.57,"#07152d");
-  sky.addColorStop(1,"#020610");
-  ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+  const sky=ctx.createLinearGradient?.(0,0,0,h);
+  if(sky){
+   sky.addColorStop(0,"#030714");
+   sky.addColorStop(.57,"#07152d");
+   sky.addColorStop(1,"#020610");
+  }
+  ctx.fillStyle=sky??"#030714";ctx.fillRect(0,0,w,h);
   for(const glow of [
    {x:.09,y:.35,size:.4,color:"40,100,183",alpha:.20},
    {x:.92,y:.16,size:.39,color:"44,102,195",alpha:.17},
