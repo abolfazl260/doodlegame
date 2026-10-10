@@ -128,7 +128,7 @@ export class GameUI{
  private upgradePanel=document.createElement("div");
  private upgradeTitle=document.createElement("strong");
  private upgradeChoices=document.createElement("div");
- private upgradeSelect=document.createElement("select");
+ private upgradeCardGrid=document.createElement("div");
  private upgradeButton=document.createElement("button");
  private upgradeSummary=document.createElement("span");
  private upgradePointsLabel=document.createElement("span");
@@ -355,21 +355,28 @@ export class GameUI{
   this.upgradePointsLabel.className="game-ui__upgrade-points";
   this.upgradeHint.className="game-ui__upgrade-hint";
   this.upgradeSummary.className="game-ui__upgrade-summary";
-  this.upgradeSelect.setAttribute("aria-label",this.i18n.messages.panels.weaponUpgrades);
+  this.upgradeCardGrid.className="game-ui__upgrade-card-grid";
+  this.upgradeCardGrid.setAttribute("role","group");
   this.upgradeButton.type="button";
   this.upgradeButton.onclick=()=>{
-   if(!this.upgradeButton.disabled)actions.upgradeWeapon(this.upgradeSelect.value as WeaponId);
+   if(!this.upgradeButton.disabled&&this.selectedUpgrade)actions.upgradeWeapon(this.selectedUpgrade);
   };
   for(const id of WEAPON_IDS){
-   const option=document.createElement("option");
-   option.value=id;
-   this.upgradeSelect.append(option);
+   const card=document.createElement("button");
+   card.type="button";card.className="game-ui__upgrade-card";
+   card.dataset.upgradeWeapon=id;
+   card.setAttribute("aria-pressed","false");
+   card.onclick=()=>{
+    if(card.disabled)return;
+    this.selectedUpgrade=id;
+    for(const item of this.upgradeCardGrid.children){
+     (item as HTMLButtonElement).setAttribute("aria-pressed",String((item as HTMLButtonElement).dataset.upgradeWeapon===id));
+    }
+    this.setText(this.upgradeHint,this.i18n.messages.upgrades[id].description);
+   };
+   this.upgradeCardGrid.append(card);
   }
-  this.upgradeSelect.onchange=()=>{
-   const id=this.upgradeSelect.value as WeaponId;
-   this.upgradeHint.textContent=this.i18n.messages.upgrades[id].description;
-  };
-  this.upgradeChoices.append(this.upgradeSelect,this.upgradeButton);
+  this.upgradeChoices.append(this.upgradeCardGrid,this.upgradeButton);
   this.upgradePanel.append(this.upgradeTitle,this.upgradePointsLabel,this.upgradeChoices,this.upgradeHint,this.upgradeSummary);
 
   this.missilePanel.className="game-ui__missile-panel";
@@ -859,19 +866,20 @@ export class GameUI{
     const runIntermission=Boolean(s.inRun&&s.progression?.run?.status==="victory");
     const available=runIntermission?s.progression!.choices.filter(id=>!upgraded.has(id)):
      WEAPON_IDS.filter(id=>!upgraded.has(id));
-    const selected=available.includes(this.upgradeSelect.value as WeaponId)?
-     this.upgradeSelect.value as WeaponId:available[0];
-    if(selected&&this.upgradeSelect.value!==selected)this.upgradeSelect.value=selected;
-    if(upgradesChanged||progressChanged){
-     for(const option of this.upgradeSelect.options){
-      const disabled=upgraded.has(option.value as WeaponId)||
-       (runIntermission&&!available.includes(option.value as WeaponId));
-      if(option.disabled!==disabled)option.disabled=disabled;
+    const selected=this.selectedUpgrade&&available.includes(this.selectedUpgrade)?
+     this.selectedUpgrade:available[0]??null;
+    this.selectedUpgrade=selected;
+    if(upgradesChanged||progressChanged||modeChanged||stateChanged||pointsChanged||localeChanged){
+     for(const item of this.upgradeCardGrid.children){
+      const card=item as HTMLButtonElement,id=card.dataset.upgradeWeapon as WeaponId;
+      const allowed=available.includes(id);
+      this.setHidden(card,!allowed);
+      card.disabled=!allowed;
+      card.setAttribute("aria-pressed",String(id===selected));
      }
     }
     const disabled=s.mode==="local-pvp"||s.upgradePoints<=0||available.length===0||
      (Boolean(s.inRun)&&!runIntermission);
-    this.upgradeSelect.disabled=disabled;
     this.upgradeButton.disabled=disabled;
     this.setHidden(this.upgradeChoices,disabled);
     this.setHidden(this.upgradeSummary,upgraded.size===0||s.upgradePoints>0);
@@ -1086,7 +1094,7 @@ export class GameUI{
   this.nextWeaponButton.setAttribute("aria-label",messages.buttons.nextWeapon);
   this.upgradeTitle.textContent=messages.panels.weaponUpgrades;
   this.upgradeButton.textContent=messages.upgrade.upgrade;
-  this.upgradeSelect.setAttribute("aria-label",messages.panels.weaponUpgrades);
+  this.upgradeCardGrid.setAttribute("aria-label",messages.panels.weaponUpgrades);
   this.missileTitle.textContent=messages.panels.missileControl;
   this.bowTitle.textContent=messages.panels.bowDraw;
   this.angleName.textContent=messages.details.angle;
@@ -1112,9 +1120,9 @@ export class GameUI{
    const card=item as HTMLButtonElement;
    card.textContent=messages.weapons[card.dataset.startingWeapon as WeaponId];
   }
-  for(const option of this.upgradeSelect.options){
-   const id=option.value as WeaponId;
-   option.textContent=messages.weapons[id]+" → "+messages.upgrades[id].name;
+  for(const item of this.upgradeCardGrid.children){
+   const card=item as HTMLButtonElement,id=card.dataset.upgradeWeapon as WeaponId;
+   card.textContent=messages.weapons[id]+" → "+messages.upgrades[id].name;
   }
   for(const item of this.weaponList.children){
    const button=item as HTMLButtonElement;
