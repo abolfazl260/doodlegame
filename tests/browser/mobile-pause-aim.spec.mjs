@@ -67,3 +67,18 @@ test("missile preview mirrors when the fighter faces left during a held aim",asy
  }finally{await page.mouse.up();}
  await expect(page.locator(".game-ui__missile-aim-guide")).toBeHidden();
 });
+
+
+test("touch Pause exposes localized Main Menu and returns to the menu without hardware Back",async({page})=>{
+ const pause=page.locator(".game-ui__mobile-pause");
+ await pause.tap();
+ const back=page.locator('button[data-action="menu"]');
+ await expect(back).toBeVisible();
+ await expect(back).toHaveText("منوی اصلی");
+ await back.tap();
+ expect(await page.evaluate(()=>window.__weaponFixture.state())).toBe("MENU");
+ await expect(pause).toBeHidden();
+ await expect(back).toBeHidden();
+ await page.locator(".game-ui__language button").click();
+ await expect(back).toHaveText("MAIN MENU");
+});
