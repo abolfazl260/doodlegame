@@ -1048,3 +1048,14 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
 @media (pointer:fine){
  .game-ui__p2-controls{display:none!important}
 }
+
+/* Distinguish the two human health bars without obscuring current HP numerals. */
+.game-ui.playing[data-mode="local-pvp"] .health-bar--player::after,
+.game-ui.playing[data-mode="local-pvp"] .health-bar--opponent::after{
+ position:absolute;inset:auto;top:50%;transform:translateY(-50%);
+ font-size:.58rem;line-height:1;font-weight:900;letter-spacing:.03em;
+ color:#fff;text-shadow:0 1px 2px #000,0 0 5px #000;
+ z-index:3;pointer-events:none;
+}
+.game-ui.playing[data-mode="local-pvp"] .health-bar--player::after{content:"P1";left:.35rem}
+.game-ui.playing[data-mode="local-pvp"] .health-bar--opponent::after{content:"P2";right:.35rem}
