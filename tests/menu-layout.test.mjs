@@ -331,7 +331,7 @@ test("wizard cannot start early, supports keyboard focus and contains zero nativ
 test("menu wizard CTA always has a translated label and each step hides the other",()=>{
  const {ui}=setup();
  const next=ui.stepNextButton,back=ui.stepBackButton;
- assert.equal(next.textContent,"NEXT: CHOOSE ARENA");
+ assert.equal(next.textContent,"NEXT · CHOOSE ARENA");
  assert.equal(back.textContent,"BACK");
  assert.equal(ui.menuProgressDetails.tag,"details");
  assert.ok(ui.menuProgressDetails.children.includes(ui.upgradePanel));
