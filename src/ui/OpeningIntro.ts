@@ -317,7 +317,7 @@ export class OpeningIntro{
    x:0,y:0,enemyType:enemy?"runner":null,bowCharge:0,missileAngle:45,missilePower:12,
    velocityX:enemy?-.8:.8,velocityY:1,grounded:false,facing:enemy?-1:1,
    health:100,maxHealth:100,weapon:"blade",attackTime:0,attackVariant:0,
-   animationTime:t,gaitPhase:t*3,landingTime:0,hitTime:0,bossPhase:0,attackTelegraph:0
+   animationTime:t,gaitPhase:t*3,landingTime:0,hitTime:0,bossPhase:0,attackTelegraph:0,kickKind:null,kickElapsed:0
   };
   const figure=fighterVisual(state);
   const scale=Math.max(25,Math.min(60,h*.068,w*.145))*scaleMultiplier;
