@@ -19,10 +19,11 @@ test("health bars flank the status, and long weapon details occupy their own row
    return {
     left:rect(".health-bar--player"),right:rect(".health-bar--opponent"),
     status:rect(".game-ui__status"),details:rect(".game-ui__details"),
-    top:rect(".game-ui__top-hud")
+    top:rect(".game-ui__top-hud"),
+    computed:[...document.querySelectorAll(".game-ui__top-hud > *")].map(el=>({tag:el.tagName,cls:el.className,display:getComputedStyle(el).display,position:getComputedStyle(el).position,gridColumn:getComputedStyle(el).gridColumn,gridRow:getComputedStyle(el).gridRow,width:getComputedStyle(el).width}))
    };
   });
-  expect(rects.left.right).toBeLessThanOrEqual(rects.status.left+1);
+  expect(rects.left.right,JSON.stringify(rects)).toBeLessThanOrEqual(rects.status.left+1);
   expect(rects.status.right).toBeLessThanOrEqual(rects.right.left+1);
   expect(rects.details.top).toBeGreaterThanOrEqual(Math.max(rects.left.bottom,rects.right.bottom)-1);
   expect(rects.details.right).toBeLessThanOrEqual(568);
