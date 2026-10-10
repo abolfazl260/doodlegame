@@ -8,6 +8,7 @@ const setup=(pvp=true)=>{
  const input=new WebInput({});
  const session=new GameSession(input);
  if(pvp)session.setMode("local-pvp");
+ session.environment=[]; // isolate throws from explosive arena props
  const a=session.player,t=session.opponent;
  a.x=-.46;t.x=.46;a.y=t.y=1.15;
  a.facing=1;t.facing=-1;a.velocityX=t.velocityX=0;
