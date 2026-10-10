@@ -21,6 +21,7 @@ const renderer={resize(){},render(){},dispose(){}};
 const game=new Game(renderer,session,scheduler,error=>{throw error;},progression);
 const ui=new GameUI(root,{
  start:()=>game.start(),pause:()=>game.pause(),resume:()=>game.resume(),restart:()=>game.restart(),
+ stopToMenu:()=>{input.resetTransientState();game.stop();},
  newRun:()=>{game.newRun();},continueRun:()=>{game.continueRun();},leaveRun:()=>{game.leaveRun();},
  weaponNext:()=>game.selectWeapon(1),weaponPrevious:()=>game.selectWeapon(-1),
  weaponSelect:id=>game.selectWeaponById(id),selectStartingWeapon:id=>game.selectStartingWeapon(id),
