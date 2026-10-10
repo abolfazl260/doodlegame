@@ -178,9 +178,10 @@ export class OpeningIntro{
   const w=this.width,h=this.height;
   const pose=openingFrame(this.elapsed,this.duration);
   ctx.setTransform(this.ratio,0,0,this.ratio,0,0);
-  ctx.fillStyle="#010204";
+  ctx.fillStyle="#020611";
   ctx.fillRect(0,0,w,h);
   const t=this.elapsed/1000;
+  this.drawSpaceAtmosphere(ctx,w,h,t);
   for(const star of this.stars){
    ctx.globalAlpha=openingStarBrightness(star,t,this.reducedMotion);
    ctx.fillStyle="#fff";
@@ -211,6 +212,57 @@ export class OpeningIntro{
   }
  }
 
+ /**
+  * Soft procedural nebula, orbital silhouettes and far-field satellite debris.
+  * Lightweight enough for the ~30 fps ambient menu; no external image assets.
+  * Center stays subdued for readable RTL/LTR menu text and controls.
+  */
+ private drawSpaceAtmosphere(ctx:CanvasRenderingContext2D,w:number,h:number,t:number){
+  ctx.save();
+  const sky=ctx.createLinearGradient(0,0,0,h);
+  sky.addColorStop(0,"#030714");
+  sky.addColorStop(.57,"#07152d");
+  sky.addColorStop(1,"#020610");
+  ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+  for(const glow of [
+   {x:.09,y:.35,size:.4,color:"40,100,183",alpha:.20},
+   {x:.92,y:.16,size:.39,color:"44,102,195",alpha:.17},
+   {x:.55,y:.82,size:.52,color:"70,136,222",alpha:.10}
+  ]){
+   const x=glow.x*w,y=glow.y*h,r=Math.max(w,h)*glow.size;
+   const light=ctx.createRadialGradient(x,y,0,x,y,r);
+   light.addColorStop(0,`rgba(${glow.color},${glow.alpha})`);
+   light.addColorStop(.33,`rgba(${glow.color},${glow.alpha*.26})`);
+   light.addColorStop(1,`rgba(${glow.color},0)`);
+   ctx.fillStyle=light;ctx.fillRect(x-r,y-r,2*r,2*r);
+  }
+  // Slow, restrained orbital glow stays well clear of the central menu panel.
+  for(const side of [-1,1]){
+   const x=side<0?-w*.095:w*1.095,y=h*.31;
+   ctx.strokeStyle=side<0?"#5388b8":"#497cba";
+   ctx.lineWidth=Math.max(.7,w*.0009);
+   ctx.globalAlpha=.19;
+   ctx.beginPath();ctx.ellipse(x,y,w*.19,h*.085,-side*.12,0,Math.PI*2);ctx.stroke();
+   ctx.globalAlpha=.36;
+   ctx.lineWidth=Math.max(1,w*.0015);
+   ctx.beginPath();ctx.ellipse(x,y,w*.14,h*.054,-side*.12,.2,2.45);ctx.stroke();
+  }
+  for(let i=0;i<11;i++){
+   const left=i%2===0;
+   const x=(left?.04:.96)*w+(left?1:-1)*w*.045*Math.sin(i*4.3);
+   const y=h*(.2+(i*.119)% .56);
+   const size=Math.max(1.2,w*(.002+(i%3)*.002));
+   ctx.fillStyle="#334a6c";ctx.globalAlpha=.18+(i%4)*.06;
+   ctx.beginPath();ctx.moveTo(x-size*1.2,y);
+   ctx.lineTo(x-size*.2,y-size*.7);
+   ctx.lineTo(x+size*.95,y-size*.24);
+   ctx.lineTo(x+size*.85,y+size*.65);
+   ctx.lineTo(x-size*.5,y+size*.8);
+   ctx.closePath();ctx.fill();
+  }
+  ctx.restore();
+ }
+
  private drawPlanet(ctx:CanvasRenderingContext2D,w:number,h:number,t:number){
   const radius=Math.min(w*.37,h*.79);
   const x=w*.5;
@@ -221,19 +273,19 @@ export class OpeningIntro{
    x-radius*.12,y-radius*.96,radius*.045,
    x,y-radius*.2,radius*1.34
   );
-  surface.addColorStop(0,"#f5f5f5");
-  surface.addColorStop(.16,"#c6c6c6");
-  surface.addColorStop(.39,"#696a6e");
-  surface.addColorStop(.68,"#1b1d22");
-  surface.addColorStop(1,"#020304");
+  surface.addColorStop(0,"#d5e5fa");
+  surface.addColorStop(.16,"#8ba9d2");
+  surface.addColorStop(.39,"#354c72");
+  surface.addColorStop(.68,"#111c36");
+  surface.addColorStop(1,"#030713");
   ctx.fillStyle=surface;
   ctx.beginPath();
   ctx.arc(x,y,radius,0,Math.PI*2);
   ctx.fill();
 
-  ctx.strokeStyle="#e4e6e7";
+  ctx.strokeStyle="#9ed5ff";
   ctx.lineWidth=Math.max(1.4,radius*.004);
-  ctx.shadowColor="#f9fbff";
+  ctx.shadowColor="#539ade";
   ctx.shadowBlur=Math.min(32,radius*.045);
   ctx.beginPath();
   ctx.arc(x,y,radius,Math.PI*1.02,Math.PI*1.98);
@@ -242,7 +294,7 @@ export class OpeningIntro{
 
   // Jagged, low-contrast terrain along the distant upper limb.
   ctx.globalAlpha=.2;
-  ctx.strokeStyle="#515257";
+  ctx.strokeStyle="#294467";
   ctx.lineWidth=Math.max(1,radius*.008);
   ctx.beginPath();
   for(let i=0;i<=80;i++){
