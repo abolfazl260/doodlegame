@@ -12,11 +12,11 @@ export interface DuelistRenderState{readonly x:number;readonly enemyType:EnemyTy
 export interface ProjectileRenderState{readonly x:number;readonly y:number;readonly vx:number;readonly vy:number;readonly life:number;readonly weapon:WeaponId;readonly rotation:number;readonly age:number;}
 export interface ExplosionRenderState{readonly x:number;readonly y:number;age:number;readonly life:number;readonly radius:number;}
 export type ArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fortress"|"bridge"|"crater"|"vertical"|"ruins"|"conveyor"|"collapse"|"storm"|"reactor";
-export type GameModeId="duel"|"missile-duel"|"melee-only"|"random-weapons"|"sudden-death"|"low-gravity"|"king-of-hill";
+export type GameModeId="duel"|"missile-duel"|"melee-only"|"random-weapons"|"sudden-death"|"low-gravity"|"king-of-hill"|"local-pvp";
 export interface HillState{readonly player:number;readonly opponent:number;readonly target:number;readonly halfWidth:number;}
 export interface ArenaDefinition{readonly id:ArenaId;readonly name:string;readonly platforms:readonly Platform[];readonly spawnX:[number,number];readonly speedMultiplier:number;readonly jumpMultiplier:number;readonly gravity:number;readonly fallLimit:number|null;readonly movingPlatforms:boolean;readonly windStrength?:number;readonly gravityWell?:{readonly x:number;readonly y:number;readonly radius:number;readonly strength:number;};}
 export interface GameRenderState{readonly player:DuelistRenderState;readonly opponent:DuelistRenderState;readonly projectiles:readonly ProjectileRenderState[];readonly explosions:readonly ExplosionRenderState[];readonly platforms:readonly Platform[];readonly environment:readonly EnvironmentRenderState[];readonly debris:readonly ArenaDebrisRenderState[];readonly winner:"player"|"opponent"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];readonly combatCues:readonly CombatCue[];readonly cameraShake:Readonly<{x:number;y:number}>;}
-export interface GameHudState{readonly playerHealth:number;readonly playerMaxHealth:number;readonly opponentHealth:number;readonly opponentMaxHealth:number;readonly weapon:WeaponId;readonly winner:"player"|"opponent"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly playerFacing:number;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];}
+export interface GameHudState{readonly playerHealth:number;readonly playerMaxHealth:number;readonly opponentHealth:number;readonly opponentMaxHealth:number;readonly weapon:WeaponId;readonly winner:"player"|"opponent"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly playerFacing:number;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];readonly secondWeapon?:WeaponId;readonly secondBowCharge?:number;}
 interface Fighter{x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;gaitPhase:number;landingTime:number;hitTime:number;bossPhase:number;attackTelegraph:number;}
 interface EnemyBrain{plan:EnemyPlan;thinkClock:number;chargeTime:number;chargeTotal:number;recoverTime:number;dodgeCooldown:number;jumpCooldown:number;transitionTime:number;phase:number;phaseAttacks:number;lastX:number;stuckTime:number;}
 interface Projectile{x:number;y:number;vx:number;vy:number;life:number;weapon:WeaponId;owner:"player"|"opponent";originX:number;returning:boolean;spin:number;age:number;bounce:number;ricochets:number;deflectCooldown?:number;damageScale?:number;sticky?:boolean;stuck?:boolean;clusterChild?:boolean;}
@@ -178,7 +178,7 @@ export class GameSession{
   return{x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.missileRules?"missile":stats.weapon,attackTime:0,cooldown:0,bowCharge:0,bowCharging:false,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0,gaitPhase:0,landingTime:0,hitTime:0,bossPhase:0,attackTelegraph:0};
 }
  setArena(id:ArenaId){this.arenaId=id;this.reset(false);}
- setMode(id:GameModeId){this.modeId=id;this.reset(false);}
+ setMode(id:GameModeId){this.modeId=id;this.input.setLocalPvPEnabled?.(id==="local-pvp");this.reset(false);}
  getArena(){return this.arena;}
  getMode(){return this.modeId;}
  getUpgradeSnapshot(){return{points:this.upgradePoints,upgradedWeapons:[...this.upgradedWeapons]};}
@@ -191,6 +191,7 @@ export class GameSession{
   this.runStage=stage;
   this.arenaId=this.runEncounters[stage-1].arena;
   this.modeId="duel";
+  this.input.setLocalPvPEnabled?.(false);
   this.reset(false);
  }
  leaveRun(){this.runStage=null;}
@@ -211,18 +212,26 @@ export class GameSession{
   this.player.bowCharging=false;
   this.player.bowCharge=0;
   if(this.player.weapon==="bow")this.player.attackTime=0;
+  this.opponent.bowCharging=false;this.opponent.bowCharge=0;
+  if(this.opponent.weapon==="bow")this.opponent.attackTime=0;
  }
  cancelTouchAttack(){this.cancelTransientActions();}
  getMissileAim(){return{angle:this.missileAngle,power:this.missilePower};}
  upgradeWeapon(id:WeaponId){if(this.upgradePoints<=0||this.upgradedWeapons.has(id))return false;this.upgradedWeapons.add(id);this.upgradePoints--;return true;}
- reset(advanceEnemy=true){this.combatCues=[];this.visualFreezeUntil=0;this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];this.debris=[];if(advanceEnemy)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,this.runStage?this.runEncounters[this.runStage-1].enemy:types[enemyIndex]);if(this.runStage){const hp=this.runEncounters[this.runStage-1].health;this.opponent.health=hp;this.opponent.maxHealth=hp;}if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER.filter(id=>id!=="missile");this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(this.modeId!=="random-weapons"&&!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;this.projectiles=[];this.resetEnvironment();this.enemyBrain=this.freshEnemyBrain();this.enemyBrain.lastX=this.opponent.x;this.winner=null;}
+ reset(advanceEnemy=true){this.combatCues=[];this.visualFreezeUntil=0;this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];this.debris=[];if(advanceEnemy)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,this.modeId==="local-pvp"?null:this.runStage?this.runEncounters[this.runStage-1].enemy:types[enemyIndex]);if(this.runStage){const hp=this.runEncounters[this.runStage-1].health;this.opponent.health=hp;this.opponent.maxHealth=hp;}if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER.filter(id=>id!=="missile");this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(this.modeId!=="random-weapons"&&!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;if(this.modeId==="local-pvp")this.opponent.weapon="blade";this.projectiles=[];this.resetEnvironment();this.enemyBrain=this.freshEnemyBrain();this.enemyBrain.lastX=this.opponent.x;this.winner=null;}
  private availableWeapons():WeaponId[]{if(this.missileRules)return["missile"];if(this.modeId==="melee-only")return["blade","hammer"];if(this.modeId==="random-weapons")return[this.player.weapon];return ORDER.filter(id=>id!=="missile");}
  selectWeapon(direction:1|-1){if(this.modeId==="random-weapons")return;const available=this.availableWeapons();const i=Math.max(0,available.indexOf(this.player.weapon));this.player.weapon=available[(i+direction+available.length)%available.length];this.player.bowCharging=false;this.player.bowCharge=0;}
  selectWeaponById(id:WeaponId){if(this.modeId==="random-weapons")return;const available=this.availableWeapons();if(!available.includes(id))return;this.player.weapon=id;this.player.bowCharging=false;this.player.bowCharge=0;}
+ selectPlayer2Weapon(direction:1|-1){
+  if(this.modeId!=="local-pvp")return;
+  const available=this.availableWeapons(),i=Math.max(0,available.indexOf(this.opponent.weapon));
+  this.opponent.weapon=available[(i+direction+available.length)%available.length];
+  this.opponent.bowCharging=false;this.opponent.bowCharge=0;
+ }
  update(dt:number){
   if(!Number.isFinite(dt)||dt<=0){this.input.endFrame();return;}
   this.ageCues(Math.min(dt,.1));if(this.winner){this.updateDebris(Math.min(dt,.1));}if(this.winner){this.explosions=this.explosions.filter(e=>(e.age+=Math.min(dt,.1))<e.life);this.input.endFrame();return;}
-  const input=this.input.getState(),duration=Math.min(dt,.1),steps=Math.ceil(duration/(1/120));
+  const input=this.input.getState(),secondInput=this.modeId==="local-pvp"?this.input.getPlayer2State?.()??input:null,duration=Math.min(dt,.1),steps=Math.ceil(duration/(1/120));
   for(let i=0;i<steps;i++) {
    const frame=i===0?input:{...input,jumpPressed:false,dashPressed:false,attackPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};
    for(const f of [this.player,this.opponent]){f.landingTime=Math.max(0,f.landingTime-duration/steps);f.hitTime=Math.max(0,f.hitTime-duration/steps);}
@@ -232,7 +241,8 @@ export class GameSession{
     const index=f.grounded?before.findIndex(p=>Math.abs(f.y-HH/2-p.y-p.height)<.12&&f.x+PH/2>p.x&&f.x-PH/2<p.x+p.width):-1;
     if(index>=0){f.x+=after[index].x-before[index].x;f.y+=after[index].y-before[index].y;}
    }
-   this.step(duration/steps,frame);
+   const secondFrame=secondInput?(i===0?secondInput:{...secondInput,jumpPressed:false,dashPressed:false,attackPressed:false,weaponNextPressed:false,weaponPreviousPressed:false}):null;
+   this.step(duration/steps,frame,secondFrame);
    for(const f of [this.player,this.opponent])f.gaitPhase+=Math.abs(f.velocityX)*duration/steps*1.8;
   }
   this.input.endFrame();
@@ -247,6 +257,15 @@ export class GameSession{
   if(this.player.dashCooldown<=DASH_COOLDOWN-DASH_TIME)this.move(this.player,d,dt);
   this.integrate(this.player,dt);
 }
+ private updateHumanOpponent(input:Readonly<InputState>,dt:number){
+  const f=this.opponent,d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;
+  if(input.dashPressed)this.tryDash(f);
+  if(input.jumpPressed)this.tryJump(f);
+  f.dashCooldown=Math.max(0,f.dashCooldown-dt);
+  f.wallJumpCooldown=Math.max(0,f.wallJumpCooldown-dt);
+  if(f.dashCooldown<=DASH_COOLDOWN-DASH_TIME)this.move(f,d,dt);
+  this.integrate(f,dt);
+ }
  private updateOpponent(dt:number){
   const enemy=this.opponent,type=enemy.enemyType!;
   const brain=this.enemyBrain,profile=ENEMY_PROFILES[type];
@@ -567,12 +586,13 @@ export class GameSession{
 
   this.constrainFighterX(f);
  }
- private updateBow(input:InputState,dt:number){
-  if(input.attackCancelled){this.player.bowCharging=false;this.player.bowCharge=0;this.player.attackTime=0;return;}
-  if(input.attackPressed&&this.player.cooldown<=0&&!this.player.bowCharging){this.player.bowCharging=true;this.player.bowCharge=0;this.player.attackTime=.12;}
-  if(!this.player.bowCharging)return;
-  if(input.attackHeld){this.player.bowCharge=Math.min(1,this.player.bowCharge+dt/.9);this.player.attackTime=.12+this.player.bowCharge*.12;return;}
-  this.fireBow(this.player,Math.max(.12,this.player.bowCharge));
+ private updateBow(input:InputState,dt:number){this.updateBowFor(this.player,input,dt);}
+ private updateBowFor(f:Fighter,input:Readonly<InputState>,dt:number){
+  if(input.attackCancelled){f.bowCharging=false;f.bowCharge=0;f.attackTime=0;return;}
+  if(input.attackPressed&&f.cooldown<=0&&!f.bowCharging){f.bowCharging=true;f.bowCharge=0;f.attackTime=.12;}
+  if(!f.bowCharging)return;
+  if(input.attackHeld){f.bowCharge=Math.min(1,f.bowCharge+dt/.9);f.attackTime=.12+f.bowCharge*.12;return;}
+  this.fireBow(f,Math.max(.12,f.bowCharge));
  }
  private fireBow(a:Fighter,charge:number){
   if(a.cooldown>0){a.bowCharging=false;a.bowCharge=0;return;}
@@ -1007,7 +1027,7 @@ export class GameSession{
     owner.velocityY=Math.max(owner.velocityY,6.5*force);
   }
  }
- getHudState():GameHudState{return{playerHealth:this.player.health,playerMaxHealth:this.player.maxHealth,opponentHealth:this.opponent.health,opponentMaxHealth:this.opponent.maxHealth,weapon:this.player.weapon,winner:this.winner,arena:this.arenaId,mode:this.modeId,hill:{player:this.hillPlayer,opponent:this.hillOpponent,target:HILL_TARGET,halfWidth:HILL_HALF_WIDTH},bowCharge:this.player.bowCharge,missileAngle:this.missileAngle,missilePower:this.missilePower,playerFacing:this.player.facing,upgradePoints:this.upgradePoints,upgradedWeapons:[...this.upgradedWeapons]};}
+ getHudState():GameHudState{return{playerHealth:this.player.health,playerMaxHealth:this.player.maxHealth,opponentHealth:this.opponent.health,opponentMaxHealth:this.opponent.maxHealth,weapon:this.player.weapon,winner:this.winner,arena:this.arenaId,mode:this.modeId,hill:{player:this.hillPlayer,opponent:this.hillOpponent,target:HILL_TARGET,halfWidth:HILL_HALF_WIDTH},bowCharge:this.player.bowCharge,missileAngle:this.missileAngle,missilePower:this.missilePower,playerFacing:this.player.facing,secondWeapon:this.opponent.weapon,secondBowCharge:this.opponent.bowCharge,upgradePoints:this.upgradePoints,upgradedWeapons:[...this.upgradedWeapons]};}
  getRenderState():GameRenderState{return{player:{...this.player,missileAngle:this.missileAngle,missilePower:this.missilePower,animationTime:this.shakeEnabled&&this.elapsed<this.visualFreezeUntil?this.visualFreezeTime:this.elapsed},opponent:{...this.opponent,missileAngle:this.missileAngle,missilePower:this.missilePower,animationTime:this.shakeEnabled&&this.elapsed<this.visualFreezeUntil?this.visualFreezeTime:this.elapsed},projectiles:this.projectiles.map(p=>({...p,rotation:p.spin})),explosions:this.explosions.map(e=>({...e})),platforms:this.platforms,environment:this.environment.map(e=>({...e})),debris:this.debris.map(({x,y,rotation,size,age,life})=>({x,y,rotation,size,age,life})),winner:this.winner,arena:this.arenaId,mode:this.modeId,hill:{player:this.hillPlayer,opponent:this.hillOpponent,target:HILL_TARGET,halfWidth:HILL_HALF_WIDTH},upgradePoints:this.upgradePoints,upgradedWeapons:[...this.upgradedWeapons],combatCues:this.combatCues,cameraShake:combatShake(this.combatCues,this.shakeEnabled)};}
  dispose(){}
 }
