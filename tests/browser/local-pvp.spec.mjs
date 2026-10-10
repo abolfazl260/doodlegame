@@ -17,6 +17,8 @@ test("Two Players option launches an AI-free duel and exposes both touch control
  const mode=page.locator(".game-ui__menu-settings select").first();
  await expect(mode.locator('option[value="local-pvp"]')).toHaveCount(1);
  await mode.selectOption("local-pvp");
+ await expect(page.locator(".game-ui__pvp-hint")).toBeVisible();
+ await expect(page.locator(".game-ui__pvp-hint")).toContainText(/P1|نفر ۱|بازیکن ۱/);
  await page.locator('button[data-action="start"]').tap();
  expect(await page.evaluate(()=>window.__runFixture.state())).toBe("PLAYING");
  const game=await snapshot(page);
