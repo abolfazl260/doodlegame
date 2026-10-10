@@ -156,3 +156,91 @@ test("wizard navigation labels persist after changing language and only one step
  await back.tap();
  await expect(next).toHaveText(/مرحله بعد/);
 });
+
+
+test("1610x738 results screen has only two full-width readable actions without collisions",async({page})=>{
+ await page.setViewportSize({width:1610,height:738});
+ await page.locator('button[data-action="next"]').tap();
+ await page.locator('button[data-action="start"]').tap();
+ await page.evaluate(()=>window.__runFixture.win());
+ await expect(page.locator(".game-ui.game-over")).toBeVisible();
+ await expect(page.locator(".game-ui__menu-result")).toContainText("بردی");
+ await expect(page.locator(".game-ui__menu-setup")).toBeHidden();
+ await expect(page.locator(".game-ui__menu-mode-panel")).toBeHidden();
+ await expect(page.locator(".game-ui__menu-arena-panel")).toBeHidden();
+ await expect(page.locator(".game-ui__menu-progress-details")).toBeHidden();
+ await expect(page.locator(".game-ui__menu-extras")).toBeHidden();
+ await expect(page.locator('button[data-action="next"]')).toBeHidden();
+ await expect(page.locator('button[data-action="back"]')).toBeHidden();
+ await expect(page.locator('button[data-action="start"]')).toBeHidden();
+ const replay=page.locator('button[data-action="restart"]');
+ const main=page.locator('button[data-action="menu"]');
+ await expect(replay).toBeVisible();
+ await expect(main).toBeVisible();
+ const rects=await page.evaluate(()=>{
+  const get=selector=>document.querySelector(selector).getBoundingClientRect();
+  const panel=get(".game-ui.game-over"),a=get('[data-action="restart"]'),b=get('[data-action="menu"]');
+  const hit=r=>{const x=r.left+r.width/2,y=r.top+r.height/2;return document.elementFromPoint(x,y)?.dataset.action??null;};
+  return {panel:{left:panel.left,right:panel.right,top:panel.top,bottom:panel.bottom},
+   replay:{left:a.left,right:a.right,top:a.top,bottom:a.bottom,width:a.width,height:a.height,hit:hit(a)},
+   main:{left:b.left,right:b.right,top:b.top,bottom:b.bottom,width:b.width,height:b.height,hit:hit(b)}};
+ });
+ for(const key of ["replay","main"]){
+  expect(rects[key].width).toBeGreaterThan(100);
+  expect(rects[key].height).toBeGreaterThanOrEqual(44);
+  expect(rects[key].left).toBeGreaterThanOrEqual(rects.panel.left);
+  expect(rects[key].right).toBeLessThanOrEqual(rects.panel.right);
+  expect(rects[key].top).toBeGreaterThanOrEqual(rects.panel.top);
+  expect(rects[key].bottom).toBeLessThanOrEqual(rects.panel.bottom+1);
+  expect(rects[key].hit).toBe(key==="replay"?"restart":"menu");
+ }
+ expect(rects.replay.right<=rects.main.left+1||rects.main.right<=rects.replay.left+1).toBe(true);
+ await main.tap();
+ await expect(page.locator(".game-ui.menu")).toBeVisible();
+ await expect(page.locator('button[data-action="next"]')).toBeVisible();
+});
+
+test("2048x1807 upgrade screen uses one optional view at a time and keeps CTA tappable",async({page})=>{
+ await page.setViewportSize({width:2048,height:1807});
+ await page.locator('button[data-action="next"]').tap();
+ await page.locator('button[data-action="start"]').tap();
+ await page.evaluate(()=>window.__runFixture.win());
+ await page.locator('button[data-action="menu"]').tap();
+ const drawer=page.locator(".game-ui__menu-progress-details");
+ await drawer.locator("> summary").tap();
+ await expect(page.locator(".game-ui__menu-progress-tabs")).toBeVisible();
+ await expect(page.locator(".game-ui__upgrade-panel")).toBeVisible();
+ await expect(page.locator(".game-ui__run-panel")).toBeHidden();
+ await page.locator('.game-ui__menu-progress-tab[data-view="run"]').tap();
+ await expect(page.locator(".game-ui__run-panel")).toBeVisible();
+ await expect(page.locator(".game-ui__upgrade-panel")).toBeHidden();
+ await page.locator('.game-ui__menu-progress-tab[data-view="upgrades"]').tap();
+ await expect(page.locator(".game-ui__upgrade-panel")).toBeVisible();
+ await expect(page.locator(".game-ui__run-panel")).toBeHidden();
+ const next=page.locator('button[data-action="next"]');
+ await expect(next).toHaveText(/مرحله بعد/);
+ await expect(next).toBeInViewport();
+ await next.tap();
+ await expect(drawer).toBeHidden();
+ await expect(page.locator(".game-ui__menu-arena-panel")).toBeVisible();
+ await expect(page.locator('button[data-action="start"]')).toBeVisible();
+});
+
+test("Run intermission exposes reward tiles and next fight together without showing setup or next arena",async({page})=>{
+ await page.locator(".game-ui__menu-progress-details > summary").tap();
+ await page.locator(".game-ui__run-new").tap();
+ await page.evaluate(()=>window.__runFixture.win());
+ await expect(page.locator(".game-ui.game-over")).toBeVisible();
+ await expect(page.locator(".game-ui__menu-setup")).toBeHidden();
+ await expect(page.locator(".game-ui__menu-progress-details")).toBeVisible();
+ await expect(page.locator(".game-ui__menu-progress-details")).toHaveAttribute("open","");
+ await expect(page.locator(".game-ui__run-panel")).toBeVisible();
+ await expect(page.locator(".game-ui__upgrade-panel")).toBeVisible();
+ await expect(page.locator(".game-ui__menu-progress-tabs")).toBeHidden();
+ await expect(page.locator(".game-ui__run-continue")).toBeDisabled();
+ await expect(page.locator('button[data-action="next"]')).toBeHidden();
+ const selected=(await page.evaluate(()=>window.__runFixture.view())).progression.choices[0];
+ await page.locator(`.game-ui__upgrade-card[data-upgrade-weapon="${selected}"]`).tap();
+ await page.locator(".game-ui__upgrade-choices > button").tap();
+ await expect(page.locator(".game-ui__run-continue")).toBeEnabled();
+});
