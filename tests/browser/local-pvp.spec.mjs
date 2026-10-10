@@ -14,12 +14,12 @@ test.beforeEach(async({page})=>{
 });
 
 test("Two Players option launches an AI-free duel and exposes both touch control sets",async({page})=>{
- const mode=page.locator(".game-ui__menu-settings select").first();
- await expect(mode.locator('option[value="local-pvp"]')).toHaveCount(1);
- await mode.selectOption("local-pvp");
+ await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
+ await expect(page.locator('.game-ui__mode-card[data-mode="local-pvp"]')).toHaveAttribute("aria-pressed","true");
  await expect(page.locator(".game-ui__pvp-hint")).toBeVisible();
  await expect(page.locator(".game-ui__pvp-hint")).toContainText(/P1|نفر ۱|بازیکن ۱/);
- await page.locator('button[data-action="start"]').tap();
+ await page.locator('button[data-action="next"]').tap();
+await page.locator('button[data-action="start"]').tap();
  expect(await page.evaluate(()=>window.__runFixture.state())).toBe("PLAYING");
  const game=await snapshot(page);
  expect(game.mode).toBe("local-pvp");
