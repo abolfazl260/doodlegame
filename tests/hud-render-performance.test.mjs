@@ -139,9 +139,9 @@ test("menu state, locale, upgrades and game-over updates retain their behavior",
  hud.upgradePoints=1;
  hud.upgradedWeapons=["blade"];
  ui.render(states.MENU,hud);
- assert.equal(ui.upgradeSelect.value,"hammer");
+ assert.equal(ui.upgradeCardGrid.children.find(b=>b.dataset.upgradeWeapon==="hammer").getAttribute("aria-pressed"),"true");
  assert.equal(ui.upgradePanel.hidden,false);
- assert.equal(ui.upgradeSelect.options.find(option=>option.value==="blade").disabled,true);
+ assert.equal(ui.upgradeCardGrid.children.find(b=>b.dataset.upgradeWeapon==="blade").disabled,true);
  const oldFormatter=ui.hpFormatter;
  i18n.setLocale("fa");
  assert.notEqual(ui.hpFormatter,oldFormatter);
