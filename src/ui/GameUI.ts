@@ -72,6 +72,7 @@ export class GameUI{
  private menu=document.createElement("div");
  private menuHeader=document.createElement("div");
  private menuSettings=document.createElement("div");
+ private pvpHint=document.createElement("div");
  private menuLinks=document.createElement("div");
  private combatSoundButton=document.createElement("button");
  private combatShakeButton=document.createElement("button");
@@ -257,6 +258,7 @@ export class GameUI{
   this.menu.className="game-ui__menu";
   this.menuHeader.className="game-ui__menu-header";
   this.menuSettings.className="game-ui__menu-settings";
+  this.pvpHint.className="game-ui__pvp-hint";this.pvpHint.hidden=true;
   this.menuLinks.className="game-ui__menu-links";
   this.menuResult.className="game-ui__menu-result";
   this.menuResult.hidden=true;
@@ -614,7 +616,7 @@ export class GameUI{
   this.runControls.append(this.runContinueButton,this.runNewButton,this.runLeaveButton);
   this.runPanel.append(this.runHeading,this.runProgress,this.runMessage,this.runMedals,this.runControls);
   this.menuLinks.append(this.helpButton,this.privacyButton,this.combatSoundButton,this.combatShakeButton,this.updateButton);
-  this.menu.append(this.menuHeader,this.menuResult,this.menuSettings,this.upgradePanel,this.runPanel,this.menuLinks,this.buttons);
+  this.menu.append(this.menuHeader,this.menuResult,this.menuSettings,this.pvpHint,this.upgradePanel,this.runPanel,this.menuLinks,this.buttons);
   this.topHud.append(this.playerHealth,this.status,this.opponentHealth,this.details);
   this.root.append(this.menu,this.help,this.privacy,this.topHud,this.weaponList,this.missilePanel,this.bowPanel,this.mobileControls,this.rotateHint);
   container.append(this.root);
@@ -709,6 +711,10 @@ export class GameUI{
     this.root.style.setProperty("--arena-platform-edge",theme.platformEdge);
    }
    if(modeChanged)this.root.dataset.mode=s.mode;
+   if(modeChanged||localeChanged||stateChanged){
+    this.setHidden(this.pvpHint,s.mode!=="local-pvp"||(state!==GameState.MENU&&state!==GameState.GAME_OVER));
+    this.setText(this.pvpHint,messages.pvp?.hint??"");
+   }
    const upgraded=new Set(s.upgradedWeapons);
    const equipped=upgraded.has(s.weapon)?messages.upgrades[s.weapon].name:messages.weapons[s.weapon];
    if(state===GameState.MENU||state===GameState.GAME_OVER){
