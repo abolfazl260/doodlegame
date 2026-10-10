@@ -113,6 +113,7 @@ try{
   pause:pauseGame,
   resume:resumeGame,
   restart:restartGame,
+  stopToMenu,
   newRun:()=>{if(!landscape?.isPortrait()){input.resetTransientState();game.newRun();}},
   continueRun:()=>{if(!landscape?.isPortrait()){input.resetTransientState();game.continueRun();}},
   leaveRun:()=>{input.resetTransientState();game.leaveRun();},
