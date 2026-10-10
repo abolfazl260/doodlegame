@@ -97,6 +97,8 @@ export class GameUI{
  private menuModePanel=document.createElement("section");
  private menuArenaPanel=document.createElement("section");
  private arenaCards=document.createElement("div");
+ private arenaShortcut=document.createElement("button");
+ private arenaSelectionSummary=document.createElement("p");
  private weaponDetails=document.createElement("details");
  private weaponDetailsTitle=document.createElement("summary");
  private weaponCards=document.createElement("div");
@@ -332,6 +334,12 @@ export class GameUI{
   this.menuModePanel.className="game-ui__menu-mode-panel";
   this.menuArenaPanel.className="game-ui__menu-arena-panel";this.menuArenaPanel.hidden=true;
   this.arenaCards.className="game-ui__arena-grid";
+  this.arenaShortcut.className="game-ui__arena-shortcut";
+  this.arenaShortcut.type="button";
+  this.arenaShortcut.onclick=()=>this.changeMenuStep(1);
+  this.arenaSelectionSummary.className="game-ui__arena-selection-summary";
+  this.arenaSelectionSummary.setAttribute("aria-live","polite");
+  this.arenaSelectionSummary.setAttribute("aria-atomic","true");
   this.weaponCards.className="game-ui__weapon-grid";
   this.weaponDetails.className="game-ui__weapon-details";
   this.weaponDetailsTitle.className="game-ui__weapon-details-title";
@@ -349,6 +357,7 @@ export class GameUI{
    card.type="button";card.className="game-ui__arena-card";
    card.dataset.arena=id;
    card.setAttribute("aria-pressed","false");
+   card.setAttribute("aria-label",id);
    card.style.setProperty("--card-accent",theme.accent);
    card.style.setProperty("--card-secondary",theme.secondary);
    const ordinal=document.createElement("span");
@@ -368,8 +377,8 @@ export class GameUI{
    card.onclick=()=>actions.selectStartingWeapon(id);
    this.weaponCards.append(card);
   }
-  this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint);
-  this.menuArenaPanel.append(this.arenaTitle,this.arenaCards,this.weaponDetails,this.matchSummary);
+  this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
+  this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaCards,this.weaponDetails,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
   this.rotateHint.className="game-ui__rotate-hint";
 
@@ -893,6 +902,12 @@ export class GameUI{
     this.quickPvpButton.setAttribute("aria-pressed",String(s.mode==="local-pvp"));
     this.setText(this.modeDescription,messages.menu?.modeDescriptions[s.mode]??"");
    }
+   if(arenaChanged||localeChanged||stateChanged){
+    this.setText(this.arenaShortcut,(messages.menu?.mapShortcut??"CHOOSE ARENA")+
+     " · "+messages.arenas[s.arena]);
+    this.setText(this.arenaSelectionSummary,(messages.menu?.selectedArena??"SELECTED ARENA")+
+     ": "+messages.arenas[s.arena]);
+   }
    if(modeChanged||arenaChanged||weaponChanged||localeChanged||stateChanged){
     this.setText(this.matchSummary,(messages.menu?.ready??"READY")+": "+
      messages.modes[s.mode]+" · "+messages.arenas[s.arena]+" · "+
@@ -1188,6 +1203,7 @@ export class GameUI{
    const card=item as HTMLButtonElement;
    const label=card.children[1] as HTMLElement;
    label.textContent=messages.arenas[card.dataset.arena as ArenaId];
+   card.setAttribute("aria-label",messages.arenas[card.dataset.arena as ArenaId]);
   }
   for(const item of this.weaponCards.children){
    const card=item as HTMLButtonElement;
