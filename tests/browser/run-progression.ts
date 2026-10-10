@@ -38,6 +38,7 @@ ui.bind(listener=>game.subscribe(listener),()=>game.getHudState());
 const fixture={
  state:()=>game.getState(),
  view:()=>game.getHudState(),
+ back:()=>game.stop(),
  win:()=>{
   if(game.getState()!==GameState.PLAYING)throw Error("not fighting");
   session.opponent.health=0;
