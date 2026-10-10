@@ -20,7 +20,7 @@ export class Game{
  endGame(){this.ready();if(this.state.getState()===GameState.PLAYING){
   if(this.inRun&&this.progression){
    const winner=this.session.getHudState().winner;
-   if(winner)this.progression.result(winner,this.session.getUpgradeSnapshot());
+   if(winner==="player"||winner==="opponent")this.progression.result(winner,this.session.getUpgradeSnapshot());
   }
   this.state.transitionTo(GameState.GAME_OVER);
  }}
