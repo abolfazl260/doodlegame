@@ -1562,3 +1562,191 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
 }
 @media(max-width:420px){.game-ui__upgrade-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-height:360px){.game-ui .game-ui__upgrade-card{min-height:40px;padding:.3rem;font-size:.63rem}}
+
+
+/* Menu wizard layout correction (reference: Persian desktop screenshot).
+   Older generic .game-ui__section-title used a 44rem intrinsic width; in a
+   nested grid that pushed the entire left card column outside its panel. */
+.game-ui:not(.playing) .game-ui__menu,
+.game-ui:not(.playing) .game-ui__menu-setup,
+.game-ui:not(.playing) .game-ui__menu-mode-panel,
+.game-ui:not(.playing) .game-ui__menu-arena-panel,
+.game-ui:not(.playing) .game-ui__quick-modes,
+.game-ui:not(.playing) .game-ui__menu-settings.game-ui__mode-grid,
+.game-ui:not(.playing) .game-ui__arena-grid,
+.game-ui:not(.playing) .game-ui__weapon-grid{
+ width:100%;
+ max-width:100%;
+ min-width:0;
+ box-sizing:border-box;
+}
+.game-ui:not(.playing) .game-ui__menu-mode-panel>.game-ui__section-title,
+.game-ui:not(.playing) .game-ui__menu-arena-panel>.game-ui__section-title{
+ width:100%;
+ max-width:100%;
+ min-width:0;
+ margin:0;
+ overflow-wrap:anywhere;
+}
+.game-ui:not(.playing) .game-ui__quick-mode,
+.game-ui:not(.playing) .game-ui__mode-card,
+.game-ui:not(.playing) .game-ui__arena-card{
+ width:100%;
+ min-width:0;
+ max-width:100%;
+}
+.game-ui:not(.playing) .game-ui__menu-mode-panel{
+ grid-template-columns:minmax(0,1fr);
+}
+.game-ui:not(.playing) .game-ui__menu-arena-panel{
+ grid-template-columns:minmax(0,1fr);
+}
+.game-ui:not(.playing) .game-ui__menu-setup-title{
+ color:#b9cbe0;
+ font-size:.69rem;
+ font-weight:850;
+ margin:0;
+ letter-spacing:.06em;
+}
+.game-ui:not(.playing) .game-ui__menu-mode-panel .game-ui__section-title{
+ font-size:.75rem;
+ font-weight:900;
+ color:#f0f4fb;
+ letter-spacing:.035em;
+}
+.game-ui:not(.playing) .game-ui__menu-lead{
+ font-size:.75rem;
+ letter-spacing:.055em;
+}
+.game-ui:not(.playing) .game-ui__quick-modes,
+.game-ui:not(.playing) .game-ui__menu-settings.game-ui__mode-grid{
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:.56rem;
+}
+.game-ui:not(.playing) .game-ui__quick-mode,
+.game-ui:not(.playing) .game-ui__mode-card{
+ justify-content:space-between;
+ text-align:start;
+ padding-inline:.78rem;
+ line-height:1.32;
+}
+/* The progress and settings drawers are secondary to the setup steps.
+   Their content must not expand the primary wizard or its CTA. */
+.game-ui__menu-progress-details{
+ display:block;
+ min-width:0;
+ max-width:100%;
+ overflow:hidden;
+ border:1px solid #60758d;
+ border-radius:.7rem;
+ background:#101a2bdc;
+}
+.game-ui__menu-progress-details[hidden],
+.game-ui__menu-extras[hidden],
+.game-ui__menu-mode-panel[hidden],
+.game-ui__menu-arena-panel[hidden]{
+ display:none!important;
+}
+.game-ui__menu-progress-details>summary{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:.65rem;
+ min-height:44px;
+ padding:.58rem .78rem;
+ cursor:pointer;
+ color:#dce8f7;
+ font-size:.74rem;
+ font-weight:850;
+ text-align:start;
+ list-style:none;
+ touch-action:manipulation;
+}
+.game-ui__menu-progress-details>summary::-webkit-details-marker{display:none}
+.game-ui__menu-progress-details>summary::after{
+ content:"+";
+ line-height:1;
+ font-size:1.2rem;
+}
+.game-ui__menu-progress-details[open]>summary::after{content:"−"}
+.game-ui__menu-progress-details[open]>summary{
+ border-bottom:1px solid #53677d;
+}
+.game-ui__menu-progress-details>.game-ui__upgrade-panel,
+.game-ui__menu-progress-details>.game-ui__run-panel{
+ box-sizing:border-box;
+ min-width:0;
+ max-width:100%;
+ width:100%;
+ margin:.45rem 0;
+}
+/* Keep next/start visible and legible even when the cards need scrolling. */
+.game-ui:not(.playing) .game-ui__controls{
+ position:sticky;
+ bottom:0;
+ z-index:5;
+ display:flex;
+ align-items:stretch;
+ justify-content:stretch;
+ flex-wrap:nowrap;
+ gap:.5rem;
+ padding:.55rem 0 max(.3rem,env(safe-area-inset-bottom,0px));
+ background:linear-gradient(180deg,#10182700 0%,#0e1524f5 30%,#0e1524 100%);
+}
+.game-ui:not(.playing) .game-ui__controls button[data-action="next"]:not([hidden]),
+.game-ui:not(.playing) .game-ui__controls button[data-action="start"]:not([hidden]){
+ display:flex;
+ flex:1 1 0;
+ align-items:center;
+ justify-content:center;
+ min-width:0;
+ width:100%;
+ min-height:54px;
+ padding:.75rem .85rem;
+ color:#172136;
+ background:#ffd779;
+ border:2px solid #fff0bb;
+ border-radius:.72rem;
+ font-size:clamp(.82rem,2vmin,1.02rem);
+ line-height:1.3;
+ text-align:center;
+ font-weight:950;
+ box-shadow:0 3px 0 #917036;
+ white-space:normal;
+}
+.game-ui:not(.playing) .game-ui__controls button[data-action="back"]:not([hidden]){
+ display:flex;
+ flex:0 0 auto;
+ align-items:center;
+ justify-content:center;
+ min-width:86px;
+ max-width:35%;
+ min-height:54px;
+ padding:.65rem .8rem;
+ background:#162339;
+ color:#f3f7ff;
+ border:2px solid #718cac;
+ font-size:.85rem;
+}
+@media (max-width:520px){
+ .game-ui:not(.playing) .game-ui__menu-settings.game-ui__mode-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+ }
+}
+@media (max-width:390px){
+ .game-ui:not(.playing) .game-ui__menu-settings.game-ui__mode-grid{
+  grid-template-columns:minmax(0,1fr);
+ }
+}
+@media (max-height:360px){
+ .game-ui:not(.playing) .game-ui__menu{
+  gap:.3rem;
+ }
+ .game-ui:not(.playing) .game-ui__menu-mode-panel,
+ .game-ui:not(.playing) .game-ui__menu-arena-panel{gap:.34rem}
+ .game-ui:not(.playing) .game-ui__controls button[data-action="next"]:not([hidden]),
+ .game-ui:not(.playing) .game-ui__controls button[data-action="start"]:not([hidden]),
+ .game-ui:not(.playing) .game-ui__controls button[data-action="back"]:not([hidden]){
+  min-height:44px;
+ }
+}
