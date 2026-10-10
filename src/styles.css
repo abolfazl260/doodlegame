@@ -988,3 +988,63 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
  .game-ui__run-medals{font-size:.57rem}
  .game-ui .game-ui__run-controls button{min-height:40px}
 }
+
+/* Local PvP: two independent landscape-friendly, safe-area touch control sets. */
+.game-ui__p2-controls{display:none}
+@media (pointer:coarse){
+ .game-ui.playing[data-mode="local-pvp"] .game-ui__p2-controls:not([hidden]){
+  position:absolute;inset:0;z-index:22;display:block;pointer-events:none;
+ }
+ .game-ui.playing[data-mode="local-pvp"] .game-ui__mobile-button--attack{
+  left:calc(var(--safe-left) + 1rem + clamp(84px,22vmin,112px) + .5rem);
+  right:auto;
+ }
+ .game-ui.playing[data-mode="local-pvp"] .game-ui__p2-joystick{
+  position:absolute;right:calc(var(--safe-right) + 1rem);
+  bottom:calc(var(--safe-bottom) + 1rem);
+  width:clamp(84px,22vmin,112px);height:clamp(84px,22vmin,112px);
+  border:2px solid #9eb5e2;border-radius:50%;
+  background:#0b1722c9;pointer-events:auto;touch-action:none;
+  opacity:.78;
+ }
+ .game-ui.playing[data-mode="local-pvp"] .game-ui__p2-joystick.active{opacity:1}
+ .game-ui__p2-thumb{
+  position:absolute;left:50%;top:50%;width:clamp(42px,10.5vmin,54px);height:clamp(42px,10.5vmin,54px);
+  border:2px solid #b9d1f5;border-radius:50%;background:#203048e8;
+  transform:translate(-50%,-50%);pointer-events:none;
+ }
+ .game-ui.playing[data-mode="local-pvp"] .game-ui__p2-attack{
+  position:absolute;
+  right:calc(var(--safe-right) + 1rem + clamp(84px,22vmin,112px) + .5rem);
+  bottom:calc(var(--safe-bottom) + 1rem);
+  display:grid;place-items:center;
+  width:clamp(60px,15vmin,78px);height:clamp(60px,15vmin,78px);
+  min-width:60px;padding:0;border:2px solid #b9d1f5;border-radius:50%;
+  background:#15243ddd;color:#fff;font-weight:800;font-size:.72rem;
+  pointer-events:auto;touch-action:none;user-select:none;
+ }
+ .game-ui.playing[data-mode="local-pvp"] .game-ui__p2-weapons{
+  position:absolute;
+  right:calc(var(--safe-right) + 1rem);
+  bottom:calc(var(--safe-bottom) + 1.5rem + clamp(84px,22vmin,112px));
+  width:clamp(160px,32vw,210px);
+  display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;
+  gap:.15rem;border:1px solid #a6bde0;border-radius:.5rem;background:#0c1825ee;
+  color:#f5faff;pointer-events:auto;direction:ltr;
+ }
+ .game-ui.playing[data-mode="local-pvp"] .game-ui__p2-weapons button{
+  min-width:44px;min-height:44px;padding:0;border:0;background:transparent;
+  color:#fff;font-size:1.4rem;
+ }
+ .game-ui__p2-weapons span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.65rem;font-weight:800}
+ .game-ui.playing[data-mode="local-pvp"] .game-ui__mobile-weapon-switcher:not([hidden]){
+  width:clamp(160px,32vw,210px);
+ }
+ .game-ui.playing[data-mode="local-pvp"] .game-ui__mobile-pause:not([hidden]){
+  top:calc(var(--safe-top) + 3.5rem);
+  right:calc(var(--safe-right) + clamp(8rem,27vw,11.5rem) + 1.5rem);
+ }
+}
+@media (pointer:fine){
+ .game-ui__p2-controls{display:none!important}
+}
