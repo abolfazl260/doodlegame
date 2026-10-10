@@ -94,23 +94,40 @@ function setup(hudOverride={}){
  return {ui,calls,hud,container};
 }
 
-test("menu uses localized native selectors for all 16 arenas and 8 modes",()=>{
- const {ui,calls}=setup();
- assert.equal(ui.arenaSelect.options.length,16);
- assert.equal(ui.modeSelect.options.length,8);
- assert.equal(ui.startingWeaponSelect.options.length,8);
- assert.equal(ui.arenaSelect.value,"classic");
- assert.equal(ui.modeSelect.value,"duel");
- assert.equal(ui.menuSettings.hidden,false);
- ui.arenaSelect.value="reactor";ui.arenaSelect.onchange();
- ui.modeSelect.value="low-gravity";ui.modeSelect.onchange();
- ui.startingWeaponSelect.value="bow";ui.startingWeaponSelect.onchange();
- assert.deepEqual(calls,[["arena","reactor"],["mode","low-gravity"],["startingWeapon","bow"]]);
- assert.equal(ui.title.textContent,"DOODLEGAME DUEL");
- assert.equal(ui.menu.children.includes(ui.buttons),true,"primary action stays in menu");
- assert.equal(ui.menu.children.at(-1),ui.buttons,"primary action is the sticky last row");
- ui.buttons.children.find(button=>button.dataset.action==="start").click();
+test("wizard selects player count and mode cards before arena and optional weapon cards",()=>{
+ const {ui,calls,hud}=setup();
+ assert.equal(ui.menuSettings.children.length,8);
+ assert.equal(ui.arenaCards.children.length,16);
+ assert.equal(ui.weaponCards.children.length,8);
+ assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"true");
+ assert.equal(ui.menuModePanel.hidden,false);
+ assert.equal(ui.menuArenaPanel.hidden,true);
+ assert.equal(ui.stepNextButton.hidden,false);
+ assert.equal(ui.buttons.children.find(b=>b.dataset.action==="start").hidden,true);
+ ui.menuSettings.children.find(b=>b.dataset.mode==="low-gravity").click();
+ assert.deepEqual(calls.at(-1),["mode","low-gravity"]);
+ hud.mode="low-gravity";ui.render(states.MENU,hud);
+ assert.equal(ui.menuSettings.children.find(b=>b.dataset.mode==="low-gravity").getAttribute("aria-pressed"),"true");
+ ui.stepNextButton.click();
+ assert.equal(ui.menuModePanel.hidden,true);
+ assert.equal(ui.menuArenaPanel.hidden,false);
+ assert.equal(ui.stepBackButton.hidden,false);
+ assert.equal(ui.buttons.children.find(b=>b.dataset.action==="start").hidden,false);
+ ui.arenaCards.children.find(b=>b.dataset.arena==="reactor").click();
+ hud.arena="reactor";ui.render(states.MENU,hud);
+ assert.deepEqual(calls.at(-1),["arena","reactor"]);
+ assert.equal(ui.arenaCards.children.find(b=>b.dataset.arena==="reactor").getAttribute("aria-pressed"),"true");
+ ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="bow").click();
+ hud.weapon="bow";ui.render(states.MENU,hud);
+ assert.deepEqual(calls.at(-1),["startingWeapon","bow"]);
+ assert.equal(ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="bow").getAttribute("aria-pressed"),"true");
+ assert.equal(ui.menu.children.at(-1),ui.buttons,"sticky navigation is the final row");
+ ui.buttons.children.find(b=>b.dataset.action==="start").click();
  assert.deepEqual(calls.at(-1),["start"]);
+ ui.stepBackButton.click();
+ assert.equal(ui.menuModePanel.hidden,false);
+ assert.equal(ui.stepNextButton.hidden,false);
+ assert.equal(hud.mode,"low-gravity","navigation preserves the selected mode");
 });
 
 test("clicking the language button immediately switches both directions without a dropdown",()=>{
@@ -128,13 +145,13 @@ test("clicking the language button immediately switches both directions without 
  assert.equal(ui.languageLabel.textContent,"زبان");
  assert.equal(ui.title.textContent,"دوئل دودل");
  assert.equal(ui.buttons.children.find(button=>button.dataset.action==="start").textContent,"شروع");
- assert.equal(ui.modeSelect.value,hud.mode,"switching language must not reset the selected mode");
+ assert.equal(ui.menuSettings.children.find(b=>b.dataset.mode===hud.mode).getAttribute("aria-pressed"),"true","language keeps selected mode");
  ui.languageButton.click();
  assert.equal(ui.i18n.locale,"en");
  assert.equal(ui.languageButton.textContent,"EN");
  assert.equal(ui.languageLabel.textContent,"Language");
  assert.equal(ui.title.textContent,"DOODLEGAME DUEL");
- assert.equal(ui.modeSelect.value,hud.mode);
+ assert.equal(ui.menuSettings.children.find(b=>b.dataset.mode===hud.mode).getAttribute("aria-pressed"),"true");
 });
 
 test("compact upgrade selector preserves purchase and availability rules",()=>{
@@ -193,18 +210,17 @@ test("menu provides a safe-area-aware scroll region and sticky primary action",(
  assert.ok(menu.includes("min-height:44px"));
 });
 
-test("starting weapon selector honors missile, melee, and random mode restrictions",()=>{
+test("optional starting weapon cards honor missile, melee and random restrictions",()=>{
  const {ui,hud}=setup();
- assert.equal(ui.startingWeaponSelect.disabled,false);
- assert.equal(ui.startingWeaponSelect.options.find(option=>option.value==="missile").disabled,true);
+ assert.equal(ui.weaponDetails.hidden,false);
+ assert.equal(ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="missile").hidden,true);
  hud.mode="melee-only";ui.render(states.MENU,hud);
- assert.equal(ui.startingWeaponSelect.options.find(option=>option.value==="blaster").disabled,true);
- assert.equal(ui.startingWeaponSelect.options.find(option=>option.value==="hammer").disabled,false);
+ assert.equal(ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="blaster").hidden,true);
+ assert.equal(ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="hammer").disabled,false);
  hud.mode="missile-duel";hud.weapon="missile";ui.render(states.MENU,hud);
- assert.equal(ui.startingWeaponSelect.disabled,true);
- assert.equal(ui.startingWeaponSelect.value,"missile");
+ assert.equal(ui.weaponDetails.hidden,true);
  hud.mode="random-weapons";hud.weapon="bow";ui.render(states.MENU,hud);
- assert.equal(ui.startingWeaponSelect.disabled,true);
+ assert.equal(ui.weaponDetails.hidden,true);
 });
 
 test("health display is a single number from 100 to 0 in either locale",()=>{
@@ -242,33 +258,31 @@ test("Android update control is a single hidden-by-default action with no extra 
 });
 
 
-test("menu prioritizes quick-play and keeps advanced utilities inside a single disclosure",()=>{
+test("player-count and mode cards are separate, with a single 2P mode",()=>{
  const {ui,calls,hud}=setup();
- assert.equal(ui.menu.children.at(-1),ui.buttons,"primary CTA is always the final, sticky row");
- assert.ok(ui.menuSetupSection.children.includes(ui.quickModes));
- assert.ok(ui.menuSetupSection.children.includes(ui.menuSettings));
+ assert.equal(ui.menu.children.at(-1),ui.buttons);
+ assert.ok(ui.menuModePanel.children.includes(ui.quickModes));
+ assert.ok(ui.menuModePanel.children.includes(ui.menuSettings));
  assert.equal(ui.quickModes.children.length,2);
  assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"true");
  assert.equal(ui.quickPvpButton.getAttribute("aria-pressed"),"false");
  assert.equal(ui.menuExtras.tag,"details");
  assert.equal(ui.menuExtras.children[0].tag,"summary");
- assert.ok(ui.menuExtras.children.includes(ui.menuLinks));
- assert.equal(ui.menuExtras.open,undefined,"advanced menu is collapsed initially");
+ assert.equal(ui.menuExtras.open,undefined);
  ui.quickPvpButton.click();
+ hud.mode="local-pvp";ui.render(states.MENU,hud);
  assert.deepEqual(calls.at(-1),["mode","local-pvp"]);
- hud.mode="local-pvp";
- ui.render(states.MENU,hud);
  assert.equal(ui.quickPvpButton.getAttribute("aria-pressed"),"true");
  assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"false");
+ assert.equal(ui.menuSettings.children.filter(c=>!c.hidden).length,1);
+ assert.equal(ui.menuSettings.children.find(c=>c.dataset.mode==="local-pvp").hidden,false);
  assert.equal(ui.pvpHint.hidden,false);
- assert.match(ui.matchSummary.textContent,/local-pvp/);
  ui.quickDuelButton.click();
  assert.deepEqual(calls.at(-1),["mode","duel"]);
- hud.mode="duel";
- hud.arena="ruins";
- hud.weapon="bow";
- ui.render(states.MENU,hud);
+ hud.mode="duel";hud.arena="ruins";hud.weapon="bow";ui.render(states.MENU,hud);
+ assert.equal(ui.menuSettings.children.filter(c=>!c.hidden).length,7);
  assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"true");
+ ui.stepNextButton.click();
  assert.match(ui.matchSummary.textContent,/ruins/);
  assert.match(ui.matchSummary.textContent,/bow/);
  assert.equal(ui.pvpHint.hidden,true);
