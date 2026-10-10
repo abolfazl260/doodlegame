@@ -1783,7 +1783,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
  overflow-wrap:anywhere;
 }
 /* When a Run disables rematch there is just one valid footer action. */
-.game-ui.game-over:not(.playing) .game-ui__controls button[data-action="menu"]:not([hidden]):only-of-type{
+.game-ui.game-over:not(.playing) .game-ui__controls:has(button[data-action="restart"][hidden]) button[data-action="menu"]:not([hidden]){
  grid-column:1/-1;
 }
 .game-ui__menu-progress-tabs{
