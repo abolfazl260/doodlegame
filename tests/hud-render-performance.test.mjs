@@ -132,10 +132,10 @@ test("menu state, locale, upgrades and game-over updates retain their behavior",
  const {ui,hud,i18n}=setup();
  hud.mode="melee-only";hud.weapon="hammer";hud.arena="towers";
  ui.render(states.MENU,hud);
- assert.equal(ui.arenaSelect.value,"towers");
- assert.equal(ui.modeSelect.value,"melee-only");
- assert.equal(ui.startingWeaponSelect.value,"hammer");
- assert.equal(ui.startingWeaponSelect.options.find(option=>option.value==="bow").disabled,true);
+ assert.equal(ui.arenaCards.children.find(card=>card.dataset.arena==="towers").getAttribute("aria-pressed"),"true");
+ assert.equal(ui.menuSettings.children.find(card=>card.dataset.mode==="melee-only").getAttribute("aria-pressed"),"true");
+ assert.equal(ui.weaponCards.children.find(card=>card.dataset.startingWeapon==="hammer").getAttribute("aria-pressed"),"true");
+ assert.equal(ui.weaponCards.children.find(card=>card.dataset.startingWeapon==="bow").disabled,true);
  hud.upgradePoints=1;
  hud.upgradedWeapons=["blade"];
  ui.render(states.MENU,hud);
