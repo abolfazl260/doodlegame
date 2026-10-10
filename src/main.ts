@@ -61,6 +61,7 @@ try{
  let shakeEnabled=!reducedMotion&&readSetting("doodlegame.cameraShake",true);
  const combatAudio=new CombatAudio();
  if(!soundEnabled)combatAudio.setMuted(true);
+ combatAudio.setAmbientActive(true);
  const renderer=createRendererWithFallback(
   ()=>new ThreeRenderer(canvas),
   ()=>new CanvasRenderer(canvas),
@@ -169,6 +170,7 @@ try{
  // the long introduction if the player returns to the main menu.
  let hasPlayed=false;
  const unsubscribeIntro=game.subscribe(state=>{
+  combatAudio.setAmbientActive(state===GameState.MENU);
   if(state===GameState.PLAYING){
    hasPlayed=true;
    intro.dispose();
