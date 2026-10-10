@@ -442,6 +442,70 @@ export class GameUI{
   };
   this.cancelTouchControls=cancelControls;
   this.cancelActiveTouchAttack=cancelAttack;
+  // Independent pointer ownership: P2 never releases or cancels P1 or the other joystick.
+  let p2StickPointer=-1,p2AttackPointer=-1;
+  const moveP2=(event:PointerEvent)=>{
+   const rect=this.p2Joystick.getBoundingClientRect();
+   const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+   let dx=event.clientX-cx,dy=event.clientY-cy;
+   const limit=Math.max(1,Math.min(rect.width,rect.height)/2-12);
+   const len=Math.hypot(dx,dy);
+   if(len>limit){dx=dx/len*limit;dy=dy/len*limit;}
+   this.p2Thumb.style.transform="translate(calc(-50% + "+dx+"px),calc(-50% + "+dy+"px))";
+   actions.setPlayer2TouchMove?.(dx/limit,dy/limit);
+  };
+  const releaseP2Stick=(event:PointerEvent)=>{
+   if(event.pointerId!==p2StickPointer)return;
+   p2StickPointer=-1;this.p2Joystick.classList.remove("active");
+   this.p2Thumb.style.transform="translate(-50%,-50%)";
+   actions.setPlayer2TouchMove?.(0,0);
+   if(this.p2Joystick.hasPointerCapture?.(event.pointerId))this.p2Joystick.releasePointerCapture(event.pointerId);
+  };
+  this.p2Joystick.addEventListener("pointerdown",event=>{
+   if(p2StickPointer!==-1||this.currentState!==GameState.PLAYING)return;
+   event.preventDefault();
+   p2StickPointer=event.pointerId;
+   try{this.p2Joystick.setPointerCapture(event.pointerId);}
+   catch{p2StickPointer=-1;return;}
+   this.p2Joystick.classList.add("active");moveP2(event);
+  });
+  this.p2Joystick.addEventListener("pointermove",event=>{
+   if(event.pointerId===p2StickPointer)moveP2(event);
+  });
+  for(const kind of ["pointerup","pointercancel","lostpointercapture"])
+   this.p2Joystick.addEventListener(kind,releaseP2Stick);
+  const clearP2Attack=()=>{
+   const id=p2AttackPointer;p2AttackPointer=-1;
+   if(id!==-1&&this.p2Attack.hasPointerCapture?.(id))this.p2Attack.releasePointerCapture(id);
+  };
+  const cancelP2Attack=()=>{
+   if(p2AttackPointer===-1)return;
+   clearP2Attack();
+   actions.player2AttackCancel?.();
+  };
+  this.cancelP2Attack=cancelP2Attack;
+  this.p2Attack.addEventListener("pointerdown",event=>{
+   if(p2AttackPointer!==-1||this.currentState!==GameState.PLAYING)return;
+   if(this.readHud?.().winner!==null)return;
+   event.preventDefault();p2AttackPointer=event.pointerId;
+   try{this.p2Attack.setPointerCapture(event.pointerId);}
+   catch{p2AttackPointer=-1;return;}
+   actions.player2AttackStart?.();
+  });
+  this.p2Attack.addEventListener("pointerup",event=>{
+   if(event.pointerId!==p2AttackPointer)return;
+   event.preventDefault();clearP2Attack();
+   if(this.currentState!==GameState.PLAYING||this.readHud?.().winner!==null)actions.player2AttackCancel?.();
+   else actions.player2AttackEnd?.();
+  });
+  for(const kind of ["pointercancel","lostpointercapture"])
+   this.p2Attack.addEventListener(kind,event=>{
+    if(event.pointerId===p2AttackPointer)cancelP2Attack();
+   });
+  this.cancelP2TouchControls=()=>{
+   cancelP2Attack();
+   if(p2StickPointer!==-1)releaseP2Stick({pointerId:p2StickPointer} as PointerEvent);
+  };
   this.mobileAttackButton.addEventListener("pointerdown",event=>{
    if(attackPointer!==-1||this.currentState!==GameState.PLAYING)return;
    const hud=this.readHud?.();
