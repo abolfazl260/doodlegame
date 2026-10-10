@@ -864,6 +864,7 @@ body{touch-action:pan-y}
  grid-template-rows:auto auto;
  gap:.25rem .5rem;
  align-items:center;
+ direction:ltr; /* Stable player-left / opponent-right layout across locales. */
  z-index:4;
  pointer-events:none;
 }
@@ -922,6 +923,9 @@ body{touch-action:pan-y}
  font-size:clamp(.66rem,1.65vmin,.78rem);
  line-height:1.25;
 }
+/* Language direction affects the text, never the physical HP positions. */
+html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status,
+html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:rtl}
 /* Values retain legibility on both the colored fill and the empty track. */
 .health-label__current{
  color:#fff;
