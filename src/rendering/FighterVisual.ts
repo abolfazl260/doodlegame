@@ -1,4 +1,5 @@
 import type {DuelistRenderState} from '../gameplay/GameSession';
+import {KICK_SPECS,kickIsActive} from '../gameplay/KickCombat.js';
 export type Point = readonly [number, number];
 export type Segment = readonly [Point, Point];
 const clamp=(v:number)=>Math.max(0,Math.min(1,v));
@@ -28,6 +29,10 @@ export function fighterVisual(s:DuelistRenderState) {
  const phase=s.gaitPhase, stride=air?0:Math.sin(phase)*speed;
  const land=clamp(s.landingTime/.18), hit=clamp(s.hitTime/.22);
  const progress=clamp(1-s.attackTime/attackDuration(s.weapon));
+ const kick=s.kickKind??null;
+ const kickProgress=kick?clamp(s.kickElapsed/KICK_SPECS[kick].duration):0;
+ const kickExtension=kick?Math.sin(Math.PI*clamp((kickProgress-(kick==="spin"?.2:.1))/(kick==="spin"?.65:.78))):0;
+ const spinTurn=kick==="spin"?Math.sin(kickProgress*Math.PI*2):0;
  const swing=s.attackTime>0?Math.sin(progress*Math.PI):0;
  const breathe=Math.sin(s.animationTime*2.8)*.018;
  const hip:Point=[0,-.05-land*.15], shoulder:Point=[-.04,.4+breathe-land*.15];
@@ -36,8 +41,16 @@ export function fighterVisual(s:DuelistRenderState) {
  const add=(a:Point,b:Point,c:Point)=>joints.push([a,b],[b,c]);
  for(const side of [-1,1]) {
   const step=stride*side;
-  const foot:Point=air?[side*.32,-.52+(s.velocityY>0?.14:0)]:[side*.25+step*.42,-.9+Math.max(0,step)*.2];
-  const knee:Point=[side*.18+step*.16,-.43+(air?.14:land*.12)];
+  let foot:Point=air?[side*.32,-.52+(s.velocityY>0?.14:0)]:[side*.25+step*.42,-.9+Math.max(0,step)*.2];
+  let knee:Point=[side*.18+step*.16,-.43+(air?.14:land*.12)];
+  if(kick&&side===1){
+   const sweep=kick==="spin"?Math.sin(kickProgress*Math.PI*2)*.48:0;
+   knee=[.26+kickExtension*.25,-.43+kickExtension*.16+sweep*.12];
+   foot=[.27+kickExtension*(kick==="spin"?1.02:.92),-.88+kickExtension*.46+sweep*.27];
+  }else if(kick&&side===-1){
+   foot=[-.36,-.91];
+   knee=[-.26,-.42];
+  }
   add(hip,knee,foot);
  }
  let hand:Point=[.46,.03];
@@ -56,12 +69,27 @@ export function fighterVisual(s:DuelistRenderState) {
  } else {hand=[.45-swing*.2,.05+swing*.3];toolAngle=-swing*.8;}
  if(air&&s.attackTime<=0&&s.weapon!=='bow'){back=[-.48,s.velocityY>0?.32:-.15];}
  if(Math.abs(s.velocityX)>9){back=[-.62,.28];}
+ if(kick){back=kick==="spin"?[-.58,.18+spinTurn*.13]:[-.52,.19];hand=[.24,.28+kickExtension*.14];}
  add([-.18,shoulder[1]],[-.3,.19],back);
  add([.18,shoulder[1]],[.32,.2],hand);
  const scale=s.enemyType==='boss'?1.18:s.enemyType==='tank'?1.08:1;
  const squash=land*.16;
- const lean=s.velocityX*s.facing*.012-hit*.18+(air?-s.velocityY*.008:0);
+ const lean=s.velocityX*s.facing*.012-hit*.18+(air?-s.velocityY*.008:0)+(kick==="spin"?spinTurn*.3:kick?-.11*kickExtension:0);
  return {joints,head,hand,toolAngle,swing,scale,scaleX:1+squash,scaleY:1-squash,lean,hit,land};
+}
+/** Motion arcs use the same segment coordinates in both Canvas and WebGL. */
+export function kickEffectSegments(s:DuelistRenderState):Segment[]{
+ const kind=s.kickKind;
+ if(!kind||!kickIsActive(kind,s.kickElapsed))return[];
+ const trail:Segment[]=[];
+ const radius=kind==="spin"?.97:.78;
+ const begin=kind==="spin"?-.85:-.45,end=kind==="spin"?1.0:.20;
+ for(let i=0;i<5;i++){
+  const a=begin+(end-begin)*i/5,b=begin+(end-begin)*(i+1)/5;
+  trail.push([[.35+radius*Math.cos(a),-.44+radius*.52*Math.sin(a)],
+   [.35+radius*Math.cos(b),-.44+radius*.52*Math.sin(b)]]);
+ }
+ return trail;
 }
 /** Each segment is a real pair of 3D vertices; buffers are sized from these arrays. */
 export function toolSegments(s:DuelistRenderState):Segment[] {
