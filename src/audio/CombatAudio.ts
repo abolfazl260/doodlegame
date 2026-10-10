@@ -7,6 +7,65 @@ export class CombatAudio{
  private disposed=false;
  private lastCueId=0;
  private lastPlayTime=-1;
+ private ambientWanted=false;
+ private ambientGain:GainNode|null=null;
+ private ambientOscillators:OscillatorNode[]=[];
+ private ambientFilter:BiquadFilterNode|null=null;
+ private readonly handleVisibility=()=>{
+  if(typeof document==="undefined")return;
+  if(document.hidden)this.stopAmbient();
+  else if(this.ambientWanted)this.unlock();
+ };
+ /** A very quiet, synthesized two-chord space drone for the floating menu.
+  * Audio remains locked until a real user gesture and never runs in combat. */
+ setAmbientActive(active:boolean){
+  if(this.disposed)return;
+  this.ambientWanted=active;
+  if(active)this.startAmbient();
+  else this.stopAmbient();
+ }
+ private startAmbient(){
+  const ctx=this.context;
+  if(!this.ambientWanted||this.muted||this.disposed||this.ambientGain||
+   !ctx||ctx.state!=="running"||typeof document!=="undefined"&&document.hidden)return;
+  try{
+   const gain=ctx.createGain();
+   const filter=ctx.createBiquadFilter();
+   filter.type="lowpass";filter.frequency.value=640;filter.Q.value=.2;
+   gain.gain.setValueAtTime(0,ctx.currentTime);
+   gain.gain.setTargetAtTime(.015,ctx.currentTime,.9);
+   filter.connect(gain);gain.connect(ctx.destination);
+   const notes=[110,164.81,220,293.66];
+   const oscillators:OscillatorNode[]=[];
+   for(let i=0;i<notes.length;i++){
+    const oscillator=ctx.createOscillator(),voice=ctx.createGain();
+    oscillator.type="sine";
+    oscillator.frequency.value=notes[i];
+    voice.gain.value=[.32,.16,.10,.06][i];
+    oscillator.connect(voice);voice.connect(filter);
+    oscillator.start();
+    oscillators.push(oscillator);
+   }
+   this.ambientGain=gain;this.ambientFilter=filter;
+   this.ambientOscillators=oscillators;
+  }catch{this.stopAmbient();}
+ }
+ private stopAmbient(){
+  if(!this.ambientGain&&!this.ambientOscillators.length)return;
+  const ctx=this.context,gain=this.ambientGain,oscillators=this.ambientOscillators;
+  this.ambientGain=null;this.ambientFilter=null;this.ambientOscillators=[];
+  try{
+   const now=ctx?.currentTime??0;
+   if(gain){
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setTargetAtTime(0,now,.12);
+   }
+   for(const oscillator of oscillators)oscillator.stop(now+.6);
+   // Nodes disconnect automatically when their context is disposed.
+  }catch{
+   for(const oscillator of oscillators)try{oscillator.stop();}catch{/* already stopped */}
+  }
+ }
  private readonly unlock=(event?:Event)=>{
   if(this.muted||this.disposed||typeof window==="undefined")return;
   // Key auto-repeat is not a new user gesture. Retry on subsequent real
@@ -23,21 +82,26 @@ export class CombatAudio{
     this.lastPlayTime=-1;
    }catch{return;}
   }
-  if(context.state==="running")return;
+  if(context.state==="running"){this.startAmbient();return;}
   try{
    // A suspended/interrupted context must be resumed by another user gesture.
    // Some browsers leave resume promises pending until audio is permitted,
    // so do not permanently block later attempts.
-   void context.resume().catch(()=>{});
+   void context.resume().then(()=>this.startAmbient()).catch(()=>{});
   }catch{/* Audio availability must not interrupt gameplay. */}
  };
  constructor(){
   if(typeof document!=="undefined"){
    document.addEventListener("pointerdown",this.unlock,{passive:true});
    document.addEventListener("keydown",this.unlock);
+   document.addEventListener("visibilitychange",this.handleVisibility);
   }
  }
- setMuted(value:boolean){this.muted=value;if(!value)this.unlock();}
+ setMuted(value:boolean){
+  this.muted=value;
+  if(value)this.stopAmbient();
+  else{this.unlock();this.startAmbient();}
+ }
  render(cues:readonly CombatCue[]){
   for(const cue of cues){
    if(cue.id<=this.lastCueId)continue;
@@ -68,7 +132,12 @@ export class CombatAudio{
  dispose(){
   if(this.disposed)return;
   this.disposed=true;
-  if(typeof document!=="undefined"){document.removeEventListener("pointerdown",this.unlock);document.removeEventListener("keydown",this.unlock);}
+  this.stopAmbient();
+  if(typeof document!=="undefined"){
+   document.removeEventListener("pointerdown",this.unlock);
+   document.removeEventListener("keydown",this.unlock);
+   document.removeEventListener("visibilitychange",this.handleVisibility);
+  }
   if(this.context){void this.context.close().catch(()=>{});this.context=null;}
  }
 }
