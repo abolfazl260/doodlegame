@@ -5,6 +5,7 @@ test.use({viewport:{width:740,height:360},hasTouch:true,isMobile:true});
 test.beforeEach(async({page})=>{
  await page.goto("tests/browser/run-progression.html");
  await page.waitForFunction(()=>Boolean(window.__runFixture));
+ await page.locator(".game-ui__menu-progress-details > summary").tap();
  await expect(page.locator(".game-ui__run-panel")).toBeVisible();
 });
 
