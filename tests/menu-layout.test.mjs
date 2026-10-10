@@ -187,13 +187,20 @@ test("menu help and privacy overlays can be closed without hiding primary action
  assert.equal(ui.privacyButton.focused,true);
 });
 
-test("game-over menu retains mode/arena selection and win message",()=>{
+test("game over is a result screen with only replay/menu actions, not another setup wizard",()=>{
  const {ui,hud}=setup();
  hud.winner="player";
  ui.render(states.GAME_OVER,hud);
  assert.equal(ui.menuResult.hidden,false);
  assert.equal(ui.menuResult.textContent,"WIN");
- assert.equal(ui.menuSettings.hidden,false);
+ assert.equal(ui.menuSetupSection.hidden,true);
+ assert.equal(ui.menuSettings.hidden,true);
+ assert.equal(ui.stepNextButton.hidden,true);
+ assert.equal(ui.stepBackButton.hidden,true);
+ assert.equal(ui.menuProgressDetails.hidden,true);
+ assert.equal(ui.menuExtras.hidden,true);
+ assert.equal(ui.buttons.children.find(b=>b.dataset.action==="restart").hidden,false);
+ assert.equal(ui.buttons.children.find(b=>b.dataset.action==="menu").hidden,false);
  ui.render(states.PAUSED,hud);
  assert.equal(ui.menuSettings.hidden,true);
 });
@@ -289,14 +296,21 @@ test("player-count and mode cards are separate, with a single 2P mode",()=>{
  assert.equal(ui.pvpHint.hidden,true);
 });
 
-test("menu setup is hidden during pause but quick-play and choices return in results",()=>{
+test("pause offers Resume, results hide setup, returning to menu restores step one",()=>{
  const {ui,hud}=setup();
+ ui.stepNextButton.click();
+ ui.render(states.PLAYING,hud);
  ui.render(states.PAUSED,hud);
  assert.equal(ui.menuSetupSection.hidden,true);
  assert.equal(ui.buttons.children.find(button=>button.dataset.action==="resume").hidden,false);
  ui.render(states.GAME_OVER,{...hud,winner:"player"});
+ assert.equal(ui.menuSetupSection.hidden,true);
+ assert.equal(ui.stepNextButton.hidden,true);
+ ui.render(states.MENU,{...hud,winner:null});
  assert.equal(ui.menuSetupSection.hidden,false);
- assert.equal(ui.menuSettings.hidden,false);
+ assert.equal(ui.menuModePanel.hidden,false);
+ assert.equal(ui.menuArenaPanel.hidden,true);
+ assert.equal(ui.stepNextButton.hidden,false);
 });
 
 test("new menu has localized live match summary and responsive touch-safe primary CTA",()=>{
@@ -353,4 +367,31 @@ test("menu wizard CTA always has a translated label and each step hides the othe
  ui.languageButton.click();
  assert.ok(next.textContent.length>0);
  assert.ok(back.textContent.length>0);
+});
+
+test("the progress drawer switches between Run and upgrades instead of stacking both panels",()=>{
+ const progression={run:null,totalWins:0,medals:[],completedRuns:0,choices:[]};
+ const {ui,hud}=setup({progression,upgradePoints:1});
+ assert.equal(ui.menuProgressDetails.hidden,false);
+ assert.equal(ui.menuProgressTabs.hidden,false);
+ assert.equal(ui.runPanel.hidden,false);
+ assert.equal(ui.upgradePanel.hidden,true);
+ ui.menuUpgradeTab.click();
+ assert.equal(ui.menuUpgradeTab.getAttribute("aria-pressed"),"true");
+ assert.equal(ui.upgradePanel.hidden,false);
+ assert.equal(ui.runPanel.hidden,true);
+ ui.menuRunTab.click();
+ assert.equal(ui.menuRunTab.getAttribute("aria-pressed"),"true");
+ assert.equal(ui.runPanel.hidden,false);
+ assert.equal(ui.upgradePanel.hidden,true);
+ hud.inRun=true;hud.progression.run={status:"victory",points:1,stage:1,upgradedWeapons:[]};
+ ui.render(states.GAME_OVER,{...hud,winner:"player"});
+ assert.equal(ui.menuSetupSection.hidden,true);
+ assert.equal(ui.menuProgressDetails.hidden,false);
+ assert.equal(ui.menuProgressDetails.open,true);
+ assert.equal(ui.menuProgressTabs.hidden,true,"reward and Run continuation stay together");
+ assert.equal(ui.runPanel.hidden,false);
+ assert.equal(ui.upgradePanel.hidden,false);
+ assert.equal(ui.stepNextButton.hidden,true);
+ assert.equal(ui.buttons.children.find(b=>b.dataset.action==="restart").hidden,true);
 });
