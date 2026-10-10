@@ -943,3 +943,48 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
  }
  .game-ui.playing .game-ui__top-hud .health-bar{min-height:30px}
 }
+
+
+/* Optional offline four-fight Run: readable on short landscape screens. */
+.game-ui__run-panel[hidden]{display:none!important}
+.game-ui__run-panel{
+ display:grid;
+ grid-template-columns:minmax(0,1fr);
+ gap:.3rem;
+ width:100%;
+ min-width:0;
+ padding:.5rem .65rem;
+ border:1px solid #6e7d99;
+ border-radius:.65rem;
+ background:#101624e9;
+ text-align:start;
+}
+.game-ui__run-heading{font-size:.8rem;letter-spacing:.04em;color:#f4f6ff}
+.game-ui__run-progress{font-size:.72rem;font-weight:750;color:#e4e9f5}
+.game-ui__run-message{font-size:.7rem;line-height:1.35;color:#f2e0ab}
+.game-ui__run-message:empty{display:none}
+.game-ui__run-medals{
+ font-size:.61rem;line-height:1.4;color:#bac8d9;
+ overflow-wrap:anywhere;
+}
+.game-ui__run-panel[data-medal="champion"]{border-color:#dec375}
+.game-ui__run-panel[data-medal="veteran"]{border-color:#a9bacc}
+.game-ui__run-panel[data-run-status="complete"]{box-shadow:inset 0 0 0 1px #e9c87577}
+.game-ui__run-controls{display:flex;flex-wrap:wrap;gap:.4rem}
+.game-ui .game-ui__run-controls button{
+ flex:1 1 7rem;
+ min-width:0;
+ min-height:44px;
+ padding:.35rem .45rem;
+ font-size:.72rem;
+ font-weight:800;
+}
+.game-ui .game-ui__run-continue{background:#e8d28a;color:#17130b;border-color:#e8d28a}
+.game-ui .game-ui__run-new{background:#252e42;border-color:#92a0ba}
+.game-ui .game-ui__run-leave{background:#151c29;border-color:#53627b}
+.game-ui .game-ui__run-continue:disabled{opacity:.45;cursor:default}
+@media (max-height:360px){
+ .game-ui__run-panel{gap:.18rem;padding:.32rem .45rem}
+ .game-ui__run-medals{font-size:.57rem}
+ .game-ui .game-ui__run-controls button{min-height:40px}
+}
