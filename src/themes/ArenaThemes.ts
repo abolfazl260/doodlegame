@@ -1,4 +1,5 @@
 import type {ArenaId,PlatformSurface} from "../gameplay/GameSession";
+import {paintProfessionalBackdrop} from "./BackgroundArt";
 
 export type ArenaUiSkin = "doodle" | "neon" | "fantasy";
 export type ArenaBackdrop = "sketch" | "city" | "clouds" | "mountains" | "cavern" | "industrial";
@@ -53,53 +54,7 @@ export function getArenaTheme(arena:ArenaId):ArenaTheme{
  return ARENA_THEMES[arena];
 }
 
-/** Cheap static 2D background shared by the Canvas and WebGL renderers. */
+/** One cached backdrop implementation for both Canvas2D and WebGL. */
 export function paintArenaBackdrop(ctx:CanvasRenderingContext2D,width:number,height:number,t:ArenaTheme):void{
- ctx.save();
- const gradient=ctx.createLinearGradient(0,0,0,height);
- if(gradient&&typeof gradient.addColorStop==="function"){
-  gradient.addColorStop(0,t.skyTop);
-  gradient.addColorStop(1,t.skyBottom);
-  ctx.fillStyle=gradient;
- }else ctx.fillStyle=t.skyTop;
- ctx.fillRect(0,0,width,height);
- const horizon=height*.68;
- ctx.fillStyle=t.silhouette;
- if(t.backdrop==="city"||t.backdrop==="industrial"){
-  for(let i=0;i<19;i++){
-   const x=i*width/18-width*.01;
-   const h=height*(.13+.25*(.5+.5*Math.sin(i*8.7)));
-   ctx.fillRect(x,horizon-h,width/27+width/42*(i%3),h+height*.36);
-  }
-  ctx.strokeStyle=t.accent;ctx.lineWidth=Math.max(1,width/430);ctx.globalAlpha=.42;
-  for(let i=1;i<19;i+=3){
-   const x=i*width/18;
-   ctx.beginPath();ctx.moveTo(x,horizon-height*.12);ctx.lineTo(x,horizon-height*.2);ctx.stroke();
-  }
-  ctx.globalAlpha=.23;ctx.fillStyle=t.secondary;
-  for(let i=0;i<14;i++)ctx.fillRect(i*width/13,horizon-height*(.06+(i%3)*.06),Math.max(2,width/170),height*.025);
- }else if(t.backdrop==="clouds"){
-  ctx.globalAlpha=.13;ctx.fillStyle=t.secondary;
-  for(let i=0;i<7;i++){
-   const x=width*(i+.2)/7,y=height*(.18+(i%3)*.11);
-   ctx.beginPath();ctx.ellipse(x,y,width*.09,height*.028,0,0,Math.PI*2);ctx.fill();
-  }
-  ctx.globalAlpha=.46;ctx.fillStyle=t.silhouette;ctx.fillRect(0,horizon,width,height-horizon);
- }else if(t.backdrop==="mountains"||t.backdrop==="cavern"){
-  ctx.beginPath();ctx.moveTo(0,height);ctx.lineTo(0,horizon);
-  for(let i=0;i<=12;i++)ctx.lineTo(i*width/12,horizon-height*(.03+.13*(.5+.5*Math.sin(i*2.9))));
-  ctx.lineTo(width,height);ctx.closePath();ctx.fill();
- }else{
-  for(let i=0;i<13;i++){
-   const x=i*width/12,blockHeight=height*(.06+.14*(.5+.5*Math.cos(i*7.3)));
-   ctx.fillRect(x,horizon-blockHeight,width/22,blockHeight+height*.3);
-  }
-  ctx.strokeStyle=t.secondary;ctx.globalAlpha=.3;ctx.lineWidth=Math.max(1.2,width/280);
-  for(let i=0;i<9;i++){
-   const x=width*((i+.5)/9),y=height*(.17+(i%3)*.14);
-   ctx.beginPath();ctx.moveTo(x-7,y);ctx.lineTo(x+7,y+4);ctx.moveTo(x,y-7);ctx.lineTo(x+3,y+9);ctx.stroke();
-  }
- }
- ctx.globalAlpha=1;
- ctx.restore();
+ paintProfessionalBackdrop(ctx,width,height,t);
 }
