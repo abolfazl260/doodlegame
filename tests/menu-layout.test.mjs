@@ -327,3 +327,30 @@ test("wizard cannot start early, supports keyboard focus and contains zero nativ
  assert.equal(ui.canStartMatch(),false);
  assert.equal(ui.menuStepIndex,0);
 });
+
+test("menu wizard CTA always has a translated label and each step hides the other",()=>{
+ const {ui}=setup();
+ const next=ui.stepNextButton,back=ui.stepBackButton;
+ assert.equal(next.textContent,"NEXT: CHOOSE ARENA");
+ assert.equal(back.textContent,"BACK");
+ assert.equal(ui.menuProgressDetails.tag,"details");
+ assert.ok(ui.menuProgressDetails.children.includes(ui.upgradePanel));
+ assert.ok(ui.menuProgressDetails.children.includes(ui.runPanel));
+ assert.equal(ui.menuModePanel.hidden,false);
+ assert.equal(ui.menuArenaPanel.hidden,true);
+ ui.stepNextButton.click();
+ assert.equal(ui.menuModePanel.hidden,true);
+ assert.equal(ui.menuArenaPanel.hidden,false);
+ assert.equal(ui.menuProgressDetails.hidden,true);
+ assert.equal(ui.menuExtras.hidden,true);
+ assert.equal(ui.stepNextButton.hidden,true);
+ assert.equal(ui.stepBackButton.hidden,false);
+ assert.ok(next.textContent.length>0);
+ ui.stepBackButton.click();
+ assert.equal(ui.menuModePanel.hidden,false);
+ assert.equal(ui.menuArenaPanel.hidden,true);
+ assert.equal(ui.menuExtras.hidden,false);
+ ui.languageButton.click();
+ assert.ok(next.textContent.length>0);
+ assert.ok(back.textContent.length>0);
+});
