@@ -203,7 +203,16 @@ export class GameSession{
  setMissileAngle(angle:number){this.missileAngle=Math.max(MIN_MISSILE_ANGLE,Math.min(MAX_MISSILE_ANGLE,angle));}
  setMissilePower(power:number){this.missilePower=Math.max(MIN_MISSILE_POWER,Math.min(MAX_MISSILE_POWER,power));}
  fireWeapon(){if(this.winner)return;const w=this.weaponStats[this.player.weapon];this.attack(this.player,this.opponent,Boolean(w));}
- cancelTouchAttack(){this.player.bowCharging=false;this.player.bowCharge=0;}
+ /**
+  * Discard a pending player action when play is interrupted. This must never
+  * release a charged arrow or modify an already-earned attack cooldown.
+  */
+ cancelTransientActions(){
+  this.player.bowCharging=false;
+  this.player.bowCharge=0;
+  if(this.player.weapon==="bow")this.player.attackTime=0;
+ }
+ cancelTouchAttack(){this.cancelTransientActions();}
  getMissileAim(){return{angle:this.missileAngle,power:this.missilePower};}
  upgradeWeapon(id:WeaponId){if(this.upgradePoints<=0||this.upgradedWeapons.has(id))return false;this.upgradedWeapons.add(id);this.upgradePoints--;return true;}
  reset(advanceEnemy=true){this.combatCues=[];this.visualFreezeUntil=0;this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];this.debris=[];if(advanceEnemy)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,this.runStage?this.runEncounters[this.runStage-1].enemy:types[enemyIndex]);if(this.runStage){const hp=this.runEncounters[this.runStage-1].health;this.opponent.health=hp;this.opponent.maxHealth=hp;}if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER.filter(id=>id!=="missile");this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(this.modeId!=="random-weapons"&&!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;this.projectiles=[];this.resetEnvironment();this.enemyBrain=this.freshEnemyBrain();this.enemyBrain.lastX=this.opponent.x;this.winner=null;}
