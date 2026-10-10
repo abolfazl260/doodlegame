@@ -1059,3 +1059,12 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
 }
 .game-ui.playing[data-mode="local-pvp"] .health-bar--player::after{content:"P1";left:.35rem}
 .game-ui.playing[data-mode="local-pvp"] .health-bar--opponent::after{content:"P2";right:.35rem}
+
+.game-ui__pvp-hint[hidden]{display:none!important}
+.game-ui__pvp-hint{
+ width:100%;min-width:0;padding:.4rem .6rem;
+ border:1px solid #6a83a6;border-radius:.45rem;
+ background:#101a2a;color:#e4ecff;
+ font-size:.68rem;line-height:1.5;text-align:start;
+ overflow-wrap:anywhere;
+}
