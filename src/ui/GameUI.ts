@@ -590,7 +590,7 @@ export class GameUI{
      this.setHidden(button,(action==="start"&&state!==GameState.MENU)||
       (action==="pause"&&state!==GameState.PLAYING)||
       (action==="resume"&&state!==GameState.PAUSED)||
-      (action==="restart"&&state===GameState.MENU));
+      (action==="restart"&&(state===GameState.MENU||Boolean(s.inRun))));
     }
    }
    if(arenaChanged){
@@ -664,8 +664,8 @@ export class GameUI{
       " ("+copy.requirements[id]+")").join("  ·  "));
      const showContinue=Boolean(run)&&phase!=="complete";
      this.setHidden(this.runContinueButton,!showContinue);
-     this.runContinueButton.disabled=phase==="victory"&&s.progression!.choices.length>0&&run!.points>0;
-     this.setText(this.runContinueButton,phase==="victory"?copy.next:
+     this.runContinueButton.disabled=phase==="victory"&&Boolean(s.inRun)&&s.progression!.choices.length>0&&run!.points>0;
+     this.setText(this.runContinueButton,phase==="victory"&&s.inRun?copy.next:
       phase==="defeat"?copy.retry:copy.continueRun);
      this.setText(this.runNewButton,copy.newRun);
      this.setHidden(this.runLeaveButton,!s.inRun);
