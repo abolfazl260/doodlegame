@@ -239,3 +239,59 @@ test("Android update control is a single hidden-by-default action with no extra 
  ui.setUpdateVisible(false);
  assert.equal(ui.updateButton.hidden,true);
 });
+
+
+test("menu prioritizes quick-play and keeps advanced utilities inside a single disclosure",()=>{
+ const {ui,calls,hud}=setup();
+ assert.equal(ui.menu.children.at(-1),ui.buttons,"primary CTA is always the final, sticky row");
+ assert.ok(ui.menuSetupSection.children.includes(ui.quickModes));
+ assert.ok(ui.menuSetupSection.children.includes(ui.menuSettings));
+ assert.equal(ui.quickModes.children.length,2);
+ assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"true");
+ assert.equal(ui.quickPvpButton.getAttribute("aria-pressed"),"false");
+ assert.equal(ui.menuExtras.tag,"details");
+ assert.equal(ui.menuExtras.children[0].tag,"summary");
+ assert.ok(ui.menuExtras.children.includes(ui.menuLinks));
+ assert.equal(ui.menuExtras.open,undefined,"advanced menu is collapsed initially");
+ ui.quickPvpButton.click();
+ assert.deepEqual(calls.at(-1),["mode","local-pvp"]);
+ hud.mode="local-pvp";
+ ui.render(states.MENU,hud);
+ assert.equal(ui.quickPvpButton.getAttribute("aria-pressed"),"true");
+ assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"false");
+ assert.equal(ui.pvpHint.hidden,false);
+ assert.match(ui.matchSummary.textContent,/local-pvp/);
+ ui.quickDuelButton.click();
+ assert.deepEqual(calls.at(-1),["mode","duel"]);
+ hud.mode="duel";
+ hud.arena="ruins";
+ hud.weapon="bow";
+ ui.render(states.MENU,hud);
+ assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"true");
+ assert.match(ui.matchSummary.textContent,/ruins/);
+ assert.match(ui.matchSummary.textContent,/bow/);
+ assert.equal(ui.pvpHint.hidden,true);
+});
+
+test("menu setup is hidden during pause but quick-play and choices return in results",()=>{
+ const {ui,hud}=setup();
+ ui.render(states.PAUSED,hud);
+ assert.equal(ui.menuSetupSection.hidden,true);
+ assert.equal(ui.buttons.children.find(button=>button.dataset.action==="resume").hidden,false);
+ ui.render(states.GAME_OVER,{...hud,winner:"player"});
+ assert.equal(ui.menuSetupSection.hidden,false);
+ assert.equal(ui.menuSettings.hidden,false);
+});
+
+test("new menu has localized live match summary and responsive touch-safe primary CTA",()=>{
+ const css=readFileSync("src/styles.css","utf8");
+ assert.match(css,/\.game-ui__quick-modes\s*\{/);
+ assert.match(css,/\.game-ui__quick-mode\[aria-pressed="true"\]/);
+ assert.match(css,/\.game-ui__menu-extras\[open\]/);
+ assert.match(css,/\.game-ui:not\(\.playing\) \.game-ui__controls button\[data-action="start"\]/);
+ assert.match(css,/@media \(max-width:520px\)/);
+ assert.match(css,/@media \(max-height:360px\)/);
+ const {ui}=setup();
+ assert.equal(ui.matchSummary.getAttribute("aria-live"),"polite");
+ assert.equal(ui.matchSummary.getAttribute("aria-atomic"),"true");
+});
