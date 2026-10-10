@@ -29,6 +29,7 @@ test("second ATTACK finger cannot release the owned UZI hold; regular release en
  const client=await page.context().newCDPSession(page);
  try{
   await touch(client,"touchStart",[first]);
+  await page.waitForTimeout(185);
   expect((await metrics(page)).held).toBe(true);
   await touch(client,"touchStart",[first,second]);
   expect((await metrics(page)).held).toBe(true);
@@ -51,6 +52,7 @@ test("joystick and ATTACK keep separate simultaneous touch ownership",async({pag
   await touch(client,"touchStart",[joystick]);
   expect((await metrics(page)).move).toBeGreaterThan(0);
   await touch(client,"touchStart",[joystick,attack]);
+  await page.waitForTimeout(185);
   let m=await metrics(page);
   expect(m.move).toBeGreaterThan(0);
   expect(m.held).toBe(true);
@@ -69,6 +71,7 @@ test("cancelled touch and capture loss cannot leave a phantom held ATTACK",async
  const client=await page.context().newCDPSession(page);
  try{
   await touch(client,"touchStart",[{...p,id:5}]);
+  await page.waitForTimeout(185);
   await page.evaluate(()=>window.__weaponFixture.tick(12));
   expect((await metrics(page)).held).toBe(true);
   await touch(client,"touchCancel",[]);
@@ -79,6 +82,7 @@ test("cancelled touch and capture loss cannot leave a phantom held ATTACK",async
   m=await metrics(page);
   expect(m.projectiles).toBe(0);
   await touch(client,"touchStart",[{...p,id:6}]);
+  await page.waitForTimeout(185);
   expect((await metrics(page)).held).toBe(true);
   await touch(client,"touchEnd",[]);
   expect((await metrics(page)).held).toBe(false);
