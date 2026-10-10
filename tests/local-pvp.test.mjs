@@ -123,6 +123,8 @@ test("choosing a new arena and rematching retain local PvP; returning to Duel re
  session.selectPlayer2Weapon(1);
  assert.equal(session.getHudState().secondWeapon,"hammer");
  session.reset();
+ session.reset();
+ session.reset();
  assert.equal(session.getHudState().winner,null);
  assert.equal(session.getHudState().secondWeapon,"blade");
  assert.equal(session.getRenderState().opponent.enemyType,null);
