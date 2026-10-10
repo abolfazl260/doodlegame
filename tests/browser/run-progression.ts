@@ -39,6 +39,42 @@ const fixture={
  state:()=>game.getState(),
  view:()=>game.getHudState(),
  back:()=>game.stop(),
+ startBowDuel:()=>{
+  if(game.getState()!==GameState.MENU)throw Error("not in menu");
+  game.selectStartingWeapon("bow");
+  input.resetTransientState();
+  game.start();
+ },
+ beginBowCharge:()=>{
+  if(game.getState()!==GameState.PLAYING)throw Error("not playing");
+  if(session.getHudState().weapon!=="bow")throw Error("Bow must be selected");
+  input.touchAttack(true);
+  for(let frame=0;frame<18;frame++)session.update(1/60);
+ },
+ releaseBow:()=>{
+  if(game.getState()!==GameState.PLAYING)throw Error("not playing");
+  input.touchAttackRelease();
+  session.update(1/60);
+ },
+ combatSnapshot:()=>({
+  state:game.getState(),
+  bowCharge:session.getHudState().bowCharge,
+  bowCharging:session.player.bowCharging,
+  attackTime:session.player.attackTime,
+  cooldown:session.player.cooldown,
+  arrows:session.getRenderState().projectiles.filter(p=>p.weapon==="bow").length,
+  playerHealth:session.getHudState().playerHealth,
+  opponentHealth:session.getHudState().opponentHealth,
+  weapon:session.getHudState().weapon
+ }),
+ pauseDirect:()=>game.pause(),
+ pauseFromBackground:()=>{input.resetTransientState();game.pause();},
+ resumeDirect:()=>game.resume(),
+ resumeFromBackground:()=>{input.resetTransientState();game.resume();},
+ nextFrame:()=>{if(game.getState()===GameState.PLAYING)session.update(1/60);},
+ restartFight:()=>{input.resetTransientState();game.restart();},
+ stopFight:()=>{input.resetTransientState();game.stop();},
+ releaseStaleInput:()=>input.resetTransientState(),
  win:()=>{
   if(game.getState()!==GameState.PLAYING)throw Error("not fighting");
   session.opponent.health=0;
