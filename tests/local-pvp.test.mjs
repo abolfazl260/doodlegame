@@ -131,3 +131,19 @@ test("choosing a new arena and rematching retain local PvP; returning to Duel re
  assert.equal(input.getPlayer2State().attackHeld,false);
  session.dispose();
 });
+
+
+test("chosen starting weapon is symmetric for both human players, including rematches",()=>{
+ const {session}=setup();
+ assert.equal(session.setStartingWeapon("blaster"),true);
+ session.reset(false);
+ assert.equal(session.getHudState().weapon,"blaster");
+ assert.equal(session.getHudState().secondWeapon,"blaster");
+ session.selectPlayer2Weapon(1);
+ assert.equal(session.getHudState().weapon,"blaster");
+ assert.equal(session.getHudState().secondWeapon,"uzi");
+ session.reset(false);
+ assert.equal(session.getHudState().weapon,"blaster");
+ assert.equal(session.getHudState().secondWeapon,"blaster");
+ session.dispose();
+});
