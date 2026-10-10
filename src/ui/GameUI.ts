@@ -20,6 +20,9 @@ type Actions={
  toggleCombatSound:()=>void;toggleCameraShake:()=>void;updateData:()=>Promise<void>;
 };
 type UiAction="start"|"pause"|"resume"|"restart"|"menu";
+type MenuStep="mode"|"arena";
+// Append another step here and give it a page in syncWizard to extend the setup.
+const MENU_STEPS:readonly MenuStep[]=["mode","arena"];
 
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
@@ -82,6 +85,17 @@ export class GameUI{
  private menuExtras=document.createElement("details");
  private menuExtrasTitle=document.createElement("summary");
  private menuSettings=document.createElement("div");
+ private menuStepIndex=0;
+ private lastSoloMode:GameModeId="duel";
+ private menuProgress=document.createElement("div");
+ private menuModePanel=document.createElement("section");
+ private menuArenaPanel=document.createElement("section");
+ private arenaCards=document.createElement("div");
+ private weaponDetails=document.createElement("details");
+ private weaponDetailsTitle=document.createElement("summary");
+ private weaponCards=document.createElement("div");
+ private stepNextButton=document.createElement("button");
+ private stepBackButton=document.createElement("button");
  private pvpHint=document.createElement("div");
  private menuLinks=document.createElement("div");
  private combatSoundButton=document.createElement("button");
@@ -98,12 +112,7 @@ export class GameUI{
  private runNewButton=document.createElement("button");
  private runContinueButton=document.createElement("button");
  private runLeaveButton=document.createElement("button");
- private modeField=document.createElement("label");
- private arenaField=document.createElement("label");
- private weaponField=document.createElement("label");
- private modeSelect=document.createElement("select");
- private arenaSelect=document.createElement("select");
- private startingWeaponSelect=document.createElement("select");
+ private selectedUpgrade:WeaponId|null=null;
  private startingWeaponTitle=document.createElement("div");
  private title=document.createElement("h1");
  private topHud=document.createElement("div");
@@ -278,7 +287,7 @@ export class GameUI{
   this.quickPvpButton.className="game-ui__quick-mode";
   this.quickDuelButton.dataset.quickMode="duel";
   this.quickPvpButton.dataset.quickMode="local-pvp";
-  this.quickDuelButton.onclick=()=>actions.modeSelect("duel");
+  this.quickDuelButton.onclick=()=>actions.modeSelect(this.lastSoloMode);
   this.quickPvpButton.onclick=()=>actions.modeSelect("local-pvp");
   this.quickModes.append(this.quickDuelButton,this.quickPvpButton);
   this.modeDescription.className="game-ui__mode-description";
@@ -288,42 +297,56 @@ export class GameUI{
   this.menuExtras.className="game-ui__menu-extras";
   this.menuExtrasTitle.className="game-ui__menu-extras-title";
   this.menuExtras.append(this.menuExtrasTitle);
-  this.menuSettings.className="game-ui__menu-settings";
+  this.menuSettings.className="game-ui__menu-settings game-ui__mode-grid";
   this.pvpHint.className="game-ui__pvp-hint";this.pvpHint.hidden=true;
   this.menuLinks.className="game-ui__menu-links";
-  this.menuResult.className="game-ui__menu-result";
-  this.menuResult.hidden=true;
-  this.arenaField.className="game-ui__menu-field";
-  this.modeField.className="game-ui__menu-field";
-  this.weaponField.className="game-ui__menu-field";
-  this.startingWeaponTitle.className="game-ui__section-title";
-  this.startingWeaponSelect.className="game-ui__menu-select";
-  this.startingWeaponSelect.onchange=()=>actions.selectStartingWeapon(this.startingWeaponSelect.value as WeaponId);
-  this.arenaTitle.className="game-ui__section-title";
+  this.menuResult.className="game-ui__menu-result";this.menuResult.hidden=true;
   this.modeTitle.className="game-ui__section-title";
-  this.arenaSelect.className="game-ui__menu-select";
-  this.modeSelect.className="game-ui__menu-select";
-  this.arenaSelect.onchange=()=>actions.arenaSelect(this.arenaSelect.value as ArenaId);
-  this.modeSelect.onchange=()=>actions.modeSelect(this.modeSelect.value as GameModeId);
-  for(const id of ARENA_IDS){
-   const option=document.createElement("option");
-   option.value=id;
-   this.arenaSelect.append(option);
-  }
+  this.arenaTitle.className="game-ui__section-title";
+  this.startingWeaponTitle.className="game-ui__section-title";
+  this.menuProgress.className="game-ui__menu-progress";
+  this.menuProgress.setAttribute("aria-live","polite");
+  this.menuModePanel.className="game-ui__menu-mode-panel";
+  this.menuArenaPanel.className="game-ui__menu-arena-panel";this.menuArenaPanel.hidden=true;
+  this.arenaCards.className="game-ui__arena-grid";
+  this.weaponCards.className="game-ui__weapon-grid";
+  this.weaponDetails.className="game-ui__weapon-details";
+  this.weaponDetailsTitle.className="game-ui__weapon-details-title";
+  this.weaponDetails.append(this.weaponDetailsTitle,this.weaponCards);
   for(const id of MODE_IDS){
-   const option=document.createElement("option");
-   option.value=id;
-   this.modeSelect.append(option);
+   const card=document.createElement("button");
+   card.type="button";card.className="game-ui__mode-card";
+   card.dataset.mode=id;
+   card.setAttribute("aria-pressed","false");
+   card.onclick=()=>actions.modeSelect(id);
+   this.menuSettings.append(card);
+  }
+  for(const [index,id] of ARENA_IDS.entries()){
+   const theme=getArenaTheme(id),card=document.createElement("button");
+   card.type="button";card.className="game-ui__arena-card";
+   card.dataset.arena=id;
+   card.setAttribute("aria-pressed","false");
+   card.style.setProperty("--card-accent",theme.accent);
+   card.style.setProperty("--card-secondary",theme.secondary);
+   const ordinal=document.createElement("span");
+   ordinal.className="game-ui__arena-number";
+   ordinal.textContent=String(index+1).padStart(2,"0");
+   const label=document.createElement("strong");
+   label.className="game-ui__arena-name";
+   card.append(ordinal,label);
+   card.onclick=()=>actions.arenaSelect(id);
+   this.arenaCards.append(card);
   }
   for(const id of WEAPON_IDS){
-   const option=document.createElement("option");
-   option.value=id;
-   this.startingWeaponSelect.append(option);
+   const card=document.createElement("button");
+   card.type="button";card.className="game-ui__loadout-card";
+   card.dataset.startingWeapon=id;
+   card.setAttribute("aria-pressed","false");
+   card.onclick=()=>actions.selectStartingWeapon(id);
+   this.weaponCards.append(card);
   }
-  this.arenaField.append(this.arenaTitle,this.arenaSelect);
-  this.modeField.append(this.modeTitle,this.modeSelect);
-  this.weaponField.append(this.startingWeaponTitle,this.startingWeaponSelect);
-  this.menuSettings.append(this.modeField,this.arenaField,this.weaponField);
+  this.menuModePanel.append(this.quickModes,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint);
+  this.menuArenaPanel.append(this.arenaTitle,this.arenaCards,this.weaponDetails,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
   this.rotateHint.className="game-ui__rotate-hint";
 
@@ -378,6 +401,11 @@ export class GameUI{
    item.onclick=()=>actions.weaponSelect(id);
    this.weaponList.append(item);
   }
+  this.stepBackButton.type="button";this.stepNextButton.type="button";
+  this.stepBackButton.dataset.action="back";this.stepNextButton.dataset.action="next";
+  this.stepBackButton.onclick=()=>this.changeMenuStep(this.menuStepIndex-1);
+  this.stepNextButton.onclick=()=>this.changeMenuStep(this.menuStepIndex+1);
+  this.buttons.append(this.stepBackButton,this.stepNextButton);
   const uiActions:[UiAction,()=>void][]=[["start",actions.start],["pause",actions.pause],["resume",actions.resume],["restart",actions.restart]];
   if(actions.stopToMenu)uiActions.push(["menu",actions.stopToMenu]);
   for(const [action,fn] of uiActions){
@@ -648,8 +676,7 @@ export class GameUI{
   this.runPanel.append(this.runHeading,this.runProgress,this.runMessage,this.runMedals,this.runControls);
   this.menuLinks.append(this.helpButton,this.privacyButton,this.combatSoundButton,this.combatShakeButton,this.updateButton);
   this.menuExtras.append(this.menuLinks);
-  this.menuSetupSection.append(this.menuLead,this.quickModes,this.menuSetupTitle,this.menuSettings,
-   this.modeDescription,this.pvpHint,this.matchSummary);
+  this.menuSetupSection.append(this.menuProgress,this.menuLead,this.menuModePanel,this.menuArenaPanel);
   this.menu.append(this.menuHeader,this.menuResult,this.menuSetupSection,this.upgradePanel,this.runPanel,this.menuExtras,this.buttons);
   this.topHud.append(this.playerHealth,this.status,this.opponentHealth,this.details);
   this.root.append(this.menu,this.help,this.privacy,this.topHud,this.weaponList,this.missilePanel,this.bowPanel,this.mobileControls,this.rotateHint);
@@ -974,6 +1001,9 @@ export class GameUI{
   this.languageButton.setAttribute("aria-label",messages.language.label+": "+currentLanguage);
   this.title.textContent=messages.title;
   this.menuLead.textContent=messages.menu?.kickoff??"CHOOSE YOUR FIGHT";
+  this.stepNextButton.textContent=messages.menu?.nextArena??"NEXT: CHOOSE ARENA";
+  this.stepBackButton.textContent=messages.menu?.back??"BACK";
+  this.weaponDetailsTitle.textContent=messages.menu?.loadout??"STARTING WEAPON · OPTIONAL";
   this.menuSetupTitle.textContent=messages.menu?.setup??"MATCH SETUP";
   this.quickDuelButton.textContent=messages.menu?.quickDuel??"SOLO DUEL";
   this.quickPvpButton.textContent=messages.menu?.quickPvp??"2 PLAYERS · LOCAL";
@@ -1019,9 +1049,20 @@ export class GameUI{
    const button=item as HTMLButtonElement;
    button.textContent=actionLabels[button.dataset.action as UiAction];
   }
-  for(const option of this.arenaSelect.options)option.textContent=messages.arenas[option.value as ArenaId];
-  for(const option of this.modeSelect.options)option.textContent=messages.modes[option.value as GameModeId];
-  for(const option of this.startingWeaponSelect.options)option.textContent=messages.weapons[option.value as WeaponId];
+  for(const item of this.menuSettings.children){
+   const card=item as HTMLButtonElement,id=card.dataset.mode as GameModeId;
+   card.textContent=messages.modes[id];
+   card.title=messages.menu?.modeDescriptions[id]??"";
+  }
+  for(const item of this.arenaCards.children){
+   const card=item as HTMLButtonElement;
+   const label=card.children[1] as HTMLElement;
+   label.textContent=messages.arenas[card.dataset.arena as ArenaId];
+  }
+  for(const item of this.weaponCards.children){
+   const card=item as HTMLButtonElement;
+   card.textContent=messages.weapons[card.dataset.startingWeapon as WeaponId];
+  }
   for(const option of this.upgradeSelect.options){
    const id=option.value as WeaponId;
    option.textContent=messages.weapons[id]+" → "+messages.upgrades[id].name;
