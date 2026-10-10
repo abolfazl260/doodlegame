@@ -10,7 +10,6 @@ export class CombatAudio{
  private ambientWanted=false;
  private ambientGain:GainNode|null=null;
  private ambientOscillators:OscillatorNode[]=[];
- private ambientFilter:BiquadFilterNode|null=null;
  private readonly handleVisibility=()=>{
   if(typeof document==="undefined")return;
   if(document.hidden)this.stopAmbient();
@@ -46,14 +45,14 @@ export class CombatAudio{
     oscillator.start();
     oscillators.push(oscillator);
    }
-   this.ambientGain=gain;this.ambientFilter=filter;
+   this.ambientGain=gain;
    this.ambientOscillators=oscillators;
   }catch{this.stopAmbient();}
  }
  private stopAmbient(){
   if(!this.ambientGain&&!this.ambientOscillators.length)return;
   const ctx=this.context,gain=this.ambientGain,oscillators=this.ambientOscillators;
-  this.ambientGain=null;this.ambientFilter=null;this.ambientOscillators=[];
+  this.ambientGain=null;this.ambientOscillators=[];
   try{
    const now=ctx?.currentTime??0;
    if(gain){
