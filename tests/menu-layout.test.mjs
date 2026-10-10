@@ -157,16 +157,17 @@ test("clicking the language button immediately switches both directions without 
 test("compact upgrade selector preserves purchase and availability rules",()=>{
  const {ui,calls,hud}=setup({upgradePoints:1,upgradedWeapons:["blade"]});
  assert.equal(ui.upgradePanel.hidden,false);
- assert.equal(ui.upgradeSelect.options.length,8);
- assert.equal(ui.upgradeSelect.options[0].disabled,true);
- assert.equal(ui.upgradeSelect.value,"hammer");
+ assert.equal(ui.upgradeCardGrid.children.length,8);
+ assert.equal(ui.upgradeCardGrid.children[0].disabled,true);
+ assert.equal(ui.upgradeCardGrid.children.find(b=>b.dataset.upgradeWeapon==="hammer").getAttribute("aria-pressed"),"true");
  assert.equal(ui.upgradeButton.disabled,false);
- ui.upgradeSelect.value="bomb";ui.upgradeSelect.onchange();
+ ui.upgradeCardGrid.children.find(b=>b.dataset.upgradeWeapon==="bomb").click();
  ui.upgradeButton.click();
  assert.deepEqual(calls.at(-1),["upgrade","bomb"]);
  hud.upgradePoints=0;
  ui.render(states.MENU,hud);
  assert.equal(ui.upgradeChoices.hidden,true);
+ assert.equal(ui.upgradeCardGrid.children.find(b=>b.dataset.upgradeWeapon==="blade").hidden,true);
  assert.equal(ui.upgradeSummary.hidden,false);
 });
 
