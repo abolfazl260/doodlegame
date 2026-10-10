@@ -196,6 +196,7 @@ test("HUD facing agrees with actual missile launch direction and preview SVG",()
  try{
   session.setMode("missile-duel");
   for(const facing of [1,-1]){
+   session.reset(false);
    session.player.facing=facing;
    const hud=session.getHudState();
    assert.equal(hud.playerFacing,facing);
