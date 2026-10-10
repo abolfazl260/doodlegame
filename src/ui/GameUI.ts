@@ -623,9 +623,9 @@ export class GameUI{
    event.preventDefault();
    const valid=this.currentState===GameState.PLAYING&&this.readHud?.().winner===null;
    const swiped=p2Grabbed||(!p2Started&&grabGesture(p2StartX,p2StartY,event.clientX,event.clientY,Date.now()-p2StartAt));
-   const began=p2Started;clearP2Attack();
+   const began=p2Started,alreadyGrabbed=p2Grabbed;clearP2Attack();
    if(!valid){if(began)actions.player2AttackCancel?.();}
-   else if(swiped){if(!p2Grabbed)actions.player2Grab?.();}
+   else if(swiped){if(!alreadyGrabbed)actions.player2Grab?.();}
    else{if(!began)actions.player2AttackStart?.();actions.player2AttackEnd?.();}
   });
   for(const kind of ["pointercancel","lostpointercapture"])
