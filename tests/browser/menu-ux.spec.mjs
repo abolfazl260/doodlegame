@@ -23,7 +23,7 @@ test("player-count cards filter mode choices and arena is selected on the next s
  await expect(cards).toHaveCount(7);
  await page.locator('.game-ui__mode-card[data-mode="low-gravity"]').tap();
  await expect(page.locator('.game-ui__mode-card[data-mode="low-gravity"]')).toHaveAttribute("aria-pressed","true");
- await expect(page.locator(".game-ui__mode-description")).toContainText("جاذبه");
+ await expect(page.locator(".game-ui__mode-description")).toContainText("پرش‌های");
  await expect(page.locator('button[data-action="start"]')).toBeHidden();
  await page.locator('button[data-action="next"]').tap();
  await expect(page.locator(".game-ui__menu-arena-panel")).toBeVisible();
@@ -47,7 +47,7 @@ test("player-count cards filter mode choices and arena is selected on the next s
 test("advanced settings stay secondary and help dialog dismisses with Escape",async({page})=>{
  const extras=page.locator(".game-ui__menu-extras");
  const help=page.locator(".game-ui__help");
- const primary=page.locator('button[data-action="start"]');
+ const primary=page.locator('button[data-action="next"]');
  await expect(extras).not.toHaveAttribute("open","");
  await expect(primary).toBeVisible();
  await extras.locator("summary").tap();
