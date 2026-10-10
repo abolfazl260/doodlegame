@@ -36,6 +36,7 @@ export class GameUI{
  private missileAimPath:SVGPathElement|null=null;
  private lastAimGuide:{angle:number;power:number;facing:number;locale:string}|null=null;
  private cancelTouchControls:()=>void=()=>{};
+ private cancelActiveTouchAttack:()=>void=()=>{};
  private removeTouchLifecycle:()=>void=()=>{};
  private mobileWeaponSwitcher=document.createElement("div");
  private previousWeaponButton=document.createElement("button");
@@ -413,6 +414,7 @@ export class GameUI{
    }
   };
   this.cancelTouchControls=cancelControls;
+  this.cancelActiveTouchAttack=cancelAttack;
   this.mobileAttackButton.addEventListener("pointerdown",event=>{
    if(attackPointer!==-1||this.currentState!==GameState.PLAYING)return;
    const hud=this.readHud?.();
@@ -424,7 +426,13 @@ export class GameUI{
    startY=event.clientY;
    baseAngle=hud.missileAngle;
    basePower=hud.missilePower;
-   this.mobileAttackButton.setPointerCapture?.(event.pointerId);
+   try{this.mobileAttackButton.setPointerCapture?.(event.pointerId);}
+   catch{
+    // An inactive/uncapturable pointer must never leave ATTACK held.
+    attackPointer=-1;
+    attackWeapon=null;
+    return;
+   }
    haptic(16);
    if(attackWeapon==="missile"){
     this.mobileAttackButton.classList.add("aiming");
@@ -576,6 +584,8 @@ export class GameUI{
   const missileRules=s.mode==="missile-duel"||(s.arena==="fortress"&&s.mode==="duel");
 
   if(staticChanged){
+   // A held UZI/Bow touch belongs to the originally selected weapon, not its replacement.
+   if(weaponChanged&&state===GameState.PLAYING)this.cancelActiveTouchAttack();
    if(stateChanged){
     this.root.classList.toggle("playing",state===GameState.PLAYING);
     this.root.classList.toggle("paused",state===GameState.PAUSED);
