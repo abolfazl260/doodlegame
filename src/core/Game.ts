@@ -3,9 +3,18 @@ export class Game{
  private state=new GameStateManager();private loop:GameLoop;private initialized=false;private disposed=false;
  private inRun=false;
  private normalSnapshot:({arena:ArenaId;mode:GameModeId;upgrades:UpgradeSnapshot})|null=null;
- constructor(private readonly renderer:Renderer,private readonly session:GameSession,scheduler:FrameScheduler,onError:(error:unknown)=>void,private readonly progression?:Progression){this.loop=new GameLoop(scheduler,dt=>this.update(dt),()=>this.renderer.render(this.session.getRenderState()),onError);}
+ constructor(private readonly renderer:Renderer,private readonly session:GameSession,scheduler:FrameScheduler,onError:(error:unknown)=>void,private readonly progression?:Progression){
+  this.loop=new GameLoop(scheduler,dt=>this.update(dt),()=>this.renderer.render(this.session.getRenderState()),onError);
+  const run=progression?.getView().run;
+  if(run?.status==="victory"){
+   this.normalSnapshot={arena:session.getHudState().arena,mode:session.getMode(),upgrades:session.getUpgradeSnapshot()};
+   this.inRun=true;
+   session.setUpgradeSnapshot({points:run.points,upgradedWeapons:run.upgradedWeapons});
+   session.startRunEncounter(run.stage);
+  }
+ }
  initialize(){this.assertNotDisposed();if(this.initialized)return;this.initialized=true;this.renderer.resize();this.renderer.render(this.session.getRenderState());}
- start(){this.ready();const s=this.state.getState();if(s===GameState.MENU||s===GameState.GAME_OVER){this.session.reset();this.state.transitionTo(GameState.PLAYING);}else if(s===GameState.PAUSED)this.state.transitionTo(GameState.PLAYING);this.loop.start();}
+ start(){this.ready();if(this.inRun)this.leaveRun();const s=this.state.getState();if(s===GameState.MENU||s===GameState.GAME_OVER){this.session.reset();this.state.transitionTo(GameState.PLAYING);}else if(s===GameState.PAUSED)this.state.transitionTo(GameState.PLAYING);this.loop.start();}
  pause(){this.ready();if(this.state.getState()===GameState.PLAYING){this.loop.stop();this.state.transitionTo(GameState.PAUSED);}}
  resume(){this.ready();if(this.state.getState()===GameState.PAUSED){this.state.transitionTo(GameState.PLAYING);this.loop.start();}}
  endGame(){this.ready();if(this.state.getState()===GameState.PLAYING){
@@ -25,7 +34,7 @@ export class Game{
   if(state===GameState.PLAYING||state===GameState.PAUSED)return false;
   if(this.inRun&&this.progression){
    const view=this.progression.getView();
-   if(state!==GameState.GAME_OVER||view.run?.status!=="victory"||!view.choices.includes(id))return false;
+   if((state!==GameState.GAME_OVER&&state!==GameState.MENU)||view.run?.status!=="victory"||!view.choices.includes(id))return false;
   }
   const upgraded=this.session.upgradeWeapon(id);
   if(upgraded&&this.inRun&&this.progression)this.progression.purchase(id,this.session.getUpgradeSnapshot());
