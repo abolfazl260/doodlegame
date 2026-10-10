@@ -4,10 +4,10 @@ import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaTh
 import {combatCameraFrame,type CombatCameraFrame} from "./CombatCamera.js";
 import type {GameRenderState,DuelistRenderState} from "../gameplay/GameSession";
 export class CanvasRenderer implements Renderer{
- private readonly context:CanvasRenderingContext2D;private width=1;private height=1;private dpr=1;private playerVisual={x:0,y:0,ready:false};private opponentVisual={x:0,y:0,ready:false};private cameraFrame:CombatCameraFrame|null=null;private framedArena:GameRenderState["arena"]|null=null;
+ private readonly context:CanvasRenderingContext2D;private width=1;private height=1;private dpr=1;private playerVisual={x:0,y:0,ready:false};private opponentVisual={x:0,y:0,ready:false};private cameraFrame:CombatCameraFrame|null=null;private framedArena:GameRenderState["arena"]|null=null;private backdropArena:GameRenderState["arena"]|null=null;private backdropCanvas:HTMLCanvasElement|null=null;
  constructor(private readonly canvas:HTMLCanvasElement){const c=canvas.getContext("2d");if(!c)throw new Error("2D canvas rendering is unavailable.");this.context=c;this.resize();}
- resize(){this.width=Math.max(1,this.canvas.clientWidth);this.height=Math.max(1,this.canvas.clientHeight);this.dpr=Math.min(window.devicePixelRatio||1,2);this.canvas.width=Math.floor(this.width*this.dpr);this.canvas.height=Math.floor(this.height*this.dpr);}
- render(state:GameRenderState){const playerDash=Math.abs(state.player.velocityX)>9;const opponentDash=Math.abs(state.opponent.velocityX)>9;const ps=this.playerVisual,os=this.opponentVisual;if(!ps.ready){ps.x=state.player.x;ps.y=state.player.y;ps.ready=true;}else{const b=playerDash?.46:state.player.grounded?.18:.24;ps.x+=(state.player.x-ps.x)*b;ps.y+=(state.player.y-ps.y)*b;}if(!os.ready){os.x=state.opponent.x;os.y=state.opponent.y;os.ready=true;}else{const b=opponentDash?.46:state.opponent.grounded?.18:.24;os.x+=(state.opponent.x-os.x)*b;os.y+=(state.opponent.y-os.y)*b;}const aspect=this.width/Math.max(1,this.height);const previous=this.framedArena===state.arena?this.cameraFrame:null;this.cameraFrame=combatCameraFrame(state,aspect,previous);this.framedArena=state.arena;const c=this.context;c.setTransform(this.dpr,0,0,this.dpr,0,0);const theme=getArenaTheme(state.arena);paintArenaBackdrop(c,this.width,this.height,theme);const frame=this.cameraFrame,vh=frame.height,vw=vh*aspect,scale=this.height/vh,toX=(x:number)=>(x+vw/2-frame.x-state.cameraShake.x)*scale,toY=(y:number)=>(frame.y+vh/2-y+state.cameraShake.y)*scale;c.fillStyle="#777";if(state.arena==="fortress")this.drawFortress(c,scale,toX,toY);for(const p of state.platforms){const palette=platformColors(theme,p.surface);c.fillStyle=palette.body;c.fillRect(toX(p.x),toY(p.y+p.height),p.width*scale,p.height*scale);c.fillStyle=palette.edge;c.fillRect(toX(p.x),toY(p.y+p.height),p.width*scale,Math.max(1.5,scale*.065));if(p.surface==="ice"){c.strokeStyle="#fff";c.globalAlpha=.32;c.lineWidth=Math.max(1,scale*.025);c.beginPath();c.moveTo(toX(p.x),toY(p.y+p.height*.65));c.lineTo(toX(p.x+p.width*.35),toY(p.y+p.height*.15));c.moveTo(toX(p.x+p.width*.55),toY(p.y+p.height*.85));c.lineTo(toX(p.x+p.width),toY(p.y+p.height*.25));c.stroke();c.globalAlpha=1;}else if(p.surface==="slippery"){c.strokeStyle="#fff";c.globalAlpha=.22;c.lineWidth=Math.max(1,scale*.025);c.beginPath();c.moveTo(toX(p.x+.15),toY(p.y+p.height*.2));c.lineTo(toX(p.x+p.width-.15),toY(p.y+p.height*.8));c.stroke();c.globalAlpha=1;}else if(p.surface==="oneWay"){c.strokeStyle="#fff";c.globalAlpha=.38;c.lineWidth=Math.max(1,scale*.025);for(let x=p.x+.25;x<p.x+p.width-.1;x+=.65){c.beginPath();c.moveTo(toX(x),toY(p.y+p.height+.06));c.lineTo(toX(x+.18),toY(p.y+p.height+.02));c.stroke();}c.globalAlpha=1;}else if(p.surface==="conveyorLeft"||p.surface==="conveyorRight"){const dir=p.surface==="conveyorRight"?1:-1;c.strokeStyle=dir>0?"#111":"#fff";c.globalAlpha=.72;c.lineWidth=Math.max(1,scale*.025);for(let x=p.x+.45;x<p.x+p.width-.25;x+=.8){const y=p.y+p.height*.52;c.beginPath();c.moveTo(toX(x-dir*.18),toY(y+.09));c.lineTo(toX(x),toY(y));c.lineTo(toX(x-dir*.18),toY(y-.09));c.stroke();}c.globalAlpha=1;}}this.drawEnvironment(c,state.environment,toX,toY,scale);this.drawArenaHazards(c,state,toX,toY,scale);this.drawArenaDebris(c,state,toX,toY,scale);this.draw(c,state.player,toX,toY,scale,false);this.draw(c,state.opponent,toX,toY,scale,true);c.fillStyle="#fff";for(const p of state.projectiles){
+ resize(){this.width=Math.max(1,this.canvas.clientWidth);this.height=Math.max(1,this.canvas.clientHeight);this.dpr=Math.min(window.devicePixelRatio||1,2);this.canvas.width=Math.floor(this.width*this.dpr);this.canvas.height=Math.floor(this.height*this.dpr);this.backdropArena=null;}
+ render(state:GameRenderState){const playerDash=Math.abs(state.player.velocityX)>9;const opponentDash=Math.abs(state.opponent.velocityX)>9;const ps=this.playerVisual,os=this.opponentVisual;if(!ps.ready){ps.x=state.player.x;ps.y=state.player.y;ps.ready=true;}else{const b=playerDash?.46:state.player.grounded?.18:.24;ps.x+=(state.player.x-ps.x)*b;ps.y+=(state.player.y-ps.y)*b;}if(!os.ready){os.x=state.opponent.x;os.y=state.opponent.y;os.ready=true;}else{const b=opponentDash?.46:state.opponent.grounded?.18:.24;os.x+=(state.opponent.x-os.x)*b;os.y+=(state.opponent.y-os.y)*b;}const aspect=this.width/Math.max(1,this.height);const previous=this.framedArena===state.arena?this.cameraFrame:null;this.cameraFrame=combatCameraFrame(state,aspect,previous);this.framedArena=state.arena;const c=this.context;c.setTransform(this.dpr,0,0,this.dpr,0,0);const theme=getArenaTheme(state.arena);this.paintBackdrop(state.arena,theme);const frame=this.cameraFrame,vh=frame.height,vw=vh*aspect,scale=this.height/vh,toX=(x:number)=>(x+vw/2-frame.x-state.cameraShake.x)*scale,toY=(y:number)=>(frame.y+vh/2-y+state.cameraShake.y)*scale;c.fillStyle="#777";if(state.arena==="fortress")this.drawFortress(c,scale,toX,toY);for(const p of state.platforms){const palette=platformColors(theme,p.surface);c.fillStyle=palette.body;c.fillRect(toX(p.x),toY(p.y+p.height),p.width*scale,p.height*scale);c.fillStyle=palette.edge;c.fillRect(toX(p.x),toY(p.y+p.height),p.width*scale,Math.max(1.5,scale*.065));if(p.surface==="ice"){c.strokeStyle="#fff";c.globalAlpha=.32;c.lineWidth=Math.max(1,scale*.025);c.beginPath();c.moveTo(toX(p.x),toY(p.y+p.height*.65));c.lineTo(toX(p.x+p.width*.35),toY(p.y+p.height*.15));c.moveTo(toX(p.x+p.width*.55),toY(p.y+p.height*.85));c.lineTo(toX(p.x+p.width),toY(p.y+p.height*.25));c.stroke();c.globalAlpha=1;}else if(p.surface==="slippery"){c.strokeStyle="#fff";c.globalAlpha=.22;c.lineWidth=Math.max(1,scale*.025);c.beginPath();c.moveTo(toX(p.x+.15),toY(p.y+p.height*.2));c.lineTo(toX(p.x+p.width-.15),toY(p.y+p.height*.8));c.stroke();c.globalAlpha=1;}else if(p.surface==="oneWay"){c.strokeStyle="#fff";c.globalAlpha=.38;c.lineWidth=Math.max(1,scale*.025);for(let x=p.x+.25;x<p.x+p.width-.1;x+=.65){c.beginPath();c.moveTo(toX(x),toY(p.y+p.height+.06));c.lineTo(toX(x+.18),toY(p.y+p.height+.02));c.stroke();}c.globalAlpha=1;}else if(p.surface==="conveyorLeft"||p.surface==="conveyorRight"){const dir=p.surface==="conveyorRight"?1:-1;c.strokeStyle=dir>0?"#111":"#fff";c.globalAlpha=.72;c.lineWidth=Math.max(1,scale*.025);for(let x=p.x+.45;x<p.x+p.width-.25;x+=.8){const y=p.y+p.height*.52;c.beginPath();c.moveTo(toX(x-dir*.18),toY(y+.09));c.lineTo(toX(x),toY(y));c.lineTo(toX(x-dir*.18),toY(y-.09));c.stroke();}c.globalAlpha=1;}}this.drawEnvironment(c,state.environment,toX,toY,scale);this.drawArenaHazards(c,state,toX,toY,scale);this.drawArenaDebris(c,state,toX,toY,scale);this.draw(c,state.player,toX,toY,scale,false);this.draw(c,state.opponent,toX,toY,scale,true);c.fillStyle="#fff";for(const p of state.projectiles){
       const px=toX(p.x),py=toY(p.y);c.lineWidth=Math.max(1,scale*.035);
       if(p.weapon==="boomerang"){
         c.save();c.translate(px,py);c.rotate(-p.rotation);c.beginPath();c.arc(0,0,Math.max(3,scale*.18),-.95,.95);c.stroke();c.beginPath();c.arc(0,0,Math.max(2,scale*.11),.95,2.15);c.stroke();c.restore();
@@ -24,6 +24,30 @@ export class CanvasRenderer implements Renderer{
         c.beginPath();c.moveTo(px-Math.sign(p.vx)*len,py);c.lineTo(px,py);c.stroke();c.beginPath();c.arc(px,py,r,0,Math.PI*2);c.fill();
       }
     }this.drawExplosions(c,state.explosions,toX,toY,scale);this.drawCombatCues(c,state,toX,toY,scale);}
+ private paintBackdrop(arena:GameRenderState["arena"],theme:ReturnType<typeof getArenaTheme>){
+  const screen=this.context;
+  if(typeof document!=="undefined"&&typeof screen.drawImage==="function"){
+   try{
+    const cache=this.backdropCanvas??document.createElement("canvas");
+    this.backdropCanvas=cache;
+    if(this.backdropArena!==arena||cache.width!==this.canvas.width||cache.height!==this.canvas.height){
+     cache.width=this.canvas.width;
+     cache.height=this.canvas.height;
+     const cachedContext=cache.getContext("2d");
+     if(!cachedContext){paintArenaBackdrop(screen,this.width,this.height,theme);return;}
+     cachedContext.setTransform(this.dpr,0,0,this.dpr,0,0);
+     paintArenaBackdrop(cachedContext,this.width,this.height,theme);
+     this.backdropArena=arena;
+    }
+    screen.drawImage(cache,0,0,this.width,this.height);
+    return;
+   }catch{
+    // If backing-canvas allocation fails, preserve the live 2D fallback.
+    this.backdropArena=null;
+   }
+  }
+  paintArenaBackdrop(screen,this.width,this.height,theme);
+ }
  private drawCombatCues(c:CanvasRenderingContext2D,state:GameRenderState,toX:(x:number)=>number,toY:(y:number)=>number,scale:number){
   for(const cue of state.combatCues){
    const t=Math.min(1,cue.age/cue.life),fade=(1-t)*(1-t);
@@ -113,5 +137,5 @@ export class CanvasRenderer implements Renderer{
   if(pose.land>0)lines([[[-.3,-.88],[-.6-pose.land*.2,-.82]],[[.3,-.88],[.6+pose.land*.2,-.82]]]);
   c.restore();
  }
- dispose(){}
+ dispose(){this.backdropCanvas=null;this.backdropArena=null;}
 }
