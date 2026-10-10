@@ -67,6 +67,7 @@ test("short landscape menu scrolls internally and keeps Resume tappable",async({
  await page.locator(".game-ui__mobile-pause").tap();
  const menu=page.locator(".game-ui__menu"),resume=page.locator('button[data-action="resume"]');
  await expect(resume).toBeVisible();
+ await page.locator(".game-ui__menu-extras summary").tap();
  const measurements=await page.evaluate(()=>{
   const menu=document.querySelector(".game-ui__menu");
   const links=document.querySelector(".game-ui__menu-links");
