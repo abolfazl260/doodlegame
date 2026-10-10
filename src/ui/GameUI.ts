@@ -6,7 +6,7 @@ import type {WeaponId} from "../input/Input";
 
 type HudState={
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
- bowCharge:number;missileAngle:number;missilePower:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
+ bowCharge:number;missileAngle:number;missilePower:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
 };
 type Actions={
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
@@ -27,9 +27,11 @@ export class GameUI{
  private joystick=document.createElement("div");
  private joystickThumb=document.createElement("div");
  private mobileAttackButton=document.createElement("button");
+ private mobilePauseButton=document.createElement("button");
  private missileAimGuide=document.createElement("div");
  private missileAimValues=document.createElement("div");
  private missileAimPath:SVGPathElement|null=null;
+ private lastAimGuide:{angle:number;power:number;facing:number;locale:string}|null=null;
  private cancelTouchControls:()=>void=()=>{};
  private removeTouchLifecycle:()=>void=()=>{};
  private mobileWeaponSwitcher=document.createElement("div");
@@ -130,6 +132,10 @@ export class GameUI{
   this.joystickThumb.className="game-ui__joystick-thumb";
   this.mobileAttackButton.type="button";
   this.mobileAttackButton.className="game-ui__mobile-button game-ui__mobile-button--attack";
+  this.mobilePauseButton.type="button";
+  this.mobilePauseButton.className="game-ui__mobile-pause";
+  this.mobilePauseButton.textContent="Ⅱ";
+  this.mobilePauseButton.onclick=()=>{if(this.currentState===GameState.PLAYING)actions.pause();};
   this.mobileWeaponSwitcher.className="game-ui__mobile-weapon-switcher";
   this.mobileWeaponSwitcher.setAttribute("role","group");
   this.previousWeaponButton.type="button";
@@ -148,7 +154,7 @@ export class GameUI{
   this.nextWeaponButton.className="game-ui__mobile-weapon-arrow";
   this.mobileWeaponSwitcher.append(weaponDisplay,this.previousWeaponButton,this.nextWeaponButton);
   this.joystick.append(this.joystickThumb);
-  this.mobileControls.append(this.mobileWeaponSwitcher,this.joystick,this.mobileAttackButton);
+  this.mobileControls.append(this.mobileWeaponSwitcher,this.joystick,this.mobileAttackButton,this.mobilePauseButton);
   this.missileAimGuide.className="game-ui__missile-aim-guide";
   this.missileAimGuide.hidden=true;
   this.missileAimGuide.setAttribute("aria-live","off");
@@ -406,7 +412,7 @@ export class GameUI{
    if(attackWeapon==="missile"){
     this.mobileAttackButton.classList.add("aiming");
     this.missileAimGuide.hidden=false;
-    this.updateMissileAimGuide(baseAngle,basePower);
+    this.updateMissileAimGuide(baseAngle,basePower,hud.playerFacing);
    }else actions.touchAttackStart();
   });
   this.mobileAttackButton.addEventListener("pointermove",event=>{
@@ -421,7 +427,7 @@ export class GameUI{
    const power=distance<12?basePower:Math.max(8,Math.min(18,Math.round((8+Math.min(1,distance/160)*10)*2)/2));
    actions.setMissileAngle(angle);
    actions.setMissilePower(power);
-   this.updateMissileAimGuide(angle,power);
+   this.updateMissileAimGuide(angle,power,hud.playerFacing);
   });
   this.mobileAttackButton.addEventListener("pointerup",event=>{
    if(attackPointer!==event.pointerId)return;
@@ -670,6 +676,9 @@ export class GameUI{
   if(s.mode==="king-of-hill"&&hillChanged)
    this.lastHill={player:s.hill.player,opponent:s.hill.opponent,target:s.hill.target};
 
+  // While aiming, joystick movement can flip the fighter without moving the attack pointer.
+  // Refresh only if direction/trajectory/locale changed; the guide caches its path.
+  if(!this.missileAimGuide.hidden)this.updateMissileAimGuide(s.missileAngle,s.missilePower,s.playerFacing);
   const bowPercent=Math.round(s.bowCharge*100),bowCharging=s.bowCharge>0;
   if(bowPercent!==this.lastBowPercent){
    this.bowMeter.firstElementChild?.setAttribute("style","width:"+bowPercent+"%");
@@ -691,16 +700,21 @@ export class GameUI{
   this.combatSoundButton.setAttribute("aria-pressed",String(this.combatSoundEnabled));
   this.combatShakeButton.setAttribute("aria-pressed",String(this.combatShakeEnabled));
  }
- private updateMissileAimGuide(angle:number,power:number){
+ private updateMissileAimGuide(angle:number,power:number,playerFacing:number){
+  const facing=playerFacing<0?-1:1,locale=this.i18n.locale;
+  const previous=this.lastAimGuide;
+  if(previous&&previous.angle===angle&&previous.power===power&&previous.facing===facing&&previous.locale===locale)return;
+  this.lastAimGuide={angle,power,facing,locale};
   const details=this.i18n.messages.details;
   this.missileAimValues.textContent=details.angle+" "+Math.round(angle)+"°  ·  "+details.power+" "+power.toFixed(1);
   if(!this.missileAimPath)return;
-  const radians=angle*Math.PI/180,vx=Math.cos(radians)*power,vy=Math.sin(radians)*power;
+  const radians=angle*Math.PI/180,vx=Math.cos(radians)*power*facing,vy=Math.sin(radians)*power;
+  const startX=facing===1?8:212;
   const points:string[]=[];
-  // Preview uses the game's missile launch speed and -7.8 vertical acceleration.
+  // Use the same facing multiplier as GameSession's missile launch velocity.
   for(let i=0;i<=28;i++){
-   const t=i*.1,x=8+vx*t*4.6,y=109-(vy*t-3.9*t*t)*4.6;
-   if(x>219||y<4||y>117)break;
+   const t=i*.1,x=startX+vx*t*4.6,y=109-(vy*t-3.9*t*t)*4.6;
+   if(x<1||x>219||y<4||y>117)break;
    points.push((points.length?"L":"M")+x.toFixed(1)+" "+y.toFixed(1));
   }
   this.missileAimPath.setAttribute("d",points.join(" "));
@@ -738,6 +752,8 @@ export class GameUI{
   this.privacyLink.textContent=messages.privacy.web;
   this.privacyCloseButton.textContent=messages.privacy.close;
   this.mobileAttackButton.textContent=messages.buttons.attack;
+  this.mobilePauseButton.setAttribute("aria-label",messages.buttons.pause);
+  this.mobilePauseButton.title=messages.buttons.pause;
   this.mobileWeaponSwitcher.setAttribute("aria-label",messages.details.equipped);
   this.previousWeaponButton.setAttribute("aria-label",messages.buttons.previousWeapon);
   this.nextWeaponButton.setAttribute("aria-label",messages.buttons.nextWeapon);

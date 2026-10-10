@@ -18,9 +18,10 @@ const session=new GameSession(input);
 session.reset(false);
 const locale=new I18n(new WebStorage());
 let ui:GameUI;
-const render=()=>ui.render(GameState.PLAYING,session.getHudState());
+let currentState=GameState.PLAYING;
+const render=()=>ui.render(currentState,session.getHudState());
 ui=new GameUI(uiRoot,{
- start(){},pause(){},resume(){},restart(){},
+ start(){},pause(){currentState=GameState.PAUSED;render();},resume(){currentState=GameState.PLAYING;render();},restart(){},
  weaponNext(){session.selectWeapon(1);render();},
  weaponPrevious(){session.selectWeapon(-1);render();},
  weaponSelect(id){session.selectWeaponById(id);render();},
@@ -42,6 +43,9 @@ render();
 
 const fixture={
  selected:()=>session.getHudState().weapon,
+ state:()=>currentState,
+ facing:()=>session.getHudState().playerFacing,
+ setFacing:(direction:1|-1)=>{input.setTouchMove(direction,0);session.update(1/60);input.setTouchMove(0,0);render();},
  setMode:(mode:GameModeId)=>{session.setMode(mode);render();},
  setArena:(arena:ArenaId)=>{session.setArena(arena);render();},
  attackPressed:()=>input.getState().attackPressed,
