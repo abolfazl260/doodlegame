@@ -56,17 +56,20 @@ const fixture={
   input.touchAttackRelease();
   session.update(1/60);
  },
- combatSnapshot:()=>({
+ combatSnapshot:()=>{
+  const fighter=Reflect.get(session,"player") as {bowCharging:boolean;attackTime:number;cooldown:number};
+  return{
   state:game.getState(),
   bowCharge:session.getHudState().bowCharge,
-  bowCharging:session.player.bowCharging,
-  attackTime:session.player.attackTime,
-  cooldown:session.player.cooldown,
+  bowCharging:fighter.bowCharging,
+  attackTime:fighter.attackTime,
+  cooldown:fighter.cooldown,
   arrows:session.getRenderState().projectiles.filter(p=>p.weapon==="bow").length,
   playerHealth:session.getHudState().playerHealth,
   opponentHealth:session.getHudState().opponentHealth,
   weapon:session.getHudState().weapon
- }),
+  };
+ },
  pauseDirect:()=>game.pause(),
  pauseFromBackground:()=>{input.resetTransientState();game.pause();},
  resumeDirect:()=>game.resume(),
