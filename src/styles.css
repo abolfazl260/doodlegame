@@ -825,7 +825,117 @@ html[dir="rtl"] .opening-intro__skip{
 }
 /* Preserve access on very short landscape phones while the aim guide is open. */
 @media (pointer:coarse) and (max-height:280px){
- .game-ui.playing .game-ui__mobile-pause{
+ .game-ui.playing .game-ui__mobile-pause:not([hidden]){
   right:calc(var(--safe-right) + clamp(8rem,27vw,11.5rem) + 1.5rem);
  }
+}
+
+
+/* Short-landscape menus must remain reachable without letting the battlefield
+   scroll. The dialog overlays remain siblings outside this scroll container. */
+body{touch-action:pan-y}
+.game-ui:not(.playing) .game-ui__menu{
+ max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 1rem);
+ overflow-x:hidden;
+ overflow-y:auto;
+ overscroll-behavior:contain;
+ touch-action:pan-y;
+ scrollbar-width:thin;
+ -webkit-overflow-scrolling:touch;
+}
+.game-ui:not(.playing) .game-ui__controls{
+ position:sticky;
+ bottom:0;
+ z-index:3;
+ padding-block:.25rem;
+ background:#08090cf2;
+}
+
+/* One top HUD layout for desktop and phones: HP | status | HP;
+   detailed weapon text occupies its own row rather than crossing the bars. */
+.game-ui__top-hud{display:none}
+.game-ui.playing .game-ui__top-hud{
+ position:absolute;
+ top:calc(var(--safe-top) + .75rem);
+ left:calc(var(--safe-left) + 1rem);
+ right:calc(var(--safe-right) + 1rem);
+ display:grid;
+ grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr);
+ grid-template-rows:auto auto;
+ gap:.25rem .5rem;
+ align-items:center;
+ z-index:4;
+ pointer-events:none;
+}
+.game-ui.playing .game-ui__top-hud .health-bar{
+ position:relative;
+ top:auto;
+ left:auto;
+ right:auto;
+ width:100%;
+ height:auto;
+ min-height:32px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ margin:0;
+ font-size:.8rem;
+ line-height:1.2;
+}
+.game-ui.playing .game-ui__top-hud .health-bar--player{grid-column:1;grid-row:1}
+.game-ui.playing .game-ui__top-hud .health-bar--opponent{grid-column:3;grid-row:1}
+.game-ui.playing .game-ui__top-hud .health-label{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ min-height:1.35rem;
+ line-height:1.2;
+}
+.game-ui.playing .game-ui__top-hud .game-ui__status,
+.game-ui.playing .game-ui__top-hud .game-ui__details{
+ position:static;
+ left:auto;
+ top:auto;
+ transform:none;
+ width:100%;
+ max-width:100%;
+ min-width:0;
+ margin:0;
+ text-align:center;
+}
+.game-ui.playing .game-ui__top-hud .game-ui__status{
+ grid-column:2;
+ grid-row:1;
+ white-space:normal;
+ overflow-wrap:anywhere;
+ line-height:1.15;
+ font-weight:800;
+ font-size:clamp(.7rem,1.8vmin,.85rem);
+}
+.game-ui.playing .game-ui__top-hud .game-ui__details{
+ grid-column:1/-1;
+ grid-row:2;
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ padding-inline:.25rem;
+ font-size:clamp(.66rem,1.65vmin,.78rem);
+ line-height:1.25;
+}
+/* Values retain legibility on both the colored fill and the empty track. */
+.health-label__current{
+ color:#fff;
+ background:#070b17;
+ border-radius:.3rem;
+ padding:.12rem .42rem;
+ font-variant-numeric:tabular-nums;
+ text-shadow:none;
+ box-shadow:0 0 0 1px #ffffff50;
+}
+@media (pointer:coarse) and (max-height:360px){
+ .game-ui.playing .game-ui__top-hud{
+  top:calc(var(--safe-top) + .4rem);
+  gap:.15rem .35rem;
+ }
+ .game-ui.playing .game-ui__top-hud .health-bar{min-height:30px}
 }
