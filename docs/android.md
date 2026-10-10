@@ -233,27 +233,30 @@ Do not edit generated files under `android/` and expect those changes to persist
 
 ## Branding
 
-Android branding is reproducible and applied during every `android:sync`.
-
-Source files:
+Android branding is generated reproducibly by `scripts/android/configure.mjs`
+during every `npm run android:sync`. The single source of truth for the
+launcher artwork is:
 
 ```text
-assets/android/branding.json
-assets/android/doodlegame-mark.svg
+assets/android/doodlegame-launcher.webp
 ```
 
-`branding.json` is the generator source of truth. It defines the monochrome doodle mark, foreground/background colors, and vector paths. The SVG is a human-readable preview/reference of the same mark.
+This full-color illustration replaces the old temporary black-and-white doodle
+mark. The image has transparent rounded corners and depicts the white fighter
+clashing with the gray opponent in electric blue.
 
-`scripts/android/configure.mjs` generates:
+The Android configuration script copies the artwork into
+`drawable-nodpi/doodlegame_icon_art.webp` and produces:
 
-- a density-independent legacy launcher vector for API 24/25
-- adaptive launcher and round icons for API 26+
-- a black splash drawable with the DoodleGame mark
-- launch-theme wiring so the WebView does not begin with the default white Capacitor splash
+- a legacy launcher icon for Android API 24/25
+- adaptive and round launcher icons for Android API 26+, with safe-zone inset
+- a splash drawable that uses the same artwork on a deep-navy background
+- manifest and launch-theme references to the generated resources
 
-Because the launcher assets are vectors, separate PNG copies for mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi are not required. Android rasterizes the resource for each device density.
-
-To replace the temporary/minimal DoodleGame mark later, update both branding source files and run `npm run android:sync`.
+The generated `android/` folder is not committed; do not edit launcher
+resources there directly. Replace the source WebP and run
+`npm run android:sync` to regenerate them. A new Android APK/AAB must be
+published for installed apps to receive a launcher-icon change.
 
 ## Mobile runtime behavior
 
