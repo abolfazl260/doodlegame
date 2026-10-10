@@ -1341,3 +1341,196 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
 @media (prefers-reduced-motion:reduce){
  .game-ui .game-ui__quick-mode{transition:none}
 }
+
+/* Two-step, expandable match wizard. No native selection dropdowns in match setup. */
+.game-ui__menu-progress{
+ display:block;
+ padding:.3rem .55rem;
+ border:1px solid #667995;
+ border-radius:999px;
+ width:fit-content;
+ min-width:0;
+ font-size:.66rem;
+ font-weight:850;
+ letter-spacing:.07em;
+ color:#dbebff;
+ background:#1b2b42ee;
+}
+.game-ui__menu-mode-panel,.game-ui__menu-arena-panel{
+ display:grid;
+ gap:clamp(.45rem,1.35vh,.75rem);
+ min-width:0;
+ text-align:start;
+}
+.game-ui__menu-mode-panel[hidden],.game-ui__menu-arena-panel[hidden],
+.game-ui__mode-card[hidden],.game-ui__arena-card[hidden],
+.game-ui__loadout-card[hidden],.game-ui__weapon-details[hidden]{display:none!important}
+.game-ui__menu-mode-panel .game-ui__section-title{margin:.15rem 0 0;color:#afbed3;font-size:.7rem;letter-spacing:.1em}
+.game-ui:not(.playing) .game-ui__menu-setup-title{
+ display:block;
+ margin:0;
+ font-size:.9rem;
+ font-weight:900;
+ color:#fff2cb;
+ line-height:1.35;
+ letter-spacing:.03em;
+}
+.game-ui:not(.playing) .game-ui__menu-settings.game-ui__mode-grid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:.5rem;
+ align-items:stretch;
+}
+.game-ui .game-ui__mode-card{
+ width:100%;min-width:0;min-height:57px;
+ padding:.65rem .9rem;
+ display:flex;align-items:center;justify-content:flex-start;
+ text-align:start;
+ color:#e9f0ff;
+ background:linear-gradient(125deg,#1a2a40,#111d30);
+ border:2px solid #586982;
+ border-radius:.7rem;
+ font-size:clamp(.73rem,2vmin,.88rem);
+ font-weight:800;
+ line-height:1.35;
+ overflow-wrap:anywhere;
+ box-shadow:2px 3px 0 #070e19;
+ touch-action:manipulation;
+}
+.game-ui .game-ui__mode-card::before{
+ content:"◇";
+ color:#9aaec4;
+ font-size:1.2rem;
+ font-weight:400;
+ padding-inline-end:.55rem;
+}
+.game-ui .game-ui__mode-card[aria-pressed="true"]{
+ border-color:#ffd779;
+ background:linear-gradient(125deg,#41331e,#242337);
+ color:#fff9e8;
+ box-shadow:2px 3px 0 #090b12,inset 0 0 0 1px #ffea9b3c;
+}
+.game-ui .game-ui__mode-card[aria-pressed="true"]::before{content:"◆";color:#ffdb8a}
+.game-ui .game-ui__quick-mode:focus-visible,.game-ui .game-ui__mode-card:focus-visible,
+.game-ui .game-ui__arena-card:focus-visible,.game-ui .game-ui__loadout-card:focus-visible{
+ outline:3px solid #f6f7ff;outline-offset:3px;
+}
+.game-ui__menu-arena-panel>.game-ui__section-title{
+ margin:0;
+ font-size:.8rem;
+ font-weight:900;
+ letter-spacing:.06em;
+ color:#ffd98f;
+}
+.game-ui__arena-grid{
+ display:grid;
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:.55rem;
+ width:100%;
+ min-width:0;
+}
+.game-ui .game-ui__arena-card{
+ position:relative;
+ display:flex;
+ flex-direction:column;
+ align-items:flex-start;
+ justify-content:space-between;
+ gap:.3rem;
+ min-height:82px;
+ min-width:0;
+ padding:.55rem .6rem;
+ overflow:hidden;
+ border:2px solid #6b7b94;
+ border-radius:.65rem;
+ color:#f4f8ff;
+ background:linear-gradient(145deg,color-mix(in srgb,var(--card-accent) 22%,#141c2a) 0%,#101726 80%);
+ box-shadow:2px 3px 0 #060a14;
+ text-align:start;
+ touch-action:manipulation;
+}
+.game-ui .game-ui__arena-card::after{
+ content:"";
+ position:absolute;inset:auto -.5rem -.2rem 35%;
+ height:55%;
+ transform:rotate(-12deg);
+ border:2px solid var(--card-secondary,#9aabbc);
+ border-radius:46% 54% 0 0;
+ opacity:.48;
+ pointer-events:none;
+}
+.game-ui__arena-number{font-size:.62rem;font-weight:900;color:var(--card-accent,#ffd779);font-variant-numeric:tabular-nums;line-height:1}
+.game-ui__arena-name{position:relative;z-index:1;font-size:.79rem;line-height:1.2;overflow-wrap:anywhere;text-shadow:0 1px 2px #06090d}
+.game-ui .game-ui__arena-card[aria-pressed="true"]{
+ border-color:#ffe09a;
+ box-shadow:0 0 0 2px #e7c66c80,2px 3px 0 #040810;
+ background:linear-gradient(145deg,color-mix(in srgb,var(--card-accent) 36%,#1a2333),#182132);
+}
+.game-ui .game-ui__arena-card[aria-pressed="true"]::before{
+ content:"✓";position:absolute;top:.35rem;inset-inline-end:.45rem;
+ z-index:1;width:1.15rem;height:1.15rem;display:grid;place-items:center;
+ background:#ffdd82;color:#162031;border-radius:50%;font-size:.75rem;font-weight:900;
+}
+.game-ui__weapon-details{
+ border:1px solid #526780;
+ border-radius:.6rem;
+ background:#0d1729db;
+}
+.game-ui__weapon-details summary{
+ display:flex;align-items:center;justify-content:space-between;
+ min-height:44px;padding:.45rem .65rem;list-style:none;
+ font-size:.72rem;font-weight:800;color:#d5e7ff;cursor:pointer;
+ touch-action:manipulation;
+}
+.game-ui__weapon-details summary::-webkit-details-marker{display:none}
+.game-ui__weapon-details summary::after{content:"+";font-size:1.15rem;line-height:1}
+.game-ui__weapon-details[open] summary::after{content:"−"}
+.game-ui__weapon-details .game-ui__section-title{display:none}
+.game-ui__weapon-grid{
+ display:grid;
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:.4rem;
+ padding:.45rem;
+ border-top:1px solid #526780;
+}
+.game-ui .game-ui__loadout-card{
+ min-width:0;min-height:44px;padding:.4rem .35rem;
+ border:1px solid #657891;border-radius:.45rem;
+ color:#e6f2ff;background:#1a2b41;
+ font-size:.73rem;font-weight:750;overflow-wrap:anywhere;
+ touch-action:manipulation;
+}
+.game-ui .game-ui__loadout-card[aria-pressed="true"]{
+ border-color:#ffd579;background:#43351e;color:#fff4d5;
+}
+.game-ui__menu-setup .game-ui__match-summary{margin-top:.05rem}
+.game-ui:not(.playing) .game-ui__controls button[data-action="next"]:not([hidden]){
+ min-height:53px;
+ background:#ffd779;border:2px solid #ffefbb;
+ color:#172236;font-weight:950;font-size:1rem;
+ box-shadow:0 3px 0 #97763c;
+}
+.game-ui:not(.playing) .game-ui__controls button[data-action="back"]:not([hidden]){
+ flex:0 0 auto;width:auto;min-width:92px;
+ background:#162339;color:#e9f4ff;
+ border:2px solid #6c86a9;
+ font-size:.82rem;font-weight:800;
+ box-shadow:none;
+}
+@media (max-width:620px){
+ .game-ui__arena-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .game-ui__weapon-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:420px){
+ .game-ui:not(.playing) .game-ui__menu-settings.game-ui__mode-grid{grid-template-columns:1fr}
+ .game-ui__arena-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .game-ui .game-ui__arena-card{min-height:76px}
+ .game-ui__weapon-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-height:360px){
+ .game-ui__menu-mode-panel,.game-ui__menu-arena-panel{gap:.36rem}
+ .game-ui__menu-progress{font-size:.58rem;padding:.22rem .45rem}
+ .game-ui .game-ui__mode-card{min-height:43px;padding:.36rem .55rem;font-size:.7rem}
+ .game-ui .game-ui__arena-card{min-height:68px;padding:.4rem .45rem}
+ .game-ui__arena-name{font-size:.69rem}
+ .game-ui:not(.playing) .game-ui__controls button[data-action="next"]:not([hidden]){min-height:46px}
+}
