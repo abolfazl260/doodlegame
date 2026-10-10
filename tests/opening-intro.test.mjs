@@ -148,7 +148,7 @@ test("skipping the intro reveals menu while the background stays alive until gam
   assert.equal(intro.active,true);
   assert.equal(intro.ambient,true);
   assert.equal(menu.inert,false);
-  assert.equal(menu.classList.contains("game-ui-intro-revealed"),true);
+  assert.equal(menu.classList.contains("game-ui-intro-revealed"),false,"returning from gameplay does not replay intro reveal");
   intro.dispose();
  }finally{
   globalThis.document=oldDocument;
