@@ -70,6 +70,7 @@ export class GameUI{
  private startingWeaponSelect=document.createElement("select");
  private startingWeaponTitle=document.createElement("div");
  private title=document.createElement("h1");
+ private topHud=document.createElement("div");
  private status=document.createElement("p");
  private details=document.createElement("p");
  private playerHealth=document.createElement("div");
@@ -198,6 +199,9 @@ export class GameUI{
   this.privacyCloseButton.onclick=()=>{this.privacy.hidden=true;this.privacyButton.focus();};
   this.privacy.append(this.privacyTitle,this.privacyContent,this.privacyLink,this.privacyCloseButton);
 
+  this.topHud.className="game-ui__top-hud";
+  this.status.className="game-ui__status";
+  this.details.className="game-ui__details";
   this.playerHealth.className="health-bar health-bar--player";
   this.opponentHealth.className="health-bar health-bar--opponent";
   this.playerHealthLabel.className="health-label";
@@ -481,7 +485,8 @@ export class GameUI{
   };
   this.menuLinks.append(this.helpButton,this.privacyButton,this.combatSoundButton,this.combatShakeButton,this.updateButton);
   this.menu.append(this.menuHeader,this.menuResult,this.menuSettings,this.upgradePanel,this.buttons,this.menuLinks);
-  this.root.append(this.menu,this.help,this.privacy,this.status,this.details,this.playerHealth,this.opponentHealth,this.weaponList,this.missilePanel,this.bowPanel,this.mobileControls,this.rotateHint);
+  this.topHud.append(this.playerHealth,this.status,this.opponentHealth,this.details);
+  this.root.append(this.menu,this.help,this.privacy,this.topHud,this.weaponList,this.missilePanel,this.bowPanel,this.mobileControls,this.rotateHint);
   container.append(this.root);
   this.applyLocale();
   this.unsubscribeLocale=this.i18n.subscribe(()=>{
