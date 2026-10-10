@@ -71,6 +71,16 @@ export class GameUI{
  private privacyCloseButton=document.createElement("button");
  private menu=document.createElement("div");
  private menuHeader=document.createElement("div");
+ private menuSetupSection=document.createElement("section");
+ private menuLead=document.createElement("div");
+ private menuSetupTitle=document.createElement("h2");
+ private quickModes=document.createElement("div");
+ private quickDuelButton=document.createElement("button");
+ private quickPvpButton=document.createElement("button");
+ private modeDescription=document.createElement("p");
+ private matchSummary=document.createElement("p");
+ private menuExtras=document.createElement("details");
+ private menuExtrasTitle=document.createElement("summary");
  private menuSettings=document.createElement("div");
  private pvpHint=document.createElement("div");
  private menuLinks=document.createElement("div");
@@ -257,6 +267,27 @@ export class GameUI{
   this.weaponList.className="game-ui__weapon-list";
   this.menu.className="game-ui__menu";
   this.menuHeader.className="game-ui__menu-header";
+  this.menuSetupSection.className="game-ui__menu-setup";
+  this.menuLead.className="game-ui__menu-lead";
+  this.menuSetupTitle.className="game-ui__menu-setup-title";
+  this.quickModes.className="game-ui__quick-modes";
+  this.quickModes.setAttribute("role","group");
+  this.quickDuelButton.type="button";
+  this.quickPvpButton.type="button";
+  this.quickDuelButton.className="game-ui__quick-mode";
+  this.quickPvpButton.className="game-ui__quick-mode";
+  this.quickDuelButton.dataset.quickMode="duel";
+  this.quickPvpButton.dataset.quickMode="local-pvp";
+  this.quickDuelButton.onclick=()=>actions.modeSelect("duel");
+  this.quickPvpButton.onclick=()=>actions.modeSelect("local-pvp");
+  this.quickModes.append(this.quickDuelButton,this.quickPvpButton);
+  this.modeDescription.className="game-ui__mode-description";
+  this.matchSummary.className="game-ui__match-summary";
+  this.matchSummary.setAttribute("aria-live","polite");
+  this.matchSummary.setAttribute("aria-atomic","true");
+  this.menuExtras.className="game-ui__menu-extras";
+  this.menuExtrasTitle.className="game-ui__menu-extras-title";
+  this.menuExtras.append(this.menuExtrasTitle);
   this.menuSettings.className="game-ui__menu-settings";
   this.pvpHint.className="game-ui__pvp-hint";this.pvpHint.hidden=true;
   this.menuLinks.className="game-ui__menu-links";
@@ -616,10 +647,18 @@ export class GameUI{
   this.runControls.append(this.runContinueButton,this.runNewButton,this.runLeaveButton);
   this.runPanel.append(this.runHeading,this.runProgress,this.runMessage,this.runMedals,this.runControls);
   this.menuLinks.append(this.helpButton,this.privacyButton,this.combatSoundButton,this.combatShakeButton,this.updateButton);
-  this.menu.append(this.menuHeader,this.menuResult,this.menuSettings,this.pvpHint,this.upgradePanel,this.runPanel,this.menuLinks,this.buttons);
+  this.menuExtras.append(this.menuLinks);
+  this.menuSetupSection.append(this.menuLead,this.quickModes,this.menuSetupTitle,this.menuSettings,
+   this.modeDescription,this.pvpHint,this.matchSummary);
+  this.menu.append(this.menuHeader,this.menuResult,this.menuSetupSection,this.upgradePanel,this.runPanel,this.menuExtras,this.buttons);
   this.topHud.append(this.playerHealth,this.status,this.opponentHealth,this.details);
   this.root.append(this.menu,this.help,this.privacy,this.topHud,this.weaponList,this.missilePanel,this.bowPanel,this.mobileControls,this.rotateHint);
   container.append(this.root);
+  this.root.addEventListener("keydown",event=>{
+   if(event.key!=="Escape")return;
+   if(!this.help.hidden){event.preventDefault();event.stopPropagation();this.help.hidden=true;this.helpButton.focus();}
+   else if(!this.privacy.hidden){event.preventDefault();event.stopPropagation();this.privacy.hidden=true;this.privacyButton.focus();}
+  });
   this.applyLocale();
   this.unsubscribeLocale=this.i18n.subscribe(()=>{
    this.applyLocale();
@@ -689,6 +728,8 @@ export class GameUI{
     if(state===GameState.PLAYING){this.setHidden(this.privacy,true);this.setHidden(this.help,true);}
     this.setHidden(this.menuResult,state!==GameState.GAME_OVER);
     this.setHidden(this.menuSettings,state!==GameState.MENU&&state!==GameState.GAME_OVER);
+    this.setHidden(this.menuSetupSection,state!==GameState.MENU&&state!==GameState.GAME_OVER);
+    if(state===GameState.PLAYING)this.menuExtras.open=false;
     this.setHidden(this.playerHealth,state!==GameState.PLAYING);
     this.setHidden(this.opponentHealth,state!==GameState.PLAYING);
     for(const item of this.buttons.children){
@@ -714,6 +755,16 @@ export class GameUI{
    if(modeChanged||localeChanged||stateChanged){
     this.setHidden(this.pvpHint,s.mode!=="local-pvp"||(state!==GameState.MENU&&state!==GameState.GAME_OVER));
     this.setText(this.pvpHint,messages.pvp?.hint??"");
+   }
+   if(modeChanged||localeChanged||stateChanged){
+    this.quickDuelButton.setAttribute("aria-pressed",String(s.mode==="duel"));
+    this.quickPvpButton.setAttribute("aria-pressed",String(s.mode==="local-pvp"));
+    this.setText(this.modeDescription,messages.menu?.modeDescriptions[s.mode]??"");
+   }
+   if(modeChanged||arenaChanged||weaponChanged||localeChanged||stateChanged){
+    this.setText(this.matchSummary,(messages.menu?.ready??"READY")+": "+
+     messages.modes[s.mode]+" · "+messages.arenas[s.arena]+" · "+
+     messages.weapons[s.weapon]);
    }
    const upgraded=new Set(s.upgradedWeapons);
    const equipped=upgraded.has(s.weapon)?messages.upgrades[s.weapon].name:messages.weapons[s.weapon];
@@ -922,6 +973,12 @@ export class GameUI{
   this.languageButton.textContent=this.i18n.locale==="fa"?"فا":"EN";
   this.languageButton.setAttribute("aria-label",messages.language.label+": "+currentLanguage);
   this.title.textContent=messages.title;
+  this.menuLead.textContent=messages.menu?.kickoff??"CHOOSE YOUR FIGHT";
+  this.menuSetupTitle.textContent=messages.menu?.setup??"MATCH SETUP";
+  this.quickDuelButton.textContent=messages.menu?.quickDuel??"SOLO DUEL";
+  this.quickPvpButton.textContent=messages.menu?.quickPvp??"2 PLAYERS · LOCAL";
+  this.quickModes.setAttribute("aria-label",messages.sections.gameMode);
+  this.menuExtrasTitle.textContent=messages.menu?.options??"SETTINGS & HELP";
   this.modeTitle.textContent=messages.sections.gameMode;
   this.arenaTitle.textContent=messages.sections.arena;
   this.startingWeaponTitle.textContent=messages.sections.weapon;
