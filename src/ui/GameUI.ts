@@ -6,7 +6,7 @@ import type {WeaponId} from "../input/Input";
 import type {ProgressionView} from "../progression/Progression";
 
 type HudState={
- playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
+ playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;missileAngle:number;missilePower:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
  progression?:ProgressionView|null;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;
 };
@@ -134,7 +134,7 @@ export class GameUI{
  private readHud:(()=>HudState)|null=null;
  private hudFrame:number|null=null;
  private currentState=GameState.MENU;
- private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId}|null=null;
+ private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId}|null=null;
  private lastHealth:{playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;locale:string}|null=null;
  private lastAim:{angle:number;power:number}|null=null;
  private lastBowPercent=NaN;
@@ -850,8 +850,8 @@ export class GameUI{
    const status=s.winner?(s.winner==="player"?messages.status.win:messages.status.lose):
     s.mode==="king-of-hill"?messages.status.hill+"  "+s.hill.player.toFixed(1)+" — "+
      s.hill.opponent.toFixed(1)+" / "+s.hill.target.toFixed(0):messages.modes[s.mode];
-   this.setText(this.status,s.mode==="local-pvp"&&s.winner?(s.winner==="player"?messages.pvp.winner1:messages.pvp.winner2):status);
-   if(state===GameState.GAME_OVER)this.setText(this.menuResult,s.mode==="local-pvp"?(s.winner==="player"?messages.pvp.winner1:messages.pvp.winner2):status);
+   this.setText(this.status,s.mode==="local-pvp"&&s.winner?(s.winner==="player"?messages.pvp.winner1:s.winner==="opponent"?messages.pvp.winner2:messages.pvp.draw):status);
+   if(state===GameState.GAME_OVER)this.setText(this.menuResult,s.mode==="local-pvp"?(s.winner==="player"?messages.pvp.winner1:s.winner==="opponent"?messages.pvp.winner2:messages.pvp.draw):status);
   }
   if(s.mode==="king-of-hill"&&hillChanged)
    this.lastHill={player:s.hill.player,opponent:s.hill.opponent,target:s.hill.target};
