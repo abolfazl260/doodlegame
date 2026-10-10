@@ -85,6 +85,10 @@ export class GameUI{
  private menuExtras=document.createElement("details");
  private menuProgressDetails=document.createElement("details");
  private menuProgressTitle=document.createElement("summary");
+ private menuProgressTabs=document.createElement("div");
+ private menuRunTab=document.createElement("button");
+ private menuUpgradeTab=document.createElement("button");
+ private menuProgressView:"run"|"upgrades"="run";
  private menuExtrasTitle=document.createElement("summary");
  private menuSettings=document.createElement("div");
  private menuStepIndex=0;
@@ -299,7 +303,18 @@ export class GameUI{
   this.matchSummary.setAttribute("aria-atomic","true");
   this.menuProgressDetails.className="game-ui__menu-progress-details";
   this.menuProgressTitle.className="game-ui__menu-progress-title";
-  this.menuProgressDetails.append(this.menuProgressTitle);
+  this.menuProgressTabs.className="game-ui__menu-progress-tabs";
+  this.menuProgressTabs.setAttribute("role","group");
+  this.menuRunTab.type="button";
+  this.menuRunTab.className="game-ui__menu-progress-tab";
+  this.menuRunTab.dataset.view="run";
+  this.menuRunTab.onclick=()=>this.selectProgressTab("run");
+  this.menuUpgradeTab.type="button";
+  this.menuUpgradeTab.className="game-ui__menu-progress-tab";
+  this.menuUpgradeTab.dataset.view="upgrades";
+  this.menuUpgradeTab.onclick=()=>this.selectProgressTab("upgrades");
+  this.menuProgressTabs.append(this.menuRunTab,this.menuUpgradeTab);
+  this.menuProgressDetails.append(this.menuProgressTitle,this.menuProgressTabs);
   this.menuExtras.className="game-ui__menu-extras";
   this.menuExtrasTitle.className="game-ui__menu-extras-title";
   this.menuExtras.append(this.menuExtrasTitle);
@@ -718,34 +733,59 @@ export class GameUI{
   const heading=next===0?this.menuLead:this.arenaTitle;
   heading.focus?.();
  }
+ private selectProgressTab(view:"run"|"upgrades"){
+  if(this.menuProgressView===view)return;
+  this.menuProgressView=view;
+  this.syncWizard(this.currentState,this.readHud?.()??null);
+ }
  private syncWizard(state:GameState,s:HudState|null){
-  const active=state===GameState.MENU||state===GameState.GAME_OVER;
+  const choosing=state===GameState.MENU;
+  const results=state===GameState.GAME_OVER;
   const onArena=MENU_STEPS[this.menuStepIndex]==="arena";
-  this.setHidden(this.menuModePanel,!active||onArena);
-  this.setHidden(this.menuArenaPanel,!active||!onArena);
-  this.setHidden(this.stepBackButton,!active||!onArena);
-  this.setHidden(this.stepNextButton,!active||onArena);
-  this.setHidden(this.menuProgressDetails,!active||onArena);
-  this.setHidden(this.menuExtras,active&&onArena);
+  // The result is NOT the first step of the setup wizard.
+  this.setHidden(this.menuSetupSection,!choosing);
+  this.setHidden(this.menuModePanel,!choosing||onArena);
+  this.setHidden(this.menuArenaPanel,!choosing||!onArena);
+  this.setHidden(this.stepBackButton,!choosing||!onArena);
+  this.setHidden(this.stepNextButton,!choosing||onArena);
+  this.setHidden(this.menuExtras,results||(choosing&&onArena));
   for(const item of this.buttons.children){
    const button=item as HTMLButtonElement;
-   if(button.dataset.action==="start")this.setHidden(button,state!==GameState.MENU||!onArena);
+   if(button.dataset.action==="start")this.setHidden(button,!choosing||!onArena);
   }
   if(s){
-   const shouldShowRun=active&&!onArena&&Boolean(s.progression);
-   this.setHidden(this.runPanel,!shouldShowRun);
-   this.setHidden(this.upgradePanel,onArena||s.mode==="local-pvp"||!active||
-    (s.upgradePoints===0&&s.upgradedWeapons.length===0));
-   this.setHidden(this.menuProgressDetails,!active||onArena||
-    Boolean(this.runPanel.hidden&&this.upgradePanel.hidden));
-   // Preserve instant access to earned rewards and an in-progress Run.
-   // Other players can expand this optional section on demand.
-   if(this.lastView?.state!==state&&s.inRun&&active)this.menuProgressDetails.open=true;
-  }
+   const rewardScreen=results&&Boolean(s.inRun);
+   const menuExtras=choosing&&!onArena;
+   const hasRun=Boolean(s.progression);
+   const hasUpgrades=s.mode!=="local-pvp"&&
+    (s.upgradePoints>0||s.upgradedWeapons.length>0);
+   // In the normal menu, show one optional view at a time. During a Run
+   // intermission the reward choices and Next Fight action remain together.
+   const combined=rewardScreen||(menuExtras&&Boolean(s.inRun));
+   const tabs=menuExtras&&!combined&&hasRun&&hasUpgrades;
+   this.setHidden(this.menuProgressTabs,!tabs);
+   this.menuRunTab.setAttribute("aria-pressed",String(this.menuProgressView==="run"));
+   this.menuUpgradeTab.setAttribute("aria-pressed",String(this.menuProgressView==="upgrades"));
+   const showRun=(menuExtras||rewardScreen)&&hasRun&&
+    (combined||!hasUpgrades||this.menuProgressView==="run");
+   const showUpgrade=(menuExtras||rewardScreen)&&hasUpgrades&&
+    (combined||!hasRun||this.menuProgressView==="upgrades");
+   this.setHidden(this.runPanel,!showRun);
+   this.setHidden(this.upgradePanel,!showUpgrade);
+   const showProgress=(menuExtras||rewardScreen)&&(hasRun||hasUpgrades);
+   this.setHidden(this.menuProgressDetails,!showProgress);
+   if(results&&rewardScreen&&this.lastView?.state!==state)
+    this.menuProgressDetails.open=true;
+   if(choosing&&s.inRun&&this.lastView?.state!==state)
+    this.menuProgressDetails.open=true;
+  }else this.setHidden(this.menuProgressDetails,true);
   const labels=this.i18n.messages.menu;
-  this.setText(this.menuLead,onArena?(labels?.chooseArena??"CHOOSE ARENA"):(labels?.kickoff??"CHOOSE YOUR FIGHT"));
-  const stepLabel=onArena?this.i18n.messages.sections.arena:(labels?.selectMode??this.i18n.messages.sections.gameMode);
-  this.setText(this.menuProgress,(labels?.step??"STEP")+" "+(this.menuStepIndex+1)+" / "+MENU_STEPS.length+" · "+stepLabel);
+  this.setText(this.menuLead,onArena?(labels?.chooseArena??"CHOOSE ARENA"):
+   (labels?.kickoff??"CHOOSE YOUR FIGHT"));
+  const stepLabel=onArena?this.i18n.messages.sections.arena:
+   (labels?.selectMode??this.i18n.messages.sections.gameMode);
+  this.setText(this.menuProgress,(labels?.step??"STEP")+" "+
+   (this.menuStepIndex+1)+" / "+MENU_STEPS.length+" · "+stepLabel);
  }
  canStartMatch(){return this.currentState===GameState.MENU&&this.menuStepIndex===MENU_STEPS.length-1;}
  setUpdateVisible(visible:boolean){this.updateButton.hidden=!visible;}
@@ -803,14 +843,19 @@ export class GameUI{
    if(weaponChanged&&state===GameState.PLAYING)this.cancelActiveTouchAttack();
    if(secondWeaponChanged&&state===GameState.PLAYING)this.cancelP2Attack();
    if(stateChanged){
+    if(state===GameState.MENU){
+     this.menuStepIndex=0;
+     this.menuProgressView=s.upgradePoints>0&&!s.inRun?"upgrades":"run";
+    }
+    if(state===GameState.GAME_OVER)this.menu.scrollTop=0;
     this.root.classList.toggle("playing",state===GameState.PLAYING);
     this.root.classList.toggle("paused",state===GameState.PAUSED);
     this.root.classList.toggle("game-over",state===GameState.GAME_OVER);
     this.root.classList.toggle("menu",state===GameState.MENU);
     if(state===GameState.PLAYING){this.setHidden(this.privacy,true);this.setHidden(this.help,true);}
     this.setHidden(this.menuResult,state!==GameState.GAME_OVER);
-    this.setHidden(this.menuSettings,state!==GameState.MENU&&state!==GameState.GAME_OVER);
-    this.setHidden(this.menuSetupSection,state!==GameState.MENU&&state!==GameState.GAME_OVER);
+    this.setHidden(this.menuSettings,state!==GameState.MENU);
+    this.setHidden(this.menuSetupSection,state!==GameState.MENU);
     if(state===GameState.PLAYING){
      this.menuExtras.open=false;
      this.menuStepIndex=0;
@@ -937,8 +982,7 @@ export class GameUI{
      this.runPanel.dataset.medal=s.progression!.medals.at(-1)??"none";
     }
    }
-   this.setHidden(this.upgradePanel,s.mode==="local-pvp"||!((state===GameState.MENU||state===GameState.GAME_OVER)&&
-    (s.upgradePoints>0||upgraded.size>0)));
+   // Visibility is controlled by syncWizard after reward/Run state is updated.
    if(localeChanged||weaponChanged||secondWeaponChanged||modeChanged||arenaChanged||upgradesChanged){
     for(const item of this.weaponList.children){
      const button=item as HTMLButtonElement,id=button.dataset.weapon as WeaponId;
@@ -1081,6 +1125,9 @@ export class GameUI{
   this.weaponDetailsTitle.textContent=messages.menu?.loadout??"STARTING WEAPON · OPTIONAL";
   this.menuSetupTitle.textContent=messages.menu?.players??"NUMBER OF PLAYERS";
   this.menuProgressTitle.textContent=messages.menu?.progressOptions??"RUN & UPGRADES";
+  this.menuRunTab.textContent=messages.run.title;
+  this.menuUpgradeTab.textContent=messages.panels.weaponUpgrades;
+  this.menuProgressTabs.setAttribute("aria-label",messages.menu?.progressOptions??"RUN & UPGRADES");
   this.quickDuelButton.textContent=messages.menu?.quickDuel??"SOLO DUEL";
   this.quickPvpButton.textContent=messages.menu?.quickPvp??"2 PLAYERS · LOCAL";
   this.quickModes.setAttribute("aria-label",messages.menu?.players??"PLAYERS");
