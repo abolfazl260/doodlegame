@@ -1844,3 +1844,67 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
   padding:.48rem .6rem;
  }
 }
+
+
+/* Arena choice remains a first-class menu action, even after backdrop upgrades.
+   A direct shortcut on step 1 opens the full 16-map gallery on step 2. */
+.game-ui:not(.playing) .game-ui__arena-shortcut{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ width:100%;
+ min-width:0;
+ min-height:46px;
+ padding:.58rem .75rem;
+ border:1px solid #7c9cbe;
+ border-radius:.6rem;
+ background:linear-gradient(110deg,#122a40,#101d30);
+ color:#e0f3ff;
+ font-size:.77rem;
+ font-weight:850;
+ text-align:start;
+ overflow-wrap:anywhere;
+ touch-action:manipulation;
+}
+.game-ui:not(.playing) .game-ui__arena-shortcut::after{
+ content:"›";
+ font-size:1.3rem;
+ padding-inline-start:.5rem;
+ color:#a7d8ff;
+ flex-shrink:0;
+}
+.game-ui:not(.playing)[dir="rtl"] .game-ui__arena-shortcut::after{content:"‹"}
+.game-ui:not(.playing) .game-ui__arena-shortcut:focus-visible{
+ outline:3px solid #ffe2a3;
+ outline-offset:2px;
+}
+.game-ui__arena-selection-summary{
+ display:block;
+ min-width:0;
+ margin:0;
+ padding:.4rem .6rem;
+ border:1px solid #5a748e;
+ border-radius:.54rem;
+ background:#142438;
+ color:#dfeeff;
+ font-size:.75rem;
+ font-weight:800;
+ text-align:start;
+ overflow-wrap:anywhere;
+}
+.game-ui__menu-arena-panel .game-ui__arena-grid{
+ display:grid;
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:.55rem;
+ max-width:100%;
+}
+@media(max-width:620px){
+ .game-ui__menu-arena-panel .game-ui__arena-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:420px){
+ .game-ui__menu-arena-panel .game-ui__arena-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-height:360px){
+ .game-ui:not(.playing) .game-ui__arena-shortcut{min-height:42px;padding:.35rem .55rem}
+ .game-ui__arena-selection-summary{padding:.3rem .5rem;font-size:.7rem}
+}
