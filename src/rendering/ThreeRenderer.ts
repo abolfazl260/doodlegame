@@ -1,4 +1,4 @@
-import {fighterVisual,toolSegments,segmentPositions,telegraphSegments} from './FighterVisual';
+import {fighterVisual,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments} from './FighterVisual';
 import * as THREE from "three";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
 import type {Renderer} from "./Renderer";
@@ -172,7 +172,7 @@ export class ThreeRenderer implements Renderer{
     [[-.55,pose.head[1]+wave],[-.76,pose.head[1]-.08+wave]]
    ]));
   }
-  const effect=[...telegraphSegments(s)] as import('./FighterVisual').Segment[];
+  const effect=[...telegraphSegments(s),...kickEffectSegments(s)] as import('./FighterVisual').Segment[];
   if(s.attackTime>0&&(s.weapon==='blaster'||s.weapon==='uzi')){
    const x=pose.hand[0]+(s.weapon==='uzi'?.54:.66),y=pose.hand[1];
    effect.push([[x,y],[x+.22,y+.1]],[[x,y],[x+.22,y-.1]],[[x,y],[x+.3,y]]);
