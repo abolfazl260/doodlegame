@@ -66,7 +66,7 @@ const messages={
 };
 function setup(weapon="missile"){
  const calls=[];
- const actions=Object.fromEntries(["start","pause","resume","restart","weaponNext","weaponPrevious"].map(x=>[x,()=>{}]));
+ const actions=Object.fromEntries(["start","pause","resume","restart","weaponNext","weaponPrevious"].map(x=>[x,()=>calls.push([x])]));
  Object.assign(actions,{
   weaponSelect(){},selectStartingWeapon(){},upgradeWeapon(){},arenaSelect(){},modeSelect(){},
   setMissileAngle(value){calls.push(["angle",value]);hud.missileAngle=value;},
@@ -80,7 +80,7 @@ function setup(weapon="missile"){
  const i18n={messages,locale:"en",setLocale(){},subscribe(){return ()=>{}}};
  const hud={playerHealth:100,playerMaxHealth:100,opponentHealth:100,opponentMaxHealth:100,
   weapon,winner:null,arena:"fortress",mode:"duel",hill:{player:0,opponent:0,target:8},
-  bowCharge:0,missileAngle:45,missilePower:13,upgradePoints:0,upgradedWeapons:[]};
+  bowCharge:0,missileAngle:45,missilePower:13,playerFacing:1,upgradePoints:0,upgradedWeapons:[]};
  const ui=new GameUI(new Node("root"),actions,i18n);
  ui.bind(()=>()=>{},()=>hud);
  ui.currentState=states.PLAYING;
@@ -184,4 +184,64 @@ test("touch layout removes missile sliders but preserves desktop range controls"
  assert.match(css,/var\(--safe-right\)/);
  assert.match(css,/var\(--safe-bottom\)/);
  assert.match(readFileSync("src/ui/GameUI.ts","utf8"),/angleInput\.type="range"/);
+});
+
+function previewXs(d){
+ return [...d.matchAll(/[ML]([0-9.]+) ([0-9.]+)/g)].map(m=>Number(m[1]));
+}
+
+test("HUD facing agrees with actual missile launch direction and preview SVG",()=>{
+ const input=new WebInput({});
+ const session=new GameSession(input);
+ try{
+  session.setMode("missile-duel");
+  for(const facing of [1,-1]){
+   session.player.facing=facing;
+   const hud=session.getHudState();
+   assert.equal(hud.playerFacing,facing);
+   session.fireWeapon();
+   const projectile=session.getRenderState().projectiles.at(-1);
+   assert.equal(Math.sign(projectile.vx),facing);
+   const {ui,hud:fake}=setup();
+   fake.playerFacing=hud.playerFacing;
+   ui.mobileAttackButton.emit("pointerdown",{pointerId:71});
+   const xs=previewXs(ui.missileAimPath.getAttribute("d"));
+   assert.ok(xs.length>2);
+   assert.equal(Math.sign(xs.at(-1)-xs[0]),facing);
+   ui.mobileAttackButton.emit("pointercancel",{pointerId:71});
+   ui.dispose();
+  }
+ }finally{session.dispose();}
+});
+
+test("missile guide updates when joystick changes facing during a held aim",()=>{
+ const {ui,hud}=setup();
+ ui.mobileAttackButton.emit("pointerdown",{pointerId:81});
+ const right=ui.missileAimPath.getAttribute("d");
+ assert.equal(Math.sign(previewXs(right).at(-1)-previewXs(right)[0]),1);
+ hud.playerFacing=-1;
+ ui.render(states.PLAYING,hud);
+ const left=ui.missileAimPath.getAttribute("d");
+ assert.notEqual(left,right);
+ assert.equal(Math.sign(previewXs(left).at(-1)-previewXs(left)[0]),-1);
+ hud.playerFacing=1;
+ ui.render(states.PLAYING,hud);
+ assert.equal(ui.missileAimPath.getAttribute("d"),right);
+ ui.mobileAttackButton.emit("pointerup",{pointerId:81});
+ ui.dispose();
+});
+
+test("mobile pause button has an accessible name, pauses once, and is not active while paused",()=>{
+ const {ui,hud,calls}=setup("blade");
+ assert.equal(ui.mobilePauseButton.type,"button");
+ assert.equal(ui.mobilePauseButton.textContent,"Ⅱ");
+ assert.equal(ui.mobilePauseButton.getAttribute("aria-label"),"Pause");
+ assert.ok(ui.mobileControls.children.includes(ui.mobilePauseButton));
+ ui.mobilePauseButton.click();
+ assert.deepEqual(calls.filter(([name])=>name==="pause"),[["pause"]]);
+ ui.render(states.PAUSED,hud);
+ assert.equal(ui.mobileControls.hidden,true);
+ ui.mobilePauseButton.click();
+ assert.equal(calls.filter(([name])=>name==="pause").length,1);
+ ui.dispose();
 });
