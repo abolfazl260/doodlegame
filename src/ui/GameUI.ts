@@ -312,7 +312,7 @@ export class GameUI{
   this.weaponCards.className="game-ui__weapon-grid";
   this.weaponDetails.className="game-ui__weapon-details";
   this.weaponDetailsTitle.className="game-ui__weapon-details-title";
-  this.weaponDetails.append(this.weaponDetailsTitle,this.weaponCards);
+  this.weaponDetails.append(this.weaponDetailsTitle,this.startingWeaponTitle,this.weaponCards);
   for(const id of MODE_IDS){
    const card=document.createElement("button");
    card.type="button";card.className="game-ui__mode-card";
@@ -345,7 +345,7 @@ export class GameUI{
    card.onclick=()=>actions.selectStartingWeapon(id);
    this.weaponCards.append(card);
   }
-  this.menuModePanel.append(this.quickModes,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint);
+  this.menuModePanel.append(this.quickModes,this.menuSetupTitle,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint);
   this.menuArenaPanel.append(this.arenaTitle,this.arenaCards,this.weaponDetails,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
   this.rotateHint.className="game-ui__rotate-hint";
@@ -693,6 +693,36 @@ export class GameUI{
   });
  }
 
+ private changeMenuStep(index:number){
+  const next=Math.max(0,Math.min(MENU_STEPS.length-1,index));
+  if(next===this.menuStepIndex)return;
+  this.menuStepIndex=next;
+  this.menu.scrollTop=0;
+  this.syncWizard(this.currentState,this.readHud?.()??null);
+  const heading=next===0?this.menuLead:this.arenaTitle;
+  heading.focus?.();
+ }
+ private syncWizard(state:GameState,s:HudState|null){
+  const active=state===GameState.MENU||state===GameState.GAME_OVER;
+  const onArena=MENU_STEPS[this.menuStepIndex]==="arena";
+  this.setHidden(this.menuModePanel,!active||onArena);
+  this.setHidden(this.menuArenaPanel,!active||!onArena);
+  this.setHidden(this.stepBackButton,!active||!onArena);
+  this.setHidden(this.stepNextButton,!active||onArena);
+  for(const item of this.buttons.children){
+   const button=item as HTMLButtonElement;
+   if(button.dataset.action==="start")this.setHidden(button,state!==GameState.MENU||!onArena);
+  }
+  if(s){
+   const shouldShowRun=active&&!onArena&&Boolean(s.progression);
+   this.setHidden(this.runPanel,!shouldShowRun);
+   this.setHidden(this.upgradePanel,onArena||s.mode==="local-pvp"||!active||
+    (s.upgradePoints===0&&s.upgradedWeapons.length===0));
+  }
+  const labels=this.i18n.messages.menu;
+  const stepLabel=onArena?this.i18n.messages.sections.arena:(labels?.selectMode??this.i18n.messages.sections.gameMode);
+  this.setText(this.menuProgress,(labels?.step??"STEP")+" "+(this.menuStepIndex+1)+" / "+MENU_STEPS.length+" · "+stepLabel);
+ }
  setUpdateVisible(visible:boolean){this.updateButton.hidden=!visible;}
  setUpdateOutcome(result:"success"|"error"){this.updateButton.dataset.result=result;}
  bind(subscribe:(listener:(state:GameState)=>void)=>()=>void,read:()=>HudState){
@@ -756,7 +786,11 @@ export class GameUI{
     this.setHidden(this.menuResult,state!==GameState.GAME_OVER);
     this.setHidden(this.menuSettings,state!==GameState.MENU&&state!==GameState.GAME_OVER);
     this.setHidden(this.menuSetupSection,state!==GameState.MENU&&state!==GameState.GAME_OVER);
-    if(state===GameState.PLAYING)this.menuExtras.open=false;
+    if(state===GameState.PLAYING){
+     this.menuExtras.open=false;
+     this.menuStepIndex=0;
+     this.weaponDetails.open=false;
+    }
     this.setHidden(this.playerHealth,state!==GameState.PLAYING);
     this.setHidden(this.opponentHealth,state!==GameState.PLAYING);
     for(const item of this.buttons.children){
@@ -784,7 +818,8 @@ export class GameUI{
     this.setText(this.pvpHint,messages.pvp?.hint??"");
    }
    if(modeChanged||localeChanged||stateChanged){
-    this.quickDuelButton.setAttribute("aria-pressed",String(s.mode==="duel"));
+    if(s.mode!=="local-pvp")this.lastSoloMode=s.mode;
+    this.quickDuelButton.setAttribute("aria-pressed",String(s.mode!=="local-pvp"));
     this.quickPvpButton.setAttribute("aria-pressed",String(s.mode==="local-pvp"));
     this.setText(this.modeDescription,messages.menu?.modeDescriptions[s.mode]??"");
    }
@@ -796,16 +831,29 @@ export class GameUI{
    const upgraded=new Set(s.upgradedWeapons);
    const equipped=upgraded.has(s.weapon)?messages.upgrades[s.weapon].name:messages.weapons[s.weapon];
    if(state===GameState.MENU||state===GameState.GAME_OVER){
-    if(this.arenaSelect.value!==s.arena)this.arenaSelect.value=s.arena;
-    if(this.modeSelect.value!==s.mode)this.modeSelect.value=s.mode;
-    if(this.startingWeaponSelect.value!==s.weapon)this.startingWeaponSelect.value=s.weapon;
-    this.startingWeaponSelect.disabled=missileRules||s.mode==="random-weapons";
-    if(modeChanged||arenaChanged){
-     for(const option of this.startingWeaponSelect.options){
-      const id=option.value as WeaponId;
-      const disabled=missileRules?id!=="missile":s.mode==="random-weapons"||
-       (s.mode==="melee-only"?id!=="blade"&&id!=="hammer":id==="missile");
-      if(option.disabled!==disabled)option.disabled=disabled;
+    if(modeChanged||localeChanged||stateChanged){
+     for(const item of this.menuSettings.children){
+      const card=item as HTMLButtonElement,id=card.dataset.mode as GameModeId;
+      const visible=s.mode==="local-pvp"?id==="local-pvp":id!=="local-pvp";
+      this.setHidden(card,!visible);
+      card.setAttribute("aria-pressed",String(id===s.mode));
+     }
+    }
+    if(arenaChanged||localeChanged||stateChanged){
+     for(const item of this.arenaCards.children){
+      const card=item as HTMLButtonElement;
+      card.setAttribute("aria-pressed",String(card.dataset.arena===s.arena));
+     }
+    }
+    if(weaponChanged||modeChanged||arenaChanged||localeChanged||stateChanged){
+     const fixed=missileRules||s.mode==="random-weapons";
+     this.setHidden(this.weaponDetails,fixed);
+     for(const item of this.weaponCards.children){
+      const card=item as HTMLButtonElement,id=card.dataset.startingWeapon as WeaponId;
+      const allowed=!fixed&&id!=="missile"&&(s.mode!=="melee-only"||id==="blade"||id==="hammer");
+      this.setHidden(card,!allowed);
+      card.disabled=!allowed;
+      card.setAttribute("aria-pressed",String(id===s.weapon));
      }
     }
     const runIntermission=Boolean(s.inRun&&s.progression?.run?.status==="victory");
@@ -892,6 +940,7 @@ export class GameUI{
     this.setHidden(this.p2Controls,!playing||s.mode!=="local-pvp");
     if(!playing&&(stateChanged||winnerChanged))this.cancelTouchControls();
    }
+   this.syncWizard(state,s);
    this.lastView={state,locale,arena:s.arena,mode:s.mode,weapon:s.weapon,winner:s.winner,
     upgradePoints:s.upgradePoints,upgradedWeapons:[...s.upgradedWeapons],progressKey,inRun:Boolean(s.inRun),secondWeapon:s.secondWeapon};
   }
@@ -1004,7 +1053,7 @@ export class GameUI{
   this.stepNextButton.textContent=messages.menu?.nextArena??"NEXT: CHOOSE ARENA";
   this.stepBackButton.textContent=messages.menu?.back??"BACK";
   this.weaponDetailsTitle.textContent=messages.menu?.loadout??"STARTING WEAPON · OPTIONAL";
-  this.menuSetupTitle.textContent=messages.menu?.setup??"MATCH SETUP";
+  this.menuSetupTitle.textContent=messages.menu?.selectMode??"CHOOSE GAME MODE";
   this.quickDuelButton.textContent=messages.menu?.quickDuel??"SOLO DUEL";
   this.quickPvpButton.textContent=messages.menu?.quickPvp??"2 PLAYERS · LOCAL";
   this.quickModes.setAttribute("aria-label",messages.sections.gameMode);
