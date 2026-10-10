@@ -1125,7 +1125,7 @@ export class GameUI{
   this.weaponDetailsTitle.textContent=messages.menu?.loadout??"STARTING WEAPON · OPTIONAL";
   this.menuSetupTitle.textContent=messages.menu?.players??"NUMBER OF PLAYERS";
   this.menuProgressTitle.textContent=messages.menu?.progressOptions??"RUN & UPGRADES";
-  this.menuRunTab.textContent=messages.run.title;
+  this.menuRunTab.textContent=messages.run?.title??"FOUR-FIGHT RUN";
   this.menuUpgradeTab.textContent=messages.panels.weaponUpgrades;
   this.menuProgressTabs.setAttribute("aria-label",messages.menu?.progressOptions??"RUN & UPGRADES");
   this.quickDuelButton.textContent=messages.menu?.quickDuel??"SOLO DUEL";
