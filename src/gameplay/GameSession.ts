@@ -598,7 +598,6 @@ export class GameSession{
 
   this.constrainFighterX(f);
  }
- private updateBow(input:InputState,dt:number){this.updateBowFor(this.player,input,dt);}
  private updateBowFor(f:Fighter,input:Readonly<InputState>,dt:number){
   if(input.attackCancelled){f.bowCharging=false;f.bowCharge=0;f.attackTime=0;return;}
   if(input.attackPressed&&f.cooldown<=0&&!f.bowCharging){f.bowCharging=true;f.bowCharge=0;f.attackTime=.12;}
