@@ -106,10 +106,11 @@ The visual weapon system is intentionally detailed while retaining the monochrom
 | Move | A / D or Left / Right |
 | Jump | W / Space / Up |
 | Attack | Z / X |
+| Grab & Throw | C (local PvP P2: Numpad1) |
 | Previous weapon | Q / O |
 | Next weapon | E / P |
 
-On mobile, drag the movement joystick **upward to jump**, including diagonally while walking. Move the stick toward the center and push up again for a double jump or wall jump; holding it upward does not repeat jumps. There is **no separate JUMP button**. The ATTACK button and weapon arrows remain separate. The main menu starts in Persian unless a saved language preference is present. Both fighters start each round at 100 HP.
+On mobile, drag the movement joystick **upward to jump**, including diagonally while walking. Move the stick toward the center and push up again for a double jump or wall jump; holding it upward does not repeat jumps. There is **no separate JUMP button**. Swipe quickly upward from ATTACK to grab a nearby opponent without firing the equipped weapon. A normal tap or hold still attacks. The ATTACK button and weapon arrows remain separate. The main menu starts in Persian unless a saved language preference is present. Both fighters start each round at 100 HP.
 
 ## Rendering
 

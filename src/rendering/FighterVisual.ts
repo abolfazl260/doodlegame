@@ -26,6 +26,8 @@ export function telegraphSegments(s:DuelistRenderState):Segment[]{
 /** World-space, articulated monochrome pose shared by WebGL and Canvas. */
 export function fighterVisual(s:DuelistRenderState) {
  const speed=clamp(Math.abs(s.velocityX)/8), air=!s.grounded;
+ const grabbing=s.grabPhase==="attempt"||s.grabPhase==="hold"||s.grabPhase==="windup";
+ const held=s.grabPhase==="held";
  const phase=s.gaitPhase, stride=air?0:Math.sin(phase)*speed;
  const land=clamp(s.landingTime/.18), hit=clamp(s.hitTime/.22);
  const progress=clamp(1-s.attackTime/attackDuration(s.weapon));
@@ -70,11 +72,17 @@ export function fighterVisual(s:DuelistRenderState) {
  if(air&&s.attackTime<=0&&s.weapon!=='bow'){back=[-.48,s.velocityY>0?.32:-.15];}
  if(Math.abs(s.velocityX)>9){back=[-.62,.28];}
  if(kick){back=kick==="spin"?[-.58,.18+spinTurn*.13]:[-.52,.19];hand=[.24,.28+kickExtension*.14];}
+ if(grabbing){
+  // Paired motion: reaching forward, then raising the victim for wind-up.
+  const lift=s.grabPhase==="windup"?.29:s.grabPhase==="hold"?.13:0;
+  back=[.05,.36+lift];hand=[.78,.36+lift];toolAngle=0;
+ }
+ if(held){back=[-.33,.51];hand=[.55,.5];toolAngle=0;}
  add([-.18,shoulder[1]],[-.3,.19],back);
  add([.18,shoulder[1]],[.32,.2],hand);
  const scale=s.enemyType==='boss'?1.18:s.enemyType==='tank'?1.08:1;
  const squash=land*.16;
- const lean=s.velocityX*s.facing*.012-hit*.18+(air?-s.velocityY*.008:0)+(kick==="spin"?spinTurn*.3:kick?-.11*kickExtension:0);
+ const lean=s.velocityX*s.facing*.012-hit*.18+(air?-s.velocityY*.008:0)+(kick==="spin"?spinTurn*.3:kick?-.11*kickExtension:0)+(held?-.22:s.grabPhase==="windup"?-.13:0);
  return {joints,head,hand,toolAngle,swing,scale,scaleX:1+squash,scaleY:1-squash,lean,hit,land};
 }
 /** Motion arcs use the same segment coordinates in both Canvas and WebGL. */
@@ -91,8 +99,19 @@ export function kickEffectSegments(s:DuelistRenderState):Segment[]{
  }
  return trail;
 }
+/** Short shared grab wind-up traces in both WebGL and Canvas fallback. */
+export function grabEffectSegments(s:DuelistRenderState):Segment[]{
+ if(s.grabPhase!=="attempt"&&s.grabPhase!=="hold"&&s.grabPhase!=="windup")return[];
+ const r=s.grabPhase==="windup"?.57:.36;
+ return [
+  [[.6,-.05],[.68+r,.03]],
+  [[.6,.21],[.68+r,.38]],
+  [[.68+r,.03],[.75+r,.2]]
+ ];
+}
 /** Each segment is a real pair of 3D vertices; buffers are sized from these arrays. */
 export function toolSegments(s:DuelistRenderState):Segment[] {
+ if(s.grabPhase!==null&&s.grabPhase!==undefined)return [];
  const lines:Segment[]=[];
  const line=(a:Point,b:Point)=>lines.push([a,b]);
  const path=(points:Point[])=>{for(let i=1;i<points.length;i++)line(points[i-1],points[i]);};

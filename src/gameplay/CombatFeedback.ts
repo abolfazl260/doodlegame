@@ -1,7 +1,7 @@
 import type {WeaponId} from "../input/Input";
 
 /** Presentation events. Never use these to apply damage or change simulation timing. */
-export type CombatCueKind="attack"|"hit"|"block"|"deflect"|"explosion"|"defeat";
+export type CombatCueKind="attack"|"hit"|"block"|"deflect"|"explosion"|"defeat"|"throw";
 export interface CombatCue {
  readonly id:number;
  readonly kind:CombatCueKind;
@@ -14,7 +14,7 @@ export interface CombatCue {
  readonly life:number;
 }
 export const MAX_COMBAT_CUES=24;
-export const cueLife=(kind:CombatCueKind)=>kind==="explosion"?.42:kind==="defeat"?.55:kind==="attack"?.13:.28;
+export const cueLife=(kind:CombatCueKind)=>kind==="explosion"?.42:kind==="defeat"?.55:kind==="throw"?.34:kind==="attack"?.13:.28;
 
 /** Pure, bounded shake so both renderers agree and don't accumulate camera drift. */
 export function combatShake(cues:readonly CombatCue[],enabled:boolean){

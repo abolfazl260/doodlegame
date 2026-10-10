@@ -43,3 +43,7 @@ The Pause button remains visible and uses the existing Pause / Resume / Main Men
 ## Out of scope
 
 Online matchmaking, LAN sessions, remote connectivity, disconnect/rejoin behavior, persistent PvP rankings, and accounts are **not included** in this local same-device implementation.
+
+## Grab & Throw (local PvP)
+
+Player 1 presses **C** and Player 2 presses **Numpad1** for a separate grab action. On touchscreen, either fighter can make a short, fast upward swipe from their own ATTACK button; regular ATTACK remains independent. A grab requires the opponent to be in front, nearly level, close enough, unobstructed, and outside the post-throw immunity window. After an attempt and short hold, the attacker winds up and throws. A hit, death, pause, reset or blocked hold location cancels both poses. Boss enemies are immune; tank enemies have a shorter valid range and reduced throw damage.

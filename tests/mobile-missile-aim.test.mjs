@@ -75,7 +75,8 @@ function setup(weapon="missile"){
   setTouchMove(x,y){calls.push(["move",x,y]);},
   touchAttackStart(){calls.push(["start"]);},
   touchAttackEnd(){calls.push(["end"]);},
-  touchAttackCancel(){calls.push(["cancel"]);}
+  touchAttackCancel(){calls.push(["cancel"]);},
+  touchGrab(){calls.push(["grab"]);}
  });
  const i18n={messages,locale:"en",setLocale(){},subscribe(){return ()=>{}}};
  const hud={playerHealth:100,playerMaxHealth:100,opponentHealth:100,opponentMaxHealth:100,
@@ -141,7 +142,7 @@ test("pausing, blur and capture loss cancel missile aim safely",()=>{
  ui.dispose();
 });
 
-test("joystick can move simultaneously with missile gesture; other weapons preserve hold/release",()=>{
+test("joystick can move simultaneously with missile gesture; other weapons preserve hold/release",async()=>{
  const {ui,calls,hud}=setup();
  ui.joystick.emit("pointerdown",{pointerId:1,clientX:85,clientY:45});
  ui.mobileAttackButton.emit("pointerdown",{pointerId:2});
@@ -156,6 +157,7 @@ test("joystick can move simultaneously with missile gesture; other weapons prese
  ui.mobileAttackButton.emit("pointerup",{pointerId:3});
  assert.deepEqual(calls.slice(-2).map(([name])=>name),["start","end"]);
  ui.mobileAttackButton.emit("pointerdown",{pointerId:4});
+ await new Promise(resolve=>setTimeout(resolve,175));
  ui.mobileAttackButton.emit("pointercancel",{pointerId:4});
  assert.equal(calls.at(-1)[0],"cancel");
  ui.dispose();
@@ -248,7 +250,7 @@ test("mobile pause button has an accessible name, pauses once, and is not active
 });
 
 
-test("ATTACK owns only the first active pointer for automatic, Bow and tap weapons",()=>{
+test("ATTACK owns only the first active pointer for automatic, Bow and tap weapons",async()=>{
  for(const weapon of ["uzi","bow","blade"]){
   const {ui,calls}=setup(weapon);
   ui.mobileAttackButton.emit("pointerdown",{pointerId:21});
@@ -257,6 +259,7 @@ test("ATTACK owns only the first active pointer for automatic, Bow and tap weapo
   ui.mobileAttackButton.emit("pointercancel",{pointerId:22});
   ui.mobileAttackButton.emit("lostpointercapture",{pointerId:22});
   assert.equal(ui.mobileAttackButton.hasPointerCapture(21),true,weapon+" owner remains captured");
+  await new Promise(resolve=>setTimeout(resolve,175));
   assert.deepEqual(calls.filter(([name])=>["start","end","cancel"].includes(name)).map(([name])=>name),
    ["start"],weapon+" ignores unrelated touches");
   ui.mobileAttackButton.emit("pointerup",{pointerId:21});
@@ -268,11 +271,12 @@ test("ATTACK owns only the first active pointer for automatic, Bow and tap weapo
  }
 });
 
-test("owner cancellation and capture loss cannot fire phantom attacks or leave a held pointer",()=>{
+test("owner cancellation and capture loss cannot fire phantom attacks or leave a held pointer",async()=>{
  for(const kind of ["pointercancel","lostpointercapture"]){
   const {ui,calls}=setup("bow");
   ui.mobileAttackButton.emit("pointerdown",{pointerId:51});
   ui.mobileAttackButton.emit("pointerdown",{pointerId:52});
+  await new Promise(resolve=>setTimeout(resolve,175));
   ui.mobileAttackButton.emit(kind,{pointerId:51});
   ui.mobileAttackButton.emit("pointerup",{pointerId:51});
   ui.mobileAttackButton.emit("pointerup",{pointerId:52});
@@ -286,11 +290,12 @@ test("owner cancellation and capture loss cannot fire phantom attacks or leave a
  }
 });
 
-test("weapon switching cancels an owned held attack without cancelling joystick movement",()=>{
+test("weapon switching cancels an owned held attack without cancelling joystick movement",async()=>{
  const {ui,hud,calls}=setup("uzi");
  ui.joystick.emit("pointerdown",{pointerId:11,clientX:82,clientY:48});
  ui.mobileAttackButton.emit("pointerdown",{pointerId:12});
  assert.equal(ui.mobileAttackButton.hasPointerCapture(12),true);
+ await new Promise(resolve=>setTimeout(resolve,175));
  hud.weapon="bow";
  ui.render(states.PLAYING,hud);
  assert.equal(ui.mobileAttackButton.hasPointerCapture(12),false);
@@ -306,6 +311,17 @@ test("weapon switching cancels an owned held attack without cancelling joystick 
  ui.dispose();
 });
 
+test("upward swipe from ATTACK triggers only grab for Blade, Bow and Missile",()=>{
+ for(const weapon of ["blade","bow","missile"]){
+  const {ui,calls}=setup(weapon);
+  ui.mobileAttackButton.emit("pointerdown",{pointerId:201,clientX:500,clientY:200});
+  ui.mobileAttackButton.emit("pointermove",{pointerId:201,clientX:505,clientY:132});
+  ui.mobileAttackButton.emit("pointerup",{pointerId:201,clientX:505,clientY:132});
+  assert.equal(calls.filter(([name])=>name==="grab").length,1,weapon);
+  assert.equal(calls.some(([name])=>["start","end","fire"].includes(name)),false,weapon);
+  ui.dispose();
+ }
+});
 test("an invalid pointer capture cannot arm an attack",()=>{
  const {ui,calls}=setup("uzi");
  const capture=ui.mobileAttackButton.setPointerCapture;

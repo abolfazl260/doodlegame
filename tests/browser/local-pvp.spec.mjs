@@ -82,6 +82,7 @@ test("P1 and P2 movement and held ATTACK respond to four concurrent real touches
   await touch(client,"touchStart",[a,b]);
   await touch(client,"touchStart",[a,b,c]);
   await touch(client,"touchStart",[a,b,c,d]);
+  await page.waitForTimeout(185); // swipe recognizer resolves ordinary hold before ATTACK
   let state=await snapshot(page);
   expect(state.p1Input.moveX).toBeGreaterThan(0);
   expect(state.p2Input.moveX).toBeLessThan(0);
@@ -199,6 +200,7 @@ test("two independent mobile Down joysticks + ATTACK simultaneously initiate the
  const client=await page.context().newCDPSession(page);
  try{
   for(let i=1;i<=4;i++)await touch(client,"touchStart",points.slice(0,i));
+  await page.waitForTimeout(185);
   const before=await snapshot(page);
   expect(before.p1Input.moveY).toBeGreaterThan(.55);
   expect(before.p2Input.moveY).toBeGreaterThan(.55);
