@@ -12,12 +12,12 @@ type HudState={
 };
 type Actions={
  newRun?:()=>void;continueRun?:()=>void;leaveRun?:()=>void;
- start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
+ start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;stopToMenu?:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
  setTouchMove:(x:number,y:number)=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;toggleCombatSound:()=>void;toggleCameraShake:()=>void;updateData:()=>Promise<void>;
 };
-type UiAction="start"|"pause"|"resume"|"restart";
+type UiAction="start"|"pause"|"resume"|"restart"|"menu";
 
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
@@ -318,7 +318,8 @@ export class GameUI{
    item.onclick=()=>actions.weaponSelect(id);
    this.weaponList.append(item);
   }
-  const uiActions:readonly [UiAction,()=>void][]=[["start",actions.start],["pause",actions.pause],["resume",actions.resume],["restart",actions.restart]];
+  const uiActions:[UiAction,()=>void][]=[["start",actions.start],["pause",actions.pause],["resume",actions.resume],["restart",actions.restart]];
+  if(actions.stopToMenu)uiActions.push(["menu",actions.stopToMenu]);
   for(const [action,fn] of uiActions){
    const button=document.createElement("button");
    button.type="button";
@@ -590,6 +591,7 @@ export class GameUI{
      this.setHidden(button,(action==="start"&&state!==GameState.MENU)||
       (action==="pause"&&state!==GameState.PLAYING)||
       (action==="resume"&&state!==GameState.PAUSED)||
+      (action==="menu"&&state!==GameState.PAUSED&&state!==GameState.GAME_OVER)||
       (action==="restart"&&(state===GameState.MENU||Boolean(s.inRun))));
     }
    }
@@ -839,7 +841,7 @@ export class GameUI{
   this.powerName.textContent=messages.details.power;
   this.fireButton.textContent=messages.buttons.fireMissile;
 
-  const actionLabels:Readonly<Record<UiAction,string>>={start:messages.buttons.start,pause:messages.buttons.pause,resume:messages.buttons.resume,restart:messages.buttons.restart};
+  const actionLabels:Readonly<Record<UiAction,string>>={start:messages.buttons.start,pause:messages.buttons.pause,resume:messages.buttons.resume,restart:messages.buttons.restart,menu:messages.buttons.menu};
   for(const item of this.buttons.children){
    const button=item as HTMLButtonElement;
    button.textContent=actionLabels[button.dataset.action as UiAction];
