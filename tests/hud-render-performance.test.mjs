@@ -151,7 +151,7 @@ test("menu state, locale, upgrades and game-over updates retain their behavior",
  ui.render(states.GAME_OVER,hud);
  assert.equal(ui.menuResult.hidden,false);
  assert.equal(ui.menuResult.textContent,"WIN");
- assert.equal(ui.menuSettings.hidden,false);
+ assert.equal(ui.menuSettings.hidden,true,"results must not expose the game-mode picker");
  ui.render(states.PAUSED,hud);
  assert.equal(ui.menuSettings.hidden,true);
  ui.dispose();
