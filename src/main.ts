@@ -2,6 +2,7 @@ import "./styles.css";
 import {Game} from "./core/Game";
 import {GameState} from "./core/GameState";
 import {GameSession} from "./gameplay/GameSession";
+import {Progression} from "./progression/Progression";
 import type {GameRenderState} from "./gameplay/GameSession";
 import {CombatAudio} from "./audio/CombatAudio";
 import {Capacitor} from "@capacitor/core";
@@ -50,6 +51,7 @@ try{
  const input=new WebInput(canvas);
  const storage=new WebStorage();
  const i18n=new I18n(storage);
+ const progression=new Progression(storage);
  const reducedMotion=typeof window.matchMedia==="function"&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
  const readSetting=(key:string,defaultValue:boolean)=>{
   try{const value=storage.get<unknown>(key);return typeof value==="boolean"?value:defaultValue;}catch{return defaultValue;}
@@ -76,7 +78,7 @@ try{
   render:(state:GameRenderState)=>{renderer.render(state);combatAudio.render(state.combatCues);},
   dispose:()=>{combatAudio.dispose();renderer.dispose();}
  };
- const game=new Game(presentationRenderer,session,new WebFrameScheduler(),error=>console.error("DoodleGame error:",error));
+ const game=new Game(presentationRenderer,session,new WebFrameScheduler(),error=>console.error("DoodleGame error:",error),progression);
  let landscape:ReturnType<typeof installLandscapeOrientation>|null=null;
  let pausedForPortrait=false;
  const pauseGame=()=>{input.resetTransientState();game.pause();};
@@ -110,6 +112,9 @@ try{
   pause:pauseGame,
   resume:resumeGame,
   restart:restartGame,
+  newRun:()=>{if(!landscape?.isPortrait())game.newRun();},
+  continueRun:()=>{if(!landscape?.isPortrait())game.continueRun();},
+  leaveRun:()=>game.leaveRun(),
   weaponNext:()=>game.selectWeapon(1),
   weaponPrevious:()=>game.selectWeapon(-1),
   weaponSelect:(id)=>game.selectWeaponById(id),
