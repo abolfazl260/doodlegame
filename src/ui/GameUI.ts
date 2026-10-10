@@ -83,6 +83,8 @@ export class GameUI{
  private modeDescription=document.createElement("p");
  private matchSummary=document.createElement("p");
  private menuExtras=document.createElement("details");
+ private menuProgressDetails=document.createElement("details");
+ private menuProgressTitle=document.createElement("summary");
  private menuExtrasTitle=document.createElement("summary");
  private menuSettings=document.createElement("div");
  private menuStepIndex=0;
@@ -295,6 +297,9 @@ export class GameUI{
   this.matchSummary.className="game-ui__match-summary";
   this.matchSummary.setAttribute("aria-live","polite");
   this.matchSummary.setAttribute("aria-atomic","true");
+  this.menuProgressDetails.className="game-ui__menu-progress-details";
+  this.menuProgressTitle.className="game-ui__menu-progress-title";
+  this.menuProgressDetails.append(this.menuProgressTitle);
   this.menuExtras.className="game-ui__menu-extras";
   this.menuExtrasTitle.className="game-ui__menu-extras-title";
   this.menuExtras.append(this.menuExtrasTitle);
@@ -348,7 +353,7 @@ export class GameUI{
    card.onclick=()=>actions.selectStartingWeapon(id);
    this.weaponCards.append(card);
   }
-  this.menuModePanel.append(this.quickModes,this.menuSetupTitle,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint);
+  this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint);
   this.menuArenaPanel.append(this.arenaTitle,this.arenaCards,this.weaponDetails,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
   this.rotateHint.className="game-ui__rotate-hint";
@@ -686,8 +691,9 @@ export class GameUI{
   this.runPanel.append(this.runHeading,this.runProgress,this.runMessage,this.runMedals,this.runControls);
   this.menuLinks.append(this.helpButton,this.privacyButton,this.combatSoundButton,this.combatShakeButton,this.updateButton);
   this.menuExtras.append(this.menuLinks);
+  this.menuProgressDetails.append(this.upgradePanel,this.runPanel);
   this.menuSetupSection.append(this.menuProgress,this.menuLead,this.menuModePanel,this.menuArenaPanel);
-  this.menu.append(this.menuHeader,this.menuResult,this.menuSetupSection,this.upgradePanel,this.runPanel,this.menuExtras,this.buttons);
+  this.menu.append(this.menuHeader,this.menuResult,this.menuSetupSection,this.menuProgressDetails,this.menuExtras,this.buttons);
   this.topHud.append(this.playerHealth,this.status,this.opponentHealth,this.details);
   this.root.append(this.menu,this.help,this.privacy,this.topHud,this.weaponList,this.missilePanel,this.bowPanel,this.mobileControls,this.rotateHint);
   container.append(this.root);
@@ -719,6 +725,8 @@ export class GameUI{
   this.setHidden(this.menuArenaPanel,!active||!onArena);
   this.setHidden(this.stepBackButton,!active||!onArena);
   this.setHidden(this.stepNextButton,!active||onArena);
+  this.setHidden(this.menuProgressDetails,!active||onArena);
+  this.setHidden(this.menuExtras,!active||onArena);
   for(const item of this.buttons.children){
    const button=item as HTMLButtonElement;
    if(button.dataset.action==="start")this.setHidden(button,state!==GameState.MENU||!onArena);
@@ -728,6 +736,11 @@ export class GameUI{
    this.setHidden(this.runPanel,!shouldShowRun);
    this.setHidden(this.upgradePanel,onArena||s.mode==="local-pvp"||!active||
     (s.upgradePoints===0&&s.upgradedWeapons.length===0));
+   this.setHidden(this.menuProgressDetails,!active||onArena||
+    (this.runPanel.hidden&&this.upgradePanel.hidden));
+   // Preserve instant access to earned rewards and an in-progress Run.
+   // Other players can expand this optional section on demand.
+   if(this.lastView?.state!==state&&s.inRun&&active)this.menuProgressDetails.open=true;
   }
   const labels=this.i18n.messages.menu;
   this.setText(this.menuLead,onArena?(labels?.chooseArena??"CHOOSE ARENA"):(labels?.kickoff??"CHOOSE YOUR FIGHT"));
@@ -1066,7 +1079,8 @@ export class GameUI{
   this.stepNextButton.textContent=messages.menu?.nextArena??"NEXT: CHOOSE ARENA";
   this.stepBackButton.textContent=messages.menu?.back??"BACK";
   this.weaponDetailsTitle.textContent=messages.menu?.loadout??"STARTING WEAPON · OPTIONAL";
-  this.menuSetupTitle.textContent=messages.menu?.selectMode??"CHOOSE GAME MODE";
+  this.menuSetupTitle.textContent=messages.menu?.players??"NUMBER OF PLAYERS";
+  this.menuProgressTitle.textContent=messages.menu?.progressOptions??"RUN & UPGRADES";
   this.quickDuelButton.textContent=messages.menu?.quickDuel??"SOLO DUEL";
   this.quickPvpButton.textContent=messages.menu?.quickPvp??"2 PLAYERS · LOCAL";
   this.quickModes.setAttribute("aria-label",messages.menu?.players??"PLAYERS");
@@ -1111,9 +1125,13 @@ export class GameUI{
 
   const actionLabels:Readonly<Record<UiAction,string>>={start:messages.buttons.start,pause:messages.buttons.pause,resume:messages.buttons.resume,restart:messages.buttons.restart,menu:messages.buttons.menu};
   for(const item of this.buttons.children){
-   const button=item as HTMLButtonElement;
-   button.textContent=actionLabels[button.dataset.action as UiAction];
+   const button=item as HTMLButtonElement,action=button.dataset.action;
+   if(action in actionLabels)this.setText(button,actionLabels[action as UiAction]);
   }
+  // The wizard's navigation buttons are not gameplay actions: never overwrite
+  // their labels with undefined when locale changes.
+  this.setText(this.stepNextButton,messages.menu?.nextArena??"NEXT · CHOOSE ARENA");
+  this.setText(this.stepBackButton,messages.menu?.back??"BACK");
   for(const item of this.menuSettings.children){
    const card=item as HTMLButtonElement,id=card.dataset.mode as GameModeId;
    card.textContent=messages.modes[id];
