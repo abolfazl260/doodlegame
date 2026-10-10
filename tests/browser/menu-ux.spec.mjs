@@ -1,0 +1,90 @@
+import {test,expect} from "@playwright/test";
+
+test.use({viewport:{width:844,height:390},hasTouch:true,isMobile:true});
+
+test.beforeEach(async({page})=>{
+ await page.goto("tests/browser/run-progression.html");
+ await page.waitForFunction(()=>Boolean(window.__runFixture));
+ await expect(page.locator(".game-ui.menu")).toBeVisible();
+});
+
+test("quick-play cards switch between solo and 2P, with a localized live match summary",async({page})=>{
+ const solo=page.locator('.game-ui__quick-mode[data-quick-mode="duel"]');
+ const versus=page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]');
+ await expect(solo).toHaveAttribute("aria-pressed","true");
+ await expect(versus).toHaveAttribute("aria-pressed","false");
+ await versus.tap();
+ expect((await page.evaluate(()=>window.__runFixture.view())).mode).toBe("local-pvp");
+ await expect(versus).toHaveAttribute("aria-pressed","true");
+ await expect(page.locator(".game-ui__mode-description")).toContainText("دو بازیکن");
+ await expect(page.locator(".game-ui__pvp-hint")).toBeVisible();
+ await solo.tap();
+ await expect(solo).toHaveAttribute("aria-pressed","true");
+ await expect(page.locator(".game-ui__pvp-hint")).toBeHidden();
+ await page.locator(".game-ui__menu-field").nth(1).locator("select").selectOption("ruins");
+ await page.locator(".game-ui__menu-field").nth(2).locator("select").selectOption("bow");
+ await expect(page.locator(".game-ui__match-summary")).toContainText("ویرانه‌ها");
+ await expect(page.locator(".game-ui__match-summary")).toContainText("کمان");
+ await page.locator(".game-ui__language button").tap();
+ await expect(page.locator(".game-ui__quick-mode").first()).toHaveText("SOLO DUEL");
+ await expect(page.locator(".game-ui__match-summary")).toContainText("RUINS");
+ await expect(page.locator(".game-ui__match-summary")).toContainText("BOW");
+ expect((await page.evaluate(()=>window.__runFixture.view())).arena).toBe("ruins");
+});
+
+test("advanced settings stay secondary and help dialog dismisses with Escape",async({page})=>{
+ const extras=page.locator(".game-ui__menu-extras");
+ const help=page.locator(".game-ui__help");
+ const primary=page.locator('button[data-action="start"]');
+ await expect(extras).not.toHaveAttribute("open","");
+ await expect(primary).toBeVisible();
+ await extras.locator("summary").tap();
+ await expect(extras).toHaveAttribute("open","");
+ const helpAction=page.locator(".game-ui__menu-links button[data-help]");
+ await helpAction.tap();
+ await expect(help).toBeVisible();
+ await page.keyboard.press("Escape");
+ await expect(help).toBeHidden();
+ await expect(helpAction).toBeFocused();
+ await expect(primary).toBeVisible();
+ await extras.locator("summary").tap();
+ await expect(extras).not.toHaveAttribute("open","");
+});
+
+test("short landscape retains a hittable sticky start CTA while setup scrolls",async({page})=>{
+ await page.setViewportSize({width:568,height:280});
+ const menu=page.locator(".game-ui__menu");
+ const start=page.locator('button[data-action="start"]');
+ const quick=page.locator(".game-ui__quick-modes");
+ await expect(quick).toBeVisible();
+ await expect(start).toBeInViewport();
+ const geometry=await page.evaluate(()=>{
+  const menu=document.querySelector(".game-ui__menu");
+  const button=document.querySelector('[data-action="start"]');
+  const rect=button.getBoundingClientRect(),x=rect.left+rect.width/2,y=rect.top+rect.height/2;
+  const before=menu.scrollTop;
+  menu.scrollTop=menu.scrollHeight;
+  return {before,after:menu.scrollTop,overflow:menu.scrollHeight>menu.clientHeight,
+   touchAction:getComputedStyle(menu).touchAction,hit:button.contains(document.elementFromPoint(x,y))};
+ });
+ expect(geometry.overflow).toBe(true);
+ expect(geometry.after).toBeGreaterThan(geometry.before);
+ expect(geometry.touchAction).toBe("pan-y");
+ expect(geometry.hit).toBe(true);
+ await expect(start).toBeInViewport();
+ await start.tap();
+ expect(await page.evaluate(()=>window.__runFixture.state())).toBe("PLAYING");
+});
+
+test("pause shows Resume without match setup and Run remains reachable from the main menu",async({page})=>{
+ const run=page.locator(".game-ui__run-panel");
+ await expect(run).toBeVisible();
+ await expect(run.locator(".game-ui__run-new")).toBeVisible();
+ await page.locator('button[data-action="start"]').tap();
+ await page.locator(".game-ui__mobile-pause").tap();
+ await expect(page.locator(".game-ui__menu-setup")).toBeHidden();
+ await expect(page.locator('button[data-action="resume"]')).toBeVisible();
+ await page.locator('button[data-action="menu"]').tap();
+ await expect(page.locator(".game-ui__menu-setup")).toBeVisible();
+ await expect(run).toBeVisible();
+});
