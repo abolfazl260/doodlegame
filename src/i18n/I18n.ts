@@ -14,6 +14,7 @@ export type Messages={
  status:{win:string;lose:string;duel:string;hill:string};
  details:{equipped:string;angle:string;power:string};
  sections:{gameMode:string;arena:string;weapon:string};
+ menu:{kickoff:string;setup:string;quickDuel:string;quickPvp:string;ready:string;options:string;modeDescriptions:Readonly<Record<GameModeId,string>>};
  panels:{weaponUpgrades:string;missileControl:string;bowDraw:string;releaseToFire:string};
  upgrade:{points:string;choose:string;earn:string;upgraded:string;upgrade:string;locked:string};
  pvp:{p1:string;p2:string;winner1:string;winner2:string;draw:string;hint:string};
@@ -36,6 +37,20 @@ const EN:Messages={
  status:{win:"YOU WIN",lose:"YOU LOSE",duel:"DUEL",hill:"HILL"},
  details:{equipped:"EQUIPPED",angle:"ANGLE",power:"POWER"},
  sections:{gameMode:"GAME MODE",arena:"ARENA",weapon:"START WEAPON"},
+ menu:{
+  kickoff:"CHOOSE YOUR FIGHT",setup:"MATCH SETUP",quickDuel:"SOLO DUEL",quickPvp:"2 PLAYERS · LOCAL",
+  ready:"YOUR MATCH",options:"SETTINGS & HELP",
+  modeDescriptions:{
+   duel:"A classic one-on-one fight against the AI.",
+   "missile-duel":"Missile-only combat. Time your shots and aim carefully.",
+   "melee-only":"Blades and hammers only. Close the distance.",
+   "random-weapons":"Your weapon changes automatically each round.",
+   "sudden-death":"One clean hit can decide the match.",
+   "low-gravity":"Higher jumps and extra airtime.",
+   "king-of-hill":"Control the center of the arena to win.",
+   "local-pvp":"Two real players on the same device. Play offline."
+  }
+ },
  panels:{weaponUpgrades:"WEAPON UPGRADES",missileControl:"MISSILE CONTROL",bowDraw:"BOW DRAW",releaseToFire:"RELEASE TO FIRE"},
  upgrade:{points:"UPGRADE POINTS",choose:"Choose a weapon upgrade before the next fight.",earn:"Win a duel to earn another point.",upgraded:"UPGRADED",upgrade:"UPGRADE",locked:"LOCKED"},
  pvp:{p1:"P1",p2:"P2",winner1:"PLAYER 1 WINS",winner2:"PLAYER 2 WINS",draw:"DRAW — BOTH PLAYERS DOWN",hint:"LOCAL 2P · P1: A/D, W, Z, Q/E · P2: ←/→, ↑, ENTER, [/] · Mobile: two touch control sets"},
@@ -65,6 +80,20 @@ const FA:Messages={
  status:{win:"بردی",lose:"باختی",duel:"دوئل",hill:"تپه"},
  details:{equipped:"سلاح",angle:"زاویه",power:"قدرت"},
  sections:{gameMode:"حالت بازی",arena:"میدان",weapon:"سلاح شروع"},
+ menu:{
+  kickoff:"مبارزه‌ات را انتخاب کن",setup:"تنظیم مسابقه",quickDuel:"دوئل تک‌نفره",quickPvp:"دو نفره · محلی",
+  ready:"مسابقه شما",options:"تنظیمات و راهنما",
+  modeDescriptions:{
+   duel:"مبارزه کلاسیک تک‌نفره در برابر هوش مصنوعی.",
+   "missile-duel":"فقط موشک؛ زمان‌بندی و نشانه‌گیری مهم است.",
+   "melee-only":"فقط تیغه و چکش؛ مبارزه از فاصله نزدیک.",
+   "random-weapons":"سلاح‌ها به‌صورت خودکار تغییر می‌کنند.",
+   "sudden-death":"یک ضربه دقیق می‌تواند سرنوشت مسابقه را تعیین کند.",
+   "low-gravity":"پرش‌های بلندتر و زمان بیشتر در هوا.",
+   "king-of-hill":"برای پیروزی، مرکز میدان را در اختیار بگیر.",
+   "local-pvp":"دو بازیکن واقعی روی یک دستگاه، بدون نیاز به اینترنت."
+  }
+ },
  panels:{weaponUpgrades:"ارتقای سلاح‌ها",missileControl:"کنترل موشک",bowDraw:"کشش کمان",releaseToFire:"برای شلیک رها کن"},
  upgrade:{points:"امتیاز ارتقا",choose:"قبل از مبارزه بعدی یک ارتقای سلاح انتخاب کن.",earn:"برای گرفتن یک امتیاز دیگر، دوئل را ببر.",upgraded:"ارتقا یافته",upgrade:"ارتقا",locked:"قفل"},
  pvp:{p1:"بازیکن ۱",p2:"بازیکن ۲",winner1:"بازیکن ۱ برنده شد",winner2:"بازیکن ۲ برنده شد",draw:"مساوی — هر دو بازیکن شکست خوردند",hint:"دو نفره محلی · نفر ۱: A/D، W، Z، Q/E · نفر ۲: ←/→، ↑، Enter، [/] · موبایل: دو دسته کنترل لمسی"},
