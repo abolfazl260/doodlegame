@@ -4,6 +4,8 @@ import {
  OPENING_DURATION_MS,
  REDUCED_MOTION_DURATION_MS,
  ambientFighterPlacement,
+ ambientFighterDrift,
+ openingStarBrightness,
  openingFrame,
  openingStars
 } from "./OpeningIntroMotion";
@@ -17,6 +19,7 @@ export class OpeningIntro{
  private context:CanvasRenderingContext2D|null=null;
  private frameId:number|null=null;
  private lastTime=0;
+ private lastDrawTime=0;
  private elapsed=0;
  private duration=OPENING_DURATION_MS;
  private width=1;
@@ -42,7 +45,7 @@ export class OpeningIntro{
   this.overlay.append(this.canvas,this.skip);
  }
 
- start(){
+ start(restoring=false){
   if(this.active)return;
   this.context=this.canvas.getContext("2d");
   if(!this.context){
@@ -53,6 +56,7 @@ export class OpeningIntro{
   this.ambientSince=0;
   this.elapsed=0;
   this.lastTime=0;
+  this.lastDrawTime=0;
   this.skip.hidden=false;
   this.overlay.classList.remove("opening-intro--ambient");
   this.overlay.setAttribute("role","dialog");
@@ -60,6 +64,7 @@ export class OpeningIntro{
   this.overlay.removeAttribute("aria-hidden");
   this.reducedMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches??false;
   this.duration=this.reducedMotion?REDUCED_MOTION_DURATION_MS:OPENING_DURATION_MS;
+  this.elapsed=restoring?this.duration+3400:0;
   this.active=true;
   document.body.append(this.overlay);
   this.menuRoot.inert=true;
@@ -67,9 +72,13 @@ export class OpeningIntro{
   window.addEventListener("resize",this.resize);
   document.addEventListener("visibilitychange",this.handleVisibility);
   this.resize();
+  if(restoring){
+   this.finish(false);
+   this.ambientSince=this.elapsed-3400; // Restore already settled, not the last intro pose.
+  }
   try{
    this.draw();
-   this.frameId=window.requestAnimationFrame(this.tick);
+   this.scheduleFrame();
   }catch(error){
    console.warn("Opening animation unavailable; continuing to menu.",error);
    this.finish();
@@ -86,14 +95,22 @@ export class OpeningIntro{
   }
  };
 
+ private cancelFrame(){
+  if(this.frameId!==null)window.cancelAnimationFrame(this.frameId);
+  this.frameId=null;
+ }
+ private scheduleFrame(){
+  if(!this.active||document.hidden||this.frameId!==null||(this.ambient&&this.reducedMotion))return;
+  this.frameId=window.requestAnimationFrame(this.tick);
+ }
  private readonly handleVisibility=()=>{
   if(!this.active)return;
   this.lastTime=0;
-  if(document.hidden){
-   if(this.frameId!==null)window.cancelAnimationFrame(this.frameId);
-   this.frameId=null;
-  }else if(this.frameId===null){
-   this.frameId=window.requestAnimationFrame(this.tick);
+  this.lastDrawTime=0;
+  if(document.hidden)this.cancelFrame();
+  else{
+   this.draw(); // Refresh on foreground, even for a reduced-motion static scene.
+   this.scheduleFrame();
   }
  };
 
@@ -105,6 +122,8 @@ export class OpeningIntro{
   this.canvas.width=Math.max(1,Math.round(this.width*this.ratio));
   this.canvas.height=Math.max(1,Math.round(this.height*this.ratio));
   if(this.ambient)this.updateAmbientPlacement();
+  // Resizing a canvas clears its pixels even when reduced motion has paused RAF.
+  if(this.ambient)this.draw();
  };
 
  private updateAmbientPlacement(){
@@ -119,15 +138,20 @@ export class OpeningIntro{
   if(this.lastTime!==0)this.elapsed+=Math.min(64,Math.max(0,now-this.lastTime));
   this.lastTime=now;
   if(!this.ambient&&this.elapsed>=this.duration)this.finish();
-  try{
-   this.draw();
-  }catch(error){
-   console.warn("Opening animation interrupted; continuing to menu.",error);
-   this.finish();
+  if(this.ambient&&!this.reducedMotion&&this.lastDrawTime>0&&now-this.lastDrawTime<32){
+   this.scheduleFrame(); // Cap ambient redraws at about 30 fps to reduce battery use.
    return;
   }
-  // The menu keeps the same living space background until gameplay starts.
-  if(!this.ambient||!this.reducedMotion)this.frameId=window.requestAnimationFrame(this.tick);
+  try{
+   this.draw();
+   this.lastDrawTime=now;
+  }catch(error){
+   console.warn("Opening animation interrupted; continuing to menu.",error);
+   if(!this.ambient)this.finish();
+   else this.dispose();
+   return;
+  }
+  this.scheduleFrame();
  };
 
  private draw(){
@@ -140,8 +164,7 @@ export class OpeningIntro{
   ctx.fillRect(0,0,w,h);
   const t=this.elapsed/1000;
   for(const star of this.stars){
-   const twinkle=.75+.25*Math.sin(t*.85+star.phase);
-   ctx.globalAlpha=star.light*twinkle;
+   ctx.globalAlpha=openingStarBrightness(star,t,this.reducedMotion);
    ctx.fillStyle="#fff";
    ctx.beginPath();
    ctx.arc(star.x*w,star.y*h,star.size,0,Math.PI*2);
@@ -151,13 +174,23 @@ export class OpeningIntro{
   this.drawPlanet(ctx,w,h,t);
   // Continue paddling in zero gravity beside the menu instead of disappearing
   // beneath its opaque panel. The starfield and planet also keep animating.
-  const ambientBlend=this.ambient?Math.min(1,Math.max(0,(this.elapsed-this.ambientSince)/2400)):0;
-  const sway=.01*Math.sin(t*.68);
-  const figureX=pose.x+(this.ambientPlacement.x+sway-pose.x)*ambientBlend;
-  const figureY=pose.y+(-.035+.018*Math.sin(t*.53))*ambientBlend;
+  const progress=this.ambient?Math.min(1,Math.max(0,(this.elapsed-this.ambientSince)/3400)):0;
+  const ambientBlend=progress*progress*(3-2*progress); // No velocity discontinuity at reveal.
+  const hero=ambientFighterDrift(t);
+  const figureX=pose.x+(this.ambientPlacement.x+hero.x-pose.x)*ambientBlend;
+  const figureY=pose.y+(hero.y)*ambientBlend;
   const figureScale=1-(1-this.ambientPlacement.scale)*ambientBlend;
-  this.drawFighter(ctx,w,h,t,figureX,figureY,pose.angle,pose.paddle,figureScale);
-
+  this.drawFighter(ctx,w,h,t,figureX,figureY,pose.angle+ambientBlend*hero.angle,
+   pose.paddle*(1-ambientBlend)+hero.paddle*ambientBlend,figureScale);
+  if(this.ambient){
+   const enemy=ambientFighterDrift(t,true);
+   const fade=this.reducedMotion?1:Math.min(1,Math.max(0,(this.elapsed-this.ambientSince)/1800));
+   ctx.save();
+   ctx.globalAlpha=fade*fade*(3-2*fade);
+   this.drawFighter(ctx,w,h,t,1-this.ambientPlacement.x+enemy.x,.43+enemy.y,
+    enemy.angle,enemy.paddle,this.ambientPlacement.scale*.95,true);
+   ctx.restore();
+  }
  }
 
  private drawPlanet(ctx:CanvasRenderingContext2D,w:number,h:number,t:number){
@@ -206,11 +239,11 @@ export class OpeningIntro{
  }
 
  private drawFighter(ctx:CanvasRenderingContext2D,w:number,h:number,t:number,
-  nx:number,ny:number,rotation:number,paddle:number,scaleMultiplier=1){
+  nx:number,ny:number,rotation:number,paddle:number,scaleMultiplier=1,enemy=false){
   // Use the same articulated torso and head design as the in-game fighter.
   const state:DuelistRenderState={
-   x:0,y:0,enemyType:null,bowCharge:0,missileAngle:45,missilePower:12,
-   velocityX:.8,velocityY:1,grounded:false,facing:1,
+   x:0,y:0,enemyType:enemy?"runner":null,bowCharge:0,missileAngle:45,missilePower:12,
+   velocityX:enemy?-.8:.8,velocityY:1,grounded:false,facing:enemy?-1:1,
    health:100,maxHealth:100,weapon:"blade",attackTime:0,attackVariant:0,
    animationTime:t,gaitPhase:t*3,landingTime:0,hitTime:0,bossPhase:0,attackTelegraph:0
   };
@@ -251,8 +284,23 @@ export class OpeningIntro{
   ctx.shadowBlur=0;
   ctx.fillStyle="#090a0b";
   ctx.beginPath();
-  ctx.arc(figure.head[0]+.08,figure.head[1]+.04,.04,0,Math.PI*2);
+  ctx.arc(figure.head[0]+(enemy?-.08:.08),figure.head[1]+.04,.04,0,Math.PI*2);
   ctx.fill();
+  if(enemy){
+   // A recognizably red headband on the same shared doodle head pose as gameplay.
+   ctx.strokeStyle="#f04250";
+   ctx.fillStyle="#f04250";
+   ctx.lineWidth=.105;
+   stroke([[figure.head[0]-.24,figure.head[1]+.07],
+    [figure.head[0]-.03,figure.head[1]+.12],
+    [figure.head[0]+.24,figure.head[1]+.055]]);
+   ctx.lineWidth=.057;
+   stroke([[figure.head[0]+.21,figure.head[1]+.075],
+    [figure.head[0]+.43,figure.head[1]+.005],
+    [figure.head[0]+.51,figure.head[1]+.105]]);
+   stroke([[figure.head[0]+.2,figure.head[1]+.06],
+    [figure.head[0]+.45,figure.head[1]-.17]]);
+  }
   // Short disjointed impulse lines suggest effort rather than powered flight.
   ctx.globalAlpha=.32+.13*Math.sin(t*5.3);
   ctx.strokeStyle="#fff";
@@ -262,7 +310,7 @@ export class OpeningIntro{
   ctx.restore();
  }
 
- private finish(){
+ private finish(reveal=true){
   if(!this.active||this.ambient)return;
   this.ambient=true;
   this.ambientSince=this.elapsed;
@@ -274,8 +322,12 @@ export class OpeningIntro{
   window.removeEventListener("keydown",this.handleKeyDown,true);
   this.menuRoot.inert=false;
   this.menuRoot.classList.remove("game-ui-intro-pending");
-  this.menuRoot.classList.add("game-ui-intro-revealed");
+  if(reveal)this.menuRoot.classList.add("game-ui-intro-revealed");
   this.updateAmbientPlacement();
+  if(this.reducedMotion){
+   this.cancelFrame();
+   this.draw(); // Static scene includes both fighters, never a blank final frame.
+  }else this.scheduleFrame();
   this.menuRoot.querySelector<HTMLButtonElement>('button[data-action="start"]')
    ?.focus({preventScroll:true});
  }
@@ -283,10 +335,7 @@ export class OpeningIntro{
  /** Restore the living starfield immediately if the player returns to the menu. */
  restoreAmbient(){
   if(this.active)return;
-  this.start();
-  if(!this.active)return;
-  this.elapsed=this.duration;
-  this.finish();
+  this.start(true); // Mount directly in steady ambient mode, with no first-frame flash.
  }
 
  dispose(){
@@ -295,8 +344,7 @@ export class OpeningIntro{
    return;
   }
   this.active=false;
-  if(this.frameId!==null)window.cancelAnimationFrame(this.frameId);
-  this.frameId=null;
+  this.cancelFrame();
   window.removeEventListener("keydown",this.handleKeyDown,true);
   window.removeEventListener("resize",this.resize);
   document.removeEventListener("visibilitychange",this.handleVisibility);
