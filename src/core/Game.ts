@@ -27,6 +27,7 @@ export class Game{
  stop(){if(this.disposed)return;this.loop.stop();this.session.cancelTransientActions();if(this.inRun){this.progression?.suspend(this.session.getUpgradeSnapshot());this.leaveRun();return;}if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);}
  restart(){this.ready();this.loop.stop();this.session.cancelTransientActions();this.state.reset();this.start();}
  selectWeapon(direction:1|-1){this.ready();this.session.selectWeapon(direction);}
+ selectPlayer2Weapon(direction:1|-1){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectPlayer2Weapon(direction);}
  selectStartingWeapon(id:import("../input/Input").WeaponId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return false;const selected=this.session.setStartingWeapon(id);if(selected)this.state.notify();return selected;}
  selectWeaponById(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectWeaponById(id);}
  upgradeWeapon(id:import("../input/Input").WeaponId){
