@@ -32,6 +32,12 @@ const ui=new GameUI(root,{
  touchAttackStart:()=>input.touchAttack(true),
  touchAttackEnd:()=>input.touchAttackRelease(),
  touchAttackCancel:()=>input.touchAttackCancel(),
+ setPlayer2TouchMove:(x,y)=>input.setPlayer2TouchMove(x,y),
+ player2AttackStart:()=>input.player2TouchAttackStart(),
+ player2AttackEnd:()=>input.player2TouchAttackRelease(),
+ player2AttackCancel:()=>input.player2TouchAttackCancel(),
+ player2WeaponNext:()=>game.selectPlayer2Weapon(1),
+ player2WeaponPrevious:()=>game.selectPlayer2Weapon(-1),
  toggleCombatSound(){},toggleCameraShake(){},updateData:async()=>{}
 },i18n);
 game.initialize();
@@ -39,6 +45,29 @@ ui.bind(listener=>game.subscribe(listener),()=>game.getHudState());
 const fixture={
  state:()=>game.getState(),
  view:()=>game.getHudState(),
+ startPvP:()=>{
+  if(game.getState()!==GameState.MENU)throw Error("startPvP requires menu");
+  game.selectMode("local-pvp");
+  input.resetTransientState();
+  game.start();
+ },
+ pvpSnapshot:()=>{
+  const state=session.getRenderState();
+  return{mode:state.mode,arena:state.arena,winner:state.winner,player:state.player,opponent:state.opponent,
+   p1Input:{...input.getState()},p2Input:{...input.getPlayer2State()}};
+ },
+ tickPvP:(frames=1)=>{
+  for(let i=0;i<frames;i++)session.update(1/60);
+ },
+ finishPvP:(winner:"player"|"opponent"|"draw")=>{
+  const player=Reflect.get(session,"player") as {health:number};
+  const opponent=Reflect.get(session,"opponent") as {health:number};
+  if(winner==="player"||winner==="draw")opponent.health=0;
+  if(winner==="opponent"||winner==="draw")player.health=0;
+  session.update(1/60);
+  game.endGame();
+ },
+ changePvPArena:(arena:import("../../src/gameplay/GameSession").ArenaId)=>game.selectArena(arena),
  back:()=>game.stop(),
  startBowDuel:()=>{
   if(game.getState()!==GameState.MENU)throw Error("not in menu");
