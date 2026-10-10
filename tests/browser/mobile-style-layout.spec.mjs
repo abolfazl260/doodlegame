@@ -19,17 +19,25 @@ test("health bars flank the status, and long weapon details occupy their own row
    return {
     left:rect(".health-bar--player"),right:rect(".health-bar--opponent"),
     status:rect(".game-ui__status"),details:rect(".game-ui__details"),
-    top:rect(".game-ui__top-hud"),
-    computed:[...document.querySelectorAll(".game-ui__top-hud > *")].map(el=>({tag:el.tagName,cls:el.className,display:getComputedStyle(el).display,position:getComputedStyle(el).position,gridColumn:getComputedStyle(el).gridColumn,gridRow:getComputedStyle(el).gridRow,width:getComputedStyle(el).width}))
+    top:rect(".game-ui__top-hud")
    };
   });
-  expect(rects.left.right,JSON.stringify(rects)).toBeLessThanOrEqual(rects.status.left+1);
+  expect(rects.left.right).toBeLessThanOrEqual(rects.status.left+1);
   expect(rects.status.right).toBeLessThanOrEqual(rects.right.left+1);
   expect(rects.details.top).toBeGreaterThanOrEqual(Math.max(rects.left.bottom,rects.right.bottom)-1);
   expect(rects.details.right).toBeLessThanOrEqual(568);
   expect(rects.left.height).toBeGreaterThanOrEqual(30);
   expect(rects.right.height).toBeGreaterThanOrEqual(30);
  }
+ // A language switch must not reverse the physical player/opponent slots.
+ await page.evaluate(()=>document.querySelector(".game-ui__language button").click());
+ const positions=await page.evaluate(()=>({
+  direction:document.documentElement.dir,
+  player:document.querySelector(".health-bar--player").getBoundingClientRect().left,
+  opponent:document.querySelector(".health-bar--opponent").getBoundingClientRect().left
+ }));
+ expect(positions.direction).toBe("ltr");
+ expect(positions.player).toBeLessThan(positions.opponent);
  const health=page.locator(".health-label__current").first();
  await expect(health).toHaveCSS("color","rgb(255, 255, 255)");
  await expect(health).toHaveCSS("background-color","rgb(7, 11, 23)");
