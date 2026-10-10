@@ -21,7 +21,7 @@ let ui:GameUI;
 let currentState=GameState.PLAYING;
 const render=()=>ui.render(currentState,session.getHudState());
 ui=new GameUI(uiRoot,{
- start(){},pause(){currentState=GameState.PAUSED;render();},resume(){currentState=GameState.PLAYING;render();},restart(){},
+ start(){},pause(){currentState=GameState.PAUSED;render();},resume(){currentState=GameState.PLAYING;render();},restart(){},stopToMenu(){currentState=GameState.MENU;render();},
  weaponNext(){session.selectWeapon(1);render();},
  weaponPrevious(){session.selectWeapon(-1);render();},
  weaponSelect(id){session.selectWeaponById(id);render();},
