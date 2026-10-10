@@ -1,4 +1,4 @@
-import {fighterVisual,toolSegments,telegraphSegments,type Segment} from './FighterVisual';
+import {fighterVisual,toolSegments,telegraphSegments,kickEffectSegments,type Segment} from './FighterVisual';
 import type {Renderer} from "./Renderer";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
 import {combatCameraFrame,type CombatCameraFrame} from "./CombatCamera.js";
@@ -135,6 +135,7 @@ export class CanvasRenderer implements Renderer{
   c.globalAlpha=.5;
   if(Math.abs(s.velocityX)>9)lines([[[-.45,-.3],[-1.1,-.3]],[[-.45,0],[-1.1,0]],[[-.45,.3],[-1.1,.3]]]);
   if(pose.land>0)lines([[[-.3,-.88],[-.6-pose.land*.2,-.82]],[[.3,-.88],[.6+pose.land*.2,-.82]]]);
+  lines(kickEffectSegments(s));
   c.restore();
  }
  dispose(){this.backdropCanvas=null;this.backdropArena=null;}
