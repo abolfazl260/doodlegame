@@ -93,3 +93,30 @@ test("a lost Run encounter can be retried; a reload during combat restarts the s
  await page.evaluate(()=>window.__runFixture.win());
  expect((await getView(page)).progression.totalWins).toBe(1);
 });
+
+test("Android Back saves a retryable wave and an unfinished reward can reenter intermission",async({page})=>{
+ await page.locator(".game-ui__run-new").tap();
+ await page.evaluate(()=>window.__runFixture.back());
+ let view=await getView(page);
+ expect(await status(page)).toBe("MENU");
+ expect(view.inRun).toBe(false);
+ expect(view.progression.run.status).toBe("ready");
+ await page.locator(".game-ui__run-continue").tap();
+ expect(await status(page)).toBe("PLAYING");
+ await page.evaluate(()=>window.__runFixture.win());
+ view=await getView(page);
+ expect(view.progression.run.status).toBe("victory");
+ await page.evaluate(()=>window.__runFixture.back());
+ expect(await status(page)).toBe("MENU");
+ await expect(page.locator(".game-ui__run-continue")).toBeEnabled();
+ await page.locator(".game-ui__run-continue").tap();
+ view=await getView(page);
+ expect(view.inRun).toBe(true);
+ expect(view.progression.run.status).toBe("victory");
+ await expect(page.locator(".game-ui__run-continue")).toBeDisabled();
+ const choice=view.progression.choices[0];
+ await page.locator(".game-ui__upgrade-choices select").selectOption(choice);
+ await page.locator(".game-ui__upgrade-choices button").tap();
+ await page.locator(".game-ui__run-continue").tap();
+ expect((await getView(page)).progression.run.stage).toBe(2);
+});
