@@ -166,3 +166,49 @@ test("compact 568×260 landscape keeps all four touch controls and Pause separat
  }
  await expect(page.locator(".game-ui__p2-weapons button")).toHaveCount(2);
 });
+
+test("Down + ATTACK activates straight, timed follow-up spins, and P2 keyboard can kick",async({page})=>{
+ await page.evaluate(()=>window.__runFixture.startPvP());
+ await page.keyboard.down("s");
+ await page.keyboard.down("z");
+ await page.evaluate(()=>window.__runFixture.tickPvP(1));
+ expect((await snapshot(page)).player.kickKind).toBe("straight");
+ await page.keyboard.up("z");
+ await page.evaluate(()=>window.__runFixture.tickPvP(25));
+ await page.keyboard.down("z");
+ await page.evaluate(()=>window.__runFixture.tickPvP(1));
+ expect((await snapshot(page)).player.kickKind).toBe("spin");
+ await page.keyboard.up("z");
+ await page.keyboard.up("s");
+ await page.keyboard.down("ArrowDown");
+ await page.keyboard.down("Enter");
+ await page.evaluate(()=>window.__runFixture.tickPvP(1));
+ expect((await snapshot(page)).opponent.kickKind).toBe("straight");
+ await page.keyboard.up("Enter");
+ await page.keyboard.up("ArrowDown");
+});
+
+test("two independent mobile Down joysticks + ATTACK simultaneously initiate the kick",async({page})=>{
+ await page.evaluate(()=>window.__runFixture.startPvP());
+ const p1=await center(page.locator(".game-ui__joystick"));
+ const p2=await center(page.locator(".game-ui__p2-joystick"));
+ const a1=await center(page.locator(".game-ui__mobile-button--attack"));
+ const a2=await center(page.locator(".game-ui__p2-attack"));
+ const points=[{id:51,x:p1.x,y:p1.y+26},{id:52,x:p2.x,y:p2.y+26},
+  {id:53,x:a1.x,y:a1.y},{id:54,x:a2.x,y:a2.y}];
+ const client=await page.context().newCDPSession(page);
+ try{
+  for(let i=1;i<=4;i++)await touch(client,"touchStart",points.slice(0,i));
+  const before=await snapshot(page);
+  expect(before.p1Input.moveY).toBeGreaterThan(.55);
+  expect(before.p2Input.moveY).toBeGreaterThan(.55);
+  await page.evaluate(()=>window.__runFixture.tickPvP(1));
+  const during=await snapshot(page);
+  expect(during.player.kickKind).toBe("straight");
+  expect(during.opponent.kickKind).toBe("straight");
+  await touch(client,"touchCancel",[]);
+  const after=await snapshot(page);
+  expect(after.p1Input.moveY).toBe(0);
+  expect(after.p2Input.moveY).toBe(0);
+ }finally{await client.detach();}
+});
