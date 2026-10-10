@@ -131,6 +131,12 @@ try{
   touchAttackStart:()=>input.touchAttack(true),
   touchAttackEnd:()=>input.touchAttackRelease(),
   touchAttackCancel:()=>{input.touchAttackCancel();game.cancelTouchAttack();},
+  setPlayer2TouchMove:(x,y)=>input.setPlayer2TouchMove(x,y),
+  player2AttackStart:()=>input.player2TouchAttackStart(),
+  player2AttackEnd:()=>input.player2TouchAttackRelease(),
+  player2AttackCancel:()=>input.player2TouchAttackCancel(),
+  player2WeaponPrevious:()=>game.selectPlayer2Weapon(-1),
+  player2WeaponNext:()=>game.selectPlayer2Weapon(1),
   updateData:async()=>{
    // Update only compatible content; APK/bundled application code stays untouched.
    const latest=await downloadLatestGameData();
