@@ -17,7 +17,8 @@ function rng(seed:number){
  return ()=>{n=(Math.imul(n,1664525)+1013904223)>>>0;return n/4294967296;};
 }
 function gradient(c:Brush,y0:number,y1:number,stops:readonly [number,string][]){
- const g=c.createLinearGradient(0,y0,0,y1);
+ const g=c.createLinearGradient?.(0,y0,0,y1);
+ if(!g)return stops[0][1];
  for(const [offset,color] of stops)g.addColorStop(offset,color);
  return g;
 }
