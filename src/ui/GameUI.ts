@@ -737,7 +737,7 @@ export class GameUI{
    this.setHidden(this.upgradePanel,onArena||s.mode==="local-pvp"||!active||
     (s.upgradePoints===0&&s.upgradedWeapons.length===0));
    this.setHidden(this.menuProgressDetails,!active||onArena||
-    (this.runPanel.hidden&&this.upgradePanel.hidden));
+    Boolean(this.runPanel.hidden&&this.upgradePanel.hidden));
    // Preserve instant access to earned rewards and an in-progress Run.
    // Other players can expand this optional section on demand.
    if(this.lastView?.state!==state&&s.inRun&&active)this.menuProgressDetails.open=true;
@@ -1126,7 +1126,7 @@ export class GameUI{
   const actionLabels:Readonly<Record<UiAction,string>>={start:messages.buttons.start,pause:messages.buttons.pause,resume:messages.buttons.resume,restart:messages.buttons.restart,menu:messages.buttons.menu};
   for(const item of this.buttons.children){
    const button=item as HTMLButtonElement,action=button.dataset.action;
-   if(action in actionLabels)this.setText(button,actionLabels[action as UiAction]);
+   if(action&&action in actionLabels)this.setText(button,actionLabels[action as UiAction]);
   }
   // The wizard's navigation buttons are not gameplay actions: never overwrite
   // their labels with undefined when locale changes.
