@@ -12,6 +12,7 @@ const canvas=document.querySelector<HTMLCanvasElement>("#game-canvas")!;
 const root=document.querySelector<HTMLElement>("#ui-root")!;
 const storage=new WebStorage();
 const input=new WebInput(canvas);
+input.start();
 const session=new GameSession(input);
 const progression=new Progression(storage);
 const i18n=new I18n(storage);
