@@ -32,7 +32,7 @@ export class Game{
  selectWeaponById(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectWeaponById(id);}
  upgradeWeapon(id:import("../input/Input").WeaponId){
   this.ready();const state=this.state.getState();
-  if(state===GameState.PLAYING||state===GameState.PAUSED)return false;
+  if(state===GameState.PLAYING||state===GameState.PAUSED||this.session.getMode()==="local-pvp")return false;
   if(this.inRun&&this.progression){
    const view=this.progression.getView();
    if((state!==GameState.GAME_OVER&&state!==GameState.MENU)||view.run?.status!=="victory"||!view.choices.includes(id))return false;
