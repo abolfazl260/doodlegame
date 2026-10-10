@@ -246,3 +246,93 @@ test("mobile pause button has an accessible name, pauses once, and is not active
  assert.equal(calls.filter(([name])=>name==="pause").length,1);
  ui.dispose();
 });
+
+
+test("ATTACK owns only the first active pointer for automatic, Bow and tap weapons",()=>{
+ for(const weapon of ["uzi","bow","blade"]){
+  const {ui,calls}=setup(weapon);
+  ui.mobileAttackButton.emit("pointerdown",{pointerId:21});
+  ui.mobileAttackButton.emit("pointerdown",{pointerId:22});
+  ui.mobileAttackButton.emit("pointerup",{pointerId:22});
+  ui.mobileAttackButton.emit("pointercancel",{pointerId:22});
+  ui.mobileAttackButton.emit("lostpointercapture",{pointerId:22});
+  assert.equal(ui.mobileAttackButton.hasPointerCapture(21),true,weapon+" owner remains captured");
+  assert.deepEqual(calls.filter(([name])=>["start","end","cancel"].includes(name)).map(([name])=>name),
+   ["start"],weapon+" ignores unrelated touches");
+  ui.mobileAttackButton.emit("pointerup",{pointerId:21});
+  ui.mobileAttackButton.emit("lostpointercapture",{pointerId:21});
+  ui.mobileAttackButton.emit("pointercancel",{pointerId:21});
+  assert.deepEqual(calls.filter(([name])=>["start","end","cancel"].includes(name)).map(([name])=>name),
+   ["start","end"],weapon+" releases only once");
+  ui.dispose();
+ }
+});
+
+test("owner cancellation and capture loss cannot fire phantom attacks or leave a held pointer",()=>{
+ for(const kind of ["pointercancel","lostpointercapture"]){
+  const {ui,calls}=setup("bow");
+  ui.mobileAttackButton.emit("pointerdown",{pointerId:51});
+  ui.mobileAttackButton.emit("pointerdown",{pointerId:52});
+  ui.mobileAttackButton.emit(kind,{pointerId:51});
+  ui.mobileAttackButton.emit("pointerup",{pointerId:51});
+  ui.mobileAttackButton.emit("pointerup",{pointerId:52});
+  assert.deepEqual(calls.filter(([name])=>["start","end","cancel"].includes(name)).map(([name])=>name),
+   ["start","cancel"],kind+" cancels once and does not fire");
+  ui.mobileAttackButton.emit("pointerdown",{pointerId:53});
+  ui.mobileAttackButton.emit("pointerup",{pointerId:53});
+  assert.deepEqual(calls.filter(([name])=>["start","end","cancel"].includes(name)).map(([name])=>name),
+   ["start","cancel","start","end"],"next legitimate tap works");
+  ui.dispose();
+ }
+});
+
+test("weapon switching cancels an owned held attack without cancelling joystick movement",()=>{
+ const {ui,hud,calls}=setup("uzi");
+ ui.joystick.emit("pointerdown",{pointerId:11,clientX:82,clientY:48});
+ ui.mobileAttackButton.emit("pointerdown",{pointerId:12});
+ assert.equal(ui.mobileAttackButton.hasPointerCapture(12),true);
+ hud.weapon="bow";
+ ui.render(states.PLAYING,hud);
+ assert.equal(ui.mobileAttackButton.hasPointerCapture(12),false);
+ assert.equal(calls.filter(([name])=>name==="cancel").length,1);
+ assert.equal(calls.some(([name,x])=>name==="move"&&x>0),true);
+ assert.equal(ui.joystick.hasPointerCapture(11),true,"movement pointer must keep ownership");
+ ui.mobileAttackButton.emit("pointerup",{pointerId:12});
+ assert.equal(calls.some(([name])=>name==="end"),false);
+ ui.mobileAttackButton.emit("pointerdown",{pointerId:13});
+ ui.mobileAttackButton.emit("pointerup",{pointerId:13});
+ assert.equal(calls.filter(([name])=>name==="end").length,1);
+ ui.joystick.emit("pointerup",{pointerId:11});
+ ui.dispose();
+});
+
+test("an invalid pointer capture cannot arm an attack",()=>{
+ const {ui,calls}=setup("uzi");
+ const capture=ui.mobileAttackButton.setPointerCapture;
+ ui.mobileAttackButton.setPointerCapture=()=>{throw new Error("stale pointer");};
+ ui.mobileAttackButton.emit("pointerdown",{pointerId:91});
+ ui.mobileAttackButton.emit("pointerup",{pointerId:91});
+ assert.deepEqual(calls.filter(([name])=>["start","end","cancel"].includes(name)),[]);
+ ui.mobileAttackButton.setPointerCapture=capture;
+ ui.mobileAttackButton.emit("pointerdown",{pointerId:92});
+ ui.mobileAttackButton.emit("pointerup",{pointerId:92});
+ assert.deepEqual(calls.filter(([name])=>["start","end","cancel"].includes(name)).map(([name])=>name),["start","end"]);
+ ui.dispose();
+});
+
+test("WebInput marks touch cancellation without disturbing a separate held attack",()=>{
+ const input=new WebInput({});
+ input.touchAttack(true);
+ input.touchAttackCancel();
+ assert.equal(input.getState().attackPressed,false);
+ assert.equal(input.getState().pointerReleased,false);
+ assert.equal(input.getState().attackHeld,false);
+ assert.equal(input.getState().attackCancelled,true);
+ input.touchAttack(true);
+ assert.equal(input.getState().attackCancelled,false);
+ input.touchAttackRelease();
+ assert.equal(input.getState().attackHeld,false);
+ assert.equal(input.getState().attackCancelled,false);
+ assert.equal(input.getState().pointerReleased,true);
+ input.dispose();
+});
