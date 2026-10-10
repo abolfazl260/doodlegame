@@ -244,3 +244,33 @@ test("Run intermission exposes reward tiles and next fight together without show
  await page.locator(".game-ui__upgrade-choices > button").tap();
  await expect(page.locator(".game-ui__run-continue")).toBeEnabled();
 });
+
+test("direct map shortcut exposes all sixteen selectable maps and the chosen arena starts the match",async({page})=>{
+ const shortcut=page.locator(".game-ui__arena-shortcut");
+ await expect(shortcut).toBeVisible();
+ await expect(shortcut).toContainText("کلاسیک");
+ await shortcut.tap();
+ const maps=page.locator(".game-ui__arena-card");
+ const ids=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge",
+ "crater","vertical","ruins","conveyor","collapse","storm","reactor"];
+ await expect(maps).toHaveCount(ids.length);
+ for(const id of ids){
+  const card=page.locator(`.game-ui__arena-card[data-arena="${id}"]`);
+  await card.tap();
+  await expect(card).toHaveAttribute("aria-pressed","true");
+  expect((await page.evaluate(()=>window.__runFixture.view())).arena).toBe(id);
+ }
+ await expect(page.locator(".game-ui__arena-selection-summary")).toContainText("راکتور");
+ await page.locator('button[data-action="back"]').tap();
+ await expect(shortcut).toContainText("راکتور");
+ await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
+ await shortcut.tap();
+ await expect(maps).toHaveCount(16);
+ await page.locator('.game-ui__arena-card[data-arena="sky"]').tap();
+ await expect(page.locator('.game-ui__arena-card[data-arena="sky"]')).toHaveAttribute("aria-pressed","true");
+ expect((await page.evaluate(()=>window.__runFixture.view())).arena).toBe("sky");
+ await page.locator('button[data-action="start"]').tap();
+ const state=await page.evaluate(()=>window.__runFixture.pvpSnapshot());
+ expect(state.arena).toBe("sky");
+ expect(state.mode).toBe("local-pvp");
+});
