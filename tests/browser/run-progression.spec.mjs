@@ -91,6 +91,7 @@ test("a lost Run encounter can be retried; a reload during combat restarts the s
  progress=await getView(page);
  expect(progress.progression.run.status).toBe("ready");
  expect(progress.progression.run.stage).toBe(1);
+ await page.locator(".game-ui__menu-progress-details > summary").tap();
  await page.locator(".game-ui__run-continue").tap();
  await page.evaluate(()=>window.__runFixture.win());
  expect((await getView(page)).progression.totalWins).toBe(1);
