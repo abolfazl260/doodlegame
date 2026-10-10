@@ -87,9 +87,10 @@ try{
  const startGame=()=>{
   if(landscape?.isPortrait())return;
   landscape?.requestLandscape();
+  input.resetTransientState();
   game.start();
  };
- const restartGame=()=>{if(!landscape?.isPortrait())game.restart();};
+ const restartGame=()=>{if(landscape?.isPortrait())return;input.resetTransientState();game.restart();};
  const disposeWebVisibility=installWebVisibilityLifecycle(document,()=>{
   if(game.getState()===GameState.PLAYING)pauseGame();
  });
@@ -112,9 +113,9 @@ try{
   pause:pauseGame,
   resume:resumeGame,
   restart:restartGame,
-  newRun:()=>{if(!landscape?.isPortrait())game.newRun();},
-  continueRun:()=>{if(!landscape?.isPortrait())game.continueRun();},
-  leaveRun:()=>game.leaveRun(),
+  newRun:()=>{if(!landscape?.isPortrait()){input.resetTransientState();game.newRun();}},
+  continueRun:()=>{if(!landscape?.isPortrait()){input.resetTransientState();game.continueRun();}},
+  leaveRun:()=>{input.resetTransientState();game.leaveRun();},
   weaponNext:()=>game.selectWeapon(1),
   weaponPrevious:()=>game.selectWeapon(-1),
   weaponSelect:(id)=>game.selectWeaponById(id),
