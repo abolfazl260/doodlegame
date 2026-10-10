@@ -138,3 +138,30 @@ test("Canvas and Three.js share distinct finite straight/roundhouse poses and sw
  assert.deepEqual(kickEffectSegments({...spin,kickElapsed:0}),[]);
  for(const pose of [a,b])assert.ok(pose.joints.flat(2).every(Number.isFinite));
 });
+
+test("holding Down + ATTACK with UZI cannot auto-fire after the kick recovery",()=>{
+ const {game,input}=fixture();
+ game.selectWeaponById("uzi");
+ kick(input);
+ tick(game,130);
+ assert.equal(game.projectiles.length,0,"no bullets or accidental projectiles from a held kick");
+ assert.equal(game.player.kickKind,null);
+ input.state.moveY=0;input.state.attackHeld=true;
+ const before=game.cueSequence;
+ tick(game,35);
+ assert.ok(game.cueSequence>before,"returning the joystick to neutral restores UZI auto-fire");
+});
+test("missile touch release becomes a kick only when Down is intentionally selected",()=>{
+ const {game,input}=fixture();
+ game.setMode("missile-duel");
+ game.player.x=-6;game.opponent.x=-5;game.player.y=game.opponent.y=1.15;
+ input.state.moveY=1;
+ game.fireWeapon();
+ assert.equal(game.player.kickKind,"straight");
+ assert.equal(game.projectiles.length,0);
+ game.reset(false);
+ input.state.moveY=0;
+ game.fireWeapon();
+ assert.equal(game.player.kickKind,null);
+ assert.equal(game.projectiles.filter(p=>p.weapon==="missile").length,1);
+});
