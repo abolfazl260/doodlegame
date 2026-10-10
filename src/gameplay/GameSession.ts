@@ -137,6 +137,13 @@ const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:numb
 };
 const ORDER:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
 export class GameSession{
+ private runStage:1|2|3|4|null=null;
+ private readonly runEncounters=[
+  {arena:"classic",enemy:"runner",health:100},
+  {arena:"towers",enemy:"tank",health:115},
+  {arena:"moving",enemy:"shooter",health:130},
+  {arena:"ruins",enemy:"boss",health:175}
+ ] as const;
  private arenaId:ArenaId="classic";private modeId:GameModeId="duel";private startingWeapon:WeaponId="blade";
  private liveData:LiveGameData|null=null;private weaponStats:typeof WEAPONS=WEAPONS;
  private missileAngle=45;private missilePower=13;private hillPlayer=0;private hillOpponent=0;
@@ -174,6 +181,19 @@ export class GameSession{
  setMode(id:GameModeId){this.modeId=id;this.reset(false);}
  getArena(){return this.arena;}
  getMode(){return this.modeId;}
+ getUpgradeSnapshot(){return{points:this.upgradePoints,upgradedWeapons:[...this.upgradedWeapons]};}
+ setUpgradeSnapshot(snapshot:{points:number;upgradedWeapons:readonly WeaponId[]}){
+  this.upgradePoints=Math.max(0,Math.min(4,Math.floor(snapshot.points)));
+  this.upgradedWeapons.clear();
+  for(const id of snapshot.upgradedWeapons)if(ORDER.includes(id))this.upgradedWeapons.add(id);
+ }
+ startRunEncounter(stage:1|2|3|4){
+  this.runStage=stage;
+  this.arenaId=this.runEncounters[stage-1].arena;
+  this.modeId="duel";
+  this.reset(false);
+ }
+ leaveRun(){this.runStage=null;}
  setStartingWeapon(id:WeaponId){
   if(this.modeId==="random-weapons"||!this.availableWeapons().includes(id))return false;
   if(id!=="missile")this.startingWeapon=id;
@@ -186,7 +206,7 @@ export class GameSession{
  cancelTouchAttack(){this.player.bowCharging=false;this.player.bowCharge=0;}
  getMissileAim(){return{angle:this.missileAngle,power:this.missilePower};}
  upgradeWeapon(id:WeaponId){if(this.upgradePoints<=0||this.upgradedWeapons.has(id))return false;this.upgradedWeapons.add(id);this.upgradePoints--;return true;}
- reset(advanceEnemy=true){this.combatCues=[];this.visualFreezeUntil=0;this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];this.debris=[];if(advanceEnemy)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,types[enemyIndex]);if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER.filter(id=>id!=="missile");this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(this.modeId!=="random-weapons"&&!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;this.projectiles=[];this.resetEnvironment();this.enemyBrain=this.freshEnemyBrain();this.enemyBrain.lastX=this.opponent.x;this.winner=null;}
+ reset(advanceEnemy=true){this.combatCues=[];this.visualFreezeUntil=0;this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];this.debris=[];if(advanceEnemy)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,this.runStage?this.runEncounters[this.runStage-1].enemy:types[enemyIndex]);if(this.runStage){const hp=this.runEncounters[this.runStage-1].health;this.opponent.health=hp;this.opponent.maxHealth=hp;}if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER.filter(id=>id!=="missile");this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(this.modeId!=="random-weapons"&&!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;this.projectiles=[];this.resetEnvironment();this.enemyBrain=this.freshEnemyBrain();this.enemyBrain.lastX=this.opponent.x;this.winner=null;}
  private availableWeapons():WeaponId[]{if(this.missileRules)return["missile"];if(this.modeId==="melee-only")return["blade","hammer"];if(this.modeId==="random-weapons")return[this.player.weapon];return ORDER.filter(id=>id!=="missile");}
  selectWeapon(direction:1|-1){if(this.modeId==="random-weapons")return;const available=this.availableWeapons();const i=Math.max(0,available.indexOf(this.player.weapon));this.player.weapon=available[(i+direction+available.length)%available.length];this.player.bowCharging=false;this.player.bowCharge=0;}
  selectWeaponById(id:WeaponId){if(this.modeId==="random-weapons")return;const available=this.availableWeapons();if(!available.includes(id))return;this.player.weapon=id;this.player.bowCharging=false;this.player.bowCharge=0;}
