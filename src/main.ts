@@ -181,6 +181,10 @@ try{
   if(event.repeat)return;
   const state=game.getState();
   if(event.code==="Enter"&&state===GameState.MENU){
+   // Native Enter should activate the focused choice, not bypass setup.
+   const target=event.target as HTMLElement|null;
+   if(target?.closest("button,a,input,select,summary,[role='button']"))return;
+   if(!ui.canStartMatch())return;
    event.preventDefault();
    startGame();
    return;
