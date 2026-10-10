@@ -71,6 +71,8 @@ export class OpeningIntro{
   window.addEventListener("keydown",this.handleKeyDown,true);
   window.addEventListener("resize",this.resize);
   document.addEventListener("visibilitychange",this.handleVisibility);
+  this.canvas.addEventListener("contextlost",this.handleContextLost);
+  this.canvas.addEventListener("contextrestored",this.handleContextRestored);
   this.resize();
   if(restoring){
    this.finish(false);
@@ -95,12 +97,28 @@ export class OpeningIntro{
   }
  };
 
+ private readonly handleContextLost=(event:Event)=>{
+  // Browsers may reclaim a mobile canvas surface in the background.
+  event.preventDefault();
+  this.cancelFrame();
+  this.context=null;
+ };
+ private readonly handleContextRestored=()=>{
+  if(!this.active)return;
+  this.context=this.canvas.getContext("2d");
+  if(!this.context)return;
+  this.lastTime=0;
+  this.lastDrawTime=0;
+  this.resize();
+  this.draw();
+  this.scheduleFrame();
+ };
  private cancelFrame(){
   if(this.frameId!==null)window.cancelAnimationFrame(this.frameId);
   this.frameId=null;
  }
  private scheduleFrame(){
-  if(!this.active||document.hidden||this.frameId!==null||(this.ambient&&this.reducedMotion))return;
+  if(!this.active||!this.context||document.hidden||this.frameId!==null||(this.ambient&&this.reducedMotion))return;
   this.frameId=window.requestAnimationFrame(this.tick);
  }
  private readonly handleVisibility=()=>{
@@ -348,6 +366,8 @@ export class OpeningIntro{
   window.removeEventListener("keydown",this.handleKeyDown,true);
   window.removeEventListener("resize",this.resize);
   document.removeEventListener("visibilitychange",this.handleVisibility);
+  this.canvas.removeEventListener("contextlost",this.handleContextLost);
+  this.canvas.removeEventListener("contextrestored",this.handleContextRestored);
   this.overlay.remove();
   this.menuRoot.inert=false;
   this.menuRoot.classList.remove("game-ui-intro-pending");
