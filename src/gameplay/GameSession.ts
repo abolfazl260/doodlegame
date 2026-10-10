@@ -660,6 +660,9 @@ export class GameSession{
   if(a.kickKind)return;
   const wantsKick=input.attackPressed&&input.moveY>=KICK_DOWN_THRESHOLD&&a.grounded&&!a.bowCharging;
   if(wantsKick){this.startKick(a);return;}
+  // A held contextual input may not turn into automatic UZI fire after the
+  // kick recovery ends. The player must release ATTACK and press again.
+  if(input.moveY>=KICK_DOWN_THRESHOLD&&input.attackHeld&&!a.bowCharging)return;
   if(a.weapon==="bow")this.updateBowFor(a,input,dt);
   else{
    const stats=this.weaponStats[a.weapon];
