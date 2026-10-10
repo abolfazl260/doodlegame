@@ -93,10 +93,10 @@ function setup(hudOverride={}){
  return {ui,calls,hud,container};
 }
 
-test("menu uses localized native selectors for all 16 arenas and 7 modes",()=>{
+test("menu uses localized native selectors for all 16 arenas and 8 modes",()=>{
  const {ui,calls}=setup();
  assert.equal(ui.arenaSelect.options.length,16);
- assert.equal(ui.modeSelect.options.length,7);
+ assert.equal(ui.modeSelect.options.length,8);
  assert.equal(ui.startingWeaponSelect.options.length,8);
  assert.equal(ui.arenaSelect.value,"classic");
  assert.equal(ui.modeSelect.value,"duel");
