@@ -47,6 +47,7 @@ test("complete three encounters and a boss with one upgrade choice after each wi
  await page.locator(".game-ui__run-leave").tap();
  expect(await status(page)).toBe("MENU");
  expect((await getView(page)).inRun).toBe(false);
+ await page.locator('button[data-action="next"]').tap();
  await page.locator('button[data-action="start"]').tap();
  expect(await status(page)).toBe("PLAYING");
  expect((await getView(page)).inRun).toBe(false);
