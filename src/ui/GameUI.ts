@@ -737,7 +737,7 @@ export class GameUI{
       if(option.disabled!==disabled)option.disabled=disabled;
      }
     }
-    const disabled=s.upgradePoints<=0||available.length===0||
+    const disabled=s.mode==="local-pvp"||s.upgradePoints<=0||available.length===0||
      (Boolean(s.inRun)&&!runIntermission);
     this.upgradeSelect.disabled=disabled;
     this.upgradeButton.disabled=disabled;
@@ -779,7 +779,7 @@ export class GameUI{
      this.runPanel.dataset.medal=s.progression!.medals.at(-1)??"none";
     }
    }
-   this.setHidden(this.upgradePanel,!((state===GameState.MENU||state===GameState.GAME_OVER)&&
+   this.setHidden(this.upgradePanel,s.mode==="local-pvp"||!((state===GameState.MENU||state===GameState.GAME_OVER)&&
     (s.upgradePoints>0||upgraded.size>0)));
    if(localeChanged||weaponChanged||secondWeaponChanged||modeChanged||arenaChanged||upgradesChanged){
     for(const item of this.weaponList.children){
