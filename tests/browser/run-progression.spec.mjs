@@ -32,7 +32,7 @@ test("complete three encounters and a boss with one upgrade choice after each wi
    await expect(page.locator(".game-ui__run-continue")).toBeDisabled();
    const selected=view.progression.choices[1];
    await page.locator(`.game-ui__upgrade-card[data-upgrade-weapon="${selected}"]`).tap();
-   await page.locator(".game-ui__upgrade-choices button").tap();
+   await page.locator(".game-ui__upgrade-choices > button").tap();
    const upgraded=await getView(page);
    expect(upgraded.progression.run.upgradedWeapons).toContain(selected);
    expect(upgraded.progression.run.points).toBe(0);
@@ -64,7 +64,7 @@ test("pending reward and purchased upgrades survive reload; English Run copy swi
  await expect(page.locator(".game-ui__run-continue")).toBeDisabled();
  const id=resumed.progression.choices[0];
  await page.locator(`.game-ui__upgrade-card[data-upgrade-weapon="${id}"]`).tap();
- await page.locator(".game-ui__upgrade-choices button").tap();
+ await page.locator(".game-ui__upgrade-choices > button").tap();
  await page.reload();
  await page.waitForFunction(()=>Boolean(window.__runFixture));
  const loaded=await getView(page);
@@ -117,7 +117,7 @@ test("Android Back saves a retryable wave and an unfinished reward can reenter i
  await expect(page.locator(".game-ui__run-continue")).toBeDisabled();
  const choice=view.progression.choices[0];
  await page.locator(`.game-ui__upgrade-card[data-upgrade-weapon="${choice}"]`).tap();
- await page.locator(".game-ui__upgrade-choices button").tap();
+ await page.locator(".game-ui__upgrade-choices > button").tap();
  await page.locator(".game-ui__run-continue").tap();
  expect((await getView(page)).progression.run.stage).toBe(2);
 });
