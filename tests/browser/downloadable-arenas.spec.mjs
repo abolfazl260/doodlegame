@@ -6,7 +6,7 @@ const raw="https://raw.githubusercontent.com/abolfazl260/doodlegame/main/public/
 async function mockGithub(page){
  await page.route(raw+"**",route=>{
   const relative=route.request().url().slice(raw.length);
-  if(!/^(catalog\.json|(?:forest|desert)\/(?:arena\.json|background\.svg))$/.test(relative))
+  if(!/^(catalog\.json|(?:forest|desert|glacier|volcano|neon-city)\/(?:arena\.json|background\.svg))$/.test(relative))
    return route.fulfill({status:404,body:"Not found"});
   const body=readFileSync(new URL("../../public/downloadable-arenas/"+relative,import.meta.url),"utf8");
   return route.fulfill({status:200,contentType:relative.endsWith(".svg")?"image/svg+xml":"application/json",headers:{"access-control-allow-origin":"*"},body});
@@ -27,7 +27,7 @@ test("players can download new GitHub arenas, choose them, and replay them offli
  await expect(extras).toBeVisible();
  await extras.locator(".game-ui__download-refresh").tap();
  const cards=extras.locator(".game-ui__download-card");
- await expect(cards).toHaveCount(2);
+ await expect(cards).toHaveCount(5);
  await cards.first().locator(".game-ui__download-install").tap();
  await expect(cards.first().locator(".game-ui__download-play")).toBeVisible();
  await cards.first().locator(".game-ui__download-play").tap();
@@ -45,6 +45,38 @@ test("players can download new GitHub arenas, choose them, and replay them offli
  await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
  await page.locator(".game-ui__download-delete").tap();
  await expect(page.locator(".game-ui__download-play")).toHaveCount(0);
+});
+
+test("three new landscapes can each be downloaded, selected and reused offline",async({page})=>{
+ await mockGithub(page);
+ await visitArenaStep(page);
+ await page.locator(".game-ui__download-refresh").tap();
+ await expect(page.locator(".game-ui__download-card")).toHaveCount(5);
+ const newlyAdded=[
+  {id:"extra-glacier",fa:"قله یخی"},
+  {id:"extra-volcano",fa:"آتشفشان سوزان"},
+  {id:"extra-neon-city",fa:"بام‌های نئونی"}
+ ];
+ for(const item of newlyAdded){
+  const card=page.locator(".game-ui__download-card").filter({hasText:item.fa});
+  await card.locator(".game-ui__download-install").tap();
+  await expect(card.locator(".game-ui__download-play")).toBeVisible();
+  await expect(card.locator(".game-ui__download-preview")).toHaveCSS("background-image",/data:image\/svg\+xml/);
+  await card.locator(".game-ui__download-play").tap();
+  await expect(page.locator(".game-ui__arena-selection-summary")).toContainText(item.fa);
+  expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe(item.id);
+ }
+ await page.unrouteAll();
+ await page.route(raw+"**",route=>route.abort());
+ await page.reload();
+ await page.waitForFunction(()=>Boolean(window.__runFixture));
+ await page.locator('button[data-action="next"]').tap();
+ await expect(page.locator(".game-ui__download-play")).toHaveCount(3);
+ const offlineCard=page.locator(".game-ui__download-card").filter({hasText:"بام‌های نئونی"});
+ await offlineCard.locator(".game-ui__download-play").tap();
+ await page.locator('button[data-action="start"]').tap();
+ expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe("extra-neon-city");
+ await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
 });
 
 test("failed catalog request never blocks the original sixteen offline arenas",async({page})=>{
