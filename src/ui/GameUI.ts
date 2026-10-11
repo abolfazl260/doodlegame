@@ -985,6 +985,14 @@ export class GameUI{
     if(document.activeElement!==this.secondNameInput&&this.secondNameInput.value!==(s.secondPlayerName??""))
      this.secondNameInput.value=s.secondPlayerName??"";
    }
+   if(localeChanged||modeChanged||stateChanged){
+    // UI captions refer to world positions, not RTL reading order.
+    // The existing name-to-fighter and health-to-fighter mapping is unchanged.
+    this.setText(this.playerNameCaption,s.mode==="local-pvp"?
+     messages.characterNames.leftPlayer:messages.characterNames.playerOne);
+    this.setText(this.secondNameCaption,s.mode==="local-pvp"?
+     messages.characterNames.rightPlayer:messages.characterNames.playerTwo);
+   }
    if(nameChanged||localeChanged||modeChanged||stateChanged){
     this.setText(this.playerHealthName,s.playerName||messages.characterNames.playerOne);
     this.setText(this.opponentHealthName,s.mode==="local-pvp"?(s.secondPlayerName||messages.characterNames.playerTwo):messages.characterNames.opponent);
