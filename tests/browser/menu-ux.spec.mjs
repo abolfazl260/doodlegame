@@ -8,6 +8,18 @@ test.beforeEach(async({page})=>{
  await expect(page.locator(".game-ui.menu")).toBeVisible();
 });
 
+async function holdToPause(page){
+ const button=page.locator(".game-ui__mobile-pause");
+ const bounds=await button.boundingBox();
+ expect(bounds).not.toBeNull();
+ const x=bounds.x+bounds.width/2,y=bounds.y+bounds.height/2;
+ // Mouse pointer events exercise the same hold logic as touch on the emulator.
+ await page.mouse.move(x,y);
+ await page.mouse.down();
+ await page.waitForTimeout(2100);
+ await page.mouse.up();
+}
+
 test("missile duel has no center slider panel and still shows angle and power",async({page})=>{
  await page.locator('.game-ui__mode-card[data-mode="missile-duel"]').tap();
  await page.locator('button[data-action="next"]').tap();
@@ -101,6 +113,23 @@ test("short landscape wizard keeps NEXT and START hittable while arena gallery s
  expect(await page.evaluate(()=>window.__runFixture.state())).toBe("PLAYING");
 });
 
+test("centered translucent pause ignores a short touch and opens after a two-second hold",async({page})=>{
+ await page.locator('button[data-action="next"]').tap();
+ await page.locator('button[data-action="start"]').tap();
+ const button=page.locator(".game-ui__mobile-pause");
+ await expect(button).toBeVisible();
+ const bounds=await button.boundingBox();
+ expect(Math.abs(bounds.x+bounds.width/2-page.viewportSize().width/2)).toBeLessThan(2);
+ expect(bounds.width).toBeLessThanOrEqual(42);
+ const opacity=await button.evaluate(el=>Number(getComputedStyle(el).opacity));
+ expect(opacity).toBeLessThan(.6);
+ await button.tap();
+ expect(await page.evaluate(()=>window.__runFixture.state())).toBe("PLAYING");
+ await holdToPause(page);
+ expect(await page.evaluate(()=>window.__runFixture.state())).toBe("PAUSED");
+ await expect(button).toBeHidden();
+});
+
 test("pause shows Resume without match setup and Run remains reachable from the main menu",async({page})=>{
  const run=page.locator(".game-ui__run-panel");
  await expect(run).not.toBeVisible();
@@ -109,7 +138,7 @@ test("pause shows Resume without match setup and Run remains reachable from the 
  await expect(run.locator(".game-ui__run-new")).toBeVisible();
  await page.locator('button[data-action="next"]').tap();
  await page.locator('button[data-action="start"]').tap();
- await page.locator(".game-ui__mobile-pause").tap();
+ await holdToPause(page);
  await expect(page.locator(".game-ui__menu-setup")).toBeHidden();
  await expect(page.locator('button[data-action="resume"]')).toBeVisible();
  await page.locator('button[data-action="menu"]').tap();
@@ -298,7 +327,7 @@ test("character names persist across launches and are used for both local fighte
  await page.locator('button[data-action="next"]').tap();
  await page.locator('button[data-action="start"]').tap();
  await expect(page.locator(".health-bar--player .health-label__name")).toHaveText("آرش");
- await page.locator(".game-ui__mobile-pause").tap();
+ await holdToPause(page);
  await page.locator('button[data-action="menu"]').tap();
  await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
  const second=page.locator(".game-ui__character-name-input").nth(1);
