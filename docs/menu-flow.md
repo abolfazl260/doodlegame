@@ -9,12 +9,13 @@ The main menu is **not a form**. It guides players through visual choices; there
 - Choose **Solo Player** or **Two Players (Local)** with one of the two large player-count cards.
 - Immediately below, choose a game mode from touch-friendly cards. Solo reveals seven existing modes; local 2P reveals its one supported mode (the opponent is a second human, never AI).
 - Changing player count updates the mode state while preserving the last solo selection when switching back from 2P. The selected card is visually distinct and exposes `aria-pressed`.
-- Choose **Next: Choose Arena** to advance. Starting a match is not possible from this screen.
+- Enter an optional **character name** for player 1. In **Two Players (Local)**, two independent name fields are shown immediately on this first screen; native keyboard input must never activate game hotkeys.
+- Choose **Next: Choose Arena** to advance (or **Next: All 16 Arenas** in local PvP). Starting a match is not possible from this screen.
 - Existing four-fight Run and its upgrade opportunities are accessible in a **collapsed Run & Upgrades drawer**. The drawer auto-expands for an ongoing Run on return from battle. The main wizard no longer buries Next behind Run content.
 
 ### Step 2 — Where do we fight?
 
-- Choose from **16 arena tiles**; each tile uses the arena's existing accent/secondary colors, a visible name and selected-state indicator.
+- Choose from **all 16 arena tiles in every mode, including local two-player mode**; each tile uses the arena's existing accent/secondary colors, a visible name and selected-state indicator.
 - Optionally expand **Starting Weapon** to choose a weapon using cards. Illegal mode/weapon combinations are hidden and disabled; the current weapon restrictions remain in the game logic.
 - View the live summary of mode, arena and weapon.
 - Use **Back** to change the player count or mode without clearing compatible settings; use **Start** to launch the chosen match.
