@@ -59,6 +59,7 @@ function getMessages(fa=false){
   status:{win:"WIN",lose:"LOSE",hill:"HILL"},
   details:{equipped:fa?"سلاح":"EQUIPPED",angle:"Angle",power:"Power"},
   sections:{gameMode:"MODE",arena:"ARENA",weapon:"WEAPON"},
+ characterNames:{playerOne:"PLAYER 1",playerTwo:"PLAYER 2",opponent:"OPPONENT",optional:"Optional name",wins:"WINS"},
   panels:{weaponUpgrades:"UPGRADES",missileControl:"MISSILE",bowDraw:"BOW",releaseToFire:"RELEASE"},
   upgrade:{points:"POINTS",choose:"Choose",earn:"Earn",upgraded:"Upgraded",upgrade:"Upgrade",locked:"Locked"},
   helpHtml:"",
