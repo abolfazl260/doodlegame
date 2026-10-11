@@ -1163,9 +1163,13 @@ export class GameUI{
    const status=s.winner?(s.winner==="player"?messages.status.win:messages.status.lose):
     s.mode==="king-of-hill"?messages.status.hill+"  "+s.hill.player.toFixed(1)+" — "+
      s.hill.opponent.toFixed(1)+" / "+s.hill.target.toFixed(0):messages.modes[s.mode];
-   const pvpResult=s.winner==="draw"?messages.pvp.draw:
-    s.winner==="player"?(s.playerName?s.playerName+" "+messages.characterNames.wins:messages.pvp.winner1):
-    s.secondPlayerName?s.secondPlayerName+" "+messages.characterNames.wins:messages.pvp.winner2;
+   // No winner while a match is active. Avoid evaluating result labels on every HUD update.
+   let pvpResult="";
+   if(s.winner==="draw")pvpResult=messages.pvp.draw;
+   else if(s.winner==="player")pvpResult=s.playerName?
+    s.playerName+" "+messages.characterNames.wins:messages.pvp.winner1;
+   else if(s.winner==="opponent")pvpResult=s.secondPlayerName?
+    s.secondPlayerName+" "+messages.characterNames.wins:messages.pvp.winner2;
    this.setText(this.status,s.mode==="local-pvp"&&s.winner?pvpResult:status);
    if(state===GameState.GAME_OVER)this.setText(this.menuResult,s.mode==="local-pvp"?pvpResult:status);
   }
