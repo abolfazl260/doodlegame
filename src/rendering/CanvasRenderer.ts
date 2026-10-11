@@ -34,9 +34,9 @@ export class CanvasRenderer implements Renderer{
      cache.width=this.canvas.width;
      cache.height=this.canvas.height;
      const cachedContext=cache.getContext("2d");
-     if(!cachedContext){paintArenaBackdrop(screen,this.width,this.height,theme);return;}
+     if(!cachedContext){paintArenaBackdrop(screen,this.width,this.height,theme,arena);return;}
      cachedContext.setTransform(this.dpr,0,0,this.dpr,0,0);
-     paintArenaBackdrop(cachedContext,this.width,this.height,theme);
+     paintArenaBackdrop(cachedContext,this.width,this.height,theme,arena);
      this.backdropArena=arena;
     }
     screen.drawImage(cache,0,0,this.width,this.height);
@@ -46,7 +46,7 @@ export class CanvasRenderer implements Renderer{
     this.backdropArena=null;
    }
   }
-  paintArenaBackdrop(screen,this.width,this.height,theme);
+  paintArenaBackdrop(screen,this.width,this.height,theme,arena);
  }
  private drawCombatCues(c:CanvasRenderingContext2D,state:GameRenderState,toX:(x:number)=>number,toY:(y:number)=>number,scale:number){
   for(const cue of state.combatCues){
