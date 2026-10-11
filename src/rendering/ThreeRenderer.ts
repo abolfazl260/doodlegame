@@ -1,13 +1,14 @@
 import {fighterVisual,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,grabEffectSegments} from './FighterVisual';
 import * as THREE from "three";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
+import {getDownloadedImage} from "../gameplay/DownloadableArenas.js";
 import type {Renderer} from "./Renderer";
 import type {GameRenderState,DuelistRenderState,EnvironmentRenderState} from "../gameplay/GameSession";
 import {WebGLContextLifecycle} from "./WebGLContextLifecycle";
 import {combatCameraFrame,type CombatCameraFrame} from "./CombatCamera.js";
 export class ThreeRenderer implements Renderer{
  private scene=new THREE.Scene();private camera=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);private renderer:THREE.WebGLRenderer;private contextLifecycle:WebGLContextLifecycle;
- private player=this.fighter(0xffffff,false);private opponent=this.fighter(0x555555,true);private platforms:THREE.Mesh[]=[];private platformEdges:THREE.Mesh[]=[];private themeArena:GameRenderState["arena"]|null=null;private themeTexture:THREE.CanvasTexture|null=null;private projectiles:THREE.Mesh[]=[];private missileTrails:THREE.Mesh[]=[];private missileFlashes:THREE.Mesh[]=[];
+ private player=this.fighter(0xffffff,false);private opponent=this.fighter(0x555555,true);private platforms:THREE.Mesh[]=[];private platformEdges:THREE.Mesh[]=[];private themeArena:GameRenderState["arena"]|null=null;private themeBackgroundImage:HTMLImageElement|undefined;private themeTexture:THREE.CanvasTexture|null=null;private projectiles:THREE.Mesh[]=[];private missileTrails:THREE.Mesh[]=[];private missileFlashes:THREE.Mesh[]=[];
  private projectileGeometry=new THREE.CircleGeometry(.09,10);private bowProjectiles:THREE.LineSegments[]=[];private explosionVisuals:THREE.Group[]=[];private combatVisuals:THREE.Group[]=[];private cameraFrame:CombatCameraFrame|null=null;private framedArena:GameRenderState["arena"]|null=null;private bombVisuals:THREE.Group[]=[];private platformMaterial=new THREE.MeshBasicMaterial({color:0x777777});private icePlatformMaterial=new THREE.MeshBasicMaterial({color:0x9a9a9a});private slipperyPlatformMaterial=new THREE.MeshBasicMaterial({color:0x858585});private oneWayPlatformMaterial=new THREE.MeshBasicMaterial({color:0x6f6f6f});private conveyorLeftPlatformMaterial=new THREE.MeshBasicMaterial({color:0x5a5a5a});private conveyorRightPlatformMaterial=new THREE.MeshBasicMaterial({color:0xaaaaaa});private environmentGroup=new THREE.Group();private environmentVisuals:THREE.Group[]=[];private debrisVisuals:THREE.Mesh[]=[];private environmentArena:GameRenderState["arena"]|null=null;private fortressGroup:THREE.Group;
  constructor(private readonly canvas:HTMLCanvasElement){this.fortressGroup=this.buildFortress();this.renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:"high-performance"});this.contextLifecycle=new WebGLContextLifecycle(canvas,()=>this.resize());this.renderer.setClearColor(0,1);this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));this.camera.position.z=20;for(const _ of [0,1,2,3,4,5,6,7]){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),this.platformMaterial);this.platforms.push(m);this.scene.add(m);const edge=new THREE.Mesh(new THREE.BoxGeometry(1,1,.02),new THREE.MeshBasicMaterial({color:0xffffff}));this.platformEdges.push(edge);this.scene.add(edge);}this.scene.add(this.player.group,this.opponent.group,this.fortressGroup,this.environmentGroup);this.resize();}
  private fighter(color:number,enemy:boolean){
@@ -130,8 +131,10 @@ export class ThreeRenderer implements Renderer{
  }
  resize(){if(!this.contextLifecycle.canRender())return;const w=Math.max(1,this.canvas.clientWidth),h=Math.max(1,this.canvas.clientHeight),a=w/h;this.renderer.setSize(w,h,false);const vh=this.cameraFrame?.height??10;this.camera.left=-a*vh/2;this.camera.right=a*vh/2;this.camera.top=vh/2;this.camera.bottom=-vh/2;this.camera.updateProjectionMatrix();}
  private applyArenaTheme(arena:GameRenderState["arena"]){
-  if(this.themeArena===arena)return;
+  const backgroundImage=getDownloadedImage(arena);
+  if(this.themeArena===arena&&this.themeBackgroundImage===backgroundImage)return;
   this.themeArena=arena;
+  this.themeBackgroundImage=backgroundImage;
   const t=getArenaTheme(arena);
   this.platformMaterial.color.set(t.platform);
   this.icePlatformMaterial.color.set(platformColors(t,"ice").body);
