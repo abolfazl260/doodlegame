@@ -51,6 +51,16 @@ adb shell cmd connectivity airplane-mode enable >/dev/null 2>&1 || true
 adb shell svc wifi disable >/dev/null 2>&1 || true
 adb shell svc data disable >/dev/null 2>&1 || true
 
+# On a freshly provisioned Android emulator, immersive fullscreen triggers a
+# one-time "Viewing full screen / Got it" system dialog. The dialog consumes
+# keyboard and touch events, so it must be dismissed before smoke navigation.
+echo "Confirming Android immersive mode before the first launch"
+adb shell settings put secure immersive_mode_confirmations confirmed
+if [[ "$(adb shell settings get secure immersive_mode_confirmations | tr -d '\r')" != "confirmed" ]]; then
+  echo "Could not suppress the Android immersive-mode confirmation." >&2
+  exit 1
+fi
+
 echo "Cold-starting offline $ACTIVITY"
 START_OUTPUT="$(adb shell am start -S -W -n "$ACTIVITY" | tr -d '\r')"
 printf '%s\n' "$START_OUTPUT"
@@ -85,15 +95,41 @@ wait_for_resumed
 sleep 2
 wait_for_resumed
 
-echo "Navigating both match setup steps using Enter"
-# Enter 1 skips the optional opening animation (or advances if it ended).
-# Enter 2 advances the player/mode step to all arenas (or starts if already
-# advanced). Enter 3 starts the match. In a solo match a fourth Enter is inert.
-for step in 1 2 3; do
-  adb shell input keyevent KEYCODE_ENTER
-  sleep 1
-done
+echo "Starting a match by tapping the actual touch controls"
+# Android adb KEYCODE_ENTER is not a reliable WebView click when no element
+# has keyboard focus. The first-run fullscreen dialog made this worse: previous
+# jobs remained on the intro / first wizard page after three Enter presses.
+# Read the screenshot dimensions rather than assuming a particular emulator DPI
+# or portrait device resolution (the app runs in landscape).
+read -r SCREEN_WIDTH SCREEN_HEIGHT < <(python3 -c '
+import struct
+with open("android-smoke-offline-menu.png","rb") as f:
+    header=f.read(24)
+assert header[:8] == b"\x89PNG\r\n\x1a\n"
+print(*struct.unpack(">II",header[16:24]))
+')
+if (( SCREEN_WIDTH <= SCREEN_HEIGHT )); then
+  echo "Expected a landscape screen before touch navigation: ${SCREEN_WIDTH}x${SCREEN_HEIGHT}" >&2
+  exit 1
+fi
+touch_fraction(){
+  local x_percent="$1" y_percent="$2"
+  adb shell input tap "$((SCREEN_WIDTH*x_percent/100))" "$((SCREEN_HEIGHT*y_percent/100))"
+}
+
+# Finish the optional opening sequence with its visible Skip control. If the
+# intro already ended, this is just a tap on the empty top-left background.
+touch_fraction 12 10
 sleep 2
+adb exec-out screencap -p > android-smoke-ready-menu.png
+
+# The wizard's sticky bottom button is visible at both steps on landscape
+# phones. Step 1: choose arena. Step 2: start a solo match.
+touch_fraction 50 92
+sleep 2
+adb exec-out screencap -p > android-smoke-arena-step.png
+touch_fraction 58 92
+sleep 3
 wait_for_resumed
 adb exec-out screencap -p > android-smoke-offline-match.png
 
