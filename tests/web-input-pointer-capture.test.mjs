@@ -188,3 +188,28 @@ test("blur and repeated pause/resume resets cannot release a charged bow",()=>{
   }finally{game.dispose();}
  });
 });
+
+test("text fields bypass all gameplay shortcuts so both local players can type names",()=>{
+ withInput(({input})=>{
+  input.setLocalPvPEnabled(true);
+  const editor={closest(){return {};}};
+  let cancelled=0;
+  for(const code of ["KeyA","KeyD","KeyW","KeyS","KeyJ","KeyL","KeyZ","KeyX","KeyQ","KeyE","Space","Enter","ArrowLeft","BracketLeft"]){
+   input.keyDown({code,target:editor,preventDefault(){cancelled++;}});
+   input.keyUp({code,target:editor});
+  }
+  assert.equal(cancelled,0,"text editor keystrokes must not be intercepted");
+  assert.equal(input.getState().moveX,0);
+  assert.equal(input.getState().attackPressed,false);
+  assert.equal(input.getState().weaponNextPressed,false);
+  assert.equal(input.getPlayer2State().moveX,0);
+  assert.equal(input.getPlayer2State().attackPressed,false);
+  assert.equal(input.getPlayer2State().weaponPreviousPressed,false);
+  // The same key remains a combat control when focus leaves the name input.
+  input.keyDown({code:"KeyA",target:null,preventDefault(){cancelled++;}});
+  assert.equal(input.getState().moveX,-1);
+  assert.equal(cancelled,1);
+  input.keyUp({code:"KeyA",target:null});
+  assert.equal(input.getState().moveX,0);
+ });
+});
