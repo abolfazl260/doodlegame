@@ -3,6 +3,7 @@ import {Game} from "./core/Game";
 import {GameState} from "./core/GameState";
 import {GameSession} from "./gameplay/GameSession";
 import {Progression} from "./progression/Progression";
+import {PlayerNames} from "./profile/PlayerNames";
 import type {GameRenderState} from "./gameplay/GameSession";
 import {CombatAudio} from "./audio/CombatAudio";
 import {Capacitor} from "@capacitor/core";
@@ -52,6 +53,7 @@ try{
  const storage=new WebStorage();
  const i18n=new I18n(storage);
  const progression=new Progression(storage);
+ const playerNames=new PlayerNames(storage);
  const reducedMotion=typeof window.matchMedia==="function"&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
  const readSetting=(key:string,defaultValue:boolean)=>{
   try{const value=storage.get<unknown>(key);return typeof value==="boolean"?value:defaultValue;}catch{return defaultValue;}
@@ -109,6 +111,7 @@ try{
   }
  });
 
+ const readHud=()=>({...game.getHudState(),playerName:playerNames.get(1),secondPlayerName:playerNames.get(2)});
  const ui=new GameUI(root,{
   start:startGame,
   pause:pauseGame,
@@ -125,6 +128,7 @@ try{
   upgradeWeapon:(id)=>game.upgradeWeapon(id),
   arenaSelect:(id:ArenaId)=>game.selectArena(id),
   modeSelect:(id:GameModeId)=>game.selectMode(id),
+  setCharacterName:(player,name)=>{playerNames.set(player,name);ui.render(game.getState(),readHud());},
   setMissileAngle:(angle)=>game.setMissileAngle(angle),
   setMissilePower:(power)=>game.setMissilePower(power),
   fireWeapon:()=>game.fireWeapon(),
@@ -164,7 +168,7 @@ try{
 
  ui.setCombatPreferences(soundEnabled,shakeEnabled);
  ui.setUpdateVisible(Capacitor.getPlatform()==="android");
- ui.bind(listener=>game.subscribe(listener),()=>game.getHudState());
+ ui.bind(listener=>game.subscribe(listener),readHud);
  input.start();
  game.initialize();
  const intro=new OpeningIntro(root,i18n.locale);
