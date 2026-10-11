@@ -59,7 +59,8 @@ test("mobile controls have no separate jump button or touchJump action",()=>{
  const css=readFileSync(new URL("../src/styles.css",import.meta.url),"utf8");
  const main=readFileSync(new URL("../src/main.ts",import.meta.url),"utf8");
  const input=readFileSync(new URL("../src/platform/web/WebInput.ts",import.meta.url),"utf8");
- assert.match(ui,/this\.mobileControls\.append\(this\.joystick,this\.mobileAttackButton,this\.mobilePauseButton,this\.p2Controls\)/);
+ assert.match(ui,/this\.mobileControls\.append\(this\.joystick,this\.mobileAttackButton,this\.p2Controls\)/);
+ assert.match(ui,/this\.root\.append\(this\.menu,this\.help,this\.privacy,this\.topHud,this\.mobilePauseButton,/);
  assert.doesNotMatch(ui,/mobileJumpButton|touchJump/);
  assert.doesNotMatch(main,/touchJump/);
  assert.doesNotMatch(input,/touchJump\(/);

@@ -1,4 +1,5 @@
 import {test,expect} from "@playwright/test";
+import {holdPause} from "./hold-pause.mjs";
 
 test.use({viewport:{width:740,height:360},hasTouch:true,isMobile:true});
 const snapshot=page=>page.evaluate(()=>window.__runFixture.pvpSnapshot());
@@ -113,7 +114,7 @@ test("P2 weapon selector, Pause/Resume and match result work on mobile",async({p
  await page.evaluate(()=>window.__runFixture.tickPvP(1));
  expect((await snapshot(page)).opponent.weapon).toBe("hammer");
  expect((await snapshot(page)).player.weapon).toBe("blade");
- await page.locator(".game-ui__mobile-pause").tap();
+ await holdPause(page);
  expect(await page.evaluate(()=>window.__runFixture.state())).toBe("PAUSED");
  await expect(page.locator(".game-ui__p2-controls")).toBeHidden();
  await page.locator('button[data-action="resume"]').tap();

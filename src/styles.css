@@ -748,43 +748,56 @@ html[dir="rtl"] .opening-intro__skip{
  box-shadow:0 0 0 3px #ffffff70,0 0 22px var(--arena-accent);
 }
 
-/* Touch-only pause action: below the right HP bar, above the action area. */
-.game-ui__mobile-pause{display:none}
-@media (pointer:coarse){
- .game-ui.playing .game-ui__mobile-pause:not([hidden]){
-  position:absolute;
-  display:grid;
-  place-items:center;
-  top:calc(var(--safe-top) + 3.5rem);
-  right:calc(var(--safe-right) + 1rem);
-  width:48px;
-  height:48px;
-  min-width:48px;
-  min-height:48px;
-  padding:0;
-  border:2px solid var(--arena-accent,#fff);
-  border-radius:.7rem;
-  background:var(--arena-hud-bg,#111);
-  color:#fff;
-  font-size:1.3rem;
-  font-weight:800;
-  line-height:1;
-  z-index:24;
-  pointer-events:auto;
-  touch-action:manipulation;
-  user-select:none;
-  -webkit-user-select:none;
- }
- .game-ui.playing .game-ui__mobile-pause:active{transform:scale(.96)}
- .game-ui.playing .game-ui__mobile-pause:focus-visible{outline:2px solid #fff;outline-offset:3px}
+/* A discreet two-second pause control centered between the HP bars.
+   The press duration is enforced in GameUI, including for desktop pointers. */
+.game-ui__mobile-pause{display:none!important}
+.game-ui.playing .game-ui__mobile-pause:not([hidden]){
+ position:absolute;
+ display:grid!important;
+ place-items:center;
+ top:calc(var(--safe-top) + .65rem);
+ left:50%;
+ transform:translateX(-50%);
+ width:40px;
+ height:40px;
+ min-width:40px;
+ min-height:40px;
+ padding:0;
+ border:1px solid rgba(185,211,246,.24);
+ border-radius:.6rem;
+ background:rgba(10,20,38,.18);
+ color:rgba(222,234,250,.56);
+ opacity:.48;
+ font-size:.9rem;
+ line-height:1;
+ box-shadow:none;
+ z-index:30;
+ pointer-events:auto;
+ touch-action:none;
+ user-select:none;
+ -webkit-user-select:none;
+ overflow:hidden;
 }
-/* Preserve access on very short landscape phones while the aim guide is open. */
-@media (pointer:coarse) and (max-height:280px){
- .game-ui.playing .game-ui__mobile-pause:not([hidden]){
-  right:calc(var(--safe-right) + clamp(8rem,27vw,11.5rem) + 1.5rem);
- }
+.game-ui.playing .game-ui__mobile-pause:hover,
+.game-ui.playing .game-ui__mobile-pause:focus-visible,
+.game-ui.playing .game-ui__mobile-pause.holding{opacity:.78}
+.game-ui.playing .game-ui__mobile-pause:focus-visible{
+ outline:2px solid rgba(185,211,246,.65);
+ outline-offset:2px;
 }
-
+.game-ui.playing .game-ui__mobile-pause.holding::after{
+ content:"";
+ position:absolute;
+ bottom:0;
+ left:0;
+ width:100%;
+ height:2px;
+ background:rgba(225,237,255,.8);
+ transform:scaleX(0);
+ transform-origin:left;
+ animation:pause-hold-fill 2s linear forwards;
+}
+@keyframes pause-hold-fill{to{transform:scaleX(1)}}
 
 /* Short-landscape menus must remain reachable without letting the battlefield
    scroll. The dialog overlays remain siblings outside this scroll container. */
@@ -816,7 +829,7 @@ body{touch-action:pan-y}
  right:calc(var(--safe-right) + 1rem);
  display:grid;
  grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr);
- grid-template-rows:auto auto;
+ grid-template-rows:auto auto auto;
  gap:.25rem .5rem;
  align-items:center;
  direction:ltr; /* Stable player-left / opponent-right layout across locales. */
@@ -861,7 +874,7 @@ body{touch-action:pan-y}
 }
 .game-ui.playing .game-ui__top-hud .game-ui__status{
  grid-column:2;
- grid-row:1;
+ grid-row:2;
  white-space:normal;
  overflow-wrap:anywhere;
  line-height:1.15;
@@ -870,7 +883,7 @@ body{touch-action:pan-y}
 }
 .game-ui.playing .game-ui__top-hud .game-ui__details{
  grid-column:1/-1;
- grid-row:2;
+ grid-row:3;
  white-space:nowrap;
  overflow:hidden;
  text-overflow:ellipsis;
@@ -994,10 +1007,6 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
  .game-ui__p2-weapons span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.65rem;font-weight:800}
  .game-ui.playing[data-players="2"] .game-ui__mobile-weapon-switcher:not([hidden]){
   width:clamp(160px,32vw,210px);
- }
- .game-ui.playing[data-players="2"] .game-ui__mobile-pause:not([hidden]){
-  top:calc(var(--safe-top) + 3.5rem);
-  right:calc(var(--safe-right) + clamp(8rem,27vw,11.5rem) + 1.5rem);
  }
 }
 @media (pointer:fine){

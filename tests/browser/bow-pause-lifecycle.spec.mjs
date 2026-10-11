@@ -1,4 +1,5 @@
 import {test,expect} from "@playwright/test";
+import {holdPause} from "./hold-pause.mjs";
 
 test.use({viewport:{width:740,height:360},hasTouch:true,isMobile:true});
 
@@ -61,6 +62,8 @@ test("mobile Pause button cancels charging and hides outside PLAYING",async({pag
  await expect(pause).toHaveAttribute("aria-label",/توقف|Pause/i);
  await page.evaluate(()=>window.__runFixture.beginBowCharge());
  await pause.tap();
+ expect((await snapshot(page)).state).toBe("PLAYING");
+ await holdPause(page);
  expect((await snapshot(page)).state).toBe("PAUSED");
  expect((await snapshot(page)).bowCharge).toBe(0);
  await expect(pause).toBeHidden();

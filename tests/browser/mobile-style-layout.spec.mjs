@@ -1,4 +1,5 @@
 import {test,expect} from "@playwright/test";
+import {holdPause} from "./hold-pause.mjs";
 
 test.use({viewport:{width:568,height:320},hasTouch:true,isMobile:true});
 
@@ -64,7 +65,7 @@ test("short-screen Pause layout cannot cover the visible missile aim guide",asyn
 
 test("short landscape menu scrolls internally and keeps Resume tappable",async({page})=>{
  await page.setViewportSize({width:568,height:280});
- await page.locator(".game-ui__mobile-pause").tap();
+ await holdPause(page);
  const menu=page.locator(".game-ui__menu"),resume=page.locator('button[data-action="resume"]');
  await expect(resume).toBeVisible();
  await page.locator(".game-ui__menu-extras summary").tap();
