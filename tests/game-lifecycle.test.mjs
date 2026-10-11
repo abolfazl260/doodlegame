@@ -55,8 +55,8 @@ test('HUD retains proportional bars and displays a single localized HP value',()
  assert.match(uiSource,/playerHealth\/playerMax\*100/);
  assert.match(uiSource,/hpFormatter\.format\(Math\.ceil\(playerHealth\)\)/);
  assert.match(uiSource,/hpFormatter\.format\(Math\.ceil\(opponentHealth\)\)/);
- assert.match(uiSource,/playerHealthLabel\.append\(this\.playerHealthCurrent\)/);
- assert.match(uiSource,/opponentHealthLabel\.append\(this\.opponentHealthCurrent\)/);
+ assert.match(uiSource,/playerHealthLabel\.append\(this\.playerHealthName,this\.playerHealthCurrent\)/);
+ assert.match(uiSource,/opponentHealthLabel\.append\(this\.opponentHealthName,this\.opponentHealthCurrent\)/);
  assert.doesNotMatch(uiSource,/playerHealthMaximum|opponentHealthMaximum/);
 });
 
