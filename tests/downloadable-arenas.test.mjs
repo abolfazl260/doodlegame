@@ -70,7 +70,7 @@ test("three additional themed maps install from GitHub, play and persist offline
   const entry=listing.find(item=>item.id===id);
   assert.ok(entry,`catalog is missing ${id}`);
   const descriptor=JSON.parse(asset(entry.path));
-  const background=asset(entry.path.replace(/arena\\.json$/,"background.svg"));
+  const background=asset(entry.path.replace(/arena\.json$/,"background.svg"));
   assert.equal(descriptor.id,id);
   assert.equal(descriptor.version,entry.version);
   assert.deepEqual(descriptor.names,entry.names);
