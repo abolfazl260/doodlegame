@@ -191,6 +191,8 @@ jobs:
           name: doodlegame-emulator-smoke
           path: |
             android-smoke-offline-menu.png
+            android-smoke-ready-menu.png
+            android-smoke-arena-step.png
             android-smoke-offline-match.png
             android-smoke-restored-paused.png
             android-smoke-resized.png
