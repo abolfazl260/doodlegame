@@ -416,8 +416,9 @@ export class GameUI{
    card.onclick=()=>actions.selectStartingWeapon(id);
    this.weaponCards.append(card);
   }
-  this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
-  this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.characterNames,this.arenaCards,this.weaponDetails,this.matchSummary);
+  // Name inputs belong to player setup, not the map selection screen.
+  this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.characterNames,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
+  this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaCards,this.weaponDetails,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
   this.rotateHint.className="game-ui__rotate-hint";
 
@@ -873,6 +874,9 @@ export class GameUI{
   const labels=this.i18n.messages.menu;
   this.setText(this.menuLead,onArena?(labels?.chooseArena??"CHOOSE ARENA"):
    (labels?.kickoff??"CHOOSE YOUR FIGHT"));
+  this.setText(this.stepNextButton,s?.mode==="local-pvp"?
+   (labels?.nextAllArenas??"NEXT · ALL 16 ARENAS"):
+   (labels?.nextArena??"NEXT · CHOOSE ARENA"));
   const stepLabel=onArena?this.i18n.messages.sections.arena:
    (labels?.selectMode??this.i18n.messages.sections.gameMode);
   this.setText(this.menuProgress,(labels?.step??"STEP")+" "+
@@ -995,8 +999,10 @@ export class GameUI{
     this.quickPvpButton.setAttribute("aria-pressed",String(s.mode==="local-pvp"));
     this.setText(this.modeDescription,messages.menu?.modeDescriptions[s.mode]??"");
    }
-   if(arenaChanged||localeChanged||stateChanged){
-    this.setText(this.arenaShortcut,(messages.menu?.mapShortcut??"CHOOSE ARENA")+
+   if(modeChanged||arenaChanged||localeChanged||stateChanged){
+    this.setText(this.arenaShortcut,(s.mode==="local-pvp"?
+     (messages.menu?.allArenas??"ALL 16 ARENAS"):
+     (messages.menu?.mapShortcut??"CHOOSE ARENA"))+
      " · "+messages.arenas[s.arena]);
     this.setText(this.arenaSelectionSummary,(messages.menu?.selectedArena??"SELECTED ARENA")+
      ": "+messages.arenas[s.arena]);

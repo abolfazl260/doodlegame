@@ -15,7 +15,7 @@ export type Messages={
  details:{equipped:string;angle:string;power:string};
  sections:{gameMode:string;arena:string;weapon:string};
  characterNames:{playerOne:string;playerTwo:string;opponent:string;optional:string;wins:string};
- menu:{kickoff:string;setup:string;players:string;progressOptions:string;selectMode:string;chooseArena:string;mapShortcut:string;selectedArena:string;step:string;nextArena:string;back:string;loadout:string;quickDuel:string;quickPvp:string;ready:string;options:string;modeDescriptions:Readonly<Record<GameModeId,string>>};
+ menu:{kickoff:string;setup:string;players:string;progressOptions:string;selectMode:string;chooseArena:string;mapShortcut:string;selectedArena:string;step:string;nextArena:string;nextAllArenas:string;allArenas:string;back:string;loadout:string;quickDuel:string;quickPvp:string;ready:string;options:string;modeDescriptions:Readonly<Record<GameModeId,string>>};
  panels:{weaponUpgrades:string;missileControl:string;bowDraw:string;releaseToFire:string};
  upgrade:{points:string;choose:string;earn:string;upgraded:string;upgrade:string;locked:string};
  pvp:{p1:string;p2:string;winner1:string;winner2:string;draw:string;hint:string};
@@ -40,7 +40,7 @@ const EN:Messages={
  sections:{gameMode:"GAME MODE",arena:"ARENA",weapon:"START WEAPON"},
  characterNames:{playerOne:"CHARACTER NAME",playerTwo:"SECOND PLAYER NAME",opponent:"OPPONENT",optional:"Enter name (optional)",wins:"WINS"},
  menu:{
-  kickoff:"CHOOSE YOUR FIGHT",setup:"MATCH SETUP",players:"NUMBER OF PLAYERS",progressOptions:"RUN & WEAPON UPGRADES",selectMode:"CHOOSE GAME MODE",chooseArena:"CHOOSE YOUR ARENA",mapShortcut:"CHOOSE ARENA",selectedArena:"SELECTED ARENA",step:"STEP",nextArena:"NEXT · CHOOSE ARENA",back:"BACK",loadout:"STARTING WEAPON · OPTIONAL",quickDuel:"SOLO PLAYER",quickPvp:"TWO PLAYERS · LOCAL",
+  kickoff:"CHOOSE YOUR FIGHT",setup:"MATCH SETUP",players:"NUMBER OF PLAYERS",progressOptions:"RUN & WEAPON UPGRADES",selectMode:"CHOOSE GAME MODE",chooseArena:"CHOOSE YOUR ARENA",mapShortcut:"CHOOSE ARENA",selectedArena:"SELECTED ARENA",step:"STEP",nextArena:"NEXT · CHOOSE ARENA",nextAllArenas:"NEXT · ALL 16 ARENAS",allArenas:"ALL 16 ARENAS",back:"BACK",loadout:"STARTING WEAPON · OPTIONAL",quickDuel:"SOLO PLAYER",quickPvp:"TWO PLAYERS · LOCAL",
   ready:"YOUR MATCH",options:"SETTINGS & HELP",
   modeDescriptions:{
    duel:"A classic one-on-one fight against the AI.",
@@ -84,7 +84,7 @@ const FA:Messages={
  sections:{gameMode:"حالت بازی",arena:"میدان",weapon:"سلاح شروع"},
  characterNames:{playerOne:"نام کاراکتر",playerTwo:"نام بازیکن دوم",opponent:"حریف",optional:"نام دلخواه (اختیاری)",wins:"برنده شد"},
  menu:{
-  kickoff:"نوع بازی را انتخاب کن",setup:"تنظیم مسابقه",players:"تعداد بازیکنان",progressOptions:"مسیر چهار مبارزه‌ای و ارتقاها",selectMode:"انتخاب حالت بازی",chooseArena:"زمین بازی را انتخاب کن",mapShortcut:"انتخاب زمین",selectedArena:"زمین انتخاب‌شده",step:"مرحله",nextArena:"مرحله بعد · انتخاب زمین",back:"بازگشت",loadout:"سلاح شروع · اختیاری",quickDuel:"یک نفره",quickPvp:"دو نفره · محلی",
+  kickoff:"نوع بازی را انتخاب کن",setup:"تنظیم مسابقه",players:"تعداد بازیکنان",progressOptions:"مسیر چهار مبارزه‌ای و ارتقاها",selectMode:"انتخاب حالت بازی",chooseArena:"زمین بازی را انتخاب کن",mapShortcut:"انتخاب زمین",selectedArena:"زمین انتخاب‌شده",step:"مرحله",nextArena:"مرحله بعد · انتخاب زمین",nextAllArenas:"مرحله بعد · انتخاب ۱۶ نقشه",allArenas:"انتخاب از ۱۶ نقشه",back:"بازگشت",loadout:"سلاح شروع · اختیاری",quickDuel:"یک نفره",quickPvp:"دو نفره · محلی",
   ready:"مسابقه شما",options:"تنظیمات و راهنما",
   modeDescriptions:{
    duel:"مبارزه کلاسیک تک‌نفره در برابر هوش مصنوعی.",

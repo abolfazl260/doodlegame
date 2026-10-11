@@ -149,3 +149,23 @@ test("chosen starting weapon is symmetric for both human players, including rema
  assert.equal(session.getHudState().secondWeapon,"blaster");
  session.dispose();
 });
+
+test("all sixteen arenas can be selected and played in local two-player mode",()=>{
+ const {session}=setup();
+ const maps=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge",
+  "crater","vertical","ruins","conveyor","collapse","storm","reactor"];
+ for(const arena of maps){
+  session.setArena(arena);
+  let state=session.getRenderState();
+  assert.equal(state.arena,arena);
+  assert.equal(state.mode,"local-pvp");
+  assert.equal(state.opponent.enemyType,null);
+  assert.equal(state.player.health,100);
+  assert.equal(state.opponent.health,100);
+  session.update(1/60);
+  state=session.getRenderState();
+  assert.equal(state.arena,arena);
+  assert.equal(state.mode,"local-pvp");
+ }
+ session.dispose();
+});
