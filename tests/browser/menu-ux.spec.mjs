@@ -285,7 +285,7 @@ test("character names persist across launches and are used for both local fighte
  await expect(page.locator(".game-ui__character-name-input").first()).toHaveValue("آرش");
  await page.locator('button[data-action="start"]').tap();
  await expect(page.locator(".health-bar--player .health-label__name")).toHaveText("آرش");
- await page.locator('button[data-action="pause"]').tap();
+ await page.locator(".game-ui__mobile-pause").tap();
  await page.locator('button[data-action="menu"]').tap();
  await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
  await page.locator('button[data-action="next"]').tap();
