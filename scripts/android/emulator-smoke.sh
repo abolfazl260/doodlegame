@@ -135,6 +135,10 @@ adb exec-out screencap -p > android-smoke-offline-match.png
 
 echo "Backgrounding an active match; foreground must return to a paused app"
 background_app
+# Allow the Android WebView to process onPause/visibility events before
+# foregrounding. Cold-boot emulator scheduling can otherwise skip the
+# inactive callback entirely.
+sleep 2
 RESTORE_OUTPUT="$(start_app)"
 printf '%s\n' "$RESTORE_OUTPUT"
 grep -q "Status: ok" <<<"$RESTORE_OUTPUT"
