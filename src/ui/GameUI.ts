@@ -54,6 +54,7 @@ export class GameUI{
  private joystickThumb=document.createElement("div");
  private mobileAttackButton=document.createElement("button");
  private mobilePauseButton=document.createElement("button");
+ private cancelPauseHold:()=>void=()=>{};
  private missileAimGuide=document.createElement("div");
  private missileAimValues=document.createElement("div");
  private missileAimPath:SVGPathElement|null=null;
@@ -230,7 +231,63 @@ export class GameUI{
   this.mobilePauseButton.type="button";
   this.mobilePauseButton.className="game-ui__mobile-pause";
   this.mobilePauseButton.textContent="Ⅱ";
-  this.mobilePauseButton.onclick=()=>{if(this.currentState===GameState.PLAYING)actions.pause();};
+  this.mobilePauseButton.hidden=true;
+  // A quick tap/click never pauses the match. Both touch and mouse must stay
+  // pressed for two seconds; focus/visibility changes cancel the pending hold.
+  const pauseHoldMs=2000;
+  let pausePointer:number|null=null,pauseKey:string|null=null;
+  let pauseStartX=0,pauseStartY=0;
+  let pauseTimer:ReturnType<typeof setTimeout>|null=null;
+  const clearPauseHold=()=>{
+   if(pauseTimer!==null){clearTimeout(pauseTimer);pauseTimer=null;}
+   this.mobilePauseButton.classList.remove("holding");
+   const pointer=pausePointer;
+   pausePointer=null;pauseKey=null;
+   if(pointer!==null&&this.mobilePauseButton.hasPointerCapture?.(pointer))
+    this.mobilePauseButton.releasePointerCapture(pointer);
+  };
+  this.cancelPauseHold=clearPauseHold;
+  const startPauseHold=()=>{
+   if(this.currentState!==GameState.PLAYING||this.mobilePauseButton.hidden)return;
+   this.mobilePauseButton.classList.add("holding");
+   pauseTimer=setTimeout(()=>{
+    if(this.currentState!==GameState.PLAYING){clearPauseHold();return;}
+    clearPauseHold();
+    actions.pause();
+   },pauseHoldMs);
+  };
+  this.mobilePauseButton.addEventListener("pointerdown",event=>{
+   if(pauseTimer!==null||pausePointer!==null||pauseKey!==null||event.button!==0)return;
+   event.preventDefault();
+   pausePointer=event.pointerId;
+   pauseStartX=event.clientX;pauseStartY=event.clientY;
+   try{this.mobilePauseButton.setPointerCapture(event.pointerId);}
+   catch{clearPauseHold();return;}
+   startPauseHold();
+  });
+  this.mobilePauseButton.addEventListener("pointermove",event=>{
+   if(event.pointerId!==pausePointer)return;
+   if(Math.hypot(event.clientX-pauseStartX,event.clientY-pauseStartY)>16)clearPauseHold();
+  });
+  for(const type of ["pointerup","pointercancel","lostpointercapture","pointerleave"] as const)
+   this.mobilePauseButton.addEventListener(type,event=>{
+    if((event as PointerEvent).pointerId===pausePointer)clearPauseHold();
+   });
+  this.mobilePauseButton.addEventListener("keydown",event=>{
+   if(event.key!=="Enter"&&event.key!==" ")return;
+   event.preventDefault();event.stopPropagation();
+   if(event.repeat||pauseTimer!==null||pausePointer!==null||pauseKey!==null)return;
+   pauseKey=event.key;startPauseHold();
+  });
+  this.mobilePauseButton.addEventListener("keyup",event=>{
+   if(event.key!=="Enter"&&event.key!==" ")return;
+   event.preventDefault();event.stopPropagation();
+   if(event.key===pauseKey)clearPauseHold();
+  });
+  this.mobilePauseButton.addEventListener("click",event=>{
+   event.preventDefault();event.stopPropagation();
+  });
+  this.mobilePauseButton.addEventListener("contextmenu",event=>event.preventDefault());
   this.mobileWeaponSwitcher.className="game-ui__mobile-weapon-switcher";
   this.mobileWeaponSwitcher.setAttribute("role","group");
   this.mobileWeaponName.className="game-ui__mobile-weapon-name";
@@ -247,7 +304,7 @@ export class GameUI{
   this.nextWeaponButton.append(weaponDisplay);
   this.mobileWeaponSwitcher.append(this.nextWeaponButton);
   this.joystick.append(this.joystickThumb);
-  this.mobileControls.append(this.joystick,this.mobileAttackButton,this.mobilePauseButton,this.p2Controls);
+  this.mobileControls.append(this.joystick,this.mobileAttackButton,this.p2Controls);
   this.missileAimGuide.className="game-ui__missile-aim-guide";
   this.missileAimGuide.hidden=true;
   this.missileAimGuide.setAttribute("aria-live","off");
@@ -559,6 +616,7 @@ export class GameUI{
    if(weapon!=="missile"&&wasStarted)actions.touchAttackCancel();
   };
   const cancelControls=()=>{
+   this.cancelPauseHold();
    cancelAttack();
    this.cancelP2TouchControls();
    for(const cancel of this.cancelAimPointers)cancel();
@@ -819,7 +877,7 @@ export class GameUI{
    });
   }
   this.root.append(this.mobileWeaponSwitcher,this.p2WeaponControls,...this.aimPads);
-  this.root.append(this.menu,this.help,this.privacy,this.topHud,this.weaponList,this.bowPanel,this.mobileControls,this.rotateHint);
+  this.root.append(this.menu,this.help,this.privacy,this.topHud,this.mobilePauseButton,this.weaponList,this.bowPanel,this.mobileControls,this.rotateHint);
   container.append(this.root);
   this.root.addEventListener("keydown",event=>{
    if(event.key!=="Escape")return;
@@ -1152,6 +1210,8 @@ export class GameUI{
     this.setHidden(this.mobileWeaponSwitcher,!playing||missileRules||s.mode==="random-weapons");
     this.setHidden(this.bowPanel,!playing||s.weapon!=="bow");
     this.setHidden(this.mobileControls,!playing);
+    this.setHidden(this.mobilePauseButton,!playing);
+    if(!playing)this.cancelPauseHold();
     this.setHidden(this.p2Controls,!playing||!(s.localPvP??s.mode==="local-pvp"));
     if(!playing&&(stateChanged||winnerChanged))this.cancelTouchControls();
    }
@@ -1316,8 +1376,9 @@ export class GameUI{
   this.p2Attack.setAttribute("aria-label",messages.pvp?.p2+" · "+messages.buttons.attack+" · "+(this.i18n.locale==="fa"?"کشیدن به بالا: گرفتن":"Swipe up: Grab"));
   this.p2Joystick.setAttribute("aria-label",messages.pvp?.p2);
   this.p2Next.setAttribute("aria-label",messages.pvp?.p2+" · "+messages.sections.weapon);
-  this.mobilePauseButton.setAttribute("aria-label",messages.buttons.pause);
-  this.mobilePauseButton.title=messages.buttons.pause;
+  const pauseHint=messages.buttons.pause+(this.i18n.locale==="fa"?" · ۲ ثانیه نگه دارید":" · Hold for 2 seconds");
+  this.mobilePauseButton.setAttribute("aria-label",pauseHint);
+  this.mobilePauseButton.title=pauseHint;
   this.mobileWeaponSwitcher.setAttribute("aria-label",messages.details.equipped);
   this.nextWeaponButton.setAttribute("aria-label",messages.sections.weapon);
   for(const pad of this.aimPads){const label=(pad.dataset.player==="2"?messages.pvp?.p2??"P2":messages.pvp?.p1??"P1")+" · "+(this.i18n.locale==="fa"?"جهت سلاح؛ برای نشانه‌گیری بکش":"Weapon direction; drag to aim");pad.setAttribute("aria-label",label);pad.title=label;}
