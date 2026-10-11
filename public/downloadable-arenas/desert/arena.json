@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "id": "extra-desert",
-  "version": 1,
+  "version": 2,
   "names": {
     "fa": "کویر سرخ",
     "en": "RED DESERT"
   },
-  "background": "background.svg",
+  "background": "background.webp",
   "arena": {
     "speedMultiplier": 1.08,
     "jumpMultiplier": 1,

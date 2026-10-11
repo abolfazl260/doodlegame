@@ -7,10 +7,11 @@ const raw="https://raw.githubusercontent.com/abolfazl260/doodlegame/main/public/
 async function mockGithub(page){
  await page.route(raw+"**",route=>{
   const relative=route.request().url().slice(raw.length);
-  if(!/^(catalog\.json|(?:forest|desert|glacier|volcano|neon-city)\/(?:arena\.json|background\.svg))$/.test(relative))
+  if(!/^(catalog\.json|(?:forest|desert|glacier|volcano|neon-city)\/(?:arena\.json|background\.(?:svg|webp)))$/.test(relative))
    return route.fulfill({status:404,body:"Not found"});
-  const body=readFileSync(new URL("../../public/downloadable-arenas/"+relative,import.meta.url),"utf8");
-  return route.fulfill({status:200,contentType:relative.endsWith(".svg")?"image/svg+xml":"application/json",headers:{"access-control-allow-origin":"*"},body});
+  const image=relative.endsWith(".webp");
+  const body=readFileSync(new URL("../../public/downloadable-arenas/"+relative,import.meta.url),image?undefined:"utf8");
+  return route.fulfill({status:200,contentType:image?"image/webp":relative.endsWith(".svg")?"image/svg+xml":"application/json",headers:{"access-control-allow-origin":"*"},body});
  });
 }
 async function visitArenaStep(page){
@@ -62,7 +63,7 @@ test("three new landscapes can each be downloaded, selected and reused offline",
   const card=page.locator(".game-ui__download-card").filter({hasText:item.fa});
   await card.locator(".game-ui__download-install").tap();
   await expect(card.locator(".game-ui__download-play")).toBeVisible();
-  await expect(card.locator(".game-ui__download-preview")).toHaveCSS("background-image",/data:image\/svg\+xml/);
+  await expect(card.locator(".game-ui__download-preview")).toHaveCSS("background-image",/data:image\/webp;base64,/);
   await card.locator(".game-ui__download-play").tap();
   await expect(page.locator(".game-ui__arena-selection-summary")).toContainText(item.fa);
   expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe(item.id);
