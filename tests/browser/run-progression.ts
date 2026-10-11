@@ -3,6 +3,7 @@ import {Game} from "../../src/core/Game";
 import {GameState} from "../../src/core/GameState";
 import {GameSession} from "../../src/gameplay/GameSession";
 import {Progression} from "../../src/progression/Progression";
+import {PlayerNames} from "../../src/profile/PlayerNames";
 import {I18n} from "../../src/i18n/I18n";
 import {WebStorage} from "../../src/platform/web/WebStorage";
 import {WebInput} from "../../src/platform/web/WebInput";
@@ -15,11 +16,13 @@ const input=new WebInput(canvas);
 input.start();
 const session=new GameSession(input);
 const progression=new Progression(storage);
+const playerNames=new PlayerNames(storage);
 const i18n=new I18n(storage);
 let scheduleId=0;
 const scheduler={request:(_callback:(timestamp:number)=>void)=>++scheduleId,cancel:(_id:number)=>{}};
 const renderer={resize(){},render(){},dispose(){}};
 const game=new Game(renderer,session,scheduler,error=>{throw error;},progression);
+const readHud=()=>({...game.getHudState(),playerName:playerNames.get(1),secondPlayerName:playerNames.get(2)});
 const ui=new GameUI(root,{
  start:()=>game.start(),pause:()=>game.pause(),resume:()=>game.resume(),restart:()=>game.restart(),
  stopToMenu:()=>{input.resetTransientState();game.stop();},
@@ -27,7 +30,7 @@ const ui=new GameUI(root,{
  weaponNext:()=>game.selectWeapon(1),weaponPrevious:()=>game.selectWeapon(-1),
  weaponSelect:id=>game.selectWeaponById(id),selectStartingWeapon:id=>game.selectStartingWeapon(id),
  upgradeWeapon:id=>game.upgradeWeapon(id),arenaSelect:id=>game.selectArena(id),
- modeSelect:id=>game.selectMode(id),setMissileAngle:n=>game.setMissileAngle(n),
+ modeSelect:id=>game.selectMode(id),setCharacterName:(player,name)=>{playerNames.set(player,name);ui.render(game.getState(),readHud());},setMissileAngle:n=>game.setMissileAngle(n),
  setMissilePower:n=>game.setMissilePower(n),fireWeapon:()=>game.fireWeapon(),
  setTouchMove:(x,y)=>input.setTouchMove(x,y),
  touchAttackStart:()=>input.touchAttack(true),
@@ -42,7 +45,7 @@ const ui=new GameUI(root,{
  toggleCombatSound(){},toggleCameraShake(){},updateData:async()=>{}
 },i18n);
 game.initialize();
-ui.bind(listener=>game.subscribe(listener),()=>game.getHudState());
+ui.bind(listener=>game.subscribe(listener),readHud);
 const fixture={
  state:()=>game.getState(),
  view:()=>game.getHudState(),
