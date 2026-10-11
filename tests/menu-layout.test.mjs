@@ -433,9 +433,10 @@ test("all sixteen maps remain selectable through a visible main-menu shortcut",(
  assert.equal(ui.arenaCards.children.length,16,"2P must retain all arena choices");
 });
 
-test("character names are editable in arena setup and shown in the HUD",()=>{
+test("character names are editable in player setup and shown in the HUD",()=>{
  const {ui,calls,hud}=setup({playerName:"",secondPlayerName:""});
- ui.stepNextButton.click();
+ assert.equal(ui.menuModePanel.children.includes(ui.characterNames),true);
+ assert.equal(ui.menuArenaPanel.children.includes(ui.characterNames),false);
  assert.equal(ui.characterNames.children.length,2);
  assert.equal(ui.secondNameLabel.hidden,true);
  ui.playerNameInput.value="آرمان";ui.playerNameInput.oninput();
@@ -444,6 +445,7 @@ test("character names are editable in arena setup and shown in the HUD",()=>{
  assert.ok(ui.matchSummary.textContent.includes("آرمان"));
  hud.mode="local-pvp";ui.render(states.MENU,hud);
  assert.equal(ui.secondNameLabel.hidden,false);
+ assert.match(ui.stepNextButton.textContent,/16|۱۶/);
  ui.secondNameInput.value="سارا";ui.secondNameInput.oninput();
  ui.render(states.PLAYING,hud);
  assert.equal(ui.playerHealthName.textContent,"آرمان");
