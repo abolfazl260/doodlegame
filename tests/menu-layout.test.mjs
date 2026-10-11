@@ -237,6 +237,25 @@ test("menu provides a safe-area-aware scroll region and sticky primary action",(
  assert.ok(menu.includes("min-height:44px"));
 });
 
+test("missile fights omit the redundant center panel while keeping aim HUD and touch controls",()=>{
+ const {ui,hud,container}=setup({mode:"missile-duel",weapon:"missile",missileAngle:33,missilePower:14.5});
+ ui.render(states.PLAYING,hud);
+ assert.equal(ui.missilePanel,undefined);
+ assert.equal(ui.root.children.some(node=>node.className==="game-ui__missile-panel"),false);
+ assert.equal(container.children[0],ui.root);
+ assert.ok(ui.root.children.includes(ui.mobileControls),"touch attack remains mounted");
+ assert.ok(ui.mobileControls.children.includes(ui.missileAimGuide),"missile trajectory guide remains mounted");
+ assert.match(ui.details.textContent,/33°/);
+ assert.match(ui.details.textContent,/14.5/);
+ hud.missileAngle=47;hud.missilePower=16;
+ ui.render(states.PLAYING,hud);
+ assert.match(ui.details.textContent,/47°/);
+ assert.match(ui.details.textContent,/16.0/);
+ const css=readFileSync("src/styles.css","utf8");
+ assert.equal(css.includes("game-ui__missile-panel"),false,"obsolete central panel styling is removed");
+ assert.ok(css.includes("game-ui__missile-aim-guide"),"mobile trajectory guide styling remains");
+});
+
 test("optional starting weapon cards honor missile, melee and random restrictions",()=>{
  const {ui,hud}=setup();
  assert.equal(ui.weaponDetails.hidden,false);
