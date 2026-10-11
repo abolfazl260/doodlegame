@@ -133,7 +133,7 @@ test("genuine WebP is validated by RIFF header, codec and dimensions",()=>{
  enormous[26]=0xff;enormous[27]=0x3f; // 16383px width is not permitted
  assert.equal(validArenaWebp(enormous.toString("base64")),false);
  assert.equal(parseDownloadedArena({...webpDescriptor,backgroundWebp:WEBP_SAMPLE_BASE64,backgroundSvg:"<svg></svg>"}),null);
- assert.equal(parseDownloadedArena({...webpDescriptor,backgroundWebp:WEBP_SAMPLE_BASE64}),null);
+ assert.equal(parseDownloadedArena({...webpDescriptor,backgroundWebp:"not-a-webp"}),null);
  const complete={...webpDescriptor,backgroundWebp:WEBP_SAMPLE_BASE64};
  assert.ok(parseDownloadedArena(complete));
 });
