@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-neon-city",
+  "version": 1,
+  "names": {
+    "fa": "بام‌های نئونی",
+    "en": "NEON ROOFTOPS"
+  },
+  "background": "background.svg",
+  "arena": {
+    "speedMultiplier": 1.16,
+    "jumpMultiplier": 1.06,
+    "gravity": -18.5,
+    "fallLimit": null,
+    "movingPlatforms": true,
+    "spawnX": [
+      -8,
+      8
+    ],
+    "platforms": [
+      {
+        "x": -12,
+        "y": -0.25,
+        "width": 24,
+        "height": 0.5,
+        "surface": "normal"
+      },
+      {
+        "x": -9.3,
+        "y": 1.35,
+        "width": 3.5,
+        "height": 0.3,
+        "surface": "conveyorRight"
+      },
+      {
+        "x": 5.8,
+        "y": 1.35,
+        "width": 3.5,
+        "height": 0.3,
+        "surface": "conveyorLeft"
+      },
+      {
+        "x": -2.6,
+        "y": 2.4,
+        "width": 5.2,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": -7.9,
+        "y": 3.55,
+        "width": 2.7,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": 5.2,
+        "y": 3.55,
+        "width": 2.7,
+        "height": 0.3,
+        "surface": "oneWay"
+      }
+    ]
+  },
+  "theme": {
+    "skin": "neon",
+    "backdrop": "city",
+    "skyTop": "#0c1237",
+    "skyBottom": "#3a2461",
+    "silhouette": "#121635",
+    "platform": "#27345b",
+    "platformEdge": "#78f5ff",
+    "accent": "#64efff",
+    "secondary": "#ef8dff",
+    "hudBackground": "#10152b"
+  }
+}
