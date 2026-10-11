@@ -15,7 +15,13 @@ const responses=new Map([
  [base+"forest/arena.json",asset("forest/arena.json")],
  [base+"forest/background.svg",asset("forest/background.svg")],
  [base+"desert/arena.json",asset("desert/arena.json")],
- [base+"desert/background.svg",asset("desert/background.svg")]
+ [base+"desert/background.svg",asset("desert/background.svg")],
+ [base+"glacier/arena.json",asset("glacier/arena.json")],
+ [base+"glacier/background.svg",asset("glacier/background.svg")],
+ [base+"volcano/arena.json",asset("volcano/arena.json")],
+ [base+"volcano/background.svg",asset("volcano/background.svg")],
+ [base+"neon-city/arena.json",asset("neon-city/arena.json")],
+ [base+"neon-city/background.svg",asset("neon-city/background.svg")]
 ]);
 const mockFetch=async url=>{
  if(!responses.has(url))return new Response("Not found",{status:404});
@@ -27,9 +33,9 @@ const memory=()=>{
 };
 const input={getState:()=>({moveX:0,moveY:0,jumpPressed:false,attackHeld:false,attackPressed:false,attackReleased:false,aimUpHeld:false,aimDownHeld:false,weaponNext:false,weaponPrevious:false}),resetTransientState(){},setLocalPvPEnabled(){}};
 
-test("GitHub catalog contains optional forest and desert arenas; 16 bundled arenas remain",async()=>{
+test("GitHub catalog exposes five optional arenas while 16 bundled arenas remain",async()=>{
  const list=await loadArenaCatalog(mockFetch);
- assert.deepEqual(list.map(x=>x.id),["extra-forest","extra-desert"]);
+ assert.deepEqual(list.map(x=>x.id),["extra-forest","extra-desert","extra-glacier","extra-volcano","extra-neon-city"]);
  const session=new GameSession(input);
  assert.equal(session.getRenderState().arena,"classic");
  session.setArena("extra-missing");
@@ -56,6 +62,42 @@ test("download and install two unique arena backgrounds, then use them without n
  assert.equal(installedArenas().some(x=>x.id==="extra-desert"),true);
  removeDownloadedArena("extra-desert",storage);
 });
+test("three additional themed maps install from GitHub, play and persist offline",async()=>{
+ const storage=memory(),listing=await loadArenaCatalog(mockFetch);
+ const newIds=["extra-glacier","extra-volcano","extra-neon-city"];
+ const packs=[];
+ for(const id of newIds){
+  const entry=listing.find(item=>item.id===id);
+  assert.ok(entry,`catalog is missing ${id}`);
+  const descriptor=JSON.parse(asset(entry.path));
+  const background=asset(entry.path.replace(/arena\\.json$/,"background.svg"));
+  assert.equal(descriptor.id,id);
+  assert.equal(descriptor.version,entry.version);
+  assert.deepEqual(descriptor.names,entry.names);
+  assert.equal(validArenaSvg(background),true);
+  const parsed=parseDownloadedArena({...descriptor,backgroundSvg:background});
+  assert.ok(parsed,`invalid layout or SVG in ${id}`);
+  const pack=await installDownloadedArena(entry,storage,mockFetch);
+  assert.equal(pack.arena.platforms.length,descriptor.arena.platforms.length);
+  assert.equal(pack.backgroundSvg,background);
+  packs.push(pack);
+  const session=new GameSession(input);
+  session.setArena(id);
+  assert.equal(session.getRenderState().arena,id);
+  assert.deepEqual(session.getArena().spawnX,[-8,8]);
+ }
+ assert.equal(new Set(packs.map(pack=>pack.backgroundSvg)).size,3,"all new maps must have different artwork");
+ assert.equal(new Set(packs.map(pack=>JSON.stringify(pack.arena.platforms))).size,3,"all three layouts must differ");
+ assert.equal(packs[0].arena.platforms[0].surface,"ice");
+ assert.equal(packs[1].arena.fallLimit,-5.8);
+ assert.equal(packs[2].arena.movingPlatforms,true);
+ assert.deepEqual(storage.get(DOWNLOADED_ARENAS_KEY).map(pack=>pack.id),newIds);
+ // Same locally saved bytes are usable without another GitHub request.
+ restoreDownloadedArenas(storage);
+ for(const id of newIds)assert.ok(getDownloadedArena(id),`offline restore failed for ${id}`);
+ for(const id of newIds)removeDownloadedArena(id,storage);
+});
+
 test("reject invalid layout, SVG script, external references and unsafe paths",()=>{
  const catalog=JSON.parse(asset("catalog.json"));
  assert.throws(()=>parseArenaCatalog({...catalog,arenas:[{...catalog.arenas[0],path:"../../outside.json"}]}));
