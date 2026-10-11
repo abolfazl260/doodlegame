@@ -10,7 +10,8 @@ async function rendererModule(name){
  const contextLifecycle=new URL('../.test-build/rendering/WebGLContextLifecycle.js',import.meta.url).href;
  const combatCamera=new URL('../.test-build/rendering/CombatCamera.js',import.meta.url).href;
  const themes=new URL('../.test-build/themes/ArenaThemes.js',import.meta.url).href;
- return import('data:text/javascript;base64,'+Buffer.from(source.replaceAll("'./FighterVisual'",JSON.stringify(visual)).replaceAll('"three"',JSON.stringify(three)).replaceAll('"./WebGLContextLifecycle"',JSON.stringify(contextLifecycle)).replaceAll('"./CombatCamera.js"',JSON.stringify(combatCamera)).replaceAll('"../themes/ArenaThemes"',JSON.stringify(themes))).toString('base64'));
+ const downloadable=new URL('../.test-build/gameplay/DownloadableArenas.js',import.meta.url).href;
+ return import('data:text/javascript;base64,'+Buffer.from(source.replaceAll("'./FighterVisual'",JSON.stringify(visual)).replaceAll('"three"',JSON.stringify(three)).replaceAll('"./WebGLContextLifecycle"',JSON.stringify(contextLifecycle)).replaceAll('"./CombatCamera.js"',JSON.stringify(combatCamera)).replaceAll('"../themes/ArenaThemes"',JSON.stringify(themes)).replaceAll('"../gameplay/DownloadableArenas.js"',JSON.stringify(downloadable))).toString('base64'));
 }
 const state=()=>new GameSession({getState(){return {}},endFrame(){}}).getRenderState();
 test('WebGL fighter draw places both fighters and produces valid geometries for every tool',async()=>{
