@@ -1910,8 +1910,11 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
 }
 
 /* Editable character names: compact and accessible on landscape touch devices. */
-.game-ui__character-names{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;min-width:0}
+/* Names follow the fighters' physical positions regardless of RTL/LTR locale:
+   P1 is the left fighter and P2 is the right fighter. */
+.game-ui__character-names{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;min-width:0;direction:ltr}
 .game-ui__character-name-field{display:grid;gap:.25rem;min-width:0;text-align:start}
+html[dir="rtl"] .game-ui__character-name-field{direction:rtl}
 .game-ui__character-name-field[hidden]{display:none!important}
 .game-ui__character-name-caption{color:#d9e6ff;font-size:.67rem;font-weight:800}
 .game-ui .game-ui__character-name-input{box-sizing:border-box;width:100%;min-width:0;min-height:44px;padding:.45rem .65rem;border:1px solid #6b84a4;border-radius:.55rem;background:#102039;color:#fff;font:inherit;font-size:.81rem;text-align:start;user-select:text;touch-action:manipulation}
