@@ -240,21 +240,51 @@ test("missile guide updates when joystick changes facing during a held aim",()=>
  ui.dispose();
 });
 
-test("mobile pause button has an accessible name, pauses once, and is not active while paused",()=>{
+test("pause requires a full two-second pointer hold; quick taps and stray pointers do nothing",async()=>{
  const {ui,hud,calls}=setup("blade");
- assert.equal(ui.mobilePauseButton.type,"button");
- assert.equal(ui.mobilePauseButton.textContent,"Ⅱ");
- assert.equal(ui.mobilePauseButton.getAttribute("aria-label"),"Pause");
- assert.ok(ui.mobileControls.children.includes(ui.mobilePauseButton));
- ui.mobilePauseButton.click();
- assert.deepEqual(calls.filter(([name])=>name==="pause"),[["pause"]]);
+ const button=ui.mobilePauseButton;
+ assert.equal(button.type,"button");
+ assert.equal(button.textContent,"Ⅱ");
+ assert.match(button.getAttribute("aria-label"),/Hold for 2 seconds/);
+ assert.ok(ui.root.children.includes(button),"pause button stays accessible outside touch-only controls");
+ assert.equal(ui.mobileControls.children.includes(button),false);
+ button.click();
+ assert.equal(calls.filter(([name])=>name==="pause").length,0);
+ button.emit("pointerdown",{pointerId:71,button:0,clientX:100,clientY:70});
+ button.emit("pointerup",{pointerId:71,button:0});
+ assert.equal(calls.filter(([name])=>name==="pause").length,0);
+ button.emit("pointerdown",{pointerId:72,button:0,clientX:100,clientY:70});
+ button.emit("pointerdown",{pointerId:73,button:0,clientX:100,clientY:70});
+ await new Promise(resolve=>setTimeout(resolve,2050));
+ assert.equal(calls.filter(([name])=>name==="pause").length,1);
+ button.emit("pointerup",{pointerId:72,button:0});
+ button.click();
+ assert.equal(calls.filter(([name])=>name==="pause").length,1);
  ui.render(states.PAUSED,hud);
- assert.equal(ui.mobileControls.hidden,true);
- ui.mobilePauseButton.click();
+ assert.equal(button.hidden,true);
+ button.emit("pointerdown",{pointerId:74,button:0});
  assert.equal(calls.filter(([name])=>name==="pause").length,1);
  ui.dispose();
 });
 
+test("pause hold is cancelled by pointer travel, cancel, release, lost capture, and leaving gameplay",async()=>{
+ const {ui,hud,calls}=setup("blade");
+ const button=ui.mobilePauseButton;
+ button.emit("pointerdown",{pointerId:21,button:0,clientX:100,clientY:70});
+ button.emit("pointermove",{pointerId:21,clientX:125,clientY:70});
+ button.emit("pointerdown",{pointerId:22,button:0,clientX:100,clientY:70});
+ button.emit("pointercancel",{pointerId:22});
+ button.emit("pointerdown",{pointerId:23,button:0,clientX:100,clientY:70});
+ button.emit("lostpointercapture",{pointerId:23});
+ button.emit("pointerdown",{pointerId:24,button:0,clientX:100,clientY:70});
+ button.emit("pointerleave",{pointerId:24});
+ button.emit("pointerdown",{pointerId:25,button:0,clientX:100,clientY:70});
+ ui.render(states.PAUSED,hud);
+ await new Promise(resolve=>setTimeout(resolve,2050));
+ assert.equal(calls.filter(([name])=>name==="pause").length,0);
+ assert.equal(button.hidden,true);
+ ui.dispose();
+});
 
 test("ATTACK owns only the first active pointer for automatic, Bow and tap weapons",async()=>{
  for(const weapon of ["uzi","bow","blade"]){
