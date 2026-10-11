@@ -139,6 +139,8 @@ export class WebInput implements InputSource {
  private context(e:MouseEvent){e.preventDefault();}
  private position(e:PointerEvent){const r=this.canvas.getBoundingClientRect();this.state.pointerX=((e.clientX-r.left)/Math.max(r.width,1))*2-1;this.state.pointerY=((e.clientY-r.top)/Math.max(r.height,1))*2-1;}
  private movement(){
+  this.state.aimUpHeld=this.keys.has("KeyR");this.state.aimDownHeld=this.keys.has("KeyF");
+  this.p2.aimUpHeld=this.keys.has("PageUp");this.p2.aimDownHeld=this.keys.has("PageDown");
   let x=this.touchMoveX,y=this.touchMoveY,x2=this.p2TouchX,y2=this.p2TouchY;
   for(const key of this.keys){
    const d=this.pvp?P1[key]:P1[key]??P2[key];
@@ -151,9 +153,9 @@ export class WebInput implements InputSource {
   this.state.moveX=Math.max(-1,Math.min(1,x));this.state.moveY=Math.max(-1,Math.min(1,y));
   this.p2.moveX=Math.max(-1,Math.min(1,x2));this.p2.moveY=Math.max(-1,Math.min(1,y2));
  }
- private gameKey(code:string){return Boolean(P1[code]||P2[code]||JUMP.has(code)||DASH.has(code)||ATTACK.has(code)||code===GRAB_KEY||["KeyQ","KeyE","KeyO","KeyP"].includes(code)||
+ private gameKey(code:string){return Boolean(P1[code]||P2[code]||JUMP.has(code)||DASH.has(code)||ATTACK.has(code)||code===GRAB_KEY||["KeyQ","KeyE","KeyO","KeyP","KeyR","KeyF","PageUp","PageDown"].includes(code)||
   (this.pvp&&(P2_ATTACK.has(code)||P2_JUMP.has(code)||P2_DASH.has(code)||code===P2_GRAB_KEY||["BracketLeft","BracketRight"].includes(code))));}
- private reset(){const pointerId=this.activePointerId;this.activePointerId=null;if(pointerId!==null&&this.canvas.hasPointerCapture(pointerId))this.canvas.releasePointerCapture(pointerId);this.touchMoveX=0;this.touchMoveY=0;this.touchJumpArmed=true;this.touchAttackHeld=false;this.state.moveX=0;this.state.moveY=0;this.state.pointerDown=false;this.state.pointerPressed=false;this.state.pointerReleased=false;this.state.attackHeld=false;this.state.attackCancelled=true;this.state.jumpPressed=false;this.state.dashPressed=false;this.state.grabPressed=false;this.state.attackPressed=false;this.state.weaponNextPressed=false;this.state.weaponPreviousPressed=false;
+ private reset(){this.state.aimUpHeld=false;this.state.aimDownHeld=false;this.p2.aimUpHeld=false;this.p2.aimDownHeld=false;const pointerId=this.activePointerId;this.activePointerId=null;if(pointerId!==null&&this.canvas.hasPointerCapture(pointerId))this.canvas.releasePointerCapture(pointerId);this.touchMoveX=0;this.touchMoveY=0;this.touchJumpArmed=true;this.touchAttackHeld=false;this.state.moveX=0;this.state.moveY=0;this.state.pointerDown=false;this.state.pointerPressed=false;this.state.pointerReleased=false;this.state.attackHeld=false;this.state.attackCancelled=true;this.state.jumpPressed=false;this.state.dashPressed=false;this.state.grabPressed=false;this.state.attackPressed=false;this.state.weaponNextPressed=false;this.state.weaponPreviousPressed=false;
   this.p2TouchX=0;this.p2TouchY=0;this.p2TouchAttackHeld=false;this.p2JumpArmed=true;
   this.p2.moveX=0;this.p2.moveY=0;this.p2.attackHeld=false;this.p2.attackPressed=false;this.p2.attackCancelled=true;
   this.p2.pointerReleased=false;this.p2.jumpPressed=false;this.p2.dashPressed=false;this.p2.grabPressed=false;

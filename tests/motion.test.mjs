@@ -197,7 +197,7 @@ test('all eight weapon upgrades change their combat behavior',()=>{
  const sticky=game.projectiles[0];sticky.x=0;sticky.y=.3;sticky.vx=0;sticky.vy=-1;game.update(1/60);
  assert.equal(sticky.stuck,true);
 
- game.setArena('fortress');game.projectiles=[];game.player.cooldown=0;game.fireWeapon();
+ game.setArena('fortress');game.selectWeaponById('missile');game.projectiles=[];game.player.cooldown=0;game.fireWeapon();
  const missile=game.projectiles[0];game.explodeMissile(missile);
  const children=game.projectiles.filter(p=>p.clusterChild);
  assert.equal(children.length,4);assert.ok(children.every(p=>p.damageScale===.42));

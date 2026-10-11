@@ -1,104 +1,53 @@
 import {test,expect} from "@playwright/test";
-
 const button=id=>`.game-ui.playing .game-ui__weapon-list button[data-weapon="${id}"]`;
+const toggle=".game-ui__mobile-weapon-switcher .game-ui__weapon-toggle";
 const selected=page=>page.evaluate(()=>window.__weaponFixture.selected());
 const changeMode=(page,mode)=>page.evaluate(m=>window.__weaponFixture.setMode(m),mode);
 const changeArena=(page,arena)=>page.evaluate(a=>window.__weaponFixture.setArena(a),arena);
-
 test.beforeEach(async({page})=>{
  await page.setViewportSize({width:1280,height:720});
  await page.goto("tests/browser/weapon-picker.html");
  await page.waitForFunction(()=>Boolean(window.__weaponFixture));
- await expect(page.locator(".game-ui.playing")).toBeVisible();
 });
-
-test("visible desktop weapon buttons receive native mouse clicks and equip the selected weapon",async({page})=>{
- const bar=page.locator(".game-ui.playing .game-ui__weapon-list");
- await expect(bar).toHaveCSS("pointer-events","none");
- for(const id of ["hammer","blaster","uzi","boomerang","bow","bomb","blade"]){
-  const target=page.locator(button(id));
-  await expect(target).toBeVisible();
-  await expect(target).toBeEnabled();
-  await expect(target).toHaveCSS("pointer-events","auto");
+test("one weapon button opens a palette and closes after choosing",async({page})=>{
+ await expect(page.locator(toggle)).toBeVisible();
+ await expect(page.locator(".game-ui__weapon-list")).toBeHidden();
+ for(const id of ["hammer","blaster","uzi","boomerang","bow","bomb","missile","blade"]){
+  await page.locator(toggle).click();await expect(page.locator(button(id))).toBeEnabled();
   await page.evaluate(()=>window.__weaponFixture.clearAttack());
-  // Playwright performs genuine Chromium pointer hit testing; a CSS-only check would miss the regression.
-  await target.click({timeout:2000});
-  expect(await selected(page)).toBe(id);
-  await expect(target).toHaveClass(/active/);
+  await page.locator(button(id)).click();expect(await selected(page)).toBe(id);
+  await expect(page.locator(".game-ui__weapon-list")).toBeHidden();
   expect(await page.evaluate(()=>window.__weaponFixture.attackPressed())).toBe(false);
  }
- await expect(page.locator(button("missile"))).toBeHidden();
 });
-
-test("weapon-bar gaps and the battlefield remain click-through to WebInput",async({page})=>{
- const list=page.locator(".game-ui.playing .game-ui__weapon-list");
- const first=page.locator(button("blade")),second=page.locator(button("hammer"));
- const a=await first.boundingBox(),b=await second.boundingBox();
- expect(a).toBeTruthy();expect(b).toBeTruthy();
- // Flex visual order reverses in RTL (Persian): choose the gap geometrically.
- const left=a.x<b.x?a:b,right=a.x<b.x?b:a;
- expect(right.x).toBeGreaterThan(left.x+left.width);
- const gapX=(left.x+left.width+right.x)/2,gapY=a.y+a.height/2;
- const underGap=await page.evaluate(({x,y})=>document.elementFromPoint(x,y)?.id,{x:gapX,y:gapY});
- expect(underGap).toBe("game-canvas");
- await page.mouse.click(gapX,gapY);
- expect(await page.evaluate(()=>window.__weaponFixture.attackPressed())).toBe(true);
- await page.evaluate(()=>window.__weaponFixture.clearAttack());
- const battlefield=await page.locator("#game-canvas").boundingBox();
- await page.mouse.click(battlefield.x+50,battlefield.y+battlefield.height/2);
- expect(await page.evaluate(()=>window.__weaponFixture.attackPressed())).toBe(true);
- expect(await selected(page)).toBe("blade");
- await expect(list).toHaveCSS("pointer-events","none");
+test("palette closes with its button or Escape without firing",async({page})=>{
+ await page.locator(toggle).click();await page.locator(toggle).click();
+ await expect(page.locator(".game-ui__weapon-list")).toBeHidden();
+ await page.locator(toggle).click();await page.keyboard.press("Escape");
+ await expect(page.locator(".game-ui__weapon-list")).toBeHidden();
+ expect(await page.evaluate(()=>window.__weaponFixture.attackPressed())).toBe(false);
 });
-
-test("melee-only hides and disables ranged weapons while the two melee buttons remain clickable",async({page})=>{
- await changeMode(page,"melee-only");
- for(const id of ["blade","hammer"]){
-  await expect(page.locator(button(id))).toBeVisible();
-  await page.locator(button(id)).click();
-  expect(await selected(page)).toBe(id);
- }
- for(const id of ["blaster","uzi","boomerang","bow","bomb","missile"]){
-  await expect(page.locator(button(id))).toBeHidden();
-  await expect(page.locator(button(id))).toBeDisabled();
-  await page.locator(button(id)).evaluate(el=>el.click());
-  expect(await selected(page)).toBe("hammer");
- }
+test("melee-only excludes ranged weapons",async({page})=>{
+ await changeMode(page,"melee-only");await page.locator(toggle).click();
+ for(const id of ["blaster","uzi","boomerang","bow","bomb","missile"]){await expect(page.locator(button(id))).toBeHidden();await expect(page.locator(button(id))).toBeDisabled();}
+ await page.locator(button("hammer")).click();expect(await selected(page)).toBe("hammer");
 });
-
-test("missile-duel and Fortress duel restrict all other weapons",async({page})=>{
- await changeMode(page,"missile-duel");
- // Desktop keeps the bar available for the single permitted Missile button.
- await expect(page.locator(button("missile"))).toBeVisible();
- await expect(page.locator(button("missile"))).toBeEnabled();
- expect(await selected(page)).toBe("missile");
- for(const id of ["blade","hammer","blaster","uzi","boomerang","bow","bomb"]){
-  await expect(page.locator(button(id))).toBeDisabled();
-  await page.locator(button(id)).evaluate(el=>el.click());
-  expect(await selected(page)).toBe("missile");
- }
- await changeMode(page,"duel");
- await changeArena(page,"fortress");
- expect(await selected(page)).toBe("missile");
- await expect(page.locator(button("missile"))).toBeVisible();
- await expect(page.locator(button("missile"))).toBeEnabled();
- await page.locator(button("missile")).click();
- expect(await selected(page)).toBe("missile");
- await expect(page.locator(button("blade"))).toBeDisabled();
+test("Missile Duel locks the weapon; Fortress allows all standard weapons",async({page})=>{
+ await changeMode(page,"missile-duel");expect(await selected(page)).toBe("missile");await expect(page.locator(toggle)).toBeHidden();
+ await changeMode(page,"duel");await changeArena(page,"fortress");expect(await selected(page)).toBe("blade");
+ await page.locator(toggle).click();await page.locator(button("missile")).click();expect(await selected(page)).toBe("missile");
+ await page.locator(toggle).click();await page.locator(button("bow")).click();expect(await selected(page)).toBe("bow");
 });
-
-test("random-weapons permits no manual weapon changes",async({page})=>{
- await changeMode(page,"random-weapons");
- const weapon=await selected(page);
- const visible=page.locator(".game-ui.playing .game-ui__weapon-list button:visible");
- await expect(visible).toHaveCount(1);
- await expect(visible).toBeDisabled();
- await visible.evaluate(el=>el.click());
- expect(await selected(page)).toBe(weapon);
- await expect(page.locator(button("missile"))).toBeDisabled();
- for(const id of ["blade","hammer","blaster","uzi","boomerang","bow","bomb"].filter(x=>x!==weapon)){
-  await expect(page.locator(button(id))).toBeHidden();
- }
+test("random weapons disables manual selection",async({page})=>{
+ await changeMode(page,"random-weapons");await expect(page.locator(toggle)).toBeHidden();await expect(page.locator(".game-ui__weapon-list")).toBeHidden();
+});
+test("direction pad aims without moving or firing",async({page})=>{
+ await page.evaluate(()=>window.__weaponFixture.setWeapon("blaster"));
+ const pad=await page.locator('.game-ui__aim-pad[data-player="1"]').boundingBox();
+ await page.mouse.move(pad.x+pad.width/2,pad.y+pad.height/2);await page.mouse.down();await page.mouse.move(pad.x+pad.width,pad.y);await page.mouse.up();
+ expect(await page.evaluate(()=>window.__weaponFixture.projectiles())).toBe(0);
+ expect(await page.evaluate(()=>window.__weaponFixture.moveX())).toBe(0);
+ expect(await page.evaluate(()=>window.__weaponFixture.attackHeld())).toBe(false);
 });
 
 test("mouse release over a blocking overlay still ends the captured canvas attack",async({page})=>{

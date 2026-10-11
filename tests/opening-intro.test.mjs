@@ -12,7 +12,7 @@ import {
 } from "../.test-build/ui/OpeningIntroMotion.js";
 
 test("long intro keeps the weightless figure moving after the menu appears",()=>{
- assert.ok(OPENING_DURATION_MS>=10000,"show the opening animation for at least 10 seconds");
+ assert.equal(OPENING_DURATION_MS,3000,"reveal the menu after three seconds");
  const beginning=openingFrame(0);
  const midpoint=openingFrame(OPENING_DURATION_MS/2);
  const end=openingFrame(OPENING_DURATION_MS);

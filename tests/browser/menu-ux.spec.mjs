@@ -8,16 +8,16 @@ test.beforeEach(async({page})=>{
  await expect(page.locator(".game-ui.menu")).toBeVisible();
 });
 
-test("player-count cards filter mode choices and arena is selected on the next screen",async({page})=>{
+test("player-count cards preserve all mode choices and arena is selected on the next screen",async({page})=>{
  const solo=page.locator('.game-ui__quick-mode[data-quick-mode="duel"]');
  const versus=page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]');
  const cards=page.locator(".game-ui__mode-card:visible");
  await expect(solo).toHaveAttribute("aria-pressed","true");
  await expect(cards).toHaveCount(7);
  await versus.tap();
- expect((await page.evaluate(()=>window.__runFixture.view())).mode).toBe("local-pvp");
+ expect((await page.evaluate(()=>window.__runFixture.view())).localPvP).toBe(true);
  await expect(versus).toHaveAttribute("aria-pressed","true");
- await expect(cards).toHaveCount(1);
+ await expect(cards).toHaveCount(7);
  await expect(page.locator(".game-ui__pvp-hint")).toBeVisible();
  await solo.tap();
  await expect(cards).toHaveCount(7);
@@ -272,7 +272,7 @@ test("direct map shortcut exposes all sixteen selectable maps and the chosen are
  await page.locator('button[data-action="start"]').tap();
  const state=await page.evaluate(()=>window.__runFixture.pvpSnapshot());
  expect(state.arena).toBe("sky");
- expect(state.mode).toBe("local-pvp");
+ expect(state.localPvP).toBe(true);
 });
 
 test("character names persist across launches and are used for both local fighters",async({page})=>{
@@ -328,7 +328,7 @@ test("real keyboard typing works for both local players and every arena is selec
  await page.locator('button[data-action="start"]').tap();
  const match=await page.evaluate(()=>window.__runFixture.pvpSnapshot());
  expect(match.arena).toBe("reactor");
- expect(match.mode).toBe("local-pvp");
+ expect(match.localPvP).toBe(true);
  await expect(page.locator(".health-bar--player .health-label__name")).toHaveText("Arman");
  await expect(page.locator(".health-bar--opponent .health-label__name")).toHaveText("Sina");
 });
@@ -364,7 +364,7 @@ test("local PvP names follow the physical left and right characters in Persian a
  await page.locator('button[data-action="start"]').tap();
  const fighters=await page.evaluate(()=>window.__runFixture.pvpSnapshot());
  expect(fighters.player.x).toBeLessThan(fighters.opponent.x);
- expect(fighters.mode).toBe("local-pvp");
+ expect(fighters.localPvP).toBe(true);
  const p1=page.locator(".health-bar--player"),p2=page.locator(".health-bar--opponent");
  await expect(p1.locator(".health-label__name")).toHaveText("Left Hero");
  await expect(p2.locator(".health-label__name")).toHaveText("Right Hero");

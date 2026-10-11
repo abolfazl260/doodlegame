@@ -99,7 +99,7 @@ function setup(hudOverride={}){
 
 test("wizard selects player count and mode cards before arena and optional weapon cards",()=>{
  const {ui,calls,hud}=setup();
- assert.equal(ui.menuSettings.children.length,8);
+ assert.equal(ui.menuSettings.children.length,7);
  assert.equal(ui.arenaCards.children.length,16);
  assert.equal(ui.weaponCards.children.length,8);
  assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"true");
@@ -240,7 +240,7 @@ test("menu provides a safe-area-aware scroll region and sticky primary action",(
 test("optional starting weapon cards honor missile, melee and random restrictions",()=>{
  const {ui,hud}=setup();
  assert.equal(ui.weaponDetails.hidden,false);
- assert.equal(ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="missile").hidden,true);
+ assert.equal(ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="missile").hidden,false);
  hud.mode="melee-only";ui.render(states.MENU,hud);
  assert.equal(ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="blaster").hidden,true);
  assert.equal(ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="hammer").disabled,false);
@@ -285,7 +285,7 @@ test("Android update control is a single hidden-by-default action with no extra 
 });
 
 
-test("player-count and mode cards are separate, with a single 2P mode",()=>{
+test("player-count and mode cards are separate, with all modes available for 2P",()=>{
  const {ui,calls,hud}=setup();
  assert.equal(ui.menu.children.at(-1),ui.buttons);
  assert.ok(ui.menuModePanel.children.includes(ui.quickModes));
@@ -301,8 +301,8 @@ test("player-count and mode cards are separate, with a single 2P mode",()=>{
  assert.deepEqual(calls.at(-1),["mode","local-pvp"]);
  assert.equal(ui.quickPvpButton.getAttribute("aria-pressed"),"true");
  assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"false");
- assert.equal(ui.menuSettings.children.filter(c=>!c.hidden).length,1);
- assert.equal(ui.menuSettings.children.find(c=>c.dataset.mode==="local-pvp").hidden,false);
+ assert.equal(ui.menuSettings.children.filter(c=>!c.hidden).length,7);
+ assert.equal(ui.menuSettings.children.some(c=>c.dataset.mode==="local-pvp"),false);
  assert.equal(ui.pvpHint.hidden,false);
  ui.quickDuelButton.click();
  assert.deepEqual(calls.at(-1),["mode","duel"]);

@@ -72,6 +72,7 @@ test("visual hit-stop freezes animation only while simulation proceeds",()=>{
 test("missile launch and explosion retain collision behavior with distinct cues",()=>{
  const game=create();
  game.setArena("fortress");
+ game.selectWeaponById("missile");
  const prevHealth=game.getRenderState().opponent.health;
  game.fireWeapon();
  let state=game.getRenderState();

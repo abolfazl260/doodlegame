@@ -15,14 +15,14 @@ test.beforeEach(async({page})=>{
 
 test("Two Players option launches an AI-free duel and exposes both touch control sets",async({page})=>{
  await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
- await expect(page.locator('.game-ui__mode-card[data-mode="local-pvp"]')).toHaveAttribute("aria-pressed","true");
+ await expect(page.locator('.game-ui__mode-card[data-mode="duel"]')).toHaveAttribute("aria-pressed","true");
  await expect(page.locator(".game-ui__pvp-hint")).toBeVisible();
  await expect(page.locator(".game-ui__pvp-hint")).toContainText(/P1|نفر ۱|بازیکن ۱/);
  await page.locator('button[data-action="next"]').tap();
 await page.locator('button[data-action="start"]').tap();
  expect(await page.evaluate(()=>window.__runFixture.state())).toBe("PLAYING");
  const game=await snapshot(page);
- expect(game.mode).toBe("local-pvp");
+ expect(game.localPvP).toBe(true);
  expect(game.player.health).toBe(100);
  expect(game.opponent.health).toBe(100);
  expect(game.opponent.enemyType).toBe(null);
@@ -30,7 +30,7 @@ await page.locator('button[data-action="start"]').tap();
  await expect(page.locator(".game-ui__p2-joystick")).toBeVisible();
  await expect(page.locator(".game-ui__p2-attack")).toBeVisible();
  await expect(page.locator(".game-ui__mobile-button--attack")).toBeVisible();
- await expect(page.locator(".game-ui__p2-weapons button")).toHaveCount(2);
+ await expect(page.locator(".game-ui__p2-weapons button")).toHaveCount(1);
 });
 
 test("desktop-style keyboard controls remain independent for both fighters",async({page})=>{
@@ -109,6 +109,7 @@ test("P2 weapon selector, Pause/Resume and match result work on mobile",async({p
  await page.evaluate(()=>window.__runFixture.startPvP());
  const next=page.locator(".game-ui__p2-weapons button").last();
  await next.tap();
+ await page.locator('.game-ui__weapon-list button[data-weapon="hammer"]').tap();
  await page.evaluate(()=>window.__runFixture.tickPvP(1));
  expect((await snapshot(page)).opponent.weapon).toBe("hammer");
  expect((await snapshot(page)).player.weapon).toBe("blade");
@@ -165,7 +166,7 @@ test("compact 568×260 landscape keeps all four touch controls and Pause separat
    expect(overlap,selectors[i]+" overlaps "+selectors[j]).toBe(0);
   }
  }
- await expect(page.locator(".game-ui__p2-weapons button")).toHaveCount(2);
+ await expect(page.locator(".game-ui__p2-weapons button")).toHaveCount(1);
 });
 
 test("Down + ATTACK activates straight, timed follow-up spins, and P2 keyboard can kick",async({page})=>{

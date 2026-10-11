@@ -10,12 +10,13 @@ type HudState={
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;missileAngle:number;missilePower:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
  progression?:ProgressionView|null;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;
- playerName?:string;secondPlayerName?:string;
+ weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;
 };
 type Actions={
  newRun?:()=>void;continueRun?:()=>void;leaveRun?:()=>void;
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;stopToMenu?:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
+ playerCountSelect?:(count:1|2)=>void;setWeaponAim?:(player:1|2,x:number,y:number)=>void;player2WeaponSelect?:(id:WeaponId)=>void;
  setCharacterName?:(player:1|2,name:string)=>void;
  setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
  setTouchMove:(x:number,y:number)=>void;touchGrab:()=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;
@@ -34,7 +35,7 @@ const MENU_STEPS:readonly MenuStep[]=["mode","arena"];
 
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
-const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill","local-pvp"];
+const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
 const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";
 
 export class GameUI{
@@ -46,7 +47,6 @@ export class GameUI{
  private p2Attack=document.createElement("button");
  private p2WeaponControls=document.createElement("div");
  private p2WeaponName=document.createElement("span");
- private p2Prev=document.createElement("button");
  private p2Next=document.createElement("button");
  private cancelP2TouchControls:()=>void=()=>{};
  private cancelP2Attack:()=>void=()=>{};
@@ -62,7 +62,6 @@ export class GameUI{
  private cancelActiveTouchAttack:()=>void=()=>{};
  private removeTouchLifecycle:()=>void=()=>{};
  private mobileWeaponSwitcher=document.createElement("div");
- private previousWeaponButton=document.createElement("button");
  private mobileWeaponName=document.createElement("span");
  private mobileWeaponIndex=document.createElement("small");
  private nextWeaponButton=document.createElement("button");
@@ -100,7 +99,7 @@ export class GameUI{
  private menuExtrasTitle=document.createElement("summary");
  private menuSettings=document.createElement("div");
  private menuStepIndex=0;
- private lastSoloMode:GameModeId="duel";
+
  private menuProgress=document.createElement("div");
  private menuModePanel=document.createElement("section");
  private menuArenaPanel=document.createElement("section");
@@ -145,6 +144,26 @@ export class GameUI{
  private opponentHealth=document.createElement("div");
  private buttons=document.createElement("div");
  private weaponList=document.createElement("div");
+ private weaponPickerPlayer:1|2=1;
+ private weaponPickerOpen=false;
+ private aimPads=[document.createElement("div"),document.createElement("div")];
+ private lastAimDirections:(number|null|undefined)[]=[];
+ private cancelAimPointers:(()=>void)[]=[];
+ private closeWeaponPicker(){
+  this.weaponPickerOpen=false;this.setHidden(this.weaponList,true);
+  this.nextWeaponButton.setAttribute("aria-expanded","false");this.p2Next.setAttribute("aria-expanded","false");
+ }
+ private toggleWeaponPicker(player:1|2){
+  if(this.currentState!==GameState.PLAYING)return;
+  const hud=this.readHud?.();if(!hud||hud.winner||hud.mode==="missile-duel"||hud.mode==="random-weapons")return;
+  if(this.weaponPickerOpen&&this.weaponPickerPlayer===player){this.closeWeaponPicker();return;}
+  this.weaponPickerPlayer=player;this.weaponPickerOpen=true;
+  this.weaponList.dataset.player=String(player);
+  this.nextWeaponButton.setAttribute("aria-expanded",String(player===1));this.p2Next.setAttribute("aria-expanded",String(player===2));
+  this.setHidden(this.weaponList,false);
+  for(const item of this.weaponList.children){const button=item as HTMLButtonElement;button.classList.toggle("active",button.dataset.weapon===(player===1?hud.weapon:hud.secondWeapon));}
+ }
+
  private arenaTitle=document.createElement("div");
  private modeTitle=document.createElement("div");
  private rotateHint=document.createElement("div");
@@ -179,7 +198,7 @@ export class GameUI{
  private readHud:(()=>HudState)|null=null;
  private hudFrame:number|null=null;
  private currentState=GameState.MENU;
- private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId;playerName?:string;secondPlayerName?:string}|null=null;
+ private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId;playerName?:string;secondPlayerName?:string;localPvP?:boolean}|null=null;
  private lastHealth:{playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;locale:string}|null=null;
  private lastAim:{angle:number;power:number}|null=null;
  private lastBowPercent=NaN;
@@ -206,13 +225,13 @@ export class GameUI{
   this.p2Attack.className="game-ui__p2-attack";
   this.p2Attack.type="button";
   this.p2WeaponControls.className="game-ui__p2-weapons";
-  this.p2Prev.type="button";this.p2Next.type="button";
-  this.p2Prev.textContent="‹";this.p2Next.textContent="›";
-  this.p2WeaponControls.append(this.p2Prev,this.p2WeaponName,this.p2Next);
-  this.p2Controls.append(this.p2Joystick,this.p2Attack,this.p2WeaponControls);
+  this.p2Next.type="button";this.p2Next.className="game-ui__weapon-toggle";
+  this.p2Next.append(this.p2WeaponName);
+  this.p2Next.setAttribute("aria-expanded","false");
+  this.p2WeaponControls.append(this.p2Next);
+  this.p2Controls.append(this.p2Joystick,this.p2Attack);
   this.p2Controls.hidden=true;
-  this.p2Prev.onclick=()=>actions.player2WeaponPrevious?.();
-  this.p2Next.onclick=()=>actions.player2WeaponNext?.();
+  this.p2Next.onclick=()=>this.toggleWeaponPicker(2);
   this.joystick.className="game-ui__joystick";
   this.joystickThumb.className="game-ui__joystick-thumb";
   this.mobileAttackButton.type="button";
@@ -223,8 +242,6 @@ export class GameUI{
   this.mobilePauseButton.onclick=()=>{if(this.currentState===GameState.PLAYING)actions.pause();};
   this.mobileWeaponSwitcher.className="game-ui__mobile-weapon-switcher";
   this.mobileWeaponSwitcher.setAttribute("role","group");
-  this.previousWeaponButton.type="button";
-  this.previousWeaponButton.textContent="‹";
   this.mobileWeaponName.className="game-ui__mobile-weapon-name";
   this.mobileWeaponName.dir="auto";
   this.mobileWeaponName.setAttribute("aria-live","polite");
@@ -234,12 +251,12 @@ export class GameUI{
   weaponDisplay.className="game-ui__mobile-weapon-display";
   weaponDisplay.append(this.mobileWeaponName,this.mobileWeaponIndex);
   this.nextWeaponButton.type="button";
-  this.nextWeaponButton.textContent="›";
-  this.previousWeaponButton.className="game-ui__mobile-weapon-arrow";
-  this.nextWeaponButton.className="game-ui__mobile-weapon-arrow";
-  this.mobileWeaponSwitcher.append(weaponDisplay,this.previousWeaponButton,this.nextWeaponButton);
+  this.nextWeaponButton.className="game-ui__weapon-toggle";
+  this.nextWeaponButton.setAttribute("aria-expanded","false");
+  this.nextWeaponButton.append(weaponDisplay);
+  this.mobileWeaponSwitcher.append(this.nextWeaponButton);
   this.joystick.append(this.joystickThumb);
-  this.mobileControls.append(this.mobileWeaponSwitcher,this.joystick,this.mobileAttackButton,this.mobilePauseButton,this.p2Controls);
+  this.mobileControls.append(this.joystick,this.mobileAttackButton,this.mobilePauseButton,this.p2Controls);
   this.missileAimGuide.className="game-ui__missile-aim-guide";
   this.missileAimGuide.hidden=true;
   this.missileAimGuide.setAttribute("aria-live","off");
@@ -316,8 +333,8 @@ export class GameUI{
   this.quickPvpButton.className="game-ui__quick-mode";
   this.quickDuelButton.dataset.quickMode="duel";
   this.quickPvpButton.dataset.quickMode="local-pvp";
-  this.quickDuelButton.onclick=()=>actions.modeSelect(this.lastSoloMode);
-  this.quickPvpButton.onclick=()=>actions.modeSelect("local-pvp");
+  this.quickDuelButton.onclick=()=>actions.playerCountSelect?actions.playerCountSelect(1):actions.modeSelect("duel");
+  this.quickPvpButton.onclick=()=>actions.playerCountSelect?actions.playerCountSelect(2):actions.modeSelect("local-pvp");
   this.quickModes.append(this.quickDuelButton,this.quickPvpButton);
   this.modeDescription.className="game-ui__mode-description";
   this.matchSummary.className="game-ui__match-summary";
@@ -477,7 +494,10 @@ export class GameUI{
    const item=document.createElement("button");
    item.type="button";
    item.dataset.weapon=id;
-   item.onclick=()=>actions.weaponSelect(id);
+   item.onclick=()=>{
+    if(this.weaponPickerPlayer===2)actions.player2WeaponSelect?.(id);else actions.weaponSelect(id);
+    this.closeWeaponPicker();
+   };
    this.weaponList.append(item);
   }
   this.stepBackButton.type="button";this.stepNextButton.type="button";
@@ -513,6 +533,7 @@ export class GameUI{
   };
   this.root.addEventListener("keydown",event=>{
    if(event.key!=="Escape")return;
+   if(this.weaponPickerOpen){event.preventDefault();event.stopPropagation();this.closeWeaponPicker();return;}
    if(!this.help.hidden){event.preventDefault();event.stopPropagation();this.helpCloseButton.click();}
    else if(!this.privacy.hidden){event.preventDefault();event.stopPropagation();this.privacyCloseButton.click();}
   });
@@ -547,8 +568,7 @@ export class GameUI{
   this.joystick.addEventListener("pointerup",releaseJoystick);
   this.joystick.addEventListener("pointercancel",releaseJoystick);
   this.joystick.addEventListener("lostpointercapture",releaseJoystick);
-  this.previousWeaponButton.onclick=()=>{haptic(8);actions.weaponPrevious();};
-  this.nextWeaponButton.onclick=()=>{haptic(8);actions.weaponNext();};
+  this.nextWeaponButton.onclick=()=>{haptic(8);this.toggleWeaponPicker(1);};
   // A captured pointer owns ATTACK independently of the movement joystick.
   // Missile gestures fire only on pointerup; cancellation never launches a missile.
   let attackPointer=-1;
@@ -573,6 +593,7 @@ export class GameUI{
   const cancelControls=()=>{
    cancelAttack();
    this.cancelP2TouchControls();
+   for(const cancel of this.cancelAimPointers)cancel();
    if(joystickPointer!==-1){
     const id=joystickPointer;
     joystickPointer=-1;
@@ -680,7 +701,7 @@ export class GameUI{
    startX=event.clientX;
    startY=event.clientY;
    attackAt=Date.now();attackStarted=false;grabTriggered=false;
-   baseAngle=hud.missileAngle;
+   baseAngle=hud.weaponAimAngle!=null?Math.atan2(Math.sin(hud.weaponAimAngle),Math.abs(Math.cos(hud.weaponAimAngle)))*180/Math.PI:hud.missileAngle;
    basePower=hud.missilePower;
    try{this.mobileAttackButton.setPointerCapture?.(event.pointerId);}
    catch{
@@ -801,10 +822,40 @@ export class GameUI{
   this.menuSetupSection.append(this.menuProgress,this.menuLead,this.menuModePanel,this.menuArenaPanel);
   this.menu.append(this.menuHeader,this.menuResult,this.menuSetupSection,this.menuProgressDetails,this.menuExtras,this.buttons);
   this.topHud.append(this.playerHealth,this.status,this.opponentHealth,this.details);
+  for(const [index,pad] of this.aimPads.entries()){
+   const player=index===0?1:2;
+   pad.className="game-ui__aim-pad";pad.dataset.player=String(player);
+   pad.setAttribute("role","group");pad.tabIndex=0;
+   pad.textContent="⊕";
+   let pointer:number|null=null;
+   const aim=(event:PointerEvent)=>{
+    const rect=pad.getBoundingClientRect(),x=event.clientX-rect.left-rect.width/2,y=rect.top+rect.height/2-event.clientY;
+    if(Math.hypot(x,y)<5)return;
+    actions.setWeaponAim?.(player,x,y);
+    pad.style.setProperty("--aim-angle",(-Math.atan2(y,x)*180/Math.PI)+"deg");
+   };
+   const release=()=>{const id=pointer;pointer=null;pad.classList.remove("active");if(id!==null&&pad.hasPointerCapture?.(id))pad.releasePointerCapture(id);};
+   this.cancelAimPointers.push(release);
+   pad.addEventListener("pointerdown",event=>{
+    if(pointer!==null||this.currentState!==GameState.PLAYING||this.readHud?.().winner)return;
+    event.preventDefault();pointer=event.pointerId;
+    try{pad.setPointerCapture(event.pointerId);}catch{pointer=null;return;}
+    pad.classList.add("active");aim(event);
+   });
+   pad.addEventListener("pointermove",event=>{if(pointer===event.pointerId)aim(event);});
+   for(const kind of ["pointerup","pointercancel","lostpointercapture"])pad.addEventListener(kind,event=>{if(pointer===(event as PointerEvent).pointerId)release();});
+   pad.addEventListener("keydown",event=>{
+    const directions:Record<string,[number,number]>={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,1],ArrowDown:[0,-1]};
+    const direction=directions[event.key];if(!direction)return;
+    event.preventDefault();event.stopPropagation();actions.setWeaponAim?.(player,...direction);
+   });
+  }
+  this.root.append(this.mobileWeaponSwitcher,this.p2WeaponControls,...this.aimPads);
   this.root.append(this.menu,this.help,this.privacy,this.topHud,this.weaponList,this.missilePanel,this.bowPanel,this.mobileControls,this.rotateHint);
   container.append(this.root);
   this.root.addEventListener("keydown",event=>{
    if(event.key!=="Escape")return;
+   if(this.weaponPickerOpen){event.preventDefault();event.stopPropagation();this.closeWeaponPicker();return;}
    if(!this.help.hidden){event.preventDefault();event.stopPropagation();this.help.hidden=true;this.helpButton.focus();}
    else if(!this.privacy.hidden){event.preventDefault();event.stopPropagation();this.privacy.hidden=true;this.privacyButton.focus();}
   });
@@ -833,7 +884,7 @@ export class GameUI{
   const choosing=state===GameState.MENU;
   const results=state===GameState.GAME_OVER;
   const onArena=MENU_STEPS[this.menuStepIndex]==="arena";
-  if(s)this.setHidden(this.secondNameLabel,s.mode!=="local-pvp");
+  if(s)this.setHidden(this.secondNameLabel,!(s.localPvP??s.mode==="local-pvp"));
   // The result is NOT the first step of the setup wizard.
   this.setHidden(this.menuSetupSection,!choosing);
   this.setHidden(this.menuModePanel,!choosing||onArena);
@@ -848,8 +899,8 @@ export class GameUI{
   if(s){
    const rewardScreen=results&&Boolean(s.inRun);
    const menuExtras=choosing&&!onArena;
-   const hasRun=Boolean(s.progression);
-   const hasUpgrades=s.mode!=="local-pvp"&&
+   const hasRun=Boolean(s.progression)&&!(s.localPvP??s.mode==="local-pvp");
+   const hasUpgrades=!(s.localPvP??s.mode==="local-pvp")&&
     (s.upgradePoints>0||s.upgradedWeapons.length>0);
    // In the normal menu, show one optional view at a time. During a Run
    // intermission the reward choices and Next Fight action remain together.
@@ -874,7 +925,7 @@ export class GameUI{
   const labels=this.i18n.messages.menu;
   this.setText(this.menuLead,onArena?(labels?.chooseArena??"CHOOSE ARENA"):
    (labels?.kickoff??"CHOOSE YOUR FIGHT"));
-  this.setText(this.stepNextButton,s?.mode==="local-pvp"?
+  this.setText(this.stepNextButton,(s?.localPvP??s?.mode==="local-pvp")?
    (labels?.nextAllArenas??"NEXT · ALL 16 ARENAS"):
    (labels?.nextArena??"NEXT · CHOOSE ARENA"));
   const stepLabel=onArena?this.i18n.messages.sections.arena:
@@ -922,7 +973,7 @@ export class GameUI{
   const messages=this.i18n.messages,locale=this.i18n.locale,old=this.lastView;
   const stateChanged=!old||old.state!==state;
   const localeChanged=!old||old.locale!==locale;
-  const arenaChanged=!old||old.arena!==s.arena,modeChanged=!old||old.mode!==s.mode;
+  const arenaChanged=!old||old.arena!==s.arena,modeChanged=!old||old.mode!==s.mode||old.localPvP!==s.localPvP;
   const weaponChanged=!old||old.weapon!==s.weapon,winnerChanged=!old||old.winner!==s.winner;
   const secondWeaponChanged=!old||old.secondWeapon!==s.secondWeapon;
   const nameChanged=!old||old.playerName!==s.playerName||old.secondPlayerName!==s.secondPlayerName;
@@ -933,7 +984,7 @@ export class GameUI{
    s.upgradedWeapons.some((id,index)=>id!==old.upgradedWeapons[index]);
   const staticChanged=stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged||secondWeaponChanged||nameChanged;
   const aimChanged=!this.lastAim||this.lastAim.angle!==s.missileAngle||this.lastAim.power!==s.missilePower;
-  const missileRules=s.mode==="missile-duel"||(s.arena==="fortress"&&s.mode==="duel");
+  const missileRules=s.mode==="missile-duel";
 
   if(staticChanged){
    // A held UZI/Bow touch belongs to the originally selected weapon, not its replacement.
@@ -979,7 +1030,7 @@ export class GameUI{
     this.root.style.setProperty("--arena-hud-bg",theme.hudBackground);
     this.root.style.setProperty("--arena-platform-edge",theme.platformEdge);
    }
-   if(modeChanged)this.root.dataset.mode=s.mode;
+   if(modeChanged){this.root.dataset.mode=s.mode;this.root.dataset.players=(s.localPvP??s.mode==="local-pvp")?"2":"1";}
    if(nameChanged||stateChanged){
     if(document.activeElement!==this.playerNameInput&&this.playerNameInput.value!==(s.playerName??""))
      this.playerNameInput.value=s.playerName??"";
@@ -989,27 +1040,26 @@ export class GameUI{
    if(localeChanged||modeChanged||stateChanged){
     // UI captions refer to world positions, not RTL reading order.
     // The existing name-to-fighter and health-to-fighter mapping is unchanged.
-    this.setText(this.playerNameCaption,s.mode==="local-pvp"?
+    this.setText(this.playerNameCaption,(s.localPvP??s.mode==="local-pvp")?
      messages.characterNames.leftPlayer:messages.characterNames.playerOne);
-    this.setText(this.secondNameCaption,s.mode==="local-pvp"?
+    this.setText(this.secondNameCaption,(s.localPvP??s.mode==="local-pvp")?
      messages.characterNames.rightPlayer:messages.characterNames.playerTwo);
    }
    if(nameChanged||localeChanged||modeChanged||stateChanged){
     this.setText(this.playerHealthName,s.playerName||messages.characterNames.playerOne);
-    this.setText(this.opponentHealthName,s.mode==="local-pvp"?(s.secondPlayerName||messages.characterNames.playerTwo):messages.characterNames.opponent);
+    this.setText(this.opponentHealthName,(s.localPvP??s.mode==="local-pvp")?(s.secondPlayerName||messages.characterNames.playerTwo):messages.characterNames.opponent);
    }
    if(modeChanged||localeChanged||stateChanged){
-    this.setHidden(this.pvpHint,s.mode!=="local-pvp"||(state!==GameState.MENU&&state!==GameState.GAME_OVER));
+    this.setHidden(this.pvpHint,!(s.localPvP??s.mode==="local-pvp")||(state!==GameState.MENU&&state!==GameState.GAME_OVER));
     this.setText(this.pvpHint,messages.pvp?.hint??"");
    }
    if(modeChanged||localeChanged||stateChanged){
-    if(s.mode!=="local-pvp")this.lastSoloMode=s.mode;
-    this.quickDuelButton.setAttribute("aria-pressed",String(s.mode!=="local-pvp"));
-    this.quickPvpButton.setAttribute("aria-pressed",String(s.mode==="local-pvp"));
+    this.quickDuelButton.setAttribute("aria-pressed",String(!(s.localPvP??s.mode==="local-pvp")));
+    this.quickPvpButton.setAttribute("aria-pressed",String((s.localPvP??s.mode==="local-pvp")));
     this.setText(this.modeDescription,messages.menu?.modeDescriptions[s.mode]??"");
    }
    if(modeChanged||arenaChanged||localeChanged||stateChanged){
-    this.setText(this.arenaShortcut,(s.mode==="local-pvp"?
+    this.setText(this.arenaShortcut,((s.localPvP??s.mode==="local-pvp")?
      (messages.menu?.allArenas??"ALL 16 ARENAS"):
      (messages.menu?.mapShortcut??"CHOOSE ARENA"))+
      " · "+messages.arenas[s.arena]);
@@ -1028,7 +1078,7 @@ export class GameUI{
     if(modeChanged||localeChanged||stateChanged){
      for(const item of this.menuSettings.children){
       const card=item as HTMLButtonElement,id=card.dataset.mode as GameModeId;
-      const visible=s.mode==="local-pvp"?id==="local-pvp":id!=="local-pvp";
+      const visible=id!=="local-pvp";
       this.setHidden(card,!visible);
       card.setAttribute("aria-pressed",String(id===s.mode));
      }
@@ -1044,7 +1094,7 @@ export class GameUI{
      this.setHidden(this.weaponDetails,fixed);
      for(const item of this.weaponCards.children){
       const card=item as HTMLButtonElement,id=card.dataset.startingWeapon as WeaponId;
-      const allowed=!fixed&&id!=="missile"&&(s.mode!=="melee-only"||id==="blade"||id==="hammer");
+      const allowed=!fixed&&(s.mode!=="melee-only"||id==="blade"||id==="hammer");
       this.setHidden(card,!allowed);
       card.disabled=!allowed;
       card.setAttribute("aria-pressed",String(id===s.weapon));
@@ -1065,7 +1115,7 @@ export class GameUI{
       card.setAttribute("aria-pressed",String(id===selected));
      }
     }
-    const disabled=s.mode==="local-pvp"||s.upgradePoints<=0||available.length===0||
+    const disabled=(s.localPvP??s.mode==="local-pvp")||s.upgradePoints<=0||available.length===0||
      (Boolean(s.inRun)&&!runIntermission);
     this.upgradeButton.disabled=disabled;
     this.setHidden(this.upgradeChoices,disabled);
@@ -1110,15 +1160,15 @@ export class GameUI{
    if(localeChanged||weaponChanged||secondWeaponChanged||modeChanged||arenaChanged||upgradesChanged){
     for(const item of this.weaponList.children){
      const button=item as HTMLButtonElement,id=button.dataset.weapon as WeaponId;
-     button.classList.toggle("active",id===s.weapon);
+     button.classList.toggle("active",id===(this.weaponPickerPlayer===1?s.weapon:s.secondWeapon));
      this.setText(button,messages.weapons[id]+(upgraded.has(id)?" ★":""));
      const hidden=missileRules?id!=="missile":s.mode==="melee-only"?(id!=="blade"&&id!=="hammer"):
-      s.mode==="random-weapons"?id!==s.weapon:id==="missile";
+      s.mode==="random-weapons"?id!==s.weapon:false;
      this.setHidden(button,hidden);
      button.disabled=hidden||s.mode==="random-weapons";
     }
-    const availableWeapons=WEAPON_IDS.filter(id=>id!=="missile"&&(s.mode!=="melee-only"||id==="blade"||id==="hammer"));
-    this.setText(this.mobileWeaponName,(s.mode==="local-pvp"?messages.pvp.p1+" · ":"")+messages.weapons[s.weapon]+(upgraded.has(s.weapon)?" ★":""));
+    const availableWeapons=WEAPON_IDS.filter(id=>s.mode!=="melee-only"||id==="blade"||id==="hammer");
+    this.setText(this.mobileWeaponName,((s.localPvP??s.mode==="local-pvp")?messages.pvp.p1+" · ":"")+messages.weapons[s.weapon]+(upgraded.has(s.weapon)?" ★":""));
     this.setText(this.p2WeaponName,messages.pvp?.p2+" · "+messages.weapons[s.secondWeapon??"blade"]);
     if(this.mobileWeaponName.title!==equipped)this.mobileWeaponName.title=equipped;
     const position=availableWeapons.indexOf(s.weapon);
@@ -1126,18 +1176,22 @@ export class GameUI{
    }
    if(stateChanged||weaponChanged||winnerChanged||modeChanged||arenaChanged){
     const playing=state===GameState.PLAYING&&s.winner===null;
-    this.setHidden(this.weaponList,!playing);
+    if(!playing||modeChanged||weaponChanged||secondWeaponChanged)this.closeWeaponPicker();
+    this.setHidden(this.weaponList,!playing||!this.weaponPickerOpen);
+    this.setHidden(this.p2WeaponControls,!playing||!(s.localPvP??s.mode==="local-pvp")||missileRules||s.mode==="random-weapons");
+    this.setHidden(this.aimPads[0],!playing);
+    this.setHidden(this.aimPads[1],!playing||!(s.localPvP??s.mode==="local-pvp"));
     this.setHidden(this.mobileWeaponSwitcher,!playing||missileRules||s.mode==="random-weapons");
     this.setHidden(this.missilePanel,!playing||s.weapon!=="missile");
     this.setHidden(this.bowPanel,!playing||s.weapon!=="bow");
     this.setHidden(this.mobileControls,!playing);
-    this.setHidden(this.p2Controls,!playing||s.mode!=="local-pvp");
+    this.setHidden(this.p2Controls,!playing||!(s.localPvP??s.mode==="local-pvp"));
     if(!playing&&(stateChanged||winnerChanged))this.cancelTouchControls();
    }
    this.syncWizard(state,s);
    this.lastView={state,locale,arena:s.arena,mode:s.mode,weapon:s.weapon,winner:s.winner,
     upgradePoints:s.upgradePoints,upgradedWeapons:[...s.upgradedWeapons],progressKey,inRun:Boolean(s.inRun),secondWeapon:s.secondWeapon,
-    playerName:s.playerName,secondPlayerName:s.secondPlayerName};
+    playerName:s.playerName,secondPlayerName:s.secondPlayerName,localPvP:s.localPvP};
   }
 
   if(!this.hpFormatter||this.hpFormatterLocale!==locale){
@@ -1158,6 +1212,11 @@ export class GameUI{
     opponentHealth:s.opponentHealth,opponentMaxHealth:s.opponentMaxHealth,locale};
   }
 
+  for(const [index,angle] of [s.weaponAimAngle,s.secondAimAngle].entries()){
+   if(this.lastAimDirections[index]===angle)continue;
+   this.aimPads[index].style.setProperty("--aim-angle",(-(angle??(index===0?0:Math.PI))*180/Math.PI)+"deg");
+   this.lastAimDirections[index]=angle;
+  }
   if(aimChanged){
    const angle=String(s.missileAngle),power=String(s.missilePower);
    if(this.angleInput.value!==angle)this.angleInput.value=angle;
@@ -1180,15 +1239,15 @@ export class GameUI{
      s.hill.opponent.toFixed(1)+" / "+s.hill.target.toFixed(0):messages.modes[s.mode];
    // No winner while a match is active. Avoid evaluating result labels on every HUD update.
    let pvpResult="";
-   if(s.mode==="local-pvp"){
+   if((s.localPvP??s.mode==="local-pvp")){
     if(s.winner==="draw")pvpResult=messages.pvp.draw;
     else if(s.winner==="player")pvpResult=s.playerName?
      s.playerName+" "+messages.characterNames.wins:messages.pvp.winner1;
     else if(s.winner==="opponent")pvpResult=s.secondPlayerName?
      s.secondPlayerName+" "+messages.characterNames.wins:messages.pvp.winner2;
    }
-   this.setText(this.status,s.mode==="local-pvp"&&s.winner?pvpResult:status);
-   if(state===GameState.GAME_OVER)this.setText(this.menuResult,s.mode==="local-pvp"?pvpResult:status);
+   this.setText(this.status,(s.localPvP??s.mode==="local-pvp")&&s.winner?pvpResult:status);
+   if(state===GameState.GAME_OVER)this.setText(this.menuResult,(s.localPvP??s.mode==="local-pvp")?pvpResult:status);
   }
   if(s.mode==="king-of-hill"&&hillChanged)
    this.lastHill={player:s.hill.player,opponent:s.hill.opponent,target:s.hill.target};
@@ -1296,13 +1355,12 @@ export class GameUI{
   this.p2Attack.textContent=messages.buttons.attack;
   this.p2Attack.setAttribute("aria-label",messages.pvp?.p2+" · "+messages.buttons.attack+" · "+(this.i18n.locale==="fa"?"کشیدن به بالا: گرفتن":"Swipe up: Grab"));
   this.p2Joystick.setAttribute("aria-label",messages.pvp?.p2);
-  this.p2Prev.setAttribute("aria-label",messages.pvp?.p2+" · "+messages.buttons.previousWeapon);
-  this.p2Next.setAttribute("aria-label",messages.pvp?.p2+" · "+messages.buttons.nextWeapon);
+  this.p2Next.setAttribute("aria-label",messages.pvp?.p2+" · "+messages.sections.weapon);
   this.mobilePauseButton.setAttribute("aria-label",messages.buttons.pause);
   this.mobilePauseButton.title=messages.buttons.pause;
   this.mobileWeaponSwitcher.setAttribute("aria-label",messages.details.equipped);
-  this.previousWeaponButton.setAttribute("aria-label",messages.buttons.previousWeapon);
-  this.nextWeaponButton.setAttribute("aria-label",messages.buttons.nextWeapon);
+  this.nextWeaponButton.setAttribute("aria-label",messages.sections.weapon);
+  for(const pad of this.aimPads){const label=(pad.dataset.player==="2"?messages.pvp?.p2??"P2":messages.pvp?.p1??"P1")+" · "+(this.i18n.locale==="fa"?"جهت سلاح؛ برای نشانه‌گیری بکش":"Weapon direction; drag to aim");pad.setAttribute("aria-label",label);pad.title=label;}
   this.upgradeTitle.textContent=messages.panels.weaponUpgrades;
   this.upgradeButton.textContent=messages.upgrade.upgrade;
   this.upgradeCardGrid.setAttribute("aria-label",messages.panels.weaponUpgrades);

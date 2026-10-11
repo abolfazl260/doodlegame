@@ -28,6 +28,8 @@ ui=new GameUI(uiRoot,{
  selectStartingWeapon(id){session.setStartingWeapon(id);render();},
  upgradeWeapon(){},
  arenaSelect(id){session.setArena(id);render();},
+ player2WeaponSelect(id){session.selectPlayer2WeaponById(id);render();},
+ setWeaponAim(player,x,y){session.setWeaponAim(player,x,y);render();},
  modeSelect(id){session.setMode(id);render();},
  setMissileAngle(angle){session.setMissileAngle(angle);render();},
  setMissilePower(power){session.setMissilePower(power);render();},

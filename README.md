@@ -72,7 +72,7 @@ The game currently includes 16 selectable arenas:
 - **Zigzag** — moving-platform traversal and one-way movement.
 - **Sky** — lighter gravity and high-platform combat.
 - **Moving** — continuous moving-platform combat.
-- **Fortress** — the dedicated missile arena.
+- **Fortress** — a destructible fortress arena; all standard weapons are available.
 - **Bridge** — destructible bridge cover over a fall zone.
 - **Crater** — recessed terrain with destructible cover.
 - **Vertical** — wall-jump and multi-level combat.
@@ -110,7 +110,7 @@ The visual weapon system is intentionally detailed while retaining the monochrom
 | Previous weapon | Q / O |
 | Next weapon | E / P |
 
-On mobile, drag the movement joystick **upward to jump**, including diagonally while walking. Move the stick toward the center and push up again for a double jump or wall jump; holding it upward does not repeat jumps. There is **no separate JUMP button**. Swipe quickly upward from ATTACK to grab a nearby opponent without firing the equipped weapon. A normal tap or hold still attacks. The ATTACK button and weapon arrows remain separate. The main menu starts in Persian unless a saved language preference is present. Both fighters start each round at 100 HP.
+On mobile, drag the movement joystick **upward to jump**, including diagonally while walking. Move the stick toward the center and push up again for a double jump or wall jump; holding it upward does not repeat jumps. There is **no separate JUMP button**. Swipe quickly upward from ATTACK to grab a nearby opponent without firing the equipped weapon. A normal tap or hold still attacks. Tap the single weapon button to open the loadout palette. Drag the ⊕ direction pad to aim, then use ATTACK to fire. Keyboard aim: P1 R/F and P2 PageUp/PageDown. Choose player count separately from game mode; all seven match modes support local two-player play. The opening space preview lasts three seconds. The main menu starts in Persian unless a saved language preference is present. Both fighters start each round at 100 HP.
 
 ## Rendering
 

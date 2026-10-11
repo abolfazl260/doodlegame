@@ -2,12 +2,12 @@ import {GameLoop} from "./GameLoop";import {GameState,GameStateManager} from "./
 export class Game{
  private state=new GameStateManager();private loop:GameLoop;private initialized=false;private disposed=false;
  private inRun=false;
- private normalSnapshot:({arena:ArenaId;mode:GameModeId;upgrades:UpgradeSnapshot})|null=null;
+ private normalSnapshot:({arena:ArenaId;mode:GameModeId;localPvP:boolean;upgrades:UpgradeSnapshot})|null=null;
  constructor(private readonly renderer:Renderer,private readonly session:GameSession,scheduler:FrameScheduler,onError:(error:unknown)=>void,private readonly progression?:Progression){
   this.loop=new GameLoop(scheduler,dt=>this.update(dt),()=>this.renderer.render(this.session.getRenderState()),onError);
   const run=progression?.getView().run;
   if(run?.status==="victory"){
-   this.normalSnapshot={arena:session.getHudState().arena,mode:session.getMode(),upgrades:session.getUpgradeSnapshot()};
+   this.normalSnapshot={arena:session.getHudState().arena,mode:session.getMode(),localPvP:session.isLocalPvP(),upgrades:session.getUpgradeSnapshot()};
    this.inRun=true;
    session.setUpgradeSnapshot({points:run.points,upgradedWeapons:run.upgradedWeapons});
    session.startRunEncounter(run.stage);
@@ -32,7 +32,7 @@ export class Game{
  selectWeaponById(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectWeaponById(id);}
  upgradeWeapon(id:import("../input/Input").WeaponId){
   this.ready();const state=this.state.getState();
-  if(state===GameState.PLAYING||state===GameState.PAUSED||this.session.getMode()==="local-pvp")return false;
+  if(state===GameState.PLAYING||state===GameState.PAUSED||this.session.isLocalPvP())return false;
   if(this.inRun&&this.progression){
    const view=this.progression.getView();
    if((state!==GameState.GAME_OVER&&state!==GameState.MENU)||view.run?.status!=="victory"||!view.choices.includes(id))return false;
@@ -42,6 +42,9 @@ export class Game{
   if(upgraded)this.state.notify();
   return upgraded;
  }
+ selectPlayerCount(count:1|2){this.ready();if(this.state.getState()!==GameState.MENU&&this.state.getState()!==GameState.GAME_OVER)return;this.loop.stop();if(this.inRun)this.leaveRun();this.session.setLocalPvP(count===2);this.state.reset();}
+ selectPlayer2WeaponById(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectPlayer2WeaponById(id);}
+ setWeaponAim(player:1|2,x:number,y:number){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.setWeaponAim(player,x,y);}
  setMissileAngle(angle:number){this.ready();this.session.setMissileAngle(angle);}
  setMissilePower(power:number){this.ready();this.session.setMissilePower(power);}
  fireWeapon(){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.fireWeapon();}
@@ -62,7 +65,7 @@ export class Game{
   if(!run||run.status==="complete")return false;
   // Coming back from the main menu with a pending reward opens intermission first.
   if(run.status==="victory"&&!this.inRun){
-   this.normalSnapshot={arena:this.session.getHudState().arena,mode:this.session.getMode(),
+   this.normalSnapshot={arena:this.session.getHudState().arena,mode:this.session.getMode(),localPvP:this.session.isLocalPvP(),
     upgrades:this.session.getUpgradeSnapshot()};
    this.inRun=true;
    this.session.setUpgradeSnapshot({points:run.points,upgradedWeapons:run.upgradedWeapons});
@@ -73,7 +76,7 @@ export class Game{
   if(run.status==="victory"&&!this.progression.advance())return false;
   if(!this.progression.canLaunch())return false;
   if(!this.inRun){
-   this.normalSnapshot={arena:this.session.getHudState().arena,mode:this.session.getMode(),
+   this.normalSnapshot={arena:this.session.getHudState().arena,mode:this.session.getMode(),localPvP:this.session.isLocalPvP(),
     upgrades:this.session.getUpgradeSnapshot()};
   }
   this.loop.stop();
@@ -95,6 +98,7 @@ export class Game{
   this.session.leaveRun();
   if(this.normalSnapshot){
    this.session.setMode(this.normalSnapshot.mode);
+   this.session.setLocalPvP(this.normalSnapshot.localPvP);
    this.session.setArena(this.normalSnapshot.arena);
    this.session.setUpgradeSnapshot(this.normalSnapshot.upgrades);
   }

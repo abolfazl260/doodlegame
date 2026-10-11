@@ -992,14 +992,14 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
 /* Local PvP: two independent landscape-friendly, safe-area touch control sets. */
 .game-ui__p2-controls{display:none}
 @media (pointer:coarse){
- .game-ui.playing[data-mode="local-pvp"] .game-ui__p2-controls:not([hidden]){
+ .game-ui.playing[data-players="2"] .game-ui__p2-controls:not([hidden]){
   position:absolute;inset:0;z-index:22;display:block;pointer-events:none;
  }
- .game-ui.playing[data-mode="local-pvp"] .game-ui__mobile-button--attack{
+ .game-ui.playing[data-players="2"] .game-ui__mobile-button--attack{
   left:calc(var(--safe-left) + 1rem + clamp(84px,22vmin,112px) + .5rem);
   right:auto;
  }
- .game-ui.playing[data-mode="local-pvp"] .game-ui__p2-joystick{
+ .game-ui.playing[data-players="2"] .game-ui__p2-joystick{
   position:absolute;right:calc(var(--safe-right) + 1rem);
   bottom:calc(var(--safe-bottom) + 1rem);
   width:clamp(84px,22vmin,112px);height:clamp(84px,22vmin,112px);
@@ -1007,13 +1007,13 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
   background:#0b1722c9;pointer-events:auto;touch-action:none;
   opacity:.78;
  }
- .game-ui.playing[data-mode="local-pvp"] .game-ui__p2-joystick.active{opacity:1}
+ .game-ui.playing[data-players="2"] .game-ui__p2-joystick.active{opacity:1}
  .game-ui__p2-thumb{
   position:absolute;left:50%;top:50%;width:clamp(42px,10.5vmin,54px);height:clamp(42px,10.5vmin,54px);
   border:2px solid #b9d1f5;border-radius:50%;background:#203048e8;
   transform:translate(-50%,-50%);pointer-events:none;
  }
- .game-ui.playing[data-mode="local-pvp"] .game-ui__p2-attack{
+ .game-ui.playing[data-players="2"] .game-ui__p2-attack{
   position:absolute;
   right:calc(var(--safe-right) + 1rem + clamp(84px,22vmin,112px) + .5rem);
   bottom:calc(var(--safe-bottom) + 1rem);
@@ -1023,7 +1023,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
   background:#15243ddd;color:#fff;font-weight:800;font-size:.72rem;
   pointer-events:auto;touch-action:none;user-select:none;
  }
- .game-ui.playing[data-mode="local-pvp"] .game-ui__p2-weapons{
+ .game-ui.playing[data-players="2"] .game-ui__p2-weapons{
   position:absolute;
   right:calc(var(--safe-right) + 1rem);
   bottom:calc(var(--safe-bottom) + 1.5rem + clamp(84px,22vmin,112px));
@@ -1032,15 +1032,15 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
   gap:.15rem;border:1px solid #a6bde0;border-radius:.5rem;background:#0c1825ee;
   color:#f5faff;pointer-events:auto;direction:ltr;
  }
- .game-ui.playing[data-mode="local-pvp"] .game-ui__p2-weapons button{
+ .game-ui.playing[data-players="2"] .game-ui__p2-weapons button{
   min-width:44px;min-height:44px;padding:0;border:0;background:transparent;
   color:#fff;font-size:1.4rem;
  }
  .game-ui__p2-weapons span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.65rem;font-weight:800}
- .game-ui.playing[data-mode="local-pvp"] .game-ui__mobile-weapon-switcher:not([hidden]){
+ .game-ui.playing[data-players="2"] .game-ui__mobile-weapon-switcher:not([hidden]){
   width:clamp(160px,32vw,210px);
  }
- .game-ui.playing[data-mode="local-pvp"] .game-ui__mobile-pause:not([hidden]){
+ .game-ui.playing[data-players="2"] .game-ui__mobile-pause:not([hidden]){
   top:calc(var(--safe-top) + 3.5rem);
   right:calc(var(--safe-right) + clamp(8rem,27vw,11.5rem) + 1.5rem);
  }
@@ -1050,15 +1050,15 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:r
 }
 
 /* Distinguish the two human health bars without obscuring current HP numerals. */
-.game-ui.playing[data-mode="local-pvp"] .health-bar--player::after,
-.game-ui.playing[data-mode="local-pvp"] .health-bar--opponent::after{
+.game-ui.playing[data-players="2"] .health-bar--player::after,
+.game-ui.playing[data-players="2"] .health-bar--opponent::after{
  position:absolute;inset:auto;top:50%;transform:translateY(-50%);
  font-size:.58rem;line-height:1;font-weight:900;letter-spacing:.03em;
  color:#fff;text-shadow:0 1px 2px #000,0 0 5px #000;
  z-index:3;pointer-events:none;
 }
-.game-ui.playing[data-mode="local-pvp"] .health-bar--player::after{content:"P1";left:.35rem}
-.game-ui.playing[data-mode="local-pvp"] .health-bar--opponent::after{content:"P2";right:.35rem}
+.game-ui.playing[data-players="2"] .health-bar--player::after{content:"P1";left:.35rem}
+.game-ui.playing[data-players="2"] .health-bar--opponent::after{content:"P2";right:.35rem}
 
 .game-ui__pvp-hint[hidden]{display:none!important}
 .game-ui__pvp-hint{
@@ -1924,3 +1924,36 @@ html[dir="rtl"] .game-ui__character-name-field{direction:rtl}
 .health-label__name{display:inline-block;max-width:72%;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:isolate}
 .health-label__current{flex:none;font-variant-numeric:tabular-nums}
 @media (max-width:640px){.game-ui__character-names{grid-template-columns:1fr}}
+
+/* One weapon button per player, opening a compact direct-selection palette. */
+.game-ui__mobile-weapon-switcher[hidden],.game-ui__p2-weapons[hidden],.game-ui__aim-pad[hidden],.game-ui__weapon-list[hidden]{display:none!important}
+.game-ui.playing .game-ui__mobile-weapon-switcher:not([hidden]),.game-ui.playing .game-ui__p2-weapons:not([hidden]){
+ display:block;position:absolute;top:5.7rem;bottom:auto;left:1rem;right:auto;transform:none;width:10rem;pointer-events:auto;z-index:25;
+}
+.game-ui.playing .game-ui__p2-weapons:not([hidden]){left:auto;right:1rem}
+.game-ui .game-ui__weapon-toggle{display:flex;align-items:center;justify-content:center;gap:.4rem;width:100%;min-height:44px;padding:.45rem .6rem;background:#07111de8;border-color:#9cb3d3;font-size:.72rem}
+.game-ui__weapon-toggle::after{content:"▾";font-size:1rem}
+.game-ui__weapon-toggle[aria-expanded="true"]::after{content:"▴"}
+.game-ui.playing .game-ui__weapon-list:not([hidden]){
+ display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));top:8.8rem;left:50%;width:min(90vw,32rem);padding:.5rem;background:#07111df5;border:1px solid #9cb3d3;border-radius:.6rem;pointer-events:auto;z-index:30;
+}
+.game-ui.playing .game-ui__weapon-list button{min-width:0;min-height:44px}
+.game-ui__aim-pad{position:absolute;right:1.5rem;bottom:6.8rem;width:56px;height:56px;border:2px solid #adc3e3;border-radius:50%;background:#07111dcc;display:grid;place-items:center;pointer-events:auto;touch-action:none;user-select:none;font-size:1.6rem;z-index:24}
+.game-ui__aim-pad::after{content:"➤";position:absolute;font-size:.8rem;transform:rotate(var(--aim-angle,0deg)) translateX(18px)}
+.game-ui__aim-pad.active,.game-ui__aim-pad:focus-visible{border-color:white;background:#23456cdd}
+.game-ui[data-players="2"] .game-ui__aim-pad[data-player="1"]{left:calc(var(--safe-left,0px) + 1rem + clamp(84px,22vmin,112px) + .65rem);right:auto}
+.game-ui[data-players="2"] .game-ui__aim-pad[data-player="2"]{right:calc(var(--safe-right,0px) + 1rem + clamp(84px,22vmin,112px) + .65rem)}
+@media(pointer:coarse){
+ .game-ui.playing .game-ui__mobile-weapon-switcher:not([hidden]),.game-ui.playing .game-ui__p2-weapons:not([hidden]){top:auto;bottom:calc(var(--safe-bottom,0px) + 1.5rem + clamp(84px,22vmin,112px));width:clamp(96px,23vmin,124px)}
+ .game-ui.playing .game-ui__weapon-list:not([hidden]){top:auto;bottom:calc(var(--safe-bottom,0px) + 5.5rem);width:min(58vw,32rem);max-height:45vh;overflow:auto}
+ .game-ui.playing .game-ui__weapon-list[data-player="1"]{left:1rem;transform:none}
+ .game-ui.playing .game-ui__weapon-list[data-player="2"]{left:auto;right:1rem;transform:none}
+ .game-ui__aim-pad{bottom:calc(var(--safe-bottom,0px) + 1.5rem + clamp(60px,15vmin,78px))}
+ .game-ui.playing .game-ui__missile-panel{display:none!important}
+}
+@media(max-width:650px){.game-ui.playing .game-ui__weapon-list:not([hidden]){grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.game-ui.playing[data-players="2"] .game-ui__p2-weapons .game-ui__weapon-toggle{font-size:.72rem;padding:.45rem .6rem;border:1px solid #9cb3d3;background:#07111de8}
+@media(pointer:coarse){.game-ui.playing[data-players="2"] .game-ui__mobile-weapon-switcher:not([hidden]){width:clamp(96px,23vmin,124px)}}
+
+.game-ui__aim-pad[data-player="2"]{--aim-angle:180deg}

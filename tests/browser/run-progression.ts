@@ -30,6 +30,9 @@ const ui=new GameUI(root,{
  weaponNext:()=>game.selectWeapon(1),weaponPrevious:()=>game.selectWeapon(-1),
  weaponSelect:id=>game.selectWeaponById(id),selectStartingWeapon:id=>game.selectStartingWeapon(id),
  upgradeWeapon:id=>game.upgradeWeapon(id),arenaSelect:id=>game.selectArena(id),
+ playerCountSelect:count=>game.selectPlayerCount(count),
+ player2WeaponSelect:id=>game.selectPlayer2WeaponById(id),
+ setWeaponAim:(player,x,y)=>game.setWeaponAim(player,x,y),
  modeSelect:id=>game.selectMode(id),setCharacterName:(player,name)=>{playerNames.set(player,name);ui.render(game.getState(),readHud());},setMissileAngle:n=>game.setMissileAngle(n),
  setMissilePower:n=>game.setMissilePower(n),fireWeapon:()=>game.fireWeapon(),
  setTouchMove:(x,y)=>input.setTouchMove(x,y),
@@ -51,13 +54,13 @@ const fixture={
  view:()=>game.getHudState(),
  startPvP:()=>{
   if(game.getState()!==GameState.MENU)throw Error("startPvP requires menu");
-  game.selectMode("local-pvp");
+  game.selectPlayerCount(2);
   input.resetTransientState();
   game.start();
  },
  pvpSnapshot:()=>{
   const state=session.getRenderState();
-  return{mode:state.mode,arena:state.arena,winner:state.winner,player:state.player,opponent:state.opponent,
+  return{localPvP:session.isLocalPvP(),mode:state.mode,arena:state.arena,winner:state.winner,player:state.player,opponent:state.opponent,
    p1Input:{...input.getState()},p2Input:{...input.getPlayer2State()}};
  },
  tickPvP:(frames=1)=>{

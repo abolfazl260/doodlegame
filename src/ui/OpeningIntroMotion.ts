@@ -1,5 +1,5 @@
 /** Deterministic timing and star placement for the opening space sequence. */
-export const OPENING_DURATION_MS=12000;
+export const OPENING_DURATION_MS=3000;
 export const REDUCED_MOTION_DURATION_MS=1000;
 
 export interface OpeningFrame{

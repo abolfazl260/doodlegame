@@ -25,7 +25,7 @@ test("mode restrictions override selection without losing a preferred weapon",()
  session.setMode("duel");
  assert.equal(session.getHudState().weapon,"hammer");
  session.setArena("fortress");
- assert.equal(session.getHudState().weapon,"missile");
+ assert.equal(session.getHudState().weapon,"hammer");
  session.setArena("classic");
  assert.equal(session.getHudState().weapon,"hammer");
  session.dispose();

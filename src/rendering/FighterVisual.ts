@@ -69,6 +69,11 @@ export function fighterVisual(s:DuelistRenderState) {
   hand=[.43-swing*.09,.18+swing*.03];back=[.23-swing*.09,.12];
   toolAngle=s.weapon==='missile'?s.missileAngle*Math.PI/180:swing*.09;
  } else {hand=[.45-swing*.2,.05+swing*.3];toolAngle=-swing*.8;}
+ if(s.aimAngle!=null&&!['blade','hammer'].includes(s.weapon)){
+  toolAngle=Math.atan2(Math.sin(s.aimAngle),Math.abs(Math.cos(s.aimAngle)));
+  hand=[Math.cos(toolAngle)*.48,.18+Math.sin(toolAngle)*.48];
+  back=[Math.cos(toolAngle)*.23,.12+Math.sin(toolAngle)*.23];
+ }
  if(air&&s.attackTime<=0&&s.weapon!=='bow'){back=[-.48,s.velocityY>0?.32:-.15];}
  if(Math.abs(s.velocityX)>9){back=[-.62,.28];}
  if(kick){back=kick==="spin"?[-.58,.18+spinTurn*.13]:[-.52,.19];hand=[.24,.28+kickExtension*.14];}
