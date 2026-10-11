@@ -11,7 +11,7 @@ export type EnemyType="runner"|"tank"|"shooter"|"jumper"|"bomber"|"ninja"|"boss"
 export type EnvironmentKind="barrel"|"box"|"wall"|"bounce"|"trap"|"rock"|"crumble"|"fan"|"gravity"|"vent"|"fallingRock";
 export interface EnvironmentRenderState{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;readonly maxHp:number;readonly active:boolean;readonly rotation:number;readonly pulse:number;readonly warning:number;}
 export interface ArenaDebrisRenderState{readonly x:number;readonly y:number;readonly rotation:number;readonly size:number;readonly age:number;readonly life:number;}
-export interface DuelistRenderState{readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly aimAngle?:number|null;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly maxHealth:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;readonly gaitPhase:number;readonly landingTime:number;readonly hitTime:number;readonly bossPhase:number;readonly attackTelegraph:number;readonly kickKind:KickKind|null;readonly kickElapsed:number;readonly grabPhase:GrabPhase;readonly grabElapsed:number;}
+export interface DuelistRenderState{readonly weaponDrawTime:number;readonly weaponHolsterFrom:WeaponId|null;readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly aimAngle?:number|null;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly maxHealth:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;readonly gaitPhase:number;readonly landingTime:number;readonly hitTime:number;readonly bossPhase:number;readonly attackTelegraph:number;readonly kickKind:KickKind|null;readonly kickElapsed:number;readonly grabPhase:GrabPhase;readonly grabElapsed:number;}
 export interface ProjectileRenderState{readonly x:number;readonly y:number;readonly vx:number;readonly vy:number;readonly life:number;readonly weapon:WeaponId;readonly rotation:number;readonly age:number;}
 export interface ExplosionRenderState{readonly x:number;readonly y:number;age:number;readonly life:number;readonly radius:number;}
 export type BuiltInArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fortress"|"bridge"|"crater"|"vertical"|"ruins"|"conveyor"|"collapse"|"storm"|"reactor";
@@ -21,10 +21,12 @@ export interface HillState{readonly player:number;readonly opponent:number;reado
 export interface ArenaDefinition{readonly id:ArenaId;readonly name:string;readonly platforms:readonly Platform[];readonly spawnX:[number,number];readonly speedMultiplier:number;readonly jumpMultiplier:number;readonly gravity:number;readonly fallLimit:number|null;readonly movingPlatforms:boolean;readonly windStrength?:number;readonly gravityWell?:{readonly x:number;readonly y:number;readonly radius:number;readonly strength:number;};}
 export interface GameRenderState{readonly player:DuelistRenderState;readonly opponent:DuelistRenderState;readonly projectiles:readonly ProjectileRenderState[];readonly explosions:readonly ExplosionRenderState[];readonly platforms:readonly Platform[];readonly environment:readonly EnvironmentRenderState[];readonly debris:readonly ArenaDebrisRenderState[];readonly winner:"player"|"opponent"|"draw"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];readonly combatCues:readonly CombatCue[];readonly cameraShake:Readonly<{x:number;y:number}>;}
 export interface GameHudState{readonly weaponAimAngle?:number|null;readonly secondAimAngle?:number|null;readonly localPvP?:boolean;readonly playerHealth:number;readonly playerMaxHealth:number;readonly opponentHealth:number;readonly opponentMaxHealth:number;readonly weapon:WeaponId;readonly winner:"player"|"opponent"|"draw"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly playerFacing:number;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];readonly secondWeapon?:WeaponId;readonly secondBowCharge?:number;}
-interface Fighter{aimAngle:number|null;x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;gaitPhase:number;landingTime:number;hitTime:number;bossPhase:number;attackTelegraph:number;kickKind:KickKind|null;kickElapsed:number;kickHit:boolean;kickComboRemaining:number;grabPhase:GrabPhase;grabElapsed:number;grabCooldown:number;grabImmunity:number;grabOffsetY:number;}
+interface Fighter{weaponDrawTime:number;weaponHolsterFrom:WeaponId|null;aimAngle:number|null;x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;gaitPhase:number;landingTime:number;hitTime:number;bossPhase:number;attackTelegraph:number;kickKind:KickKind|null;kickElapsed:number;kickHit:boolean;kickComboRemaining:number;grabPhase:GrabPhase;grabElapsed:number;grabCooldown:number;grabImmunity:number;grabOffsetY:number;}
 interface EnemyBrain{plan:EnemyPlan;thinkClock:number;chargeTime:number;chargeTotal:number;recoverTime:number;dodgeCooldown:number;jumpCooldown:number;transitionTime:number;phase:number;phaseAttacks:number;lastX:number;stuckTime:number;}
 interface Projectile{x:number;y:number;vx:number;vy:number;life:number;weapon:WeaponId;owner:"player"|"opponent";originX:number;returning:boolean;spin:number;age:number;bounce:number;ricochets:number;deflectCooldown?:number;damageScale?:number;sticky?:boolean;stuck?:boolean;clusterChild?:boolean;}
 interface EnvironmentBody{kind:EnvironmentKind;x:number;y:number;width:number;height:number;hp:number;maxHp:number;active:boolean;rotation:number;pulse:number;warning:number;falling:boolean;vx:number;vy:number;grounded:boolean;cooldown:number;timer:number;}
+/** A visual-only holster and draw; logical weapon switches immediately. */
+export const WEAPON_DRAW_DURATION=.18;
 const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2,DASH_SPEED=14,DASH_TIME=.12,DASH_COOLDOWN=.65,WALL_JUMP_SPEED=9.6,MIN_MISSILE_ANGLE=12,MAX_MISSILE_ANGLE=78,MIN_MISSILE_POWER=8,MAX_MISSILE_POWER=18,HILL_TARGET=8,HILL_HALF_WIDTH=1.6;
 const ARENAS:Readonly<Record<BuiltInArenaId,ArenaDefinition>>={
  classic:{id:"classic",name:"CLASSIC",speedMultiplier:1,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-5,5],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-4,y:2,width:3.5,height:.35,surface:"ice"},{x:.5,y:3.7,width:3.5,height:.35,surface:"slippery"}]},
@@ -186,7 +188,7 @@ export class GameSession{
  private create(x:number,facing:number,enemyType:EnemyType|null):Fighter{
   const p=this.platformAtSpawn(x);
   const stats=enemyType===null?{health:100,weapon:"blade" as WeaponId,speed:1,jump:1}:{health:100,weapon:{runner:"blade",tank:"hammer",shooter:"blaster",jumper:"boomerang",bomber:"bomb",ninja:"uzi",boss:"hammer"}[enemyType] as WeaponId,speed:{runner:1.35,tank:.68,shooter:.82,jumper:1.05,bomber:.9,ninja:1.2,boss:.92}[enemyType],jump:{runner:1.1,tank:.8,shooter:.9,jumper:1.35,bomber:1,ninja:1.15,boss:1.1}[enemyType]};
-  return{aimAngle:null,x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.missileRules?"missile":stats.weapon,attackTime:0,cooldown:0,bowCharge:0,bowCharging:false,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0,gaitPhase:0,landingTime:0,hitTime:0,bossPhase:0,attackTelegraph:0,kickKind:null,kickElapsed:0,kickHit:false,kickComboRemaining:0,grabPhase:null,grabElapsed:0,grabCooldown:0,grabImmunity:0,grabOffsetY:0};
+  return{weaponDrawTime:0,weaponHolsterFrom:null,aimAngle:null,x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.missileRules?"missile":stats.weapon,attackTime:0,cooldown:0,bowCharge:0,bowCharging:false,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0,gaitPhase:0,landingTime:0,hitTime:0,bossPhase:0,attackTelegraph:0,kickKind:null,kickElapsed:0,kickHit:false,kickComboRemaining:0,grabPhase:null,grabElapsed:0,grabCooldown:0,grabImmunity:0,grabOffsetY:0};
 }
  setArena(id:ArenaId){
   if(id.startsWith("extra-")&&!getDownloadedArena(id))return;
@@ -266,18 +268,37 @@ export class GameSession{
  upgradeWeapon(id:WeaponId){if(this.upgradePoints<=0||this.upgradedWeapons.has(id))return false;this.upgradedWeapons.add(id);this.upgradePoints--;return true;}
  reset(advanceEnemy=true){this.combatCues=[];this.visualFreezeUntil=0;this.elapsed=0;this.missileAngle=45;this.missilePower=13;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];this.debris=[];if(advanceEnemy&&!this.localPvP)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,this.localPvP?null:this.runStage?this.runEncounters[this.runStage-1].enemy:types[enemyIndex]);if(this.runStage){const hp=this.runEncounters[this.runStage-1].health;this.opponent.health=hp;this.opponent.maxHealth=hp;}if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER;this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(this.modeId!=="random-weapons"&&!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;if(this.localPvP&&this.modeId!=="random-weapons")this.opponent.weapon=this.player.weapon;this.projectiles=[];this.resetEnvironment();this.enemyBrain=this.freshEnemyBrain();this.enemyBrain.lastX=this.opponent.x;this.winner=null;}
  private availableWeapons():WeaponId[]{if(this.missileRules)return["missile"];if(this.modeId==="melee-only")return["blade","hammer"];if(this.modeId==="random-weapons")return[this.player.weapon];return [...ORDER];}
- selectWeapon(direction:1|-1){if(this.modeId==="random-weapons")return;this.cancelKick(this.player);const available=this.availableWeapons();const i=Math.max(0,available.indexOf(this.player.weapon));this.player.weapon=available[(i+direction+available.length)%available.length];this.player.bowCharging=false;this.player.bowCharge=0;}
- selectWeaponById(id:WeaponId){if(this.modeId==="random-weapons")return;this.cancelKick(this.player);const available=this.availableWeapons();if(!available.includes(id))return;this.player.weapon=id;this.player.bowCharging=false;this.player.bowCharge=0;}
+ /** Switch the logical weapon immediately; only the holster/draw pose is delayed.
+  * Retain the already-earned cooldown, and cancel any charge from the old bow.
+  */
+ private equipWeapon(f:Fighter,id:WeaponId){
+  if(id===f.weapon)return;
+  this.cancelKick(f);
+  f.weaponHolsterFrom=f.weapon;
+  f.weapon=id;
+  f.weaponDrawTime=WEAPON_DRAW_DURATION;
+  f.bowCharging=false;f.bowCharge=0;
+  // Attack swing is purely visual; never carry the previous weapon's arc over.
+  f.attackTime=0;
+ }
+ private cancelWeaponDraw(f:Fighter){f.weaponDrawTime=0;f.weaponHolsterFrom=null;}
+ selectWeapon(direction:1|-1){
+  if(this.modeId==="random-weapons")return;
+  const available=this.availableWeapons(),i=Math.max(0,available.indexOf(this.player.weapon));
+  this.equipWeapon(this.player,available[(i+direction+available.length)%available.length]);
+ }
+ selectWeaponById(id:WeaponId){
+  if(this.modeId==="random-weapons"||!this.availableWeapons().includes(id))return;
+  this.equipWeapon(this.player,id);
+ }
  selectPlayer2Weapon(direction:1|-1){
   if(!this.localPvP||this.modeId==="random-weapons")return;
-  this.cancelKick(this.opponent);
   const available=this.availableWeapons(),i=Math.max(0,available.indexOf(this.opponent.weapon));
-  this.opponent.weapon=available[(i+direction+available.length)%available.length];
-  this.opponent.bowCharging=false;this.opponent.bowCharge=0;
+  this.equipWeapon(this.opponent,available[(i+direction+available.length)%available.length]);
  }
  selectPlayer2WeaponById(id:WeaponId){
   if(!this.localPvP||this.modeId==="random-weapons"||!this.availableWeapons().includes(id))return;
-  this.cancelKick(this.opponent);this.opponent.weapon=id;this.opponent.bowCharging=false;this.opponent.bowCharge=0;
+  this.equipWeapon(this.opponent,id);
  }
  update(dt:number){
   if(!Number.isFinite(dt)||dt<=0){this.input.endFrame();return;}
@@ -285,7 +306,7 @@ export class GameSession{
   const input=this.input.getState(),secondInput=this.localPvP?this.input.getPlayer2State?.()??IDLE_P2_INPUT:null,duration=Math.min(dt,.1),steps=Math.ceil(duration/(1/120));
   for(let i=0;i<steps;i++) {
    const frame=i===0?input:{...input,jumpPressed:false,dashPressed:false,attackPressed:false,grabPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};
-   for(const f of [this.player,this.opponent]){f.landingTime=Math.max(0,f.landingTime-duration/steps);f.hitTime=Math.max(0,f.hitTime-duration/steps);}
+   for(const f of [this.player,this.opponent]){f.landingTime=Math.max(0,f.landingTime-duration/steps);f.hitTime=Math.max(0,f.hitTime-duration/steps);f.weaponDrawTime=Math.max(0,f.weaponDrawTime-duration/steps);if(f.weaponDrawTime===0)f.weaponHolsterFrom=null;}
    const before=this.platforms;
    const after=this.platformsAt(this.elapsed+duration/steps);
    for(const f of [this.player,this.opponent]){
@@ -361,7 +382,7 @@ export class GameSession{
    enemy.bossPhase=brain.phase;
    // Regular modes permit boss weapon variation; challenge modes keep their enforced weapons.
    if(!this.missileRules&&this.modeId!=="melee-only"&&this.modeId!=="random-weapons"&&brain.chargeTime<=0&&enemy.cooldown<=0){
-    enemy.weapon=brain.phase===0||brain.phaseAttacks%2!==0?"hammer":brain.phase===1?"boomerang":"bomb";
+    this.equipWeapon(enemy,brain.phase===0||brain.phaseAttacks%2!==0?"hammer":brain.phase===1?"boomerang":"bomb");
    }
   }
 
@@ -789,13 +810,14 @@ export class GameSession{
  }
  private updateBowFor(f:Fighter,input:Readonly<InputState>,dt:number){
   if(input.attackCancelled){f.bowCharging=false;f.bowCharge=0;f.attackTime=0;return;}
-  if(input.attackPressed&&f.cooldown<=0&&!f.bowCharging){f.bowCharging=true;f.bowCharge=0;f.attackTime=.12;}
+  if(input.attackPressed&&f.cooldown<=0&&!f.bowCharging){this.cancelWeaponDraw(f);f.bowCharging=true;f.bowCharge=0;f.attackTime=.12;}
   if(!f.bowCharging)return;
   if(input.attackHeld){f.bowCharge=Math.min(1,f.bowCharge+dt/.9);f.attackTime=.12+f.bowCharge*.12;return;}
   this.fireBow(f,Math.max(.12,f.bowCharge));
  }
  private fireBow(a:Fighter,charge:number){
   if(a.cooldown>0){a.bowCharging=false;a.bowCharge=0;return;}
+  this.cancelWeaponDraw(a);
   const w=this.weaponStats.bow,direction=a.facing,speed=w.projectileSpeed!*(.58+.62*charge),angle=this.aimFor(a,(4+11*charge)*Math.PI/180);
   const originX=a.x+direction*(.72+.08*charge),originY=a.y+.48;
   const upgraded=!this.localPvP&&a===this.player&&this.upgradedWeapons.has("bow");
@@ -809,6 +831,7 @@ export class GameSession{
  private attack(a:Fighter,t:Fighter,pressed:boolean){
   const w=this.weaponStats[a.weapon];
   if(!pressed||a.cooldown>0||a.kickKind||a.grabPhase!==null)return;
+  this.cancelWeaponDraw(a);
   const upgraded=!this.localPvP&&a===this.player&&this.upgradedWeapons.has(a.weapon);
   const wall=this.wallDirection(a);
   const melee=a.weapon==="blade"||a.weapon==="hammer";
