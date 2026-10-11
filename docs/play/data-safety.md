@@ -19,10 +19,11 @@ The Play Console Data Safety form must still be completed, and the public Privac
 | Data | Storage | Leaves device? | Purpose | Retention / deletion |
 | --- | --- | --- | --- | --- |
 | Language preference (`doodlegame.locale`) | browser/WebView `localStorage` | No | Remember English/Persian UI choice | Until app/site data is cleared or the app is uninstalled |
+| Optional character names (`doodlegame.characterNames`) | browser/WebView `localStorage` | No | Display each player’s chosen name in local match setup and HUD | Until app/site data is cleared or the app is uninstalled |
 | Current match state | JavaScript memory | No | Gameplay | Discarded when the session/app process ends |
 | Weapon upgrade state for the current run | JavaScript memory | No | Gameplay progression during the run | Discarded when the session/app process ends |
 
-There is no server-side DoodleGame user account, profile, cloud save, or user-data database in the current product.
+There is no server-side DoodleGame user account, profile, cloud save, or user-data database in the current product. Character names are optional and remain exclusively on the device.
 
 ## Android release permissions
 
