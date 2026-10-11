@@ -332,3 +332,58 @@ test("real keyboard typing works for both local players and every arena is selec
  await expect(page.locator(".health-bar--player .health-label__name")).toHaveText("Arman");
  await expect(page.locator(".health-bar--opponent .health-label__name")).toHaveText("Sina");
 });
+
+test("local PvP names follow the physical left and right characters in Persian and English",async({page})=>{
+ await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
+ const fields=page.locator(".game-ui__character-name-input");
+ const left=fields.nth(0),right=fields.nth(1);
+ const labels=page.locator(".game-ui__character-name-caption");
+ const positions=async()=>{
+  const [l,r]=await Promise.all([left.boundingBox(),right.boundingBox()]);
+  expect(l).toBeTruthy();expect(r).toBeTruthy();
+  expect(l.x+l.width/2).toBeLessThan(r.x+r.width/2);
+ };
+ await expect(page.locator("html")).toHaveAttribute("dir","rtl");
+ await expect(labels.first()).toContainText("سمت چپ");
+ await expect(labels.nth(1)).toContainText("سمت راست");
+ await positions();
+ // Switching the language must not swap the physical fields.
+ await page.locator(".game-ui__language button").tap();
+ await expect(page.locator("html")).toHaveAttribute("dir","ltr");
+ await expect(labels.first()).toContainText("LEFT");
+ await expect(labels.nth(1)).toContainText("RIGHT");
+ await positions();
+ await left.fill("Left Hero");
+ await right.fill("Right Hero");
+ await page.locator(".game-ui__language button").tap();
+ await expect(page.locator("html")).toHaveAttribute("dir","rtl");
+ await expect(left).toHaveValue("Left Hero");
+ await expect(right).toHaveValue("Right Hero");
+ await positions();
+ await page.locator('button[data-action="next"]').tap();
+ await page.locator('button[data-action="start"]').tap();
+ const fighters=await page.evaluate(()=>window.__runFixture.pvpSnapshot());
+ expect(fighters.player.x).toBeLessThan(fighters.opponent.x);
+ expect(fighters.mode).toBe("local-pvp");
+ const p1=page.locator(".health-bar--player"),p2=page.locator(".health-bar--opponent");
+ await expect(p1.locator(".health-label__name")).toHaveText("Left Hero");
+ await expect(p2.locator(".health-label__name")).toHaveText("Right Hero");
+ const leftHud=await p1.boundingBox(),rightHud=await p2.boundingBox();
+ expect(leftHud.x+leftHud.width/2).toBeLessThan(rightHud.x+rightHud.width/2);
+ await page.evaluate(()=>window.__runFixture.finishPvP("opponent"));
+ await expect(page.locator(".game-ui__menu-result")).toContainText("Right Hero");
+});
+
+test("compact landscape names stay assigned to the correct side despite stacked inputs",async({page})=>{
+ await page.setViewportSize({width:568,height:260});
+ await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
+ const names=page.locator(".game-ui__character-name-input");
+ await expect(page.locator(".game-ui__character-name-caption").first()).toContainText("چپ");
+ await expect(page.locator(".game-ui__character-name-caption").nth(1)).toContainText("راست");
+ await names.nth(0).fill("بازیکن چپ");
+ await names.nth(1).fill("بازیکن راست");
+ await page.locator('button[data-action="next"]').tap();
+ await page.locator('button[data-action="start"]').tap();
+ await expect(page.locator(".health-bar--player .health-label__name")).toHaveText("بازیکن چپ");
+ await expect(page.locator(".health-bar--opponent .health-label__name")).toHaveText("بازیکن راست");
+});
