@@ -55,7 +55,7 @@ export function validArenaSvg(svg:unknown):svg is string{
   /^\s*<svg\s/i.test(svg)&&/<\/svg>\s*$/.test(svg)&&
   !/<\s*(?:script|foreignObject|iframe|image|use|a|style|animate|set)\b/i.test(svg)&&
   !/\b(?:on[a-z]+|href|xlink:href)\s*=/i.test(svg)&&
-  !/(?:<!DOCTYPE|<!ENTITY|@import|javascript:|https?:\/\/|data:)/i.test(svg);
+  !/(?:<!DOCTYPE|<!ENTITY|@import|javascript:|data:)/i.test(svg);
 }
 export function parseDownloadedArena(v:unknown):DownloadedArena|null{
  if(!plain(v)||v.schemaVersion!==1||!isId(v.id)||!Number.isSafeInteger(v.version)||!num(v.version,1,1000000))return null;
