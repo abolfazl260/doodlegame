@@ -25,6 +25,23 @@ start_app() {
   adb shell am start -W -n "$ACTIVITY" | tr -d '\r'
 }
 
+wait_for_resumed() {
+  local tries
+  for tries in {1..15}; do
+    if is_resumed; then return 0; fi
+    sleep 1
+  done
+  echo "App did not return to foreground within 15 seconds." >&2
+  adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity' >&2 || true
+  return 1
+}
+
+background_app() {
+  # HOME key events can be delayed by an overloaded cold-boot emulator and
+  # delivered after the app is restored. Launch HOME synchronously instead.
+  adb shell am start -W -a android.intent.action.MAIN -c android.intent.category.HOME | tr -d '\r'
+}
+
 echo "Installing $APK_PATH"
 adb install -r "$APK_PATH"
 adb logcat -b all -c >/dev/null 2>&1 || adb logcat -c
@@ -56,38 +73,44 @@ fi
 sleep 3
 PID="$(adb shell pidof "$PACKAGE" | tr -d '\r')"
 test -n "$PID"
-is_resumed
+wait_for_resumed
 adb exec-out screencap -p > android-smoke-offline-menu.png
 
 echo "Backgrounding and restoring the offline menu"
-adb shell input keyevent KEYCODE_HOME
-sleep 1
+background_app
 MENU_RESTORE_OUTPUT="$(start_app)"
 printf '%s\n' "$MENU_RESTORE_OUTPUT"
 grep -q "Status: ok" <<<"$MENU_RESTORE_OUTPUT"
-sleep 1
-is_resumed
-
-echo "Starting a match from the menu using the Enter shortcut"
-adb shell input keyevent KEYCODE_ENTER
+wait_for_resumed
 sleep 2
-is_resumed
+wait_for_resumed
+
+echo "Navigating both match setup steps using Enter"
+# Enter 1 skips the optional opening animation (or advances if it ended).
+# Enter 2 advances the player/mode step to all arenas (or starts if already
+# advanced). Enter 3 starts the match. In a solo match a fourth Enter is inert.
+for step in 1 2 3; do
+  adb shell input keyevent KEYCODE_ENTER
+  sleep 1
+done
+sleep 2
+wait_for_resumed
 adb exec-out screencap -p > android-smoke-offline-match.png
 
 echo "Backgrounding an active match; foreground must return to a paused app"
-adb shell input keyevent KEYCODE_HOME
-sleep 1
+background_app
 RESTORE_OUTPUT="$(start_app)"
 printf '%s\n' "$RESTORE_OUTPUT"
 grep -q "Status: ok" <<<"$RESTORE_OUTPUT"
+wait_for_resumed
 sleep 2
-is_resumed
+wait_for_resumed
 adb exec-out screencap -p > android-smoke-restored-paused.png
 
 echo "Back from PAUSED must return to menu without exiting"
 adb shell input keyevent KEYCODE_BACK
 sleep 1
-is_resumed
+wait_for_resumed
 
 echo "Exercising an alternate phone resolution from the menu"
 sleep 1

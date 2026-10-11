@@ -133,6 +133,22 @@ test("wizard selects player count and mode cards before arena and optional weapo
  assert.equal(hud.mode,"low-gravity","navigation preserves the selected mode");
 });
 
+test("native Enter navigation advances the wizard once and only starts from the arena step",()=>{
+ const {ui,hud}=setup();
+ assert.equal(ui.canStartMatch(),false);
+ assert.equal(ui.menuModePanel.hidden,false);
+ ui.advanceMenuStep();
+ assert.equal(ui.canStartMatch(),true);
+ assert.equal(ui.menuArenaPanel.hidden,false);
+ assert.equal(ui.menuModePanel.hidden,true);
+ ui.advanceMenuStep();
+ assert.equal(ui.canStartMatch(),true,"advancing at the final step does not wrap");
+ ui.render(states.PLAYING,hud);
+ assert.equal(ui.canStartMatch(),false);
+ ui.advanceMenuStep();
+ assert.equal(ui.menuArenaPanel.hidden,true);
+});
+
 test("clicking the language button immediately switches both directions without a dropdown",()=>{
  const {ui,hud}=setup();
  assert.equal(ui.languageControl.tag,"div");

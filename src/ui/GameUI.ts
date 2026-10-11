@@ -882,6 +882,7 @@ export class GameUI{
   this.setText(this.menuProgress,(labels?.step??"STEP")+" "+
    (this.menuStepIndex+1)+" / "+MENU_STEPS.length+" · "+stepLabel);
  }
+ advanceMenuStep(){if(this.currentState===GameState.MENU)this.changeMenuStep(this.menuStepIndex+1);}
  canStartMatch(){return this.currentState===GameState.MENU&&this.menuStepIndex===MENU_STEPS.length-1;}
  setUpdateVisible(visible:boolean){this.updateButton.hidden=!visible;}
  setUpdateOutcome(result:"success"|"error"){this.updateButton.dataset.result=result;}
