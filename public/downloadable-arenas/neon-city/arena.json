@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "id": "extra-neon-city",
-  "version": 1,
+  "version": 2,
   "names": {
     "fa": "بام‌های نئونی",
     "en": "NEON ROOFTOPS"
   },
-  "background": "background.svg",
+  "background": "background.webp",
   "arena": {
     "speedMultiplier": 1.16,
     "jumpMultiplier": 1.06,

@@ -11,20 +11,21 @@ import {WEBP_SAMPLE_BASE64,WEBP_SAMPLE_DESCRIPTOR,WEBP_SAMPLE_LISTING} from "./f
 
 const base="https://raw.githubusercontent.com/abolfazl260/doodlegame/main/public/downloadable-arenas/";
 const asset=path=>readFileSync("public/downloadable-arenas/"+path,"utf8");
+const binaryAsset=path=>readFileSync("public/downloadable-arenas/"+path);
 const webpDescriptor={...JSON.parse(asset("forest/arena.json")),...WEBP_SAMPLE_DESCRIPTOR};
 const webpBytes=Buffer.from(WEBP_SAMPLE_BASE64,"base64");
 const responses=new Map([
  [ARENA_CATALOG_URL,asset("catalog.json")],
  [base+"forest/arena.json",asset("forest/arena.json")],
- [base+"forest/background.svg",asset("forest/background.svg")],
+ [base+"forest/background.webp",binaryAsset("forest/background.webp")],
  [base+"desert/arena.json",asset("desert/arena.json")],
- [base+"desert/background.svg",asset("desert/background.svg")],
+ [base+"desert/background.webp",binaryAsset("desert/background.webp")],
  [base+"glacier/arena.json",asset("glacier/arena.json")],
- [base+"glacier/background.svg",asset("glacier/background.svg")],
+ [base+"glacier/background.webp",binaryAsset("glacier/background.webp")],
  [base+"volcano/arena.json",asset("volcano/arena.json")],
- [base+"volcano/background.svg",asset("volcano/background.svg")],
+ [base+"volcano/background.webp",binaryAsset("volcano/background.webp")],
  [base+"neon-city/arena.json",asset("neon-city/arena.json")],
- [base+"neon-city/background.svg",asset("neon-city/background.svg")],
+ [base+"neon-city/background.webp",binaryAsset("neon-city/background.webp")],
  [base+"webp-demo/arena.json",JSON.stringify(webpDescriptor)],
  [base+"webp-demo/background.webp",webpBytes]
 ]);
@@ -41,6 +42,7 @@ const input={getState:()=>({moveX:0,moveY:0,jumpPressed:false,attackHeld:false,a
 test("GitHub catalog exposes five optional arenas while 16 bundled arenas remain",async()=>{
  const list=await loadArenaCatalog(mockFetch);
  assert.deepEqual(list.map(x=>x.id),["extra-forest","extra-desert","extra-glacier","extra-volcano","extra-neon-city"]);
+ assert.deepEqual(list.map(x=>x.version),[2,2,2,2,2]);
  const session=new GameSession(input);
  assert.equal(session.getRenderState().arena,"classic");
  session.setArena("extra-missing");
@@ -51,9 +53,11 @@ test("download and install two unique arena backgrounds, then use them without n
  const installed=await installDownloadedArena(list[0],storage,mockFetch);
  assert.equal(installed.id,"extra-forest");
  assert.equal(installed.arena.platforms.length,4);
- assert.match(installed.backgroundSvg,/svg/);
+ assert.equal(validArenaWebp(installed.backgroundWebp),true);
+ assert.equal(installed.backgroundSvg,undefined);
+ assert.ok(arenaImageDataUrl(installed).startsWith("data:image/webp;base64,"));
  const desert=await installDownloadedArena(list[1],storage,mockFetch);
- assert.notEqual(desert.backgroundSvg,installed.backgroundSvg);
+ assert.notEqual(desert.backgroundWebp,installed.backgroundWebp);
  const session=new GameSession(input);
  session.setArena("extra-forest");
  assert.equal(session.getRenderState().arena,"extra-forest");
@@ -75,23 +79,24 @@ test("three additional themed maps install from GitHub, play and persist offline
   const entry=listing.find(item=>item.id===id);
   assert.ok(entry,`catalog is missing ${id}`);
   const descriptor=JSON.parse(asset(entry.path));
-  const background=asset(entry.path.replace(/arena\.json$/,"background.svg"));
+  const background=binaryAsset(entry.path.replace(/arena\.json$/,"background.webp"));
+  const backgroundBase64=background.toString("base64");
   assert.equal(descriptor.id,id);
   assert.equal(descriptor.version,entry.version);
   assert.deepEqual(descriptor.names,entry.names);
-  assert.equal(validArenaSvg(background),true);
-  const parsed=parseDownloadedArena({...descriptor,backgroundSvg:background});
+  assert.equal(validArenaWebp(backgroundBase64),true);
+  const parsed=parseDownloadedArena({...descriptor,backgroundWebp:backgroundBase64});
   assert.ok(parsed,`invalid layout or SVG in ${id}`);
   const pack=await installDownloadedArena(entry,storage,mockFetch);
   assert.equal(pack.arena.platforms.length,descriptor.arena.platforms.length);
-  assert.equal(pack.backgroundSvg,background);
+  assert.equal(pack.backgroundWebp,backgroundBase64);
   packs.push(pack);
   const session=new GameSession(input);
   session.setArena(id);
   assert.equal(session.getRenderState().arena,id);
   assert.deepEqual(session.getArena().spawnX,[-8,8]);
  }
- assert.equal(new Set(packs.map(pack=>pack.backgroundSvg)).size,3,"all new maps must have different artwork");
+ assert.equal(new Set(packs.map(pack=>pack.backgroundWebp)).size,3,"all new maps must have different artwork");
  assert.equal(new Set(packs.map(pack=>JSON.stringify(pack.arena.platforms))).size,3,"all three layouts must differ");
  assert.equal(packs[0].arena.platforms[0].surface,"ice");
  assert.equal(packs[1].arena.fallLimit,-5.8);
@@ -101,6 +106,23 @@ test("three additional themed maps install from GitHub, play and persist offline
  restoreDownloadedArenas(storage);
  for(const id of newIds)assert.ok(getDownloadedArena(id),`offline restore failed for ${id}`);
  for(const id of newIds)removeDownloadedArena(id,storage);
+});
+
+test("version-1 SVG maps remain usable offline and can upgrade to version-2 WebP",async()=>{
+ const storage=memory();
+ const former=JSON.parse(asset("forest/arena.json"));
+ const cached=parseDownloadedArena({...former,version:1,backgroundSvg:asset("forest/background.svg")});
+ assert.ok(cached);
+ storage.set(DOWNLOADED_ARENAS_KEY,[cached]);
+ restoreDownloadedArenas(storage);
+ assert.equal(getDownloadedArena("extra-forest").backgroundSvg,cached.backgroundSvg);
+ const listing=(await loadArenaCatalog(mockFetch))[0];
+ const next=await installDownloadedArena(listing,storage,mockFetch);
+ assert.equal(next.version,2);
+ assert.equal(next.backgroundSvg,undefined);
+ assert.equal(validArenaWebp(next.backgroundWebp),true);
+ assert.equal(storage.get(DOWNLOADED_ARENAS_KEY)[0].version,2);
+ removeDownloadedArena("extra-forest",storage);
 });
 
 test("reject invalid layout, SVG script, external references and unsafe paths",()=>{

@@ -3,7 +3,7 @@
   "arenas": [
     {
       "id": "extra-forest",
-      "version": 1,
+      "version": 2,
       "names": {
         "fa": "جنگل مه‌آلود",
         "en": "MISTY FOREST"
@@ -12,7 +12,7 @@
     },
     {
       "id": "extra-desert",
-      "version": 1,
+      "version": 2,
       "names": {
         "fa": "کویر سرخ",
         "en": "RED DESERT"
@@ -21,7 +21,7 @@
     },
     {
       "id": "extra-glacier",
-      "version": 1,
+      "version": 2,
       "names": {
         "fa": "قله یخی",
         "en": "FROST PEAK"
@@ -30,7 +30,7 @@
     },
     {
       "id": "extra-volcano",
-      "version": 1,
+      "version": 2,
       "names": {
         "fa": "آتشفشان سوزان",
         "en": "VOLCANIC FORGE"
@@ -39,7 +39,7 @@
     },
     {
       "id": "extra-neon-city",
-      "version": 1,
+      "version": 2,
       "names": {
         "fa": "بام‌های نئونی",
         "en": "NEON ROOFTOPS"

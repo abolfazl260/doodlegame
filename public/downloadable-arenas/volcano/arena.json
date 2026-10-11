@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "id": "extra-volcano",
-  "version": 1,
+  "version": 2,
   "names": {
     "fa": "آتشفشان سوزان",
     "en": "VOLCANIC FORGE"
   },
-  "background": "background.svg",
+  "background": "background.webp",
   "arena": {
     "speedMultiplier": 1.06,
     "jumpMultiplier": 1.18,
