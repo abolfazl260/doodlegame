@@ -14,6 +14,7 @@ export type Messages={
  status:{win:string;lose:string;duel:string;hill:string};
  details:{equipped:string;angle:string;power:string};
  sections:{gameMode:string;arena:string;weapon:string};
+ characterNames:{playerOne:string;playerTwo:string;opponent:string;optional:string;wins:string};
  menu:{kickoff:string;setup:string;players:string;progressOptions:string;selectMode:string;chooseArena:string;mapShortcut:string;selectedArena:string;step:string;nextArena:string;back:string;loadout:string;quickDuel:string;quickPvp:string;ready:string;options:string;modeDescriptions:Readonly<Record<GameModeId,string>>};
  panels:{weaponUpgrades:string;missileControl:string;bowDraw:string;releaseToFire:string};
  upgrade:{points:string;choose:string;earn:string;upgraded:string;upgrade:string;locked:string};
@@ -33,10 +34,11 @@ const EN:Messages={
  title:"DOODLEGAME DUEL",
  rotateHint:"Rotate your device to landscape to play.",
  buttons:{start:"Start",pause:"Pause",resume:"Resume",restart:"Restart",menu:"MAIN MENU",help:"HOW TO PLAY",jump:"JUMP",attack:"ATTACK",fireMissile:"FIRE MISSILE",previousWeapon:"Previous weapon",nextWeapon:"Next weapon",update:"UPDATE"},
- privacy:{"button":"PRIVACY","title":"YOUR PRIVACY","web":"READ THE WEB POLICY","close":"CLOSE","html":"<p><b>DoodleGame does not collect or share personal data.</b> There are no accounts, ads, analytics or trackers.</p><p><b>What is saved?</b> Your language, sound and camera-shake choices, and any manually downloaded game-balance data are stored on this device. Standard matches and upgrades stay in memory while you play. Optional Run checkpoints, career wins and earned badges are saved locally on this device.</p><p><b>How to delete it:</b> Clear app/browser data or uninstall the game. There is no online account to delete.</p>"},
+ privacy:{"button":"PRIVACY","title":"YOUR PRIVACY","web":"READ THE WEB POLICY","close":"CLOSE","html":"<p><b>DoodleGame does not collect or share personal data.</b> There are no accounts, ads, analytics or trackers.</p><p><b>What is saved?</b> Your language, sound and camera-shake choices, your chosen character names, and any manually downloaded game-balance data are stored on this device. Standard matches and upgrades stay in memory while you play. Optional Run checkpoints, career wins and earned badges are saved locally on this device.</p><p><b>How to delete it:</b> Clear app/browser data or uninstall the game. There is no online account to delete.</p>"},
  status:{win:"YOU WIN",lose:"YOU LOSE",duel:"DUEL",hill:"HILL"},
  details:{equipped:"EQUIPPED",angle:"ANGLE",power:"POWER"},
  sections:{gameMode:"GAME MODE",arena:"ARENA",weapon:"START WEAPON"},
+ characterNames:{playerOne:"CHARACTER NAME",playerTwo:"SECOND PLAYER NAME",opponent:"OPPONENT",optional:"Enter name (optional)",wins:"WINS"},
  menu:{
   kickoff:"CHOOSE YOUR FIGHT",setup:"MATCH SETUP",players:"NUMBER OF PLAYERS",progressOptions:"RUN & WEAPON UPGRADES",selectMode:"CHOOSE GAME MODE",chooseArena:"CHOOSE YOUR ARENA",mapShortcut:"CHOOSE ARENA",selectedArena:"SELECTED ARENA",step:"STEP",nextArena:"NEXT · CHOOSE ARENA",back:"BACK",loadout:"STARTING WEAPON · OPTIONAL",quickDuel:"SOLO PLAYER",quickPvp:"TWO PLAYERS · LOCAL",
   ready:"YOUR MATCH",options:"SETTINGS & HELP",
@@ -76,10 +78,11 @@ const FA:Messages={
  title:"دوئل دودل‌گیم",
  rotateHint:"برای اجرای بازی دستگاه را افقی بچرخانید.",
  buttons:{start:"شروع",pause:"توقف",resume:"ادامه",restart:"شروع دوباره",menu:"منوی اصلی",help:"راهنمای بازی",jump:"پرش",attack:"حمله",fireMissile:"شلیک موشک",previousWeapon:"سلاح قبلی",nextWeapon:"سلاح بعدی",update:"بروزرسانی"},
- privacy:{"button":"حریم خصوصی","title":"حریم خصوصی شما","web":"مشاهده سیاست در وب","close":"بستن","html":"<p><b>دودل‌گیم اطلاعات شخصی شما را جمع‌آوری نمی‌کند و به دیگران نمی‌دهد.</b> بازی حساب کاربری، تبلیغات و ابزار ردیابی ندارد.</p><p><b>چه چیزی ذخیره می‌شود؟</b> زبان انتخابی، تنظیمات صدا و لرزش دوربین و داده‌های بروزرسانی‌شده بازی روی همین دستگاه ذخیره می‌شوند. مبارزه‌ها و ارتقاهای حالت عادی فقط هنگام بازی در حافظه هستند. مرحله‌های مسیر اختیاری، بردهای مسیر و نشان‌های کسب‌شده به‌صورت محلی روی همین دستگاه ذخیره می‌شوند.</p><p><b>چطور پاکش کنیم؟</b> داده‌های برنامه یا مرورگر را پاک کنید یا بازی را حذف کنید. حساب آنلاینی وجود ندارد که نیاز به حذف داشته باشد.</p>"},
+ privacy:{"button":"حریم خصوصی","title":"حریم خصوصی شما","web":"مشاهده سیاست در وب","close":"بستن","html":"<p><b>دودل‌گیم اطلاعات شخصی شما را جمع‌آوری نمی‌کند و به دیگران نمی‌دهد.</b> بازی حساب کاربری، تبلیغات و ابزار ردیابی ندارد.</p><p><b>چه چیزی ذخیره می‌شود؟</b> زبان انتخابی، تنظیمات صدا و لرزش دوربین و نام‌های انتخابی کاراکترها و داده‌های بروزرسانی‌شده بازی روی همین دستگاه ذخیره می‌شوند. مبارزه‌ها و ارتقاهای حالت عادی فقط هنگام بازی در حافظه هستند. مرحله‌های مسیر اختیاری، بردهای مسیر و نشان‌های کسب‌شده به‌صورت محلی روی همین دستگاه ذخیره می‌شوند.</p><p><b>چطور پاکش کنیم؟</b> داده‌های برنامه یا مرورگر را پاک کنید یا بازی را حذف کنید. حساب آنلاینی وجود ندارد که نیاز به حذف داشته باشد.</p>"},
  status:{win:"بردی",lose:"باختی",duel:"دوئل",hill:"تپه"},
  details:{equipped:"سلاح",angle:"زاویه",power:"قدرت"},
  sections:{gameMode:"حالت بازی",arena:"میدان",weapon:"سلاح شروع"},
+ characterNames:{playerOne:"نام کاراکتر",playerTwo:"نام بازیکن دوم",opponent:"حریف",optional:"نام دلخواه (اختیاری)",wins:"برنده شد"},
  menu:{
   kickoff:"نوع بازی را انتخاب کن",setup:"تنظیم مسابقه",players:"تعداد بازیکنان",progressOptions:"مسیر چهار مبارزه‌ای و ارتقاها",selectMode:"انتخاب حالت بازی",chooseArena:"زمین بازی را انتخاب کن",mapShortcut:"انتخاب زمین",selectedArena:"زمین انتخاب‌شده",step:"مرحله",nextArena:"مرحله بعد · انتخاب زمین",back:"بازگشت",loadout:"سلاح شروع · اختیاری",quickDuel:"یک نفره",quickPvp:"دو نفره · محلی",
   ready:"مسابقه شما",options:"تنظیمات و راهنما",

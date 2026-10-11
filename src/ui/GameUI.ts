@@ -10,11 +10,13 @@ type HudState={
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;missileAngle:number;missilePower:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
  progression?:ProgressionView|null;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;
+ playerName?:string;secondPlayerName?:string;
 };
 type Actions={
  newRun?:()=>void;continueRun?:()=>void;leaveRun?:()=>void;
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;stopToMenu?:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
+ setCharacterName?:(player:1|2,name:string)=>void;
  setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
  setTouchMove:(x:number,y:number)=>void;touchGrab:()=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;
  setPlayer2TouchMove?:(x:number,y:number)=>void;player2Grab?:()=>void;player2AttackStart?:()=>void;player2AttackEnd?:()=>void;player2AttackCancel?:()=>void;player2WeaponNext?:()=>void;player2WeaponPrevious?:()=>void;
@@ -105,6 +107,13 @@ export class GameUI{
  private arenaCards=document.createElement("div");
  private arenaShortcut=document.createElement("button");
  private arenaSelectionSummary=document.createElement("p");
+ private characterNames=document.createElement("div");
+ private playerNameLabel=document.createElement("label");
+ private secondNameLabel=document.createElement("label");
+ private playerNameCaption=document.createElement("span");
+ private secondNameCaption=document.createElement("span");
+ private playerNameInput=document.createElement("input");
+ private secondNameInput=document.createElement("input");
  private weaponDetails=document.createElement("details");
  private weaponDetailsTitle=document.createElement("summary");
  private weaponCards=document.createElement("div");
@@ -149,6 +158,8 @@ export class GameUI{
  private upgradeHint=document.createElement("span");
  private playerHealthLabel=document.createElement("span");
  private opponentHealthLabel=document.createElement("span");
+ private playerHealthName=document.createElement("span");
+ private opponentHealthName=document.createElement("span");
  private playerHealthCurrent=document.createElement("span");
  private opponentHealthCurrent=document.createElement("span");
  private missilePanel=document.createElement("div");
@@ -168,7 +179,7 @@ export class GameUI{
  private readHud:(()=>HudState)|null=null;
  private hudFrame:number|null=null;
  private currentState=GameState.MENU;
- private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId}|null=null;
+ private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId;playerName?:string;secondPlayerName?:string}|null=null;
  private lastHealth:{playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;locale:string}|null=null;
  private lastAim:{angle:number;power:number}|null=null;
  private lastBowPercent=NaN;
@@ -281,8 +292,11 @@ export class GameUI{
   this.opponentHealthLabel.className="health-label";
   this.playerHealthCurrent.className="health-label__current";
   this.opponentHealthCurrent.className="health-label__current";
-  this.playerHealthLabel.append(this.playerHealthCurrent);
-  this.opponentHealthLabel.append(this.opponentHealthCurrent);
+  this.playerHealthName.className="health-label__name";
+  this.opponentHealthName.className="health-label__name";
+  this.playerHealthName.dir="auto";this.opponentHealthName.dir="auto";
+  this.playerHealthLabel.append(this.playerHealthName,this.playerHealthCurrent);
+  this.opponentHealthLabel.append(this.opponentHealthName,this.opponentHealthCurrent);
   this.playerHealth.append(this.playerHealthLabel);
   this.opponentHealth.append(this.opponentHealthLabel);
 
@@ -346,6 +360,25 @@ export class GameUI{
   this.arenaSelectionSummary.className="game-ui__arena-selection-summary";
   this.arenaSelectionSummary.setAttribute("aria-live","polite");
   this.arenaSelectionSummary.setAttribute("aria-atomic","true");
+  this.characterNames.className="game-ui__character-names";
+  for(const [label,caption,input,player] of [
+   [this.playerNameLabel,this.playerNameCaption,this.playerNameInput,1],
+   [this.secondNameLabel,this.secondNameCaption,this.secondNameInput,2]
+  ] as const){
+   label.className="game-ui__character-name-field";
+   caption.className="game-ui__character-name-caption";
+   input.className="game-ui__character-name-input";
+   input.type="text";input.maxLength=24;input.autocomplete="off";input.spellcheck=false;
+   input.dir="auto";
+   input.oninput=()=>actions.setCharacterName?.(player,input.value);
+   input.onchange=()=>{
+    actions.setCharacterName?.(player,input.value);
+    const hud=this.readHud?.();
+    if(hud)input.value=player===1?hud.playerName??"":hud.secondPlayerName??"";
+   };
+   label.append(caption,input);this.characterNames.append(label);
+  }
+  this.secondNameLabel.hidden=true;
   this.weaponCards.className="game-ui__weapon-grid";
   this.weaponDetails.className="game-ui__weapon-details";
   this.weaponDetailsTitle.className="game-ui__weapon-details-title";
@@ -384,7 +417,7 @@ export class GameUI{
    this.weaponCards.append(card);
   }
   this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
-  this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaCards,this.weaponDetails,this.matchSummary);
+  this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.characterNames,this.arenaCards,this.weaponDetails,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
   this.rotateHint.className="game-ui__rotate-hint";
 
@@ -799,6 +832,7 @@ export class GameUI{
   const choosing=state===GameState.MENU;
   const results=state===GameState.GAME_OVER;
   const onArena=MENU_STEPS[this.menuStepIndex]==="arena";
+  if(s)this.setHidden(this.secondNameLabel,s.mode!=="local-pvp");
   // The result is NOT the first step of the setup wizard.
   this.setHidden(this.menuSetupSection,!choosing);
   this.setHidden(this.menuModePanel,!choosing||onArena);
@@ -886,12 +920,13 @@ export class GameUI{
   const arenaChanged=!old||old.arena!==s.arena,modeChanged=!old||old.mode!==s.mode;
   const weaponChanged=!old||old.weapon!==s.weapon,winnerChanged=!old||old.winner!==s.winner;
   const secondWeaponChanged=!old||old.secondWeapon!==s.secondWeapon;
+  const nameChanged=!old||old.playerName!==s.playerName||old.secondPlayerName!==s.secondPlayerName;
   const progressKey=s.progression?JSON.stringify(s.progression):"";
   const progressChanged=!old||old.progressKey!==progressKey||old.inRun!==Boolean(s.inRun);
   const pointsChanged=!old||old.upgradePoints!==s.upgradePoints;
   const upgradesChanged=!old||old.upgradedWeapons.length!==s.upgradedWeapons.length||
    s.upgradedWeapons.some((id,index)=>id!==old.upgradedWeapons[index]);
-  const staticChanged=stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged||secondWeaponChanged;
+  const staticChanged=stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged||secondWeaponChanged||nameChanged;
   const aimChanged=!this.lastAim||this.lastAim.angle!==s.missileAngle||this.lastAim.power!==s.missilePower;
   const missileRules=s.mode==="missile-duel"||(s.arena==="fortress"&&s.mode==="duel");
 
@@ -940,6 +975,16 @@ export class GameUI{
     this.root.style.setProperty("--arena-platform-edge",theme.platformEdge);
    }
    if(modeChanged)this.root.dataset.mode=s.mode;
+   if(nameChanged||stateChanged){
+    if(document.activeElement!==this.playerNameInput&&this.playerNameInput.value!==(s.playerName??""))
+     this.playerNameInput.value=s.playerName??"";
+    if(document.activeElement!==this.secondNameInput&&this.secondNameInput.value!==(s.secondPlayerName??""))
+     this.secondNameInput.value=s.secondPlayerName??"";
+   }
+   if(nameChanged||localeChanged||modeChanged||stateChanged){
+    this.setText(this.playerHealthName,s.playerName||messages.characterNames.playerOne);
+    this.setText(this.opponentHealthName,s.mode==="local-pvp"?(s.secondPlayerName||messages.characterNames.playerTwo):messages.characterNames.opponent);
+   }
    if(modeChanged||localeChanged||stateChanged){
     this.setHidden(this.pvpHint,s.mode!=="local-pvp"||(state!==GameState.MENU&&state!==GameState.GAME_OVER));
     this.setText(this.pvpHint,messages.pvp?.hint??"");
@@ -956,8 +1001,9 @@ export class GameUI{
     this.setText(this.arenaSelectionSummary,(messages.menu?.selectedArena??"SELECTED ARENA")+
      ": "+messages.arenas[s.arena]);
    }
-   if(modeChanged||arenaChanged||weaponChanged||localeChanged||stateChanged){
+   if(modeChanged||arenaChanged||weaponChanged||localeChanged||stateChanged||nameChanged){
     this.setText(this.matchSummary,(messages.menu?.ready??"READY")+": "+
+     (s.playerName?s.playerName+" · ":"")+
      messages.modes[s.mode]+" · "+messages.arenas[s.arena]+" · "+
      messages.weapons[s.weapon]);
    }
@@ -1075,7 +1121,8 @@ export class GameUI{
    }
    this.syncWizard(state,s);
    this.lastView={state,locale,arena:s.arena,mode:s.mode,weapon:s.weapon,winner:s.winner,
-    upgradePoints:s.upgradePoints,upgradedWeapons:[...s.upgradedWeapons],progressKey,inRun:Boolean(s.inRun),secondWeapon:s.secondWeapon};
+    upgradePoints:s.upgradePoints,upgradedWeapons:[...s.upgradedWeapons],progressKey,inRun:Boolean(s.inRun),secondWeapon:s.secondWeapon,
+    playerName:s.playerName,secondPlayerName:s.secondPlayerName};
   }
 
   if(!this.hpFormatter||this.hpFormatterLocale!==locale){
@@ -1116,8 +1163,17 @@ export class GameUI{
    const status=s.winner?(s.winner==="player"?messages.status.win:messages.status.lose):
     s.mode==="king-of-hill"?messages.status.hill+"  "+s.hill.player.toFixed(1)+" — "+
      s.hill.opponent.toFixed(1)+" / "+s.hill.target.toFixed(0):messages.modes[s.mode];
-   this.setText(this.status,s.mode==="local-pvp"&&s.winner?(s.winner==="player"?messages.pvp.winner1:s.winner==="opponent"?messages.pvp.winner2:messages.pvp.draw):status);
-   if(state===GameState.GAME_OVER)this.setText(this.menuResult,s.mode==="local-pvp"?(s.winner==="player"?messages.pvp.winner1:s.winner==="opponent"?messages.pvp.winner2:messages.pvp.draw):status);
+   // No winner while a match is active. Avoid evaluating result labels on every HUD update.
+   let pvpResult="";
+   if(s.mode==="local-pvp"){
+    if(s.winner==="draw")pvpResult=messages.pvp.draw;
+    else if(s.winner==="player")pvpResult=s.playerName?
+     s.playerName+" "+messages.characterNames.wins:messages.pvp.winner1;
+    else if(s.winner==="opponent")pvpResult=s.secondPlayerName?
+     s.secondPlayerName+" "+messages.characterNames.wins:messages.pvp.winner2;
+   }
+   this.setText(this.status,s.mode==="local-pvp"&&s.winner?pvpResult:status);
+   if(state===GameState.GAME_OVER)this.setText(this.menuResult,s.mode==="local-pvp"?pvpResult:status);
   }
   if(s.mode==="king-of-hill"&&hillChanged)
    this.lastHill={player:s.hill.player,opponent:s.hill.opponent,target:s.hill.target};
@@ -1201,6 +1257,10 @@ export class GameUI{
   this.modeTitle.textContent=messages.sections.gameMode;
   this.arenaTitle.textContent=messages.sections.arena;
   this.startingWeaponTitle.textContent=messages.sections.weapon;
+  this.playerNameCaption.textContent=messages.characterNames.playerOne;
+  this.secondNameCaption.textContent=messages.characterNames.playerTwo;
+  this.playerNameInput.placeholder=messages.characterNames.optional;
+  this.secondNameInput.placeholder=messages.characterNames.optional;
   this.rotateHint.textContent=messages.rotateHint;
   this.updateButton.textContent=messages.buttons.update;
   this.helpButton.textContent=messages.buttons.help;

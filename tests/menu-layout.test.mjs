@@ -51,6 +51,7 @@ const messages={
  status:{win:"WIN",lose:"LOSE",hill:"HILL"},
  details:{equipped:"EQUIPPED",angle:"ANGLE",power:"POWER"},
  sections:{gameMode:"MODE",arena:"ARENA",weapon:"WEAPON"},
+ characterNames:{playerOne:"PLAYER 1",playerTwo:"PLAYER 2",opponent:"OPPONENT",optional:"Optional name",wins:"WINS"},
  pvp:{p1:"P1",p2:"P2",hint:"Shared-screen controls",winner1:"P1 wins",winner2:"P2 wins",draw:"Draw"},
  panels:{weaponUpgrades:"UPGRADES",missileControl:"MISSILE",bowDraw:"BOW",releaseToFire:"RELEASE"},
  upgrade:{points:"POINTS",choose:"Choose",earn:"Earn",upgraded:"UPGRADED",upgrade:"Upgrade",locked:"Locked"},
@@ -72,6 +73,7 @@ function setup(hudOverride={}){
   modeSelect:id=>calls.push(["mode",id]),
   updateData:async()=>{calls.push(["update"]);},
   setMissileAngle(){},setMissilePower(){},fireWeapon(){},
+  setCharacterName:(player,name)=>{calls.push(["name",player,name]);hud[player===1?"playerName":"secondPlayerName"]=name;},
   setTouchMove(){},touchAttackStart(){},touchAttackEnd(){}
  };
  const listeners=new Set();
@@ -236,8 +238,8 @@ test("health display is a single number from 100 to 0 in either locale",()=>{
  const {ui,hud}=setup({playerHealth:45,opponentHealth:100});
  assert.equal(ui.playerHealthCurrent.textContent,"45");
  assert.equal(ui.opponentHealthCurrent.textContent,"100");
- assert.equal(ui.playerHealthLabel.children.length,1);
- assert.equal(ui.opponentHealthLabel.children.length,1);
+ assert.equal(ui.playerHealthLabel.children.length,2);
+ assert.equal(ui.opponentHealthLabel.children.length,2);
  hud.playerHealth=0;
  hud.opponentHealth=45;
  ui.render(states.PLAYING,hud);
@@ -429,4 +431,22 @@ test("all sixteen maps remain selectable through a visible main-menu shortcut",(
  ui.quickPvpButton.click();
  hud.mode="local-pvp";ui.render(states.MENU,hud);
  assert.equal(ui.arenaCards.children.length,16,"2P must retain all arena choices");
+});
+
+test("character names are editable in arena setup and shown in the HUD",()=>{
+ const {ui,calls,hud}=setup({playerName:"",secondPlayerName:""});
+ ui.stepNextButton.click();
+ assert.equal(ui.characterNames.children.length,2);
+ assert.equal(ui.secondNameLabel.hidden,true);
+ ui.playerNameInput.value="آرمان";ui.playerNameInput.oninput();
+ assert.deepEqual(calls.at(-1),["name",1,"آرمان"]);
+ ui.render(states.MENU,hud);
+ assert.ok(ui.matchSummary.textContent.includes("آرمان"));
+ hud.mode="local-pvp";ui.render(states.MENU,hud);
+ assert.equal(ui.secondNameLabel.hidden,false);
+ ui.secondNameInput.value="سارا";ui.secondNameInput.oninput();
+ ui.render(states.PLAYING,hud);
+ assert.equal(ui.playerHealthName.textContent,"آرمان");
+ assert.equal(ui.opponentHealthName.textContent,"سارا");
+ assert.deepEqual(calls.at(-1),["name",2,"سارا"]);
 });

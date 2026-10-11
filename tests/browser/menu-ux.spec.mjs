@@ -274,3 +274,24 @@ test("direct map shortcut exposes all sixteen selectable maps and the chosen are
  expect(state.arena).toBe("sky");
  expect(state.mode).toBe("local-pvp");
 });
+
+test("character names persist across launches and are used for both local fighters",async({page})=>{
+ await page.locator('button[data-action="next"]').tap();
+ await page.locator(".game-ui__character-name-input").first().fill("آرش");
+ await expect(page.locator(".game-ui__match-summary")).toContainText("آرش");
+ await page.reload();
+ await page.waitForFunction(()=>Boolean(window.__runFixture));
+ await page.locator('button[data-action="next"]').tap();
+ await expect(page.locator(".game-ui__character-name-input").first()).toHaveValue("آرش");
+ await page.locator('button[data-action="start"]').tap();
+ await expect(page.locator(".health-bar--player .health-label__name")).toHaveText("آرش");
+ await page.locator(".game-ui__mobile-pause").tap();
+ await page.locator('button[data-action="menu"]').tap();
+ await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
+ await page.locator('button[data-action="next"]').tap();
+ const second=page.locator(".game-ui__character-name-input").nth(1);
+ await expect(second).toBeVisible();
+ await second.fill("سام");
+ await page.locator('button[data-action="start"]').tap();
+ await expect(page.locator(".health-bar--opponent .health-label__name")).toHaveText("سام");
+});

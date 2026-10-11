@@ -58,6 +58,7 @@ const messages={
  privacy:{button:"Privacy",title:"Privacy",close:"Close",web:"Web",networkNote:"Offline",html:""},
  status:{win:"Win",lose:"Lose",hill:"Hill"},details:{equipped:"Equipped",angle:"Angle",power:"Power"},
  sections:{gameMode:"Mode",arena:"Arena",weapon:"Weapon"},
+ characterNames:{playerOne:"PLAYER 1",playerTwo:"PLAYER 2",opponent:"OPPONENT",optional:"Optional name",wins:"WINS"},
  panels:{weaponUpgrades:"Upgrades",missileControl:"Missile",bowDraw:"Bow",releaseToFire:"Release"},
  upgrade:{points:"Points",choose:"Choose",earn:"Earn",upgraded:"Upgraded",upgrade:"Upgrade",locked:"Locked"},
  helpHtml:"",arenas:Object.fromEntries(arenas.map(x=>[x,x])),
