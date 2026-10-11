@@ -58,7 +58,15 @@ export class WebInput implements InputSource {
   this.p2.weaponNextPressed=false;this.p2.weaponPreviousPressed=false;
   this.p2.attackHeld=this.p2TouchAttackHeld||Array.from(this.keys).some(code=>P2_ATTACK.has(code));
  } dispose(){this.stop();}
+ private isEditableTarget(target:EventTarget|null){
+  const element=target as HTMLElement|null;
+  return Boolean(element?.isContentEditable||
+   element?.closest?.('input,textarea,select,[contenteditable],[role="textbox"]'));
+ }
  private keyDown(e:KeyboardEvent){
+  // Menu text fields must receive letters/Space/Enter normally, including
+  // keys otherwise reserved for player 1 or player 2. Respect IME composition.
+  if(e.isComposing||this.isEditableTarget(e.target))return;
   const first=!this.keys.has(e.code);this.keys.add(e.code);
   if(this.gameKey(e.code))e.preventDefault();
   if(this.pvp){
@@ -88,7 +96,10 @@ export class WebInput implements InputSource {
   }
   this.movement();
  }
- private keyUp(e:KeyboardEvent){this.keys.delete(e.code);this.movement();}
+ private keyUp(e:KeyboardEvent){
+  // A key released after focusing a text field cannot remain held in-game.
+  this.keys.delete(e.code);this.movement();
+ }
  private down(e:PointerEvent){
   // Touch is owned by the mobile UI. Only the primary mouse/pen pointer attacks.
   if(e.pointerType==="touch"||e.button!==0||this.activePointerId!==null)return;
