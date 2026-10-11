@@ -2,6 +2,7 @@ import {App} from "@capacitor/app";
 import {Capacitor,SystemBars} from "@capacitor/core";
 import type {PluginListenerHandle} from "@capacitor/core";
 import {GameState} from "../../core/GameState";
+import {pausePlayingMatch} from "./NativePausePolicy";
 
 type NativeLifecycleActions={
  getState:()=>GameState;
@@ -23,16 +24,25 @@ export async function installNativeAppLifecycle(actions:NativeLifecycleActions):
   }
  };
 
- await restoreImmersiveMode();
-
+ // Install listeners before the asynchronous fullscreen request. Native WebView
+ // JavaScript may be suspended during backgrounding, so an inactive event can
+ // be missed; the active event is a second chance to stop an ongoing match.
+ const pausePlaying=()=>{pausePlayingMatch(actions);};
  handles.push(await App.addListener("appStateChange",({isActive})=>{
-  if(!isActive){
-   if(actions.getState()===GameState.PLAYING)actions.pause();
-   return;
+  pausePlaying();
+  if(isActive){
+   void restoreImmersiveMode();
+   actions.resize();
   }
-  void restoreImmersiveMode();
-  actions.resize();
  }));
+
+ // Some Android WebViews dispatch visibilitychange only after foregrounding.
+ // This complementary fallback preserves the same paused-on-return behavior.
+ const onVisibilityChange=()=>{
+  if(document.visibilityState==="visible")pausePlaying();
+ };
+ document.addEventListener("visibilitychange",onVisibilityChange);
+ void restoreImmersiveMode();
 
  handles.push(await App.addListener("backButton",()=>{
   const state=actions.getState();
@@ -48,6 +58,7 @@ export async function installNativeAppLifecycle(actions:NativeLifecycleActions):
  }));
 
  return()=>{
+  document.removeEventListener("visibilitychange",onVisibilityChange);
   for(const handle of handles)void handle.remove();
  };
 }
