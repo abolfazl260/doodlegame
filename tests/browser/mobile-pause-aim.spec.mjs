@@ -1,4 +1,5 @@
 import {test,expect} from "@playwright/test";
+import {holdPause} from "./hold-pause.mjs";
 
 test.use({viewport:{width:844,height:390},hasTouch:true,isMobile:true});
 
@@ -8,17 +9,20 @@ test.beforeEach(async({page})=>{
  await expect(page.locator(".game-ui.playing")).toBeVisible();
 });
 
-test("mobile pause is a 48px touch target below health and opens the resume menu",async({page})=>{
+test("pause is a subtle centered hold target and opens the resume menu after two seconds",async({page})=>{
  const pause=page.locator(".game-ui__mobile-pause");
  await expect(pause).toBeVisible();
  await expect(pause).toHaveAttribute("aria-label",/توقف|Pause/i);
  const bounds=await pause.boundingBox();
- const rightHealth=await page.locator(".health-bar--opponent").boundingBox();
  expect(bounds).toBeTruthy();
- expect(bounds.width).toBeGreaterThanOrEqual(48);
- expect(bounds.height).toBeGreaterThanOrEqual(48);
- expect(bounds.y).toBeGreaterThanOrEqual(rightHealth.y+rightHealth.height);
+ expect(bounds.width).toBeLessThanOrEqual(42);
+ expect(bounds.height).toBeLessThanOrEqual(42);
+ expect(Math.abs(bounds.x+bounds.width/2-page.viewportSize().width/2)).toBeLessThan(2);
+ const opacity=await pause.evaluate(el=>Number(getComputedStyle(el).opacity));
+ expect(opacity).toBeLessThan(.6);
  await pause.tap();
+ expect(await page.evaluate(()=>window.__weaponFixture.state())).toBe("PLAYING");
+ await holdPause(page);
  expect(await page.evaluate(()=>window.__weaponFixture.state())).toBe("PAUSED");
  await expect(pause).toBeHidden();
  const resume=page.locator("button[data-action='resume']");
@@ -28,7 +32,7 @@ test("mobile pause is a 48px touch target below health and opens the resume menu
  await expect(pause).toBeVisible();
 });
 
-test("pause remains fully tappable on a small landscape screen",async({page})=>{
+test("pause remains hittable with a two-second hold on a small landscape screen",async({page})=>{
  await page.setViewportSize({width:568,height:320});
  const pause=page.locator(".game-ui__mobile-pause");
  await expect(pause).toBeVisible();
@@ -39,7 +43,7 @@ test("pause remains fully tappable on a small landscape screen",async({page})=>{
  expect(bounds.y+bounds.height).toBeLessThanOrEqual(320);
  const center={x:bounds.x+bounds.width/2,y:bounds.y+bounds.height/2};
  expect(await page.evaluate(({x,y})=>document.elementFromPoint(x,y)?.closest(".game-ui__mobile-pause")!==null,center)).toBe(true);
- await pause.tap();
+ await holdPause(page);
  expect(await page.evaluate(()=>window.__weaponFixture.state())).toBe("PAUSED");
 });
 
@@ -71,7 +75,7 @@ test("missile preview mirrors when the fighter faces left during a held aim",asy
 
 test("touch Pause exposes localized Main Menu and returns to the menu without hardware Back",async({page})=>{
  const pause=page.locator(".game-ui__mobile-pause");
- await pause.tap();
+ await holdPause(page);
  const back=page.locator('button[data-action="menu"]');
  await expect(back).toBeVisible();
  await expect(back).toHaveText("منوی اصلی");
