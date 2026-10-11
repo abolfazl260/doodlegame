@@ -2,6 +2,7 @@ import "../../src/styles.css";
 import {Game} from "../../src/core/Game";
 import {GameState} from "../../src/core/GameState";
 import {GameSession} from "../../src/gameplay/GameSession";
+import {restoreDownloadedArenas,loadArenaCatalog,installDownloadedArena,removeDownloadedArena} from "../../src/gameplay/DownloadableArenas";
 import {Progression} from "../../src/progression/Progression";
 import {PlayerNames} from "../../src/profile/PlayerNames";
 import {I18n} from "../../src/i18n/I18n";
@@ -12,6 +13,7 @@ import {GameUI} from "../../src/ui/GameUI";
 const canvas=document.querySelector<HTMLCanvasElement>("#game-canvas")!;
 const root=document.querySelector<HTMLElement>("#ui-root")!;
 const storage=new WebStorage();
+restoreDownloadedArenas(storage);
 const input=new WebInput(canvas);
 input.start();
 const session=new GameSession(input);
@@ -30,6 +32,9 @@ const ui=new GameUI(root,{
  weaponNext:()=>game.selectWeapon(1),weaponPrevious:()=>game.selectWeapon(-1),
  weaponSelect:id=>game.selectWeaponById(id),selectStartingWeapon:id=>game.selectStartingWeapon(id),
  upgradeWeapon:id=>game.upgradeWeapon(id),arenaSelect:id=>game.selectArena(id),
+ fetchArenaCatalog:()=>loadArenaCatalog(),
+ installArena:async entry=>{await installDownloadedArena(entry,storage);},
+ deleteArena:id=>{if(game.getHudState().arena===id)game.selectArena("classic");removeDownloadedArena(id,storage);},
  playerCountSelect:count=>game.selectPlayerCount(count),
  player2WeaponSelect:id=>game.selectPlayer2WeaponById(id),
  setWeaponAim:(player,x,y)=>game.setWeaponAim(player,x,y),

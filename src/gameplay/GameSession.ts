@@ -4,6 +4,7 @@ import {KICK_SPECS,KICK_COMBO_TIME,KICK_DOWN_THRESHOLD,kickIsActive,type KickKin
 import {combatShake,cueLife,MAX_COMBAT_CUES,type CombatCue,type CombatCueKind} from "./CombatFeedback.js";
 import {bossPhaseFor,chooseEnemyPlan,ENEMY_PROFILES,hasClearShot,terrainAhead,type EnemyPlan} from "./EnemyAI.js";
 import type {LiveGameData} from "./LiveGameData.js";
+import {getDownloadedArena} from "./DownloadableArenas.js";
 export type PlatformSurface="normal"|"ice"|"slippery"|"oneWay"|"conveyorLeft"|"conveyorRight";
 export interface Platform{readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly surface?:PlatformSurface;}
 export type EnemyType="runner"|"tank"|"shooter"|"jumper"|"bomber"|"ninja"|"boss";
@@ -13,7 +14,8 @@ export interface ArenaDebrisRenderState{readonly x:number;readonly y:number;read
 export interface DuelistRenderState{readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly aimAngle?:number|null;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly maxHealth:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;readonly gaitPhase:number;readonly landingTime:number;readonly hitTime:number;readonly bossPhase:number;readonly attackTelegraph:number;readonly kickKind:KickKind|null;readonly kickElapsed:number;readonly grabPhase:GrabPhase;readonly grabElapsed:number;}
 export interface ProjectileRenderState{readonly x:number;readonly y:number;readonly vx:number;readonly vy:number;readonly life:number;readonly weapon:WeaponId;readonly rotation:number;readonly age:number;}
 export interface ExplosionRenderState{readonly x:number;readonly y:number;age:number;readonly life:number;readonly radius:number;}
-export type ArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fortress"|"bridge"|"crater"|"vertical"|"ruins"|"conveyor"|"collapse"|"storm"|"reactor";
+export type BuiltInArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fortress"|"bridge"|"crater"|"vertical"|"ruins"|"conveyor"|"collapse"|"storm"|"reactor";
+export type ArenaId=BuiltInArenaId|`extra-${string}`;
 export type GameModeId="duel"|"missile-duel"|"melee-only"|"random-weapons"|"sudden-death"|"low-gravity"|"king-of-hill"|"local-pvp";
 export interface HillState{readonly player:number;readonly opponent:number;readonly target:number;readonly halfWidth:number;}
 export interface ArenaDefinition{readonly id:ArenaId;readonly name:string;readonly platforms:readonly Platform[];readonly spawnX:[number,number];readonly speedMultiplier:number;readonly jumpMultiplier:number;readonly gravity:number;readonly fallLimit:number|null;readonly movingPlatforms:boolean;readonly windStrength?:number;readonly gravityWell?:{readonly x:number;readonly y:number;readonly radius:number;readonly strength:number;};}
@@ -24,7 +26,7 @@ interface EnemyBrain{plan:EnemyPlan;thinkClock:number;chargeTime:number;chargeTo
 interface Projectile{x:number;y:number;vx:number;vy:number;life:number;weapon:WeaponId;owner:"player"|"opponent";originX:number;returning:boolean;spin:number;age:number;bounce:number;ricochets:number;deflectCooldown?:number;damageScale?:number;sticky?:boolean;stuck?:boolean;clusterChild?:boolean;}
 interface EnvironmentBody{kind:EnvironmentKind;x:number;y:number;width:number;height:number;hp:number;maxHp:number;active:boolean;rotation:number;pulse:number;warning:number;falling:boolean;vx:number;vy:number;grounded:boolean;cooldown:number;timer:number;}
 const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2,DASH_SPEED=14,DASH_TIME=.12,DASH_COOLDOWN=.65,WALL_JUMP_SPEED=9.6,MIN_MISSILE_ANGLE=12,MAX_MISSILE_ANGLE=78,MIN_MISSILE_POWER=8,MAX_MISSILE_POWER=18,HILL_TARGET=8,HILL_HALF_WIDTH=1.6;
-const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
+const ARENAS:Readonly<Record<BuiltInArenaId,ArenaDefinition>>={
  classic:{id:"classic",name:"CLASSIC",speedMultiplier:1,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-5,5],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-4,y:2,width:3.5,height:.35,surface:"ice"},{x:.5,y:3.7,width:3.5,height:.35,surface:"slippery"}]},
  towers:{id:"towers",name:"TOWERS",speedMultiplier:1,jumpMultiplier:1.15,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.6,width:4.5,height:.35,surface:"oneWay"},{x:4.5,y:1.6,width:4.5,height:.35},{x:-3,y:3.5,width:6,height:.35,surface:"ice"},{x:-10,y:5.2,width:3.5,height:.35},{x:6.5,y:5.2,width:3.5,height:.35}]},
  pit:{id:"pit",name:"PIT",speedMultiplier:1,jumpMultiplier:1,gravity:G,fallLimit:-3.5,movingPlatforms:false,spawnX:[-8,8],platforms:[{x:-12,y:-.25,width:7.5,height:.5},{x:4.5,y:-.25,width:7.5,height:.5},{x:-7.5,y:2.1,width:4,height:.35,surface:"slippery"},{x:3.5,y:2.1,width:4,height:.35},{x:-1.75,y:4,width:3.5,height:.35}]},
@@ -42,7 +44,7 @@ const ARENAS:Readonly<Record<ArenaId,ArenaDefinition>>={
  reactor:{id:"reactor",name:"REACTOR",speedMultiplier:1,jumpMultiplier:1.05,gravity:G,fallLimit:null,movingPlatforms:false,gravityWell:{x:0,y:2.35,radius:4.7,strength:13},spawnX:[-5.3,5.3],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.75,width:3.8,height:.35},{x:5.2,y:1.75,width:3.8,height:.35},{x:-4.2,y:3.55,width:3.2,height:.35,surface:"oneWay"},{x:1,y:3.55,width:3.2,height:.35,surface:"oneWay"}]}
 };
 interface EnvironmentTemplate{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;}
-const ENVIRONMENT_TEMPLATES:Readonly<Record<ArenaId,readonly EnvironmentTemplate[]>>={
+const ENVIRONMENT_TEMPLATES:Readonly<Record<BuiltInArenaId,readonly EnvironmentTemplate[]>>={
  classic:[
   {kind:"box",x:-1.8,y:.8,width:1.05,height:1.05,hp:16},
   {kind:"barrel",x:1.65,y:.8,width:.75,height:1.1,hp:1}
@@ -168,7 +170,12 @@ export class GameSession{
   }
  }
  private ageCues(dt:number){this.combatCues=this.combatCues.map(c=>({...c,age:c.age+dt})).filter(c=>c.age<c.life);}
- private get arena():ArenaDefinition{const base=ARENAS[this.arenaId],tuning=this.liveData?.arenas[this.arenaId];return tuning?{...base,...tuning}:base;}
+ private get arena():ArenaDefinition{
+  const downloaded=getDownloadedArena(this.arenaId);
+  if(downloaded)return downloaded.arena;
+  const id=this.arenaId as BuiltInArenaId,base=ARENAS[id]??ARENAS.classic,tuning=this.liveData?.arenas[id];
+  return tuning?{...base,...tuning}:base;
+ }
  /** Apply validated data for subsequent combat rounds; no remote code is executed. */
  setLiveGameData(data:LiveGameData|null){this.liveData=data;this.weaponStats=Object.fromEntries(ORDER.map(id=>[id,{...WEAPONS[id],...data?.weapons[id]}])) as typeof WEAPONS;}
  private get missileRules(){return this.modeId==="missile-duel";}
@@ -181,7 +188,10 @@ export class GameSession{
   const stats=enemyType===null?{health:100,weapon:"blade" as WeaponId,speed:1,jump:1}:{health:100,weapon:{runner:"blade",tank:"hammer",shooter:"blaster",jumper:"boomerang",bomber:"bomb",ninja:"uzi",boss:"hammer"}[enemyType] as WeaponId,speed:{runner:1.35,tank:.68,shooter:.82,jumper:1.05,bomber:.9,ninja:1.2,boss:.92}[enemyType],jump:{runner:1.1,tank:.8,shooter:.9,jumper:1.35,bomber:1,ninja:1.15,boss:1.1}[enemyType]};
   return{aimAngle:null,x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.missileRules?"missile":stats.weapon,attackTime:0,cooldown:0,bowCharge:0,bowCharging:false,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0,gaitPhase:0,landingTime:0,hitTime:0,bossPhase:0,attackTelegraph:0,kickKind:null,kickElapsed:0,kickHit:false,kickComboRemaining:0,grabPhase:null,grabElapsed:0,grabCooldown:0,grabImmunity:0,grabOffsetY:0};
 }
- setArena(id:ArenaId){this.arenaId=id;this.reset(false);}
+ setArena(id:ArenaId){
+  if(id.startsWith("extra-")&&!getDownloadedArena(id))return;
+  this.arenaId=id;this.reset(false);
+ }
  setMode(id:GameModeId){
   // Retain the legacy entry point for saved integrations and older clients.
   if(id==="local-pvp"){this.localPvP=true;this.modeId=id;}
@@ -911,7 +921,7 @@ export class GameSession{
   if(e.hp===0)this.destroyEnvironment(e);
  }
  private resetEnvironment(){
-  this.environment=ENVIRONMENT_TEMPLATES[this.arenaId].map((t,i)=>({kind:t.kind,x:t.x,y:t.y,width:t.width,height:t.height,hp:t.hp,maxHp:t.hp,active:true,rotation:0,pulse:0,warning:0,falling:false,vx:0,vy:0,grounded:false,cooldown:0,timer:t.kind==="fallingRock"?1.1+(i%2)*1.6:t.kind==="vent"?1.9+(i%2)*1.1:0}));
+  this.environment=(ENVIRONMENT_TEMPLATES[this.arenaId as BuiltInArenaId]??[]).map((t,i)=>({kind:t.kind,x:t.x,y:t.y,width:t.width,height:t.height,hp:t.hp,maxHp:t.hp,active:true,rotation:0,pulse:0,warning:0,falling:false,vx:0,vy:0,grounded:false,cooldown:0,timer:t.kind==="fallingRock"?1.1+(i%2)*1.6:t.kind==="vent"?1.9+(i%2)*1.1:0}));
   for(const e of this.environment)this.snapEnvironmentToPlatform(e);
  }
  private snapEnvironmentToPlatform(e:EnvironmentBody){

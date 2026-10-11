@@ -1,4 +1,4 @@
-import type {ArenaId,GameModeId} from "../gameplay/GameSession";
+import type {BuiltInArenaId,GameModeId} from "../gameplay/GameSession";
 import type {WeaponId} from "../input/Input";
 import type {Storage} from "../storage/Storage";
 
@@ -21,7 +21,7 @@ export type Messages={
  pvp:{p1:string;p2:string;winner1:string;winner2:string;draw:string;hint:string};
  run:{title:string;newRun:string;continueRun:string;next:string;retry:string;leave:string;wave:string;boss:string;ready:string;victory:string;defeat:string;complete:string;choose:string;career:string;points:string;medals:Record<"rookie"|"veteran"|"champion",string>;requirements:Record<"rookie"|"veteran"|"champion",string>};
  helpHtml:string;
- arenas:Readonly<Record<ArenaId,string>>;
+ arenas:Readonly<Record<BuiltInArenaId,string>>;
  modes:Readonly<Record<GameModeId,string>>;
  weapons:Readonly<Record<WeaponId,string>>;
  upgrades:Readonly<Record<WeaponId,UpgradeCopy>>;

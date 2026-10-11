@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-forest",
+  "version": 1,
+  "names": {
+    "fa": "جنگل مه‌آلود",
+    "en": "MISTY FOREST"
+  },
+  "background": "background.svg",
+  "arena": {
+    "speedMultiplier": 1,
+    "jumpMultiplier": 1.13,
+    "gravity": -22,
+    "fallLimit": null,
+    "movingPlatforms": false,
+    "spawnX": [
+      -8,
+      8
+    ],
+    "platforms": [
+      {
+        "x": -12,
+        "y": -0.25,
+        "width": 24,
+        "height": 0.5
+      },
+      {
+        "x": -9,
+        "y": 1.65,
+        "width": 4,
+        "height": 0.35,
+        "surface": "oneWay"
+      },
+      {
+        "x": 5,
+        "y": 1.65,
+        "width": 4,
+        "height": 0.35,
+        "surface": "oneWay"
+      },
+      {
+        "x": -3,
+        "y": 3.35,
+        "width": 6,
+        "height": 0.35,
+        "surface": "slippery"
+      }
+    ]
+  },
+  "theme": {
+    "skin": "fantasy",
+    "backdrop": "mountains",
+    "skyTop": "#0c2834",
+    "skyBottom": "#1f4737",
+    "silhouette": "#102b27",
+    "platform": "#487c5f",
+    "platformEdge": "#a6ebae",
+    "accent": "#92f2af",
+    "secondary": "#c7e9ff",
+    "hudBackground": "#071d20"
+  }
+}

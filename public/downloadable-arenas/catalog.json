@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "arenas": [
+    {
+      "id": "extra-forest",
+      "version": 1,
+      "names": {
+        "fa": "جنگل مه‌آلود",
+        "en": "MISTY FOREST"
+      },
+      "path": "forest/arena.json"
+    },
+    {
+      "id": "extra-desert",
+      "version": 1,
+      "names": {
+        "fa": "کویر سرخ",
+        "en": "RED DESERT"
+      },
+      "path": "desert/arena.json"
+    }
+  ]
+}

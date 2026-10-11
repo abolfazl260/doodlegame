@@ -2,6 +2,7 @@ import "./styles.css";
 import {Game} from "./core/Game";
 import {GameState} from "./core/GameState";
 import {GameSession} from "./gameplay/GameSession";
+import {restoreDownloadedArenas,loadArenaCatalog,installDownloadedArena,removeDownloadedArena} from "./gameplay/DownloadableArenas.js";
 import {Progression} from "./progression/Progression";
 import {PlayerNames} from "./profile/PlayerNames";
 import type {GameRenderState} from "./gameplay/GameSession";
@@ -70,6 +71,7 @@ try{
   error=>console.warn("WebGL renderer unavailable; using canvas fallback.",error)
  );
 
+ restoreDownloadedArenas(storage);
  const session=new GameSession(input);
  let appliedGameData:(ReturnType<typeof parseLiveGameData>)=null;
  try{appliedGameData=parseLiveGameData(storage.get<unknown>(GAME_DATA_STORAGE_KEY));}
@@ -127,6 +129,16 @@ try{
   selectStartingWeapon:(id)=>game.selectStartingWeapon(id),
   upgradeWeapon:(id)=>game.upgradeWeapon(id),
   arenaSelect:(id:ArenaId)=>game.selectArena(id),
+  fetchArenaCatalog:()=>loadArenaCatalog(),
+  installArena:async listing=>{
+   await installDownloadedArena(listing,storage);
+   game.resize();
+  },
+  deleteArena:id=>{
+   if(game.getHudState().arena===id)game.selectArena("classic");
+   removeDownloadedArena(id,storage);
+   game.resize();
+  },
   modeSelect:(id:GameModeId)=>game.selectMode(id),
   playerCountSelect:count=>game.selectPlayerCount(count),
   player2WeaponSelect:id=>game.selectPlayer2WeaponById(id),

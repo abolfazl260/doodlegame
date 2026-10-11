@@ -1,7 +1,8 @@
 import {GameState} from "../core/GameState";
 
 import {getArenaTheme} from "../themes/ArenaThemes";
-import type {ArenaId,GameModeId,HillState} from "../gameplay/GameSession";
+import type {ArenaId,BuiltInArenaId,GameModeId,HillState} from "../gameplay/GameSession";
+import {getDownloadedArena,installedArenas,arenaImageDataUrl,type ArenaListing,type DownloadedArenaId} from "../gameplay/DownloadableArenas.js";
 import type {I18n} from "../i18n/I18n";
 import type {WeaponId} from "../input/Input";
 import type {ProgressionView} from "../progression/Progression";
@@ -22,6 +23,7 @@ type Actions={
  setTouchMove:(x:number,y:number)=>void;touchGrab:()=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;
  setPlayer2TouchMove?:(x:number,y:number)=>void;player2Grab?:()=>void;player2AttackStart?:()=>void;player2AttackEnd?:()=>void;player2AttackCancel?:()=>void;player2WeaponNext?:()=>void;player2WeaponPrevious?:()=>void;
  toggleCombatSound:()=>void;toggleCameraShake:()=>void;updateData:()=>Promise<void>;
+ fetchArenaCatalog?:()=>Promise<ArenaListing[]>;installArena?:(listing:ArenaListing)=>Promise<void>;deleteArena?:(id:DownloadedArenaId)=>void;
 };
 /** UI-local to preserve standalone GameUI test harness; matches GrabCombat rules. */
 const grabGesture=(startX:number,startY:number,x:number,y:number,elapsedMs:number)=>{
@@ -105,6 +107,15 @@ export class GameUI{
  private menuModePanel=document.createElement("section");
  private menuArenaPanel=document.createElement("section");
  private arenaCards=document.createElement("div");
+ private extraArenaSection=document.createElement("section");
+ private extraArenaHeading=document.createElement("h3");
+ private extraArenaRefresh=document.createElement("button");
+ private extraArenaList=document.createElement("div");
+ private extraArenaFeedback=document.createElement("p");
+ private extraCatalog:ArenaListing[]=[];
+ private extraBusy=false;
+ private extraStatus="";
+ private extraActions:Actions;
  private arenaShortcut=document.createElement("button");
  private arenaSelectionSummary=document.createElement("p");
  private characterNames=document.createElement("div");
@@ -202,6 +213,7 @@ export class GameUI{
  private setHidden(node:HTMLElement,hidden:boolean){if(node.hidden!==hidden)node.hidden=hidden;}
 
  constructor(container:HTMLElement,actions:Actions,private readonly i18n:I18n){
+  this.extraActions=actions;
   this.root.className="game-ui";
 
   this.languageControl.className="game-ui__language";
@@ -419,6 +431,14 @@ export class GameUI{
   this.menuModePanel.className="game-ui__menu-mode-panel";
   this.menuArenaPanel.className="game-ui__menu-arena-panel";this.menuArenaPanel.hidden=true;
   this.arenaCards.className="game-ui__arena-grid";
+  this.extraArenaSection.className="game-ui__downloadable-arenas";
+  this.extraArenaHeading.className="game-ui__section-title";
+  this.extraArenaRefresh.className="game-ui__download-refresh";this.extraArenaRefresh.type="button";
+  this.extraArenaRefresh.onclick=()=>{void this.loadExtraCatalog();};
+  this.extraArenaList.className="game-ui__download-grid";
+  this.extraArenaFeedback.className="game-ui__download-feedback";
+  this.extraArenaFeedback.setAttribute("aria-live","polite");
+  this.extraArenaSection.append(this.extraArenaHeading,this.extraArenaRefresh,this.extraArenaFeedback,this.extraArenaList);
   this.arenaShortcut.className="game-ui__arena-shortcut";
   this.arenaShortcut.type="button";
   this.arenaShortcut.onclick=()=>this.changeMenuStep(1);
@@ -483,7 +503,7 @@ export class GameUI{
   }
   // Name inputs belong to player setup, not the map selection screen.
   this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.characterNames,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
-  this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaCards,this.weaponDetails,this.matchSummary);
+  this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaCards,this.extraArenaSection,this.weaponDetails,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
   this.rotateHint.className="game-ui__rotate-hint";
 
@@ -997,6 +1017,7 @@ export class GameUI{
  render(state:GameState,s:HudState){
   this.currentState=state;
   const messages=this.i18n.messages,locale=this.i18n.locale,old=this.lastView;
+  const arenaName=(id:ArenaId)=>getDownloadedArena(id)?.names[locale]??messages.arenas[id as BuiltInArenaId]??id;
   const stateChanged=!old||old.state!==state;
   const localeChanged=!old||old.locale!==locale;
   const arenaChanged=!old||old.arena!==s.arena,modeChanged=!old||old.mode!==s.mode||old.localPvP!==s.localPvP;
@@ -1088,14 +1109,14 @@ export class GameUI{
     this.setText(this.arenaShortcut,((s.localPvP??s.mode==="local-pvp")?
      (messages.menu?.allArenas??"ALL 16 ARENAS"):
      (messages.menu?.mapShortcut??"CHOOSE ARENA"))+
-     " · "+messages.arenas[s.arena]);
+     " · "+arenaName(s.arena));
     this.setText(this.arenaSelectionSummary,(messages.menu?.selectedArena??"SELECTED ARENA")+
-     ": "+messages.arenas[s.arena]);
+     ": "+arenaName(s.arena));
    }
    if(modeChanged||arenaChanged||weaponChanged||localeChanged||stateChanged||nameChanged){
     this.setText(this.matchSummary,(messages.menu?.ready??"READY")+": "+
      (s.playerName?s.playerName+" · ":"")+
-     messages.modes[s.mode]+" · "+messages.arenas[s.arena]+" · "+
+     messages.modes[s.mode]+" · "+arenaName(s.arena)+" · "+
      messages.weapons[s.weapon]);
    }
    const upgraded=new Set(s.upgradedWeapons);
@@ -1110,6 +1131,7 @@ export class GameUI{
      }
     }
     if(arenaChanged||localeChanged||stateChanged){
+     this.refreshExtraArenaCards(s.arena);
      for(const item of this.arenaCards.children){
       const card=item as HTMLButtonElement;
       card.setAttribute("aria-pressed",String(card.dataset.arena===s.arena));
@@ -1315,7 +1337,75 @@ export class GameUI{
   }
   this.missileAimPath.setAttribute("d",points.join(" "));
  }
- dispose(){
+
+ private async loadExtraCatalog(){
+  if(this.extraBusy||!this.extraActions.fetchArenaCatalog)return;
+  this.extraBusy=true;this.extraStatus=this.i18n.locale==="fa"?"در حال بررسی زمین‌ها…":"Checking arenas…";
+  this.refreshExtraArenaCards(this.readHud?.().arena);
+  try{
+   this.extraCatalog=await this.extraActions.fetchArenaCatalog();
+   this.extraStatus=this.i18n.locale==="fa"?"زمین‌های جدید آماده دانلود هستند.":"New arenas are available to download.";
+  }catch{
+   this.extraStatus=this.i18n.locale==="fa"?"دسترسی به گیت‌هاب ممکن نیست؛ زمین‌های ذخیره‌شده همچنان قابل بازی هستند.":"GitHub is unavailable. Saved arenas still work offline.";
+  }finally{this.extraBusy=false;this.refreshExtraArenaCards(this.readHud?.().arena);}
+ }
+ private async installExtraArena(listing:ArenaListing){
+  if(this.extraBusy||!this.extraActions.installArena)return;
+  this.extraBusy=true;this.extraStatus=this.i18n.locale==="fa"?"در حال دانلود و ذخیره زمین…":"Downloading and saving arena…";
+  this.refreshExtraArenaCards(this.readHud?.().arena);
+  try{
+   await this.extraActions.installArena(listing);
+   this.extraStatus=this.i18n.locale==="fa"?"دانلود شد؛ اکنون بدون اینترنت قابل بازی است.":"Downloaded. This arena now works offline.";
+  }catch{
+   this.extraStatus=this.i18n.locale==="fa"?"دانلود ناموفق بود؛ اتصال اینترنت یا فضای ذخیره‌سازی را بررسی کن.":"Download failed. Check your connection and storage.";
+  }finally{this.extraBusy=false;this.refreshExtraArenaCards(this.readHud?.().arena);}
+ }
+ private refreshExtraArenaCards(selected?:ArenaId){
+  const fa=this.i18n.locale==="fa";
+  this.extraArenaHeading.textContent=fa?"زمین‌های قابل دانلود از گیت‌هاب":"DOWNLOADABLE ARENAS · GITHUB";
+  this.extraArenaRefresh.textContent=fa?"بررسی زمین‌های جدید":"CHECK NEW ARENAS";
+  this.extraArenaRefresh.disabled=this.extraBusy||!this.extraActions.fetchArenaCatalog;
+  this.extraArenaFeedback.textContent=this.extraStatus||(fa?
+   "۱۶ زمین اصلی همیشه آفلاین هستند. زمین‌های جدید را یک بار دانلود کن.":"The 16 built-in arenas always work offline. Download extras once.");
+  this.extraArenaList.replaceChildren();
+  const installed=installedArenas();
+  const entries=new Map<string,ArenaListing>();
+  for(const item of this.extraCatalog)entries.set(item.id,item);
+  for(const pack of installed)if(!entries.has(pack.id))entries.set(pack.id,{id:pack.id,version:pack.version,names:pack.names,path:""});
+  for(const entry of entries.values()){
+   const owned=installed.find(p=>p.id===entry.id);
+   const card=document.createElement("div");card.className="game-ui__download-card";
+   const title=document.createElement("strong");title.textContent=owned?.names[this.i18n.locale]??entry.names[this.i18n.locale];
+   const picture=document.createElement("div");picture.className="game-ui__download-preview";
+   if(owned)picture.style.backgroundImage="url("+JSON.stringify(arenaImageDataUrl(owned.backgroundSvg))+")";
+   const row=document.createElement("div");row.className="game-ui__download-actions";
+   if(owned){
+    const choose=document.createElement("button");choose.type="button";choose.dataset.arena=owned.id;
+    choose.className="game-ui__download-play";
+    choose.textContent=fa?"انتخاب زمین":"PLAY";
+    choose.setAttribute("aria-pressed",String(selected===owned.id));
+    choose.onclick=()=>this.extraActions.arenaSelect(owned.id);
+    row.append(choose);
+    const remove=document.createElement("button");remove.type="button";remove.className="game-ui__download-delete";
+    remove.textContent=fa?"حذف":"DELETE";remove.disabled=this.extraBusy;
+    remove.onclick=()=>{
+     try{this.extraActions.deleteArena?.(owned.id);this.extraStatus=fa?"زمین حذف شد.":"Arena deleted.";}
+     catch{this.extraStatus=fa?"حذف ناموفق بود.":"Could not delete arena.";}
+     this.refreshExtraArenaCards(this.readHud?.().arena);
+    };
+    row.append(remove);
+   }
+   if(!owned||entry.version>owned.version){
+    const button=document.createElement("button");button.type="button";button.className="game-ui__download-install";
+    button.textContent=owned?(fa?"بروزرسانی":"UPDATE"):(fa?"دانلود":"DOWNLOAD");
+    button.disabled=this.extraBusy;button.onclick=()=>{void this.installExtraArena(entry);};
+    row.append(button);
+   }
+   card.append(picture,title,row);this.extraArenaList.append(card);
+  }
+ }
+
+  dispose(){
   this.cancelTouchControls();
   this.removeTouchLifecycle();
   this.unsubscribe?.();
@@ -1350,6 +1440,7 @@ export class GameUI{
   this.menuExtrasTitle.textContent=messages.menu?.options??"SETTINGS & HELP";
   this.modeTitle.textContent=messages.sections.gameMode;
   this.arenaTitle.textContent=messages.sections.arena;
+  this.refreshExtraArenaCards(this.readHud?.().arena);
   this.startingWeaponTitle.textContent=messages.sections.weapon;
   this.playerNameCaption.textContent=messages.characterNames.playerOne;
   this.secondNameCaption.textContent=messages.characterNames.playerTwo;
@@ -1404,8 +1495,8 @@ export class GameUI{
   for(const item of this.arenaCards.children){
    const card=item as HTMLButtonElement;
    const label=card.children[1] as HTMLElement;
-   label.textContent=messages.arenas[card.dataset.arena as ArenaId];
-   card.setAttribute("aria-label",messages.arenas[card.dataset.arena as ArenaId]);
+   label.textContent=messages.arenas[card.dataset.arena as BuiltInArenaId];
+   card.setAttribute("aria-label",messages.arenas[card.dataset.arena as BuiltInArenaId]);
   }
   for(const item of this.weaponCards.children){
    const card=item as HTMLButtonElement;

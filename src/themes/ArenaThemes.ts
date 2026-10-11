@@ -1,4 +1,5 @@
-import type {ArenaId,PlatformSurface} from "../gameplay/GameSession";
+import type {ArenaId,BuiltInArenaId,PlatformSurface} from "../gameplay/GameSession";
+import {getDownloadedArena,getDownloadedImage} from "../gameplay/DownloadableArenas.js";
 import {paintProfessionalBackdrop} from "./BackgroundArt.js";
 
 export type ArenaUiSkin = "doodle" | "neon" | "fantasy";
@@ -22,7 +23,7 @@ function theme(skin:ArenaUiSkin,backdrop:ArenaBackdrop,skyTop:string,skyBottom:s
  return {skin,backdrop,skyTop,skyBottom,silhouette,platform,platformEdge,accent,secondary,hudBackground:"#080d1c"};
 }
 
-export const ARENA_THEMES:Readonly<Record<ArenaId,ArenaTheme>>={
+export const ARENA_THEMES:Readonly<Record<BuiltInArenaId,ArenaTheme>>={
  classic:theme("doodle","sketch","#171c29","#080b13","#111b28","#525f70","#d4e0f2","#ffffff","#91c7e7"),
  towers:theme("fantasy","mountains","#242437","#0c111d","#1b2232","#666376","#c9b384","#f1c777","#8dacc8"),
  pit:theme("fantasy","cavern","#26132e","#090713","#24122a","#62455c","#d49cb8","#f18ee4","#b381e6"),
@@ -51,10 +52,13 @@ export function platformColors(t:ArenaTheme,surface:PlatformSurface="normal"):{b
 }
 
 export function getArenaTheme(arena:ArenaId):ArenaTheme{
- return ARENA_THEMES[arena];
+ return getDownloadedArena(arena)?.theme??ARENA_THEMES[arena as BuiltInArenaId]??ARENA_THEMES.classic;
 }
 
 /** One cached backdrop implementation for both Canvas2D and WebGL. */
-export function paintArenaBackdrop(ctx:CanvasRenderingContext2D,width:number,height:number,t:ArenaTheme):void{
+export function paintArenaBackdrop(ctx:CanvasRenderingContext2D,width:number,height:number,t:ArenaTheme,arena?:ArenaId):void{
  paintProfessionalBackdrop(ctx,width,height,t);
+ if(!arena)return;
+ const image=getDownloadedImage(arena);
+ if(image?.complete&&image.naturalWidth>0)ctx.drawImage(image,0,0,width,height);
 }

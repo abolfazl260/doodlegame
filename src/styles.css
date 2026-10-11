@@ -1920,3 +1920,45 @@ html[dir="rtl"] .game-ui__character-name-field{direction:rtl}
 @media(pointer:coarse){.game-ui.playing[data-players="2"] .game-ui__mobile-weapon-switcher:not([hidden]){width:clamp(96px,23vmin,124px)}}
 
 .game-ui__aim-pad[data-player="2"]{--aim-angle:180deg}
+
+
+/* Optional maps fetched from this project's GitHub public directory.
+   Built-in maps remain in the grid above and work without a connection. */
+.game-ui__downloadable-arenas{
+ display:grid;gap:.5rem;margin-top:.95rem;padding:.7rem;
+ border:1px solid #49677e;border-radius:.75rem;
+ background:linear-gradient(140deg,#071523e8,#162136ee);
+}
+.game-ui__downloadable-arenas .game-ui__section-title{margin:0}
+.game-ui__download-refresh{
+ justify-self:start;min-height:40px;padding:.35rem .75rem;
+ background:#15415b;border:1px solid #67d5ec;border-radius:.5rem;
+ color:#e8faff;font-weight:800;touch-action:manipulation;
+}
+.game-ui__download-refresh:disabled,.game-ui__download-actions button:disabled{opacity:.55}
+.game-ui__download-feedback{margin:0;font-size:.75rem;color:#c5d7e9;line-height:1.4}
+.game-ui__download-grid{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;
+}
+.game-ui__download-card{
+ display:grid;gap:.35rem;min-width:0;align-content:start;
+ border:1px solid #6889a0;border-radius:.6rem;padding:.38rem;
+ background:#0b1727;
+}
+.game-ui__download-card>strong{font-size:.78rem;overflow-wrap:anywhere}
+.game-ui__download-preview{
+ aspect-ratio:16/9;min-width:0;border-radius:.38rem;
+ background:linear-gradient(155deg,#123843,#508b75 60%,#272e4a);
+ background-size:cover;background-position:center;
+}
+.game-ui__download-actions{display:flex;flex-wrap:wrap;gap:.35rem}
+.game-ui__download-actions button{
+ flex:1;min-width:3rem;min-height:40px;border-radius:.4rem;
+ border:1px solid #75a9c5;background:#193851;color:#fff;
+ font-size:.68rem;font-weight:800;touch-action:manipulation;
+}
+.game-ui__download-actions .game-ui__download-install{border-color:#fee49c;background:#5b4324}
+.game-ui__download-actions .game-ui__download-delete{background:#34202d;border-color:#987c85}
+.game-ui__download-actions [aria-pressed="true"]{outline:2px solid #ffdc80}
+@media(max-width:700px){.game-ui__download-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:450px){.game-ui__download-grid{grid-template-columns:1fr}}
