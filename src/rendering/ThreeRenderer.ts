@@ -142,7 +142,7 @@ export class ThreeRenderer implements Renderer{
   const surface=document.createElement("canvas");surface.width=640;surface.height=360;
   const ctx=surface.getContext("2d");
   if(ctx){
-   paintArenaBackdrop(ctx,surface.width,surface.height,t);
+   paintArenaBackdrop(ctx,surface.width,surface.height,t,arena);
    const texture=new THREE.CanvasTexture(surface);
    texture.colorSpace=THREE.SRGBColorSpace;
    this.scene.background=texture;
