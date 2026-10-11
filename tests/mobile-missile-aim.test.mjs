@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {getArenaTheme} from "../.test-build/themes/ArenaThemes.js";
+import {getDownloadedArena,installedArenas,arenaImageDataUrl} from "../.test-build/gameplay/DownloadableArenas.js";
 import {WebInput} from "../.test-build/platform/web/WebInput.js";
 import {GameSession} from "../.test-build/gameplay/GameSession.js";
 
@@ -11,8 +12,10 @@ const gameStateImport=compiled.split("\n").find(line=>line.startsWith("import ")
 assert.ok(gameStateImport);
 const themeImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("ArenaThemes"));
 assert.ok(themeImport,"compiled UI imports arena themes");
-const runnable=compiled.replace(gameStateImport,"const GameState=states;").replace(themeImport,"").replace("export class GameUI","class GameUI");
-const {GameUI}=new Function("states","getArenaTheme",runnable+";return {GameUI};")(states,getArenaTheme);
+const extraImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("DownloadableArenas"));
+assert.ok(extraImport,"compiled UI imports downloaded arenas");
+const runnable=compiled.replace(gameStateImport,"const GameState=states;").replace(themeImport,"").replace(extraImport,"").replace("export class GameUI","class GameUI");
+const {GameUI}=new Function("states","getArenaTheme","getDownloadedArena","installedArenas","arenaImageDataUrl",runnable+";return {GameUI};")(states,getArenaTheme,getDownloadedArena,installedArenas,arenaImageDataUrl);
 
 class Node{
  constructor(tag="div"){
@@ -23,6 +26,7 @@ class Node{
   this.listeners=new Map();this.capture=new Set();
  }
  append(...nodes){this.children.push(...nodes);}
+ replaceChildren(...nodes){this.children=[...nodes];}
  addEventListener(type,fn){const listeners=this.listeners.get(type)??[];listeners.push(fn);this.listeners.set(type,listeners);}
  emit(type,data={}){for(const fn of this.listeners.get(type)??[])fn({pointerId:3,clientX:500,clientY:200,preventDefault(){},...data});}
  setPointerCapture(id){this.capture.add(id);}
