@@ -51,7 +51,7 @@ const messages={
  status:{win:"WIN",lose:"LOSE",hill:"HILL"},
  details:{equipped:"EQUIPPED",angle:"ANGLE",power:"POWER"},
  sections:{gameMode:"MODE",arena:"ARENA",weapon:"WEAPON"},
- characterNames:{playerOne:"PLAYER 1",playerTwo:"PLAYER 2",opponent:"OPPONENT",optional:"Optional name",wins:"WINS"},
+ characterNames:{playerOne:"PLAYER 1",playerTwo:"PLAYER 2",leftPlayer:"LEFT CHARACTER · P1",rightPlayer:"RIGHT CHARACTER · P2",opponent:"OPPONENT",optional:"Optional name",wins:"WINS"},
  pvp:{p1:"P1",p2:"P2",hint:"Shared-screen controls",winner1:"P1 wins",winner2:"P2 wins",draw:"Draw"},
  panels:{weaponUpgrades:"UPGRADES",missileControl:"MISSILE",bowDraw:"BOW",releaseToFire:"RELEASE"},
  upgrade:{points:"POINTS",choose:"Choose",earn:"Earn",upgraded:"UPGRADED",upgrade:"Upgrade",locked:"Locked"},
@@ -445,10 +445,28 @@ test("character names are editable in player setup and shown in the HUD",()=>{
  assert.ok(ui.matchSummary.textContent.includes("آرمان"));
  hud.mode="local-pvp";ui.render(states.MENU,hud);
  assert.equal(ui.secondNameLabel.hidden,false);
+ assert.equal(ui.playerNameCaption.textContent,"LEFT CHARACTER · P1");
+ assert.equal(ui.secondNameCaption.textContent,"RIGHT CHARACTER · P2");
  assert.match(ui.stepNextButton.textContent,/16|۱۶/);
  ui.secondNameInput.value="سارا";ui.secondNameInput.oninput();
  ui.render(states.PLAYING,hud);
  assert.equal(ui.playerHealthName.textContent,"آرمان");
  assert.equal(ui.opponentHealthName.textContent,"سارا");
  assert.deepEqual(calls.at(-1),["name",2,"سارا"]);
+});
+
+test("name-input grid preserves P1 left and P2 right even under Persian RTL",()=>{
+ const css=readFileSync("src/styles.css","utf8");
+ assert.match(css,/\.game-ui__character-names\{[^}]*direction:ltr\}/);
+ assert.match(css,/html\[dir="rtl"\] \.game-ui__character-name-field\{direction:rtl\}/);
+ const {ui,hud}=setup({mode:"local-pvp",playerName:"Left",secondPlayerName:"Right"});
+ assert.equal(ui.characterNames.children[0],ui.playerNameLabel);
+ assert.equal(ui.characterNames.children[1],ui.secondNameLabel);
+ assert.equal(ui.playerNameCaption.textContent,"LEFT CHARACTER · P1");
+ assert.equal(ui.secondNameCaption.textContent,"RIGHT CHARACTER · P2");
+ assert.equal(ui.playerNameInput.value,"Left");
+ assert.equal(ui.secondNameInput.value,"Right");
+ hud.mode="duel";ui.render(states.MENU,hud);
+ assert.equal(ui.playerNameCaption.textContent,"PLAYER 1");
+ assert.equal(ui.secondNameLabel.hidden,true);
 });
