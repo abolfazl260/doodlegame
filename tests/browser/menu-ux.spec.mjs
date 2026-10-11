@@ -276,22 +276,59 @@ test("direct map shortcut exposes all sixteen selectable maps and the chosen are
 });
 
 test("character names persist across launches and are used for both local fighters",async({page})=>{
- await page.locator('button[data-action="next"]').tap();
- await page.locator(".game-ui__character-name-input").first().fill("آرش");
- await expect(page.locator(".game-ui__match-summary")).toContainText("آرش");
+ const first=page.locator(".game-ui__character-name-input").first();
+ await expect(first).toBeVisible();
+ await first.fill("آرش");
  await page.reload();
  await page.waitForFunction(()=>Boolean(window.__runFixture));
+ await expect(first).toHaveValue("آرش");
  await page.locator('button[data-action="next"]').tap();
- await expect(page.locator(".game-ui__character-name-input").first()).toHaveValue("آرش");
  await page.locator('button[data-action="start"]').tap();
  await expect(page.locator(".health-bar--player .health-label__name")).toHaveText("آرش");
  await page.locator(".game-ui__mobile-pause").tap();
  await page.locator('button[data-action="menu"]').tap();
  await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
- await page.locator('button[data-action="next"]').tap();
  const second=page.locator(".game-ui__character-name-input").nth(1);
  await expect(second).toBeVisible();
  await second.fill("سام");
+ await page.locator('button[data-action="next"]').tap();
+ await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
  await page.locator('button[data-action="start"]').tap();
  await expect(page.locator(".health-bar--opponent .health-label__name")).toHaveText("سام");
+});
+
+test("real keyboard typing works for both local players and every arena is selectable",async({page})=>{
+ await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
+ const first=page.locator(".game-ui__character-name-input").first();
+ const second=page.locator(".game-ui__character-name-input").nth(1);
+ await expect(first).toBeVisible();
+ await expect(second).toBeVisible();
+ await first.pressSequentially("Arman");
+ await second.pressSequentially("Sina");
+ await expect(first).toHaveValue("Arman");
+ await expect(second).toHaveValue("Sina");
+ // Typing must not trigger attacks, movement, weapon changes or jump.
+ const before=await page.evaluate(()=>window.__runFixture.pvpSnapshot());
+ expect(before.p1Input.moveX).toBe(0);
+ expect(before.p2Input.moveX).toBe(0);
+ expect(before.p1Input.attackPressed).toBe(false);
+ expect(before.p2Input.attackPressed).toBe(false);
+ await expect(page.locator('button[data-action="next"]')).toContainText("۱۶");
+ await page.locator('button[data-action="next"]').tap();
+ const ids=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge",
+  "crater","vertical","ruins","conveyor","collapse","storm","reactor"];
+ await expect(page.locator(".game-ui__arena-card")).toHaveCount(ids.length);
+ for(const id of ids){
+  const card=page.locator(`.game-ui__arena-card[data-arena="${id}"]`);
+  await expect(card).toBeEnabled();
+  await card.tap();
+  await expect(card).toHaveAttribute("aria-pressed","true");
+  expect((await page.evaluate(()=>window.__runFixture.view())).arena).toBe(id);
+ }
+ await page.locator('button[data-action="start"]').tap();
+ const match=await page.evaluate(()=>window.__runFixture.pvpSnapshot());
+ expect(match.arena).toBe("reactor");
+ expect(match.mode).toBe("local-pvp");
+ await expect(page.locator(".health-bar--player .health-label__name")).toHaveText("Arman");
+ await expect(page.locator(".health-bar--opponent .health-label__name")).toHaveText("Sina");
 });
