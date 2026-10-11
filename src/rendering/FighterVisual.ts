@@ -1,4 +1,5 @@
 import type {DuelistRenderState} from '../gameplay/GameSession';
+import {WEAPON_DRAW_DURATION} from '../gameplay/GameSession.js';
 import {KICK_SPECS,kickIsActive} from '../gameplay/KickCombat.js';
 export type Point = readonly [number, number];
 export type Segment = readonly [Point, Point];
@@ -23,8 +24,24 @@ export function telegraphSegments(s:DuelistRenderState):Segment[]{
  }
  return result;
 }
+/** The first 55 ms lower the outgoing tool; the remaining 125 ms draw the
+ * newly equipped tool. Actual weapon logic always uses s.weapon. An attack
+ * immediately takes visual precedence, so no projectile comes from an old tool.
+ */
+export function weaponDrawPose(s:DuelistRenderState){
+ const remaining=s.weaponDrawTime??0;
+ const from=s.weaponHolsterFrom??null;
+ if(remaining<=0||!from||from===s.weapon||s.attackTime>0||s.bowCharge>0||
+   s.kickKind||s.grabPhase!==null)return {weapon:s.weapon,phase:"ready" as const,progress:1};
+ const progress=clamp(1-remaining/WEAPON_DRAW_DURATION);
+ if(progress<.31)return {weapon:from,phase:"holster" as const,progress:progress/.31};
+ return {weapon:s.weapon,phase:"draw" as const,progress:(progress-.31)/.69};
+}
+const interpolate=(a:number,b:number,t:number)=>a+(b-a)*t;
+
 /** World-space, articulated monochrome pose shared by WebGL and Canvas. */
 export function fighterVisual(s:DuelistRenderState) {
+ const draw=weaponDrawPose(s),weapon=draw.weapon;
  const speed=clamp(Math.abs(s.velocityX)/8), air=!s.grounded;
  const grabbing=s.grabPhase==="attempt"||s.grabPhase==="hold"||s.grabPhase==="windup";
  const held=s.grabPhase==="held";
@@ -58,23 +75,23 @@ export function fighterVisual(s:DuelistRenderState) {
  let hand:Point=[.46,.03];
  let back:Point=[-.45-stride*.16,.05+stride*.1];
  let toolAngle=Math.sin(phase)*speed*.06;
- if(s.weapon==='blade'||s.weapon==='hammer') {
-  const angles=s.weapon==='hammer'?(s.attackVariant===2?[.9,-1.2]:[-1.1,1.25]):(s.attackVariant===0?[.9,-1.2]:[-1.15,1.1]);
+ if(weapon==='blade'||weapon==='hammer') {
+  const angles=weapon==='hammer'?(s.attackVariant===2?[.9,-1.2]:[-1.1,1.25]):(s.attackVariant===0?[.9,-1.2]:[-1.15,1.1]);
   toolAngle=s.attackTime>0?angles[0]+swing*(angles[1]-angles[0]):-.35;
-  if(s.weapon==='blade'&&s.attackVariant===2)toolAngle=-toolAngle;
-  if(s.weapon==='blade'&&s.attackVariant===3)toolAngle=.08;
+  if(weapon==='blade'&&s.attackVariant===2)toolAngle=-toolAngle;
+  if(weapon==='blade'&&s.attackVariant===3)toolAngle=.08;
   hand=[.34+swing*.18,.09+swing*.08];
- } else if(s.weapon==='bow') {hand=[.45,.22];back=[.1-s.bowCharge*.3,.22];toolAngle=0;}
- else if(s.weapon==='blaster'||s.weapon==='uzi'||s.weapon==='missile') {
+ } else if(weapon==='bow') {hand=[.45,.22];back=[.1-s.bowCharge*.3,.22];toolAngle=0;}
+ else if(weapon==='blaster'||weapon==='uzi'||weapon==='missile') {
   hand=[.43-swing*.09,.18+swing*.03];back=[.23-swing*.09,.12];
-  toolAngle=s.weapon==='missile'?s.missileAngle*Math.PI/180:swing*.09;
+  toolAngle=weapon==='missile'?s.missileAngle*Math.PI/180:swing*.09;
  } else {hand=[.45-swing*.2,.05+swing*.3];toolAngle=-swing*.8;}
- if(s.aimAngle!=null&&!['blade','hammer'].includes(s.weapon)){
+ if(s.aimAngle!=null&&!['blade','hammer'].includes(weapon)){
   toolAngle=Math.atan2(Math.sin(s.aimAngle),Math.abs(Math.cos(s.aimAngle)));
   hand=[Math.cos(toolAngle)*.48,.18+Math.sin(toolAngle)*.48];
   back=[Math.cos(toolAngle)*.23,.12+Math.sin(toolAngle)*.23];
  }
- if(air&&s.attackTime<=0&&s.weapon!=='bow'){back=[-.48,s.velocityY>0?.32:-.15];}
+ if(air&&s.attackTime<=0&&weapon!=='bow'){back=[-.48,s.velocityY>0?.32:-.15];}
  if(Math.abs(s.velocityX)>9){back=[-.62,.28];}
  if(kick){back=kick==="spin"?[-.58,.18+spinTurn*.13]:[-.52,.19];hand=[.24,.28+kickExtension*.14];}
  if(grabbing){
@@ -83,6 +100,14 @@ export function fighterVisual(s:DuelistRenderState) {
   back=[.05,.36+lift];hand=[.78,.36+lift];toolAngle=0;
  }
  if(held){back=[-.33,.51];hand=[.55,.5];toolAngle=0;}
+ if(draw.phase!=="ready"){
+  const amount=draw.phase==="holster"?draw.progress:1-draw.progress;
+  const ease=amount*amount*(3-2*amount);
+  hand=[interpolate(hand[0],.1,ease),interpolate(hand[1],-.55,ease)];
+  toolAngle=interpolate(toolAngle,-1.35,ease);
+  // Keep the weapon below the torso during holster and then raise it.
+  back=[interpolate(back[0],-.33,ease*.25),interpolate(back[1],-.12,ease*.25)];
+ }
  add([-.18,shoulder[1]],[-.3,.19],back);
  add([.18,shoulder[1]],[.32,.2],hand);
  const scale=s.enemyType==='boss'?1.18:s.enemyType==='tank'?1.08:1;
@@ -117,11 +142,12 @@ export function grabEffectSegments(s:DuelistRenderState):Segment[]{
 /** Each segment is a real pair of 3D vertices; buffers are sized from these arrays. */
 export function toolSegments(s:DuelistRenderState):Segment[] {
  if(s.grabPhase!==null&&s.grabPhase!==undefined)return [];
+ const weapon=weaponDrawPose(s).weapon;
  const lines:Segment[]=[];
  const line=(a:Point,b:Point)=>lines.push([a,b]);
  const path=(points:Point[])=>{for(let i=1;i<points.length;i++)line(points[i-1],points[i]);};
  const rect=(x:number,y:number,w:number,h:number)=>path([[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x,y]]);
- switch(s.weapon) {
+ switch(weapon) {
   case 'blade':
    rect(-.12,-.045,.25,.09);line([.12,-.16],[.12,.16]);
    path([[.15,-.08],[.78,-.07],[1.02,0],[.78,.07],[.15,.08]]);line([.2,0],[.88,0]);
@@ -131,7 +157,7 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
    for(let x=0;x<.3;x+=.07)line([x,-.06],[x+.03,.06]);
    line([.63,-.12],[.77,.12]);line([.77,-.12],[.63,.12]);break;
   case 'blaster':case 'uzi': {
-   const length=s.weapon==='uzi'?.42:.54;
+   const length=weapon==='uzi'?.42:.54;
    rect(-.16,-.08,length,.21);rect(.04,-.3,.12,.22);rect(length-.16,-.03,.27,.08);
    rect(-.06,.13,.17,.055);rect(.18,-.14,.12,.065);
    for(let x=-.1;x<.13;x+=.055)line([x,.02],[x,.09]);
