@@ -4,12 +4,15 @@ import {readFileSync} from "node:fs";
 import {
  ARENA_CATALOG_URL,DOWNLOADED_ARENAS_KEY,parseArenaCatalog,parseDownloadedArena,validArenaSvg,
  loadArenaCatalog,installDownloadedArena,removeDownloadedArena,restoreDownloadedArenas,
- getDownloadedArena,installedArenas
+ getDownloadedArena,installedArenas,validArenaWebp,arenaImageDataUrl,MAX_WEBP_BYTES
 } from "../.test-build/gameplay/DownloadableArenas.js";
 import {GameSession} from "../.test-build/gameplay/GameSession.js";
+import {WEBP_SAMPLE_BASE64,WEBP_SAMPLE_DESCRIPTOR,WEBP_SAMPLE_LISTING} from "./fixtures/downloadable-webp.mjs";
 
 const base="https://raw.githubusercontent.com/abolfazl260/doodlegame/main/public/downloadable-arenas/";
 const asset=path=>readFileSync("public/downloadable-arenas/"+path,"utf8");
+const webpDescriptor={...JSON.parse(asset("forest/arena.json")),...WEBP_SAMPLE_DESCRIPTOR};
+const webpBytes=Buffer.from(WEBP_SAMPLE_BASE64,"base64");
 const responses=new Map([
  [ARENA_CATALOG_URL,asset("catalog.json")],
  [base+"forest/arena.json",asset("forest/arena.json")],
@@ -21,7 +24,9 @@ const responses=new Map([
  [base+"volcano/arena.json",asset("volcano/arena.json")],
  [base+"volcano/background.svg",asset("volcano/background.svg")],
  [base+"neon-city/arena.json",asset("neon-city/arena.json")],
- [base+"neon-city/background.svg",asset("neon-city/background.svg")]
+ [base+"neon-city/background.svg",asset("neon-city/background.svg")],
+ [base+"webp-demo/arena.json",JSON.stringify(webpDescriptor)],
+ [base+"webp-demo/background.webp",webpBytes]
 ]);
 const mockFetch=async url=>{
  if(!responses.has(url))return new Response("Not found",{status:404});
@@ -111,6 +116,49 @@ test("reject invalid layout, SVG script, external references and unsafe paths",(
  assert.equal(parseDownloadedArena({...f,backgroundSvg:svg,arena:{...f.arena,gravity:999}}),null);
  assert.ok(parseDownloadedArena({...f,backgroundSvg:svg}));
 });
+
+test("genuine WebP is validated by RIFF header, codec and dimensions",()=>{
+ assert.equal(validArenaWebp(WEBP_SAMPLE_BASE64),true);
+ assert.equal(validArenaWebp("garbage"),false);
+ assert.equal(validArenaWebp(WEBP_SAMPLE_BASE64.slice(0,-4)),false);
+ const bogus=Buffer.from(webpBytes);
+ bogus.write("NOPE",8,"ascii");
+ assert.equal(validArenaWebp(bogus.toString("base64")),false);
+ const oversized=Buffer.alloc(MAX_WEBP_BYTES+1,0);
+ assert.equal(validArenaWebp(oversized.toString("base64")),false);
+ const badSize=Buffer.from(webpBytes);
+ badSize.writeUInt32LE(12,4);
+ assert.equal(validArenaWebp(badSize.toString("base64")),false);
+ const enormous=Buffer.from(webpBytes);
+ enormous[26]=0xff;enormous[27]=0x3f; // 16383px width is not permitted
+ assert.equal(validArenaWebp(enormous.toString("base64")),false);
+ assert.equal(parseDownloadedArena({...webpDescriptor,backgroundWebp:WEBP_SAMPLE_BASE64,backgroundSvg:"<svg></svg>"}),null);
+ assert.equal(parseDownloadedArena({...webpDescriptor,backgroundWebp:"not-a-webp"}),null);
+ const complete={...webpDescriptor,backgroundWebp:WEBP_SAMPLE_BASE64};
+ assert.ok(parseDownloadedArena(complete));
+});
+
+test("WebP downloads use real binary bytes and survive offline persistence",async()=>{
+ const storage=memory();
+ const installed=await installDownloadedArena(WEBP_SAMPLE_LISTING,storage,mockFetch);
+ assert.equal(installed.backgroundWebp,WEBP_SAMPLE_BASE64);
+ assert.equal(installed.backgroundSvg,undefined);
+ assert.ok(arenaImageDataUrl(installed).startsWith("data:image/webp;base64,"));
+ const game=new GameSession(input);
+ game.setArena("extra-webp-demo");
+ assert.equal(game.getRenderState().arena,"extra-webp-demo");
+ assert.equal(storage.get(DOWNLOADED_ARENAS_KEY)[0].backgroundWebp,WEBP_SAMPLE_BASE64);
+ restoreDownloadedArenas(storage);
+ assert.equal(getDownloadedArena("extra-webp-demo").backgroundWebp,WEBP_SAMPLE_BASE64);
+ const refused=memory();
+ await assert.rejects(installDownloadedArena(WEBP_SAMPLE_LISTING,refused,async url=>{
+  if(url.endsWith("background.webp"))return new Response(new Uint8Array(MAX_WEBP_BYTES+1),{status:200});
+  return mockFetch(url);
+ }),/size limit/);
+ assert.equal(refused.get(DOWNLOADED_ARENAS_KEY),null,"oversized WebP cannot be saved");
+ removeDownloadedArena("extra-webp-demo",storage);
+});
+
 test("failed fetch leaves installed state unchanged",async()=>{
  const storage=memory(),list=parseArenaCatalog(JSON.parse(asset("catalog.json")));
  await assert.rejects(installDownloadedArena(list[0],storage,async()=>new Response("",{status:503})));
