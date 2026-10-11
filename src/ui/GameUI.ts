@@ -181,15 +181,6 @@ export class GameUI{
  private opponentHealthName=document.createElement("span");
  private playerHealthCurrent=document.createElement("span");
  private opponentHealthCurrent=document.createElement("span");
- private missilePanel=document.createElement("div");
- private missileTitle=document.createElement("strong");
- private angleInput=document.createElement("input");
- private powerInput=document.createElement("input");
- private angleName=document.createElement("span");
- private powerName=document.createElement("span");
- private angleLabel=document.createElement("span");
- private powerLabel=document.createElement("span");
- private fireButton=document.createElement("button");
  private languageControl=document.createElement("div");
  private languageLabel=document.createElement("span");
  private languageButton=document.createElement("button");
@@ -468,27 +459,9 @@ export class GameUI{
   this.upgradeChoices.append(this.upgradeCardGrid,this.upgradeButton);
   this.upgradePanel.append(this.upgradeTitle,this.upgradePointsLabel,this.upgradeChoices,this.upgradeHint,this.upgradeSummary);
 
-  this.missilePanel.className="game-ui__missile-panel";
   this.bowPanel.className="game-ui__bow-panel";
   this.bowMeter.className="game-ui__bow-meter";
   this.bowValue.className="game-ui__bow-value";
-
-  this.angleInput.type="range";
-  this.angleInput.min="12";
-  this.angleInput.max="78";
-  this.angleInput.step="1";
-  this.powerInput.type="range";
-  this.powerInput.min="8";
-  this.powerInput.max="18";
-  this.powerInput.step=".5";
-  this.angleName.className="game-ui__missile-name";
-  this.powerName.className="game-ui__missile-name";
-  this.angleLabel.className="game-ui__missile-value";
-  this.powerLabel.className="game-ui__missile-value";
-  this.angleInput.oninput=()=>actions.setMissileAngle(Number(this.angleInput.value));
-  this.powerInput.oninput=()=>actions.setMissilePower(Number(this.powerInput.value));
-  this.fireButton.type="button";
-  this.fireButton.onclick=actions.fireWeapon;
 
   for(const id of WEAPON_IDS){
    const item=document.createElement("button");
@@ -540,11 +513,6 @@ export class GameUI{
 
   this.bowMeter.innerHTML="<span></span>";
   this.bowPanel.append(this.bowTitle,this.bowMeter,this.bowValue);
-  const angleRow=document.createElement("label");
-  angleRow.append(this.angleName,this.angleInput,this.angleLabel);
-  const powerRow=document.createElement("label");
-  powerRow.append(this.powerName,this.powerInput,this.powerLabel);
-  this.missilePanel.append(this.missileTitle,angleRow,powerRow,this.fireButton);
 
   const haptic=(duration=10)=>{if(typeof navigator!=="undefined"&&"vibrate" in navigator)navigator.vibrate(duration);};
   let joystickPointer=-1;
@@ -851,7 +819,7 @@ export class GameUI{
    });
   }
   this.root.append(this.mobileWeaponSwitcher,this.p2WeaponControls,...this.aimPads);
-  this.root.append(this.menu,this.help,this.privacy,this.topHud,this.weaponList,this.missilePanel,this.bowPanel,this.mobileControls,this.rotateHint);
+  this.root.append(this.menu,this.help,this.privacy,this.topHud,this.weaponList,this.bowPanel,this.mobileControls,this.rotateHint);
   container.append(this.root);
   this.root.addEventListener("keydown",event=>{
    if(event.key!=="Escape")return;
@@ -1182,7 +1150,6 @@ export class GameUI{
     this.setHidden(this.aimPads[0],!playing);
     this.setHidden(this.aimPads[1],!playing||!(s.localPvP??s.mode==="local-pvp"));
     this.setHidden(this.mobileWeaponSwitcher,!playing||missileRules||s.mode==="random-weapons");
-    this.setHidden(this.missilePanel,!playing||s.weapon!=="missile");
     this.setHidden(this.bowPanel,!playing||s.weapon!=="bow");
     this.setHidden(this.mobileControls,!playing);
     this.setHidden(this.p2Controls,!playing||!(s.localPvP??s.mode==="local-pvp"));
@@ -1217,14 +1184,7 @@ export class GameUI{
    this.aimPads[index].style.setProperty("--aim-angle",(-(angle??(index===0?0:Math.PI))*180/Math.PI)+"deg");
    this.lastAimDirections[index]=angle;
   }
-  if(aimChanged){
-   const angle=String(s.missileAngle),power=String(s.missilePower);
-   if(this.angleInput.value!==angle)this.angleInput.value=angle;
-   if(this.powerInput.value!==power)this.powerInput.value=power;
-   this.setText(this.angleLabel,Math.round(s.missileAngle)+"°");
-   this.setText(this.powerLabel,s.missilePower.toFixed(1));
-   this.lastAim={angle:s.missileAngle,power:s.missilePower};
-  }
+  if(aimChanged)this.lastAim={angle:s.missileAngle,power:s.missilePower};
   if(staticChanged||(aimChanged&&s.weapon==="missile")){
    const equipped=s.upgradedWeapons.includes(s.weapon)?messages.upgrades[s.weapon].name:messages.weapons[s.weapon];
    this.setText(this.details,messages.modes[s.mode]+"  •  "+messages.details.equipped+" "+equipped+
@@ -1364,11 +1324,7 @@ export class GameUI{
   this.upgradeTitle.textContent=messages.panels.weaponUpgrades;
   this.upgradeButton.textContent=messages.upgrade.upgrade;
   this.upgradeCardGrid.setAttribute("aria-label",messages.panels.weaponUpgrades);
-  this.missileTitle.textContent=messages.panels.missileControl;
   this.bowTitle.textContent=messages.panels.bowDraw;
-  this.angleName.textContent=messages.details.angle;
-  this.powerName.textContent=messages.details.power;
-  this.fireButton.textContent=messages.buttons.fireMissile;
 
   const actionLabels:Readonly<Record<UiAction,string>>={start:messages.buttons.start,pause:messages.buttons.pause,resume:messages.buttons.resume,restart:messages.buttons.restart,menu:messages.buttons.menu};
   for(const item of this.buttons.children){

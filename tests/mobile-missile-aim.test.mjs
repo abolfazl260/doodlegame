@@ -180,13 +180,18 @@ test("input and session cancel a charged bow without launching it",()=>{
  session.dispose();
 });
 
-test("touch layout removes missile sliders but preserves desktop range controls",()=>{
+test("missile aiming uses the touch trajectory guide without a separate center panel",()=>{
  const css=readFileSync("src/styles.css","utf8");
- assert.match(css,/@media \(pointer:coarse\)\{\s*\.game-ui\.playing \.game-ui__missile-panel\{display:none!important\}/);
+ const ui=readFileSync("src/ui/GameUI.ts","utf8");
+ assert.doesNotMatch(css,/game-ui__missile-panel/);
+ assert.doesNotMatch(ui,/angleInput\.type="range"/);
+ assert.doesNotMatch(ui,/this\.missilePanel/);
  assert.match(css,/\.game-ui\.playing \.game-ui__missile-aim-guide:not\(\[hidden\]\)/);
  assert.match(css,/var\(--safe-right\)/);
  assert.match(css,/var\(--safe-bottom\)/);
- assert.match(readFileSync("src/ui/GameUI.ts","utf8"),/angleInput\.type="range"/);
+ assert.match(ui,/actions\.setMissileAngle\(angle\)/);
+ assert.match(ui,/actions\.setMissilePower\(power\)/);
+ assert.match(ui,/if\(weapon==="missile"\)actions\.fireWeapon\(\)/);
 });
 
 function previewXs(d){

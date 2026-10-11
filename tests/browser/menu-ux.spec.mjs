@@ -8,6 +8,19 @@ test.beforeEach(async({page})=>{
  await expect(page.locator(".game-ui.menu")).toBeVisible();
 });
 
+test("missile duel has no center slider panel and still shows angle and power",async({page})=>{
+ await page.locator('.game-ui__mode-card[data-mode="missile-duel"]').tap();
+ await page.locator('button[data-action="next"]').tap();
+ await page.locator('button[data-action="start"]').tap();
+ await expect(page.locator(".game-ui.playing")).toBeVisible();
+ await expect(page.locator(".game-ui__missile-panel")).toHaveCount(0);
+ await expect(page.locator(".game-ui__mobile-button--attack")).toBeVisible();
+ await expect(page.locator(".game-ui__missile-aim-guide")).toHaveCount(1);
+ const hudText=await page.locator(".game-ui.playing").innerText();
+ expect(hudText).toMatch(/(?:زاویه|ANGLE)/i);
+ expect(hudText).toMatch(/(?:قدرت|POWER)/i);
+});
+
 test("player-count cards preserve all mode choices and arena is selected on the next screen",async({page})=>{
  const solo=page.locator('.game-ui__quick-mode[data-quick-mode="duel"]');
  const versus=page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]');

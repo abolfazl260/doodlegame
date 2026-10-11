@@ -114,10 +114,11 @@ test("health/aim/bow changes update only dynamic HUD, never menu option lists",(
  counters.writes=0;
  ui.render(states.PLAYING,hud);
  assert.equal(counters.writes,0);
- hud.missileAngle=64;hud.missilePower=16;
+ hud.weapon="missile";hud.missileAngle=64;hud.missilePower=16;
  ui.render(states.PLAYING,hud);
- assert.equal(ui.angleInput.value,"64");
- assert.equal(ui.powerInput.value,"16");
+ assert.deepEqual(ui.lastAim,{angle:64,power:16});
+ assert.match(ui.details.textContent,/64°/);
+ assert.match(ui.details.textContent,/16\.0/);
  assert.equal(counters.optionReads,0);
  hud.bowCharge=.5;
  ui.render(states.PLAYING,hud);
