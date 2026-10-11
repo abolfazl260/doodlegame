@@ -18,6 +18,33 @@
         "en": "RED DESERT"
       },
       "path": "desert/arena.json"
+    },
+    {
+      "id": "extra-glacier",
+      "version": 1,
+      "names": {
+        "fa": "قله یخی",
+        "en": "FROST PEAK"
+      },
+      "path": "glacier/arena.json"
+    },
+    {
+      "id": "extra-volcano",
+      "version": 1,
+      "names": {
+        "fa": "آتشفشان سوزان",
+        "en": "VOLCANIC FORGE"
+      },
+      "path": "volcano/arena.json"
+    },
+    {
+      "id": "extra-neon-city",
+      "version": 1,
+      "names": {
+        "fa": "بام‌های نئونی",
+        "en": "NEON ROOFTOPS"
+      },
+      "path": "neon-city/arena.json"
     }
   ]
 }

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-glacier",
+  "version": 1,
+  "names": {
+    "fa": "قله یخی",
+    "en": "FROST PEAK"
+  },
+  "background": "background.svg",
+  "arena": {
+    "speedMultiplier": 1.02,
+    "jumpMultiplier": 1.13,
+    "gravity": -20.5,
+    "fallLimit": null,
+    "movingPlatforms": false,
+    "spawnX": [
+      -8,
+      8
+    ],
+    "platforms": [
+      {
+        "x": -12,
+        "y": -0.25,
+        "width": 24,
+        "height": 0.5,
+        "surface": "ice"
+      },
+      {
+        "x": -10.2,
+        "y": 1.55,
+        "width": 3.8,
+        "height": 0.35,
+        "surface": "ice"
+      },
+      {
+        "x": 6.4,
+        "y": 1.55,
+        "width": 3.8,
+        "height": 0.35,
+        "surface": "ice"
+      },
+      {
+        "x": -2.2,
+        "y": 1.35,
+        "width": 4.4,
+        "height": 0.32,
+        "surface": "oneWay"
+      },
+      {
+        "x": -3,
+        "y": 3.25,
+        "width": 6,
+        "height": 0.36,
+        "surface": "slippery"
+      }
+    ]
+  },
+  "theme": {
+    "skin": "fantasy",
+    "backdrop": "mountains",
+    "skyTop": "#0c2345",
+    "skyBottom": "#437d99",
+    "silhouette": "#0c334c",
+    "platform": "#81bdd3",
+    "platformEdge": "#e3fbff",
+    "accent": "#a8f1ff",
+    "secondary": "#d9eaff",
+    "hudBackground": "#0b2743"
+  }
+}

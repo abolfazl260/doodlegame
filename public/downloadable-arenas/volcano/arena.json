@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-volcano",
+  "version": 1,
+  "names": {
+    "fa": "آتشفشان سوزان",
+    "en": "VOLCANIC FORGE"
+  },
+  "background": "background.svg",
+  "arena": {
+    "speedMultiplier": 1.06,
+    "jumpMultiplier": 1.18,
+    "gravity": -24,
+    "fallLimit": -5.8,
+    "movingPlatforms": false,
+    "spawnX": [
+      -8,
+      8
+    ],
+    "platforms": [
+      {
+        "x": -12,
+        "y": -0.25,
+        "width": 10.5,
+        "height": 0.55,
+        "surface": "normal"
+      },
+      {
+        "x": 1.5,
+        "y": -0.25,
+        "width": 10.5,
+        "height": 0.55,
+        "surface": "normal"
+      },
+      {
+        "x": -1.5,
+        "y": 1.05,
+        "width": 3,
+        "height": 0.32,
+        "surface": "oneWay"
+      },
+      {
+        "x": -5.35,
+        "y": 2.35,
+        "width": 2.75,
+        "height": 0.35,
+        "surface": "slippery"
+      },
+      {
+        "x": 2.6,
+        "y": 2.35,
+        "width": 2.75,
+        "height": 0.35,
+        "surface": "slippery"
+      },
+      {
+        "x": -1.9,
+        "y": 3.65,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "oneWay"
+      }
+    ]
+  },
+  "theme": {
+    "skin": "fantasy",
+    "backdrop": "cavern",
+    "skyTop": "#291229",
+    "skyBottom": "#b24533",
+    "silhouette": "#341926",
+    "platform": "#623c45",
+    "platformEdge": "#ffa451",
+    "accent": "#ffb361",
+    "secondary": "#ffd08c",
+    "hudBackground": "#2e1622"
+  }
+}
