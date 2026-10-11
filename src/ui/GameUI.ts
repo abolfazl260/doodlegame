@@ -1377,7 +1377,7 @@ export class GameUI{
    const card=document.createElement("div");card.className="game-ui__download-card";
    const title=document.createElement("strong");title.textContent=owned?.names[this.i18n.locale]??entry.names[this.i18n.locale];
    const picture=document.createElement("div");picture.className="game-ui__download-preview";
-   if(owned)picture.style.backgroundImage="url("+JSON.stringify(arenaImageDataUrl(owned.backgroundSvg))+")";
+   if(owned)picture.style.backgroundImage="url("+JSON.stringify(arenaImageDataUrl(owned))+")";
    const row=document.createElement("div");row.className="game-ui__download-actions";
    if(owned){
     const choose=document.createElement("button");choose.type="button";choose.dataset.arena=owned.id;
