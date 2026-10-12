@@ -1,4 +1,4 @@
-import {GameState} from "../../core/GameState";
+import {GameState} from "../../core/GameState.js";
 
 /**
  * Telegram Mini App bridge. Never trust initDataUnsafe or send Telegram identity
