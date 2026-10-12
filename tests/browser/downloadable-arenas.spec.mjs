@@ -99,9 +99,10 @@ test("short landscape gallery keeps all downloadable cards independently reachab
  expect(before.touchAction).toBe("pan-y");
  await grid.evaluate(node=>node.scrollTop=node.scrollHeight);
  const last=grid.locator(".game-ui__download-card").last();
- const viewport=await grid.boundingBox(),card=await last.boundingBox();
- expect(card.y+card.height).toBeLessThanOrEqual(viewport.y+viewport.height+1);
- expect(card.y).toBeGreaterThanOrEqual(viewport.y-1);
+ const viewport=await grid.boundingBox(),download=await last.locator(".game-ui__download-install").boundingBox();
+ // A card may be taller than the short viewport, but its action must be reachable.
+ expect(download.y+download.height).toBeLessThanOrEqual(viewport.y+viewport.height+1);
+ expect(download.y).toBeGreaterThanOrEqual(viewport.y-1);
  await last.locator(".game-ui__download-install").tap();
  await expect(last.locator(".game-ui__download-play")).toBeVisible();
  await last.locator(".game-ui__download-play").tap();
