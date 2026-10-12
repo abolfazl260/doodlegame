@@ -39,10 +39,12 @@ export function installTelegramMiniApp(
  doc:Document,
  callbacks:{getState:()=>GameState;onBack:()=>void;onResize:()=>void;onReady?:(app:TelegramWebApp)=>void;onFailure?:()=>void}
 ){
- if(!hasTelegramLaunchParams(win.location.search,win.location.hash)){
+ const host=win as TelegramWindow;
+ // Some Telegram clients expose WebApp before launch parameters are visible.
+ // Trust only SDK presence for the UI; actual identity always needs signed initData.
+ if(!hasTelegramLaunchParams(win.location.search,win.location.hash)&&!host.Telegram?.WebApp){
   return {active:false,requestFullscreen:()=>{},onGameState:()=>{},dispose:()=>{}};
  }
- const host=win as TelegramWindow;
  const root=doc.documentElement;
  root.classList.add("telegram-mini-app");
  let disposed=false;
