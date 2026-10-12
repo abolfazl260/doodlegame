@@ -336,7 +336,7 @@ export class GameSession{
   this.updateAim(this.opponent,secondInput,dt);
   this.handleHumanAttack(this.opponent,this.player,secondInput,dt);
  }
- this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0&&this.opponent.health<=0)this.winner=this.localPvP?"draw":"player";else if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0){this.winner="player";if(!this.localPvP)this.upgradePoints++;}else this.updateHill(dt);if(this.winner){this.cancelGrab(this.player,this.opponent);this.cancelGrab(this.opponent,this.player);this.cancelKick(this.player);this.cancelKick(this.opponent);if(this.winner==="draw"){for(const defeated of [this.player,this.opponent])this.emitCue("defeat",defeated.weapon,defeated.x,defeated.y+.3,defeated.facing,1.2);}else{const defeated=this.winner==="player"?this.opponent:this.player;this.emitCue("defeat",defeated.weapon,defeated.x,defeated.y+.3,defeated.facing,1.4);}}if(!this.missileRules&&this.modeId!=="random-weapons"){if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);
+ this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0&&this.opponent.health<=0)this.winner=this.localPvP?"draw":"player";else if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0){this.winner="player";if(!this.localPvP)this.upgradePoints++;}else this.updateHill(dt);if(this.winner){this.clearAirPose(this.player);this.clearAirPose(this.opponent);this.cancelGrab(this.player,this.opponent);this.cancelGrab(this.opponent,this.player);this.cancelKick(this.player);this.cancelKick(this.opponent);if(this.winner==="draw"){for(const defeated of [this.player,this.opponent])this.emitCue("defeat",defeated.weapon,defeated.x,defeated.y+.3,defeated.facing,1.2);}else{const defeated=this.winner==="player"?this.opponent:this.player;this.emitCue("defeat",defeated.weapon,defeated.x,defeated.y+.3,defeated.facing,1.4);}}if(!this.missileRules&&this.modeId!=="random-weapons"){if(input.weaponNextPressed)this.selectWeapon(1);if(input.weaponPreviousPressed)this.selectWeapon(-1);
  if(this.localPvP&&secondInput){
   if(secondInput.weaponNextPressed)this.selectPlayer2Weapon(1);
   if(secondInput.weaponPreviousPressed)this.selectPlayer2Weapon(-1);
@@ -592,11 +592,12 @@ export class GameSession{
     if(incoming>2)f.landingTime=.18*Math.min(1,incoming/10);
     f.velocityY=0;
     f.grounded=true;
+    this.landAirPose(f);
     f.doubleJumpAvailable=true;
     f.airDashAvailable=true;
   }
   this.constrainFighterX(f);
-  if(this.arena.fallLimit!==null&&f.y-HH/2<this.arena.fallLimit){f.health=0;return;}
+  if(this.arena.fallLimit!==null&&f.y-HH/2<this.arena.fallLimit){f.health=0;this.clearAirPose(f);return;}
   for(const p of this.platforms){
    if(p.surface==='oneWay')continue;
    const top=p.y+p.height;
@@ -921,7 +922,7 @@ export class GameSession{
   if(a.weapon==="boomerang"&&upgraded){spawn(4,.72);spawn(1.2,.72);return;}
   spawn(a.weapon==="boomerang"?2.8:a.weapon==="bomb"?2.4:a.weapon==="bow"?1.8:0,1,a.weapon==="uzi"&&upgraded?2:0);
 }
- private damage(t:Fighter,damage:number,knockback:number,weapon:WeaponId="blade"){if(t.health<=0||damage<=0)return;this.interruptGrab(t);this.cancelKick(t);this.emitCue("hit",weapon,t.x,t.y+.3,Math.sign(knockback)||t.facing,Math.max(.45,Math.min(1.65,damage/15)));const mass=t.enemyType==="tank"?1.8:t.enemyType==="boss"?2.2:1;t.health=Math.max(0,t.health-(this.modeId==="sudden-death"&&damage>0?t.health:damage));t.velocityX+=knockback/mass;t.velocityY=Math.max(t.velocityY,2/mass);t.grounded=false;t.hitTime=.22;}
+ private damage(t:Fighter,damage:number,knockback:number,weapon:WeaponId="blade"){if(t.health<=0||damage<=0)return;this.interruptGrab(t);this.cancelKick(t);this.clearAirPose(t);this.emitCue("hit",weapon,t.x,t.y+.3,Math.sign(knockback)||t.facing,Math.max(.45,Math.min(1.65,damage/15)));const mass=t.enemyType==="tank"?1.8:t.enemyType==="boss"?2.2:1;t.health=Math.max(0,t.health-(this.modeId==="sudden-death"&&damage>0?t.health:damage));t.velocityX+=knockback/mass;t.velocityY=Math.max(t.velocityY,2/mass);t.grounded=false;t.hitTime=.22;}
  private updateHill(dt:number){if(this.modeId!=="king-of-hill")return;const playerIn=Math.abs(this.player.x)<=HILL_HALF_WIDTH,opponentIn=Math.abs(this.opponent.x)<=HILL_HALF_WIDTH;if(playerIn===opponentIn)return;if(playerIn)this.hillPlayer=Math.min(HILL_TARGET,this.hillPlayer+dt);else this.hillOpponent=Math.min(HILL_TARGET,this.hillOpponent+dt);if(this.hillPlayer>=HILL_TARGET){this.winner="player";if(!this.localPvP)this.upgradePoints++;}else if(this.hillOpponent>=HILL_TARGET)this.winner="opponent";}
  private spawnDebris(e:EnvironmentBody){
   for(let i=0;i<4;i++){
@@ -1038,7 +1039,7 @@ export class GameSession{
    const overlap=f.x+PH/2>left&&f.x-PH/2<right;
    const crossed=previousBottom>=top-.08&&f.y-HH/2<=top+.08;
    if(crossed&&overlap&&f.velocityY<=0){
-    f.y=top+HH/2;f.velocityY=0;f.grounded=true;f.doubleJumpAvailable=true;f.airDashAvailable=true;
+    f.y=top+HH/2;f.velocityY=0;f.grounded=true;this.landAirPose(f);f.doubleJumpAvailable=true;f.airDashAvailable=true;
     if(e.kind==="crumble"&&e.timer<=0)e.timer=.68;
     continue;
    }
@@ -1055,7 +1056,7 @@ export class GameSession{
    if(!e.active)continue;
    if(e.kind==="bounce"){
     const touching=Math.abs(f.x-e.x)<e.width/2+PH/2&&f.y-HH/2<=e.y+e.height/2+.16&&f.y-HH/2>=e.y-e.height/2-.22;
-    if(touching&&e.cooldown<=0&&f.velocityY<=1){f.velocityY=14.2;f.grounded=false;f.doubleJumpAvailable=true;f.airDashAvailable=true;e.cooldown=.35;e.pulse=1;}
+    if(touching&&e.cooldown<=0&&f.velocityY<=1){f.velocityY=14.2;f.grounded=false;this.clearAirPose(f);f.doubleJumpAvailable=true;f.airDashAvailable=true;e.cooldown=.35;e.pulse=1;}
    }else if(e.kind==="vent"){
     const touching=Math.abs(f.x-e.x)<e.width/2+PH/2-.05&&Math.abs((f.y-HH/2)-(e.y+e.height/2))<.46;
     if(touching&&e.pulse>.2&&e.cooldown<=0){
@@ -1064,7 +1065,7 @@ export class GameSession{
     }
    }else if(e.kind==="trap"){
     const touching=Math.abs(f.x-e.x)<e.width/2+PH/2&&Math.abs((f.y-HH/2)-(e.y+e.height/2))<.28;
-    if(touching&&e.cooldown<=0&&f.velocityY<=1){f.health=Math.max(0,f.health-(this.modeId==="sudden-death"?f.health:18));f.velocityY=10;e.cooldown=.55;e.pulse=1;}
+    if(touching&&e.cooldown<=0&&f.velocityY<=1){f.health=Math.max(0,f.health-(this.modeId==="sudden-death"?f.health:18));this.clearAirPose(f);f.velocityY=10;e.cooldown=.55;e.pulse=1;}
    }else if(e.kind==="barrel"){
     const touching=Math.abs(f.x-e.x)<e.width/2+PH/2&&Math.abs(f.y-e.y)<HH/2+e.height/2;
     if(touching&&Math.abs(f.velocityX)>2)this.explodeBarrel(e,f.x>=e.x?1:-1);
@@ -1219,7 +1220,7 @@ export class GameSession{
      target.health=Math.max(0,target.health-(this.modeId==="sudden-death"?target.health:w.damage*damageScale*falloff));
     target.velocityX+=dirX*(7.5+5*falloff);
     target.velocityY=Math.max(target.velocityY,6+8*falloff);
-    target.grounded=false;
+    target.grounded=false;this.clearAirPose(target);
     target.doubleJumpAvailable=true;
     target.airDashAvailable=true;
   }
@@ -1229,7 +1230,7 @@ export class GameSession{
     const falloff=Math.max(.2,1-ownerDistance/radius);
     owner.velocityX+=Math.sign(owner.x-p.x||p.vx||owner.facing)*6*falloff;
     owner.velocityY=Math.max(owner.velocityY,5+6*falloff);
-    owner.grounded=false;
+    owner.grounded=false;this.clearAirPose(owner);
   }
   if(!p.clusterChild&&!this.localPvP&&p.owner==="player"&&this.upgradedWeapons.has("missile")){
     const direction=Math.sign(p.vx)||this.player.facing||1,speed=7.5;
