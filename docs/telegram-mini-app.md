@@ -113,6 +113,48 @@ normal gameplay continues. Users see a clear offline/unavailable status
 in the leaderboard. Reopen the Mini App if Telegram `initData` has expired.
 Data collection is disclosed in `public/privacy.html`.
 
+## Troubleshooting: the Telegram game looks unchanged or D1 stays empty
+
+1. Verify that the bot's **Main Mini App** is linked to
+   `https://abolfazl260.github.io/doodlegame/` in **@BotFather**.
+   A plain link sent in chat or an ordinary URL menu button may open the
+   Telegram **in-app browser**, not a Telegram Mini App; this does not supply
+   signed login data. Use the bot's **Launch App** action or proper Web App
+   menu button.
+2. In the Telegram launch, the game menu has an immediately visible connection
+   banner **below the title**, with a **connected** or **error** state.
+   Tap it to read the specific error. The ranking control is no longer buried
+   inside collapsed settings. The banner is absent from an ordinary web/Android
+   launch.
+3. If the banner says **login rejected (HTTP 401)**, check that the secret
+   `TELEGRAM_BOT_TOKEN` in **Cloudflare Worker → Settings → Variables and
+   Secrets** belongs to the **same Telegram bot** as the Main Mini App. Do not
+   share or log the token. Close the Mini App fully and relaunch it.
+4. If it says **server error (HTTP 5xx)**, in **Cloudflare → Storage &
+   Databases → D1 → doodlegame-telegram-leaderboard → Console**, run:
+   ```sql
+   SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;
+   SELECT COUNT(*) AS players FROM players;
+   SELECT COUNT(*) AS matches FROM matches;
+   ```
+   Both `players` and `matches` must exist. If missing, apply the
+   `leaderboard-worker/migrations/0001_init.sql` schema from this repo;
+   also verify the Worker **Bindings** include the D1 variable named exactly
+   `DB`, pointing to this database. Check **Worker → Observability → Logs**
+   for details. Use no raw Telegram `initData` in support screenshots.
+5. `/health` returning `{"ok":true}` proves only that the Worker code
+   is running; it **does not** read D1 or validate a real Telegram account.
+   `/api/me` returning `401` without an Authorization header is expected.
+   Neither response proves an account was registered.
+6. Once the menu banner shows **connected**, opening the Mini App should
+   insert or update a record in `players` even if no match was played.
+   An eligible finished **single-player** fight inserts an entry in `matches`.
+   Local PvP and Run mode do not count toward the online leaderboard.
+7. To get refreshed scenery, open **Choose Arena → Check New Arenas**, then
+   **Update** each previously installed downloadable arena (version 3).
+   These extra backgrounds will **not** update automatically on existing
+   offline installs. The 16 bundled maps are unchanged.
+
 ## Testing
 
 - `npm test`: unit coverage for SDK opt-in detection, safe areas, resize and
