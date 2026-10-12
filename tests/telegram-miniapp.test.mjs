@@ -120,6 +120,26 @@ test("older Telegram versions fall back to expand rather than unsupported fullsc
  integration.dispose();
 });
 
+test("pre-injected SDK is recognized even without URL markers while login still requires signed data",()=>{
+ const h=harness();
+ h.win.Telegram={WebApp:h.app};
+ let ready=false;
+ const integration=installTelegramMiniApp(h.win,h.doc,{...h.callbacks,onReady:()=>{ready=true;}});
+ assert.equal(integration.active,true);
+ assert.equal(ready,true);
+ assert.equal(h.appended,0);
+ integration.dispose();
+});
+
+test("Telegram SDK failure triggers a visible error callback",()=>{
+ const h=harness("","#tgWebAppPlatform=android&tgWebAppVersion=9.0");
+ let failures=0;
+ h.doc.head.appendChild=script=>{script.onerror?.();};
+ const integration=installTelegramMiniApp(h.win,h.doc,{...h.callbacks,onFailure:()=>failures++});
+ assert.equal(failures,1);
+ integration.dispose();
+});
+
 test("pre-injected Telegram SDK works and never downloads the script twice",()=>{
  const h=harness("","#tgWebAppPlatform=tdesktop&tgWebAppVersion=9.0");
  h.win.Telegram={WebApp:h.app};
