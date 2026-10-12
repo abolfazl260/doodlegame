@@ -63,7 +63,7 @@ test("three new landscapes can each be downloaded, selected and reused offline",
   const card=page.locator(".game-ui__download-card").filter({hasText:item.fa});
   await card.locator(".game-ui__download-install").tap();
   await expect(card.locator(".game-ui__download-play")).toBeVisible();
-  await expect(card.locator(".game-ui__download-preview")).toHaveCSS("background-image",/data:image\/webp;base64,/);
+  await expect(card.locator(".game-ui__download-preview")).toHaveCSS("background-image",/data:image\/svg\+xml;charset=utf-8,/);
   await card.locator(".game-ui__download-play").tap();
   await expect(page.locator(".game-ui__arena-selection-summary")).toContainText(item.fa);
   expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe(item.id);
@@ -79,6 +79,46 @@ test("three new landscapes can each be downloaded, selected and reused offline",
  await page.locator('button[data-action="start"]').tap();
  expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe("extra-neon-city");
  await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
+});
+
+test("short landscape gallery keeps all downloadable cards independently reachable above sticky menu actions",async({page})=>{
+ await mockGithub(page);
+ await page.setViewportSize({width:568,height:300});
+ await visitArenaStep(page);
+ await page.locator(".game-ui__download-refresh").tap();
+ const grid=page.locator(".game-ui__download-grid");
+ await expect(grid.locator(".game-ui__download-card")).toHaveCount(5);
+ // Previously the full gallery expanded under the sticky Start/Back footer.
+ const before=await grid.evaluate(node=>{
+  const css=getComputedStyle(node);
+  return {scrollHeight:node.scrollHeight,clientHeight:node.clientHeight,
+   overflowY:css.overflowY,touchAction:css.touchAction};
+ });
+ expect(before.scrollHeight).toBeGreaterThan(before.clientHeight);
+ expect(before.overflowY).toBe("auto");
+ expect(before.touchAction).toBe("pan-y");
+ await grid.evaluate(node=>node.scrollTop=node.scrollHeight);
+ const last=grid.locator(".game-ui__download-card").last();
+ const viewport=await grid.boundingBox(),card=await last.boundingBox();
+ expect(card.y+card.height).toBeLessThanOrEqual(viewport.y+viewport.height+1);
+ expect(card.y).toBeGreaterThanOrEqual(viewport.y-1);
+ await last.locator(".game-ui__download-install").tap();
+ await expect(last.locator(".game-ui__download-play")).toBeVisible();
+ await last.locator(".game-ui__download-play").tap();
+ await expect(page.locator(".game-ui__arena-selection-summary")).toContainText("بام‌های نئونی");
+ await expect(page.locator('button[data-action="start"]')).toBeInViewport();
+});
+
+test("downloadable previews appear before install, then switch to cached SVG after installing",async({page})=>{
+ await mockGithub(page);
+ await visitArenaStep(page);
+ await page.locator(".game-ui__download-refresh").tap();
+ const card=page.locator(".game-ui__download-card").filter({hasText:"جنگل مه‌آلود"});
+ await expect(card.locator(".game-ui__download-preview")).toHaveCSS("background-image",/forest\/background\.svg/);
+ await expect(card.locator(".game-ui__download-badge")).toContainText("جدید");
+ await card.locator(".game-ui__download-install").tap();
+ await expect(card.locator(".game-ui__download-preview")).toHaveCSS("background-image",/data:image\/svg\+xml;charset=utf-8,/);
+ await expect(card.locator(".game-ui__download-badge")).toContainText("دانلودشده");
 });
 
 test("WebP arena downloads as binary, displays its thumbnail and plays again offline",async({page})=>{
