@@ -159,8 +159,8 @@ export class ThreeRenderer implements Renderer{
  private draw(view:ReturnType<ThreeRenderer['fighter']>,s:DuelistRenderState){
   const pose=fighterVisual(s);
   view.group.position.set(s.x,s.y,.1);
-  view.group.scale.set(s.facing*pose.scale*pose.scaleX,pose.scale*pose.scaleY,1);
-  view.group.rotation.z=-s.facing*pose.lean;
+  view.group.scale.set(pose.visualFacing*pose.scale*pose.scaleX,pose.scale*pose.scaleY,1);
+  view.group.rotation.z=-Math.sign(pose.visualFacing)*pose.lean;
   this.setLines(view.limbs,segmentPositions(pose.joints));
   view.head.position.set(pose.head[0],pose.head[1],.02);
   view.eye.position.set(pose.head[0]+.08,pose.head[1]+.04,.04);
