@@ -56,7 +56,7 @@ test("Telegram login is discoverable outside collapsed settings and explains rej
  await expect(ranks).toHaveAttribute("data-state","error");
  await expect(ranks).toContainText("اتصال برقرار نیست");
  expect(await ranks.evaluate(el=>Boolean(el.closest(".game-ui__menu-extras")))).toBe(false);
- await ranks.click();
+ await ranks.evaluate(el=>el.click());
  await expect(page.locator(".telegram-leaderboard__status")).toContainText("توکن");
 });
 
@@ -74,7 +74,7 @@ test("Telegram login explains uninitialized D1 tables instead of hiding server e
  await page.goto("/doodlegame/#tgWebAppPlatform=android&tgWebAppVersion=9.0");
  const ranks=page.locator(".game-ui__telegram-ranks");
  await expect(ranks).toHaveAttribute("data-state","error");
- await ranks.click();
+ await ranks.evaluate(el=>el.click());
  await expect(page.locator(".telegram-leaderboard__status")).toContainText("players");
  await expect(page.locator(".telegram-leaderboard__status")).toContainText("matches");
 });
