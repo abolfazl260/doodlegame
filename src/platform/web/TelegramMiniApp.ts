@@ -39,7 +39,7 @@ export function installTelegramMiniApp(
  callbacks:{getState:()=>GameState;onBack:()=>void;onResize:()=>void}
 ){
  if(!hasTelegramLaunchParams(win.location.search,win.location.hash)){
-  return {active:false,requestFullscreen:()=>{},dispose:()=>{}};
+  return {active:false,requestFullscreen:()=>{},onGameState:()=>{},dispose:()=>{}};
  }
  const host=win as TelegramWindow;
  const root=doc.documentElement;
