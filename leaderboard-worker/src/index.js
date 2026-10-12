@@ -68,7 +68,7 @@ export async function handleRequest(request,env,now=Math.floor(Date.now()/1000))
  const url=new URL(request.url);
  const origin=request.headers.get("Origin");
  const allowed=env.ALLOWED_ORIGIN??"https://abolfazl260.github.io";
- const cors={"Access-Control-Allow-Origin":allowed,"Access-Control-Allow-Headers":"Authorization, Content-Type","Access-Control-Allow-Methods":"GET, POST, OPTIONS","Vary":"Origin"};
+ const cors={"Access-Control-Allow-Origin":allowed,"Access-Control-Allow-Headers":"Authorization, Content-Type","Access-Control-Allow-Methods":"GET, POST, DELETE, OPTIONS","Vary":"Origin"};
  if(origin&&origin!==allowed)return json({error:"Forbidden origin"},403);
  if(request.method==="OPTIONS")return new Response(null,{status:204,headers:cors});
  const respond=(body,status=200)=>json(body,status,cors);
@@ -87,6 +87,13 @@ export async function handleRequest(request,env,now=Math.floor(Date.now()/1000))
   const rows=await leaderboard(env.DB);
   return respond({ok:true,leaders:rows.map(({isUserId,...rest})=>rest),
    me:await playerSummary(env.DB,user),myRank:rows.findIndex(row=>row.isUserId===user.id)+1||null});
+ }
+ if(request.method==="DELETE"&&url.pathname==="/api/me"){
+  await env.DB.batch([
+   env.DB.prepare("DELETE FROM matches WHERE player_id=?").bind(user.id),
+   env.DB.prepare("DELETE FROM players WHERE id=?").bind(user.id)
+  ]);
+  return respond({ok:true});
  }
  if(request.method==="POST"&&url.pathname==="/api/matches/start"){
   await upsertPlayer(env.DB,user,now);
