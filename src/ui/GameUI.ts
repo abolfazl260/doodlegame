@@ -436,6 +436,9 @@ export class GameUI{
   this.extraArenaRefresh.className="game-ui__download-refresh";this.extraArenaRefresh.type="button";
   this.extraArenaRefresh.onclick=()=>{void this.loadExtraCatalog();};
   this.extraArenaList.className="game-ui__download-grid";
+  this.extraArenaList.tabIndex=0;
+  this.extraArenaList.setAttribute("role","region");
+  this.extraArenaList.setAttribute("aria-label","Downloadable arena gallery");
   this.extraArenaFeedback.className="game-ui__download-feedback";
   this.extraArenaFeedback.setAttribute("aria-live","polite");
   this.extraArenaSection.append(this.extraArenaHeading,this.extraArenaRefresh,this.extraArenaFeedback,this.extraArenaList);
@@ -1377,7 +1380,19 @@ export class GameUI{
    const card=document.createElement("div");card.className="game-ui__download-card";
    const title=document.createElement("strong");title.textContent=owned?.names[this.i18n.locale]??entry.names[this.i18n.locale];
    const picture=document.createElement("div");picture.className="game-ui__download-preview";
+   const titleText=owned?.names[this.i18n.locale]??entry.names[this.i18n.locale];
+   picture.setAttribute("role","img");
+   picture.setAttribute("aria-label",titleText);
    if(owned)picture.style.backgroundImage="url("+JSON.stringify(arenaImageDataUrl(owned))+")";
+   else if(/^[a-z0-9-]{2,32}\/arena\.json$/.test(entry.path)){
+    // Public preview before downloading. The offline placeholder remains usable.
+    const preview="https://raw.githubusercontent.com/abolfazl260/doodlegame/main/public/downloadable-arenas/"+
+     entry.path.replace(/arena\.json$/,"background.svg");
+    picture.style.backgroundImage="url("+JSON.stringify(preview)+")";
+   }
+   const badge=document.createElement("span");badge.className="game-ui__download-badge";
+   badge.dataset.owned=String(Boolean(owned));
+   badge.textContent=owned?(fa?"دانلودشده":"SAVED"):(fa?"جدید":"NEW");
    const row=document.createElement("div");row.className="game-ui__download-actions";
    if(owned){
     const choose=document.createElement("button");choose.type="button";choose.dataset.arena=owned.id;
@@ -1401,7 +1416,7 @@ export class GameUI{
     button.disabled=this.extraBusy;button.onclick=()=>{void this.installExtraArena(entry);};
     row.append(button);
    }
-   card.append(picture,title,row);this.extraArenaList.append(card);
+   card.append(picture,badge,title,row);this.extraArenaList.append(card);
   }
  }
 
