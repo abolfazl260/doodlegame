@@ -693,7 +693,7 @@ export class GameSession{
  /** A grab has its own action, cooldown and temporary synchronized pair state. */
  private startGrab(a:Fighter){
   if(this.winner||a.health<=0||a.grabPhase!==null||a.grabCooldown>0||a.kickKind||a.bowCharging||a.cooldown>0)return false;
-  a.grabPhase="attempt";a.grabElapsed=0;a.velocityX*=.25;
+  this.clearAirPose(a);a.grabPhase="attempt";a.grabElapsed=0;a.velocityX*=.25;
   a.bowCharging=false;a.bowCharge=0;a.attackTime=0;
   a.grabCooldown=GRAB.cooldown;
   this.emitCue("attack",a.weapon,a.x+a.facing*.55,a.y+.1,a.facing,.6);
@@ -819,14 +819,14 @@ export class GameSession{
  }
  private updateBowFor(f:Fighter,input:Readonly<InputState>,dt:number){
   if(input.attackCancelled){f.bowCharging=false;f.bowCharge=0;f.attackTime=0;return;}
-  if(input.attackPressed&&f.cooldown<=0&&!f.bowCharging){this.cancelWeaponDraw(f);f.bowCharging=true;f.bowCharge=0;f.attackTime=.12;}
+  if(input.attackPressed&&f.cooldown<=0&&!f.bowCharging){this.clearAirPose(f);this.cancelWeaponDraw(f);f.bowCharging=true;f.bowCharge=0;f.attackTime=.12;}
   if(!f.bowCharging)return;
   if(input.attackHeld){f.bowCharge=Math.min(1,f.bowCharge+dt/.9);f.attackTime=.12+f.bowCharge*.12;return;}
   this.fireBow(f,Math.max(.12,f.bowCharge));
  }
  private fireBow(a:Fighter,charge:number){
   if(a.cooldown>0){a.bowCharging=false;a.bowCharge=0;return;}
-  this.cancelWeaponDraw(a);
+  this.clearAirPose(a);this.cancelWeaponDraw(a);
   const w=this.weaponStats.bow,direction=a.facing,speed=w.projectileSpeed!*(.58+.62*charge),angle=this.aimFor(a,(4+11*charge)*Math.PI/180);
   const originX=a.x+direction*(.72+.08*charge),originY=a.y+.48;
   const upgraded=!this.localPvP&&a===this.player&&this.upgradedWeapons.has("bow");
@@ -840,7 +840,7 @@ export class GameSession{
  private attack(a:Fighter,t:Fighter,pressed:boolean){
   const w=this.weaponStats[a.weapon];
   if(!pressed||a.cooldown>0||a.kickKind||a.grabPhase!==null)return;
-  this.cancelWeaponDraw(a);
+  this.clearAirPose(a);this.cancelWeaponDraw(a);
   const upgraded=!this.localPvP&&a===this.player&&this.upgradedWeapons.has(a.weapon);
   const wall=this.wallDirection(a);
   const melee=a.weapon==="blade"||a.weapon==="hammer";
