@@ -1,4 +1,5 @@
 import "./styles.css";
+import "./platform/web/TelegramLeaderboard.css";
 import {Game} from "./core/Game";
 import {GameState} from "./core/GameState";
 import {GameSession} from "./gameplay/GameSession";
@@ -17,6 +18,7 @@ import {installNativeAppLifecycle} from "./platform/mobile/NativeAppLifecycle";
 import {installWebVisibilityLifecycle} from "./platform/web/WebVisibilityLifecycle";
 import {installLandscapeOrientation} from "./platform/web/LandscapeOrientation";
 import {installTelegramMiniApp} from "./platform/web/TelegramMiniApp";
+import {TelegramLeaderboard} from "./platform/web/TelegramLeaderboard";
 import {CanvasRenderer} from "./rendering/CanvasRenderer";
 import {ThreeRenderer} from "./rendering/ThreeRenderer";
 import {createRendererWithFallback} from "./rendering/RendererFactory";
@@ -87,6 +89,7 @@ try{
  const game=new Game(presentationRenderer,session,new WebFrameScheduler(),error=>console.error("DoodleGame error:",error),progression);
  let landscape:ReturnType<typeof installLandscapeOrientation>|null=null;
  let telegram:ReturnType<typeof installTelegramMiniApp>|null=null;
+ const rankings=new TelegramLeaderboard(root);
  let pausedForPortrait=false;
  const pauseGame=()=>{input.resetTransientState();game.pause();};
  const resumeGame=()=>{if(landscape?.isPortrait())return;input.resetTransientState();game.resume();};
@@ -196,9 +199,11 @@ try{
    if(current===GameState.PLAYING)pauseGame();
    else if(current===GameState.PAUSED||current===GameState.GAME_OVER)stopToMenu();
   },
-  onResize:()=>game.resize()
+  onResize:()=>game.resize(),
+  onReady:app=>rankings.connect(app)
  });
  const unsubscribeTelegram=game.subscribe(()=>telegram?.onGameState?.());
+ const unsubscribeRankings=game.subscribe(state=>rankings.onGameState(state,game.getHudState()));
  telegram.onGameState?.();
  const intro=new OpeningIntro(root,i18n.locale);
  // Hide the living background during gameplay; restore it without replaying
@@ -261,6 +266,8 @@ try{
  window.addEventListener("resize",resize);
  window.addEventListener("beforeunload",()=>{
   unsubscribeTelegram();
+  unsubscribeRankings();
+  rankings.dispose();
   telegram?.dispose();
   unsubscribeIntro();
   disposeWebVisibility();

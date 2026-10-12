@@ -1,11 +1,12 @@
 import {GameState} from "../../core/GameState.js";
 
 /**
- * Telegram Mini App bridge. Never trust initDataUnsafe or send Telegram identity
- * to the static game: accounts and verified scores would require a backend.
+ * Telegram Mini App bridge. Never trust initDataUnsafe: raw initData is sent
+ * only to the separate Worker API for server-side verification.
  * The official SDK is fetched only when Telegram launch parameters are present.
  */
 export interface TelegramWebApp{
+ initData?:string;
  ready?:()=>void;
  expand?:()=>void;
  requestFullscreen?:()=>void;
@@ -36,7 +37,7 @@ const safePixel=(value:unknown)=>typeof value==="number"&&Number.isFinite(value)
 export function installTelegramMiniApp(
  win:Window,
  doc:Document,
- callbacks:{getState:()=>GameState;onBack:()=>void;onResize:()=>void}
+ callbacks:{getState:()=>GameState;onBack:()=>void;onResize:()=>void;onReady?:(app:TelegramWebApp)=>void}
 ){
  if(!hasTelegramLaunchParams(win.location.search,win.location.hash)){
   return {active:false,requestFullscreen:()=>{},onGameState:()=>{},dispose:()=>{}};
@@ -85,6 +86,7 @@ export function installTelegramMiniApp(
   try{current.ready?.();current.expand?.();}catch{/* usable in ordinary webview */}
   onResize();
   syncBack();
+  callbacks.onReady?.(current);
  };
  const requestFullscreen=()=>{
   if(disposed||!app)return;

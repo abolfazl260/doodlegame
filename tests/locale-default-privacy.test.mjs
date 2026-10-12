@@ -62,11 +62,11 @@ test("privacy wording is short, transparent, and consistently bilingual",()=>{
  assert.match(faPrivacy,/چطور پاکش کنیم/);
  assert.match(enPrivacy,/How to delete it/);
  assert.match(locale,/How to delete it/);
- assert.match(locale,/اطلاعات شخصی شما را جمع‌آوری نمی‌کند/);
- assert.match(policy,/DoodleGame does not collect or share personal or sensitive user data/i);
+ assert.match(locale,/نسخه عادی وب و اندروید به ورود با حساب نیاز ندارد/);
+ assert.match(policy,/regular web game and Android app do not require an account/i);
  assert.doesNotMatch(policy,/>[^<]*(GitHub|Capacitor|WebView|INTERNET permission|مجوز اینترنت|دسترسی اینترنت)[^<]*</i);
  assert.match(policy,/https:\/\/abolfazl260\.github\.io\/doodlegame\/privacy\.html/);
- assert.match(policy,/اطلاعات شخصی یا حساس/);
+ assert.match(policy,/شناسه معتبر تلگرام/);
  assert.doesNotMatch(policy,/<script\\b/i);
 });
 
@@ -74,8 +74,8 @@ test("bilingual privacy policy omits internet-runtime and hosting disclosures wi
  const html=readFileSync("public/privacy.html","utf8");
  const text=html.replace(/<[^>]+>/g," ");
  assert.doesNotMatch(text,/GitHub|GitHub Pages|GitHub Issues|Capacitor|WebView|INTERNET permission|دسترسی اینترنت|مجوز اینترنت|اینترنت استفاده|میزبانی می‌شود/i);
- assert.match(text,/does not collect or share personal or sensitive user data/i);
- assert.match(text,/اطلاعات شخصی یا حساس/);
+ assert.match(text,/optional Telegram Mini App leaderboard/i);
+ assert.match(text,/شناسه معتبر تلگرام/);
  assert.match(text,/Data Safety/);
  const en=new I18n(makeStorage());en.setLocale("en");
  const fa=new I18n(makeStorage());

@@ -140,8 +140,8 @@ export function main() {
     ),
     check(
       "Privacy Policy identifies DoodleGame",
-      /DoodleGame Privacy Policy/i.test(policy) && /does not collect or share personal or sensitive user data/i.test(policy),
-      "Policy contains app identity and current no-collection disclosure."
+      /DoodleGame Privacy Policy/i.test(policy) && /regular web game and Android app do not require an account/i.test(policy) && /optional Telegram/i.test(policy),
+      "Policy separates non-account Android/web use from optional Telegram leaderboard data."
     ),
     check(
       "Data Safety document links public policy",
