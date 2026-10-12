@@ -200,7 +200,8 @@ try{
    else if(current===GameState.PAUSED||current===GameState.GAME_OVER)stopToMenu();
   },
   onResize:()=>game.resize(),
-  onReady:app=>rankings.connect(app)
+  onReady:app=>rankings.connect(app),
+  onFailure:()=>rankings.reportSdkFailure()
  });
  const unsubscribeTelegram=game.subscribe(()=>telegram?.onGameState?.());
  const unsubscribeRankings=game.subscribe(state=>rankings.onGameState(state,game.getHudState()));
