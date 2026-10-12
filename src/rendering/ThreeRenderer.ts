@@ -1,4 +1,4 @@
-import {fighterVisual,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,grabEffectSegments} from './FighterVisual';
+import {fighterVisual,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments} from './FighterVisual';
 import * as THREE from "three";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
 import {getDownloadedImage} from "../gameplay/DownloadableArenas.js";
@@ -119,7 +119,7 @@ export class ThreeRenderer implements Renderer{
    const g=this.combatVisuals[i],cue=state.combatCues[i];if(!cue){g.visible=false;continue;}
    const t=Math.min(1,cue.age/cue.life),fade=(1-t)*(1-t);
    g.visible=true;g.position.set(cue.x,cue.y,.45);
-   const r=cue.kind==="explosion"?1.15:cue.kind==="attack"?.22:cue.kind==="deflect"?.48:cue.kind==="block"?.44:.56;
+   const r=cue.kind==="slam"?1.4:cue.kind==="explosion"?1.15:cue.kind==="attack"?.22:cue.kind==="deflect"?.48:cue.kind==="block"?.44:.56;
    const size=r*cue.intensity*(.4+t*1.4);
    g.scale.set(size,size,1);
    g.rotation.z=cue.direction<0?Math.PI:0;
@@ -175,7 +175,7 @@ export class ThreeRenderer implements Renderer{
     [[-.55,pose.head[1]+wave],[-.76,pose.head[1]-.08+wave]]
    ]));
   }
-  const effect=[...telegraphSegments(s),...kickEffectSegments(s),...grabEffectSegments(s)] as import('./FighterVisual').Segment[];
+  const effect=[...telegraphSegments(s),...kickEffectSegments(s),...slamEffectSegments(s),...grabEffectSegments(s)] as import('./FighterVisual').Segment[];
   if(s.attackTime>0&&(s.weapon==='blaster'||s.weapon==='uzi')){
    const x=pose.hand[0]+(s.weapon==='uzi'?.54:.66),y=pose.hand[1];
    effect.push([[x,y],[x+.22,y+.1]],[[x,y],[x+.22,y-.1]],[[x,y],[x+.3,y]]);
