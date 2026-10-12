@@ -23,7 +23,7 @@ The Play Console Data Safety form must still be completed, and the public Privac
 | Current match state | JavaScript memory | No | Gameplay | Discarded when the session/app process ends |
 | Weapon upgrade state for the current run | JavaScript memory | No | Gameplay progression during the run | Discarded when the session/app process ends |
 
-There is no server-side DoodleGame user account, profile, cloud save, or user-data database in the current product. Character names are optional and remain exclusively on the device.
+The **Google Play Android application** has no Telegram login, DoodleGame backend account, cloud save, or remote user database. Character names stay on the device. The separately launched **Telegram Mini App**, if the owner activates its optional Cloudflare Worker, verifies Telegram identity and stores player display names and single-player results in D1. That Telegram-only feature is not invoked from the Play APK; its data behavior is disclosed separately in the public Privacy Policy. Re-review the Play Data Safety declaration before shipping any Android functionality that calls the leaderboard API.
 
 ## Android release permissions
 
