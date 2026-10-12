@@ -1,4 +1,4 @@
-import {fighterVisual,toolSegments,telegraphSegments,kickEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
+import {fighterVisual,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
 import type {Renderer} from "./Renderer";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
 import {getDownloadedImage} from "../gameplay/DownloadableArenas.js";
@@ -54,7 +54,7 @@ export class CanvasRenderer implements Renderer{
  private drawCombatCues(c:CanvasRenderingContext2D,state:GameRenderState,toX:(x:number)=>number,toY:(y:number)=>number,scale:number){
   for(const cue of state.combatCues){
    const t=Math.min(1,cue.age/cue.life),fade=(1-t)*(1-t);
-   const radius=(cue.kind==="explosion"?1.15:cue.kind==="attack"?.22:cue.kind==="deflect"?.48:cue.kind==="block"?.44:.56)*cue.intensity*(.4+1.4*t)*scale;
+   const radius=(cue.kind==="slam"?1.4:cue.kind==="explosion"?1.15:cue.kind==="attack"?.22:cue.kind==="deflect"?.48:cue.kind==="block"?.44:.56)*cue.intensity*(.4+1.4*t)*scale;
    c.save();c.translate(toX(cue.x),toY(cue.y));c.rotate(cue.direction<0?Math.PI:0);
    c.strokeStyle="#fff";c.fillStyle="#fff";c.lineWidth=Math.max(1.4,scale*.035);
    c.globalAlpha=(cue.kind==="attack"?.3:.75)*fade;
@@ -139,6 +139,7 @@ export class CanvasRenderer implements Renderer{
   if(Math.abs(s.velocityX)>9)lines([[[-.45,-.3],[-1.1,-.3]],[[-.45,0],[-1.1,0]],[[-.45,.3],[-1.1,.3]]]);
   if(pose.land>0)lines([[[-.3,-.88],[-.6-pose.land*.2,-.82]],[[.3,-.88],[.6+pose.land*.2,-.82]]]);
   lines(kickEffectSegments(s));
+  lines(slamEffectSegments(s));
   lines(grabEffectSegments(s));
   c.restore();
  }
