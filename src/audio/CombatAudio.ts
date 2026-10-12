@@ -112,15 +112,15 @@ export class CombatAudio{
   const ctx=this.context;
   if(!ctx||ctx.state!=="running"||ctx.currentTime-this.lastPlayTime<.045)return;
   this.lastPlayTime=ctx.currentTime;
-  const explosion=cue.kind==="explosion",heavy=cue.weapon==="hammer"||cue.weapon==="missile"||cue.weapon==="bomb";
-  const base=cue.kind==="attack"?(heavy?115:260):cue.kind==="deflect"?700:cue.kind==="block"?450:cue.kind==="defeat"?140:explosion?70:heavy?105:320;
-  const duration=explosion?.22:cue.kind==="defeat"?.26:cue.kind==="attack"?.065:.11;
+  const explosion=cue.kind==="explosion",slam=cue.kind==="slam",heavy=cue.weapon==="hammer"||cue.weapon==="missile"||cue.weapon==="bomb";
+  const base=cue.kind==="attack"?(heavy?115:260):cue.kind==="deflect"?700:cue.kind==="block"?450:cue.kind==="defeat"?140:slam?80:explosion?70:heavy?105:320;
+  const duration=slam?.19:explosion?.22:cue.kind==="defeat"?.26:cue.kind==="attack"?.065:.11;
   try{
    const oscillator=ctx.createOscillator(),gain=ctx.createGain(),time=ctx.currentTime;
-   oscillator.type=explosion?"sawtooth":cue.kind==="deflect"?"sine":"triangle";
+   oscillator.type=explosion||slam?"sawtooth":cue.kind==="deflect"?"sine":"triangle";
    oscillator.frequency.setValueAtTime(base,time);
-   oscillator.frequency.exponentialRampToValueAtTime(Math.max(32,base*(explosion?.35:cue.kind==="deflect"?1.5:.55)),time+duration);
-   const volume=(explosion?.12:cue.kind==="attack"?.045:.085)*Math.min(1.5,cue.intensity);
+   oscillator.frequency.exponentialRampToValueAtTime(Math.max(32,base*((explosion||slam)?.35:cue.kind==="deflect"?1.5:.55)),time+duration);
+   const volume=((explosion||slam)?.12:cue.kind==="attack"?.045:.085)*Math.min(1.5,cue.intensity);
    gain.gain.setValueAtTime(Math.max(.0001,volume),time);
    gain.gain.exponentialRampToValueAtTime(.0001,time+duration);
    oscillator.connect(gain);gain.connect(ctx.destination);
