@@ -16,6 +16,7 @@ import {WebStorage} from "./platform/web/WebStorage";
 import {installNativeAppLifecycle} from "./platform/mobile/NativeAppLifecycle";
 import {installWebVisibilityLifecycle} from "./platform/web/WebVisibilityLifecycle";
 import {installLandscapeOrientation} from "./platform/web/LandscapeOrientation";
+import {installTelegramMiniApp} from "./platform/web/TelegramMiniApp";
 import {CanvasRenderer} from "./rendering/CanvasRenderer";
 import {ThreeRenderer} from "./rendering/ThreeRenderer";
 import {createRendererWithFallback} from "./rendering/RendererFactory";
@@ -85,12 +86,14 @@ try{
  };
  const game=new Game(presentationRenderer,session,new WebFrameScheduler(),error=>console.error("DoodleGame error:",error),progression);
  let landscape:ReturnType<typeof installLandscapeOrientation>|null=null;
+ let telegram:ReturnType<typeof installTelegramMiniApp>|null=null;
  let pausedForPortrait=false;
  const pauseGame=()=>{input.resetTransientState();game.pause();};
  const resumeGame=()=>{if(landscape?.isPortrait())return;input.resetTransientState();game.resume();};
  const stopToMenu=()=>{pausedForPortrait=false;input.resetTransientState();game.stop();};
  const startGame=()=>{
   if(landscape?.isPortrait())return;
+  telegram?.requestFullscreen();
   landscape?.requestLandscape();
   input.resetTransientState();
   game.start();
@@ -186,6 +189,17 @@ try{
  ui.bind(listener=>game.subscribe(listener),readHud);
  input.start();
  game.initialize();
+ telegram=installTelegramMiniApp(window,document,{
+  getState:()=>game.getState(),
+  onBack:()=>{
+   const current=game.getState();
+   if(current===GameState.PLAYING)pauseGame();
+   else if(current===GameState.PAUSED||current===GameState.GAME_OVER)stopToMenu();
+  },
+  onResize:()=>game.resize()
+ });
+ const unsubscribeTelegram=game.subscribe(()=>telegram?.onGameState?.());
+ telegram.onGameState?.();
  const intro=new OpeningIntro(root,i18n.locale);
  // Hide the living background during gameplay; restore it without replaying
  // the long introduction if the player returns to the main menu.
@@ -246,6 +260,8 @@ try{
  const resize=()=>game.resize();
  window.addEventListener("resize",resize);
  window.addEventListener("beforeunload",()=>{
+  unsubscribeTelegram();
+  telegram?.dispose();
   unsubscribeIntro();
   disposeWebVisibility();
   landscape?.dispose();
