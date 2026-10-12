@@ -327,12 +327,12 @@ export class GameSession{
     const interrupted=!f.grounded||f.health<=0||f.hitTime>0||isDash||
      f.kickKind!==null||f.grabPhase!==null||f.attackTime>0;
     const changed=f.facing!==beforeFacing[index];
-    if(changed&&f.grounded&&Math.abs(f.velocityX)>.55&&!interrupted)f.turnPoseTime=TURN_POSE_DURATION;
+    if(changed&&f.grounded&&!interrupted)f.turnPoseTime=TURN_POSE_DURATION;
     else f.turnPoseTime=Math.max(0,f.turnPoseTime-tick);
     if(interrupted)f.turnPoseTime=0;
     // Smooth only the rendered orientation. Input, attacks, facing and hitbox
     // direction keep using f.facing without any latency.
-    const alpha=1-Math.exp(-tick/.052);
+    const alpha=1-Math.exp(-tick/.074);
     f.visualFacing+=(f.facing-f.visualFacing)*alpha;
     if(Math.abs(f.visualFacing-f.facing)<.008)f.visualFacing=f.facing;
     const fastRun=Math.max(0,Math.min(1,(Math.abs(f.velocityX)-4.2)/4));
