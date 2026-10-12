@@ -1,5 +1,5 @@
 import type {DuelistRenderState} from '../gameplay/GameSession';
-import {WEAPON_DRAW_DURATION,DOUBLE_JUMP_POSE_DURATION,WALL_JUMP_POSE_DURATION,TURN_POSE_DURATION} from '../gameplay/GameSession.js';
+import {WEAPON_DRAW_DURATION,DOUBLE_JUMP_POSE_DURATION,WALL_JUMP_POSE_DURATION,TURN_POSE_DURATION,SLAM} from '../gameplay/GameSession.js';
 import {KICK_SPECS,kickIsActive} from '../gameplay/KickCombat.js';
 export type Point = readonly [number, number];
 export type Segment = readonly [Point, Point];
@@ -31,7 +31,7 @@ export function telegraphSegments(s:DuelistRenderState):Segment[]{
 export function weaponDrawPose(s:DuelistRenderState){
  const remaining=s.weaponDrawTime??0;
  const from=s.weaponHolsterFrom??null;
- if(remaining<=0||!from||from===s.weapon||s.attackTime>0||s.bowCharge>0||
+ if(remaining<=0||!from||from===s.weapon||s.attackTime>0||s.bowCharge>0||s.slamPhase!==null||
    s.kickKind||s.grabPhase!==null)return {weapon:s.weapon,phase:"ready" as const,progress:1};
  const progress=clamp(1-remaining/WEAPON_DRAW_DURATION);
  if(progress<.31)return {weapon:from,phase:"holster" as const,progress:progress/.31};
@@ -42,7 +42,7 @@ const interpolate=(a:number,b:number,t:number)=>a+(b-a)*t;
 /** One visual state machine for both renderers, driven by actual movement only. */
 export function airbornePose(s:DuelistRenderState){
  if(s.grounded||s.health<=0)return{phase:"grounded" as const,progress:0};
- const interrupted=s.hitTime>0||s.kickKind!==null||s.grabPhase!==null||s.attackTime>0;
+ const interrupted=s.hitTime>0||s.kickKind!==null||s.grabPhase!==null||s.attackTime>0||s.slamPhase!==null;
  if(!interrupted&&s.jumpStage===2&&s.doubleJumpPoseTime>0){
   return {phase:"double" as const,progress:clamp(1-s.doubleJumpPoseTime/DOUBLE_JUMP_POSE_DURATION)};
  }
@@ -110,6 +110,13 @@ export function fighterVisual(s:DuelistRenderState) {
   }else if(air&&flight.phase==="rise"){
    knee=[side*.19,-.32];
    foot=[side*.3,-.48+(side===1?.10:0)];
+  }
+  if(s.slamPhase!==null){
+   const phase=s.slamPhase,elapsed=s.slamElapsed;
+   const anticipation=Math.min(1,elapsed/SLAM.startup);
+   const curl=phase==="startup"?.35+anticipation*.5:phase==="impact"?.9:phase==="recovery"?.6*(1-Math.min(1,elapsed/SLAM.recovery)):0;
+   knee=[side*(.14+curl*.12),-.39+curl*.24];
+   foot=[side*(.17+curl*.22),-.83+curl*.32];
   }
   if(kick&&side===1){
    const sweep=kick==="spin"?Math.sin(kickProgress*Math.PI*2)*.48:0;
@@ -182,6 +189,14 @@ export function fighterVisual(s:DuelistRenderState) {
    back=[-.46,.28];
   }
  }
+ if(s.slamPhase!==null){
+  const stage=s.slamPhase,elapsed=s.slamElapsed;
+  const wind=stage==="startup"?Math.min(1,elapsed/SLAM.startup):1;
+  if(stage==="startup"){back=[-.49,.32+wind*.35];hand=[.36,.23+wind*.37];toolAngle=-.7;}
+  else if(stage==="descent"){back=[-.5,.64];hand=[.29,.67];toolAngle=-1.1;}
+  else if(stage==="impact"){back=[-.6,-.15];hand=[.38,-.36];toolAngle=-1.25;}
+  else{const release=Math.min(1,elapsed/SLAM.recovery);back=[-.6+release*.15,-.15+release*.20];hand=[.38,-.36+release*.52];}
+ }
  if(draw.phase!=="ready"){
   const amount=draw.phase==="holster"?draw.progress:1-draw.progress;
   const ease=amount*amount*(3-2*amount);
@@ -199,12 +214,16 @@ export function fighterVisual(s:DuelistRenderState) {
   flight.phase==="fall"?-.08*flight.progress:0;
  const runLean=fastRun*.065*(!air&&!hitOverride?1:0);
  const turnLean=pivot*.16*Math.sign(s.velocityX||s.facing);
- const lean=s.velocityX*s.facing*.012-hit*.18+(air?-s.velocityY*.008:0)+aerialTilt+runLean+turnLean+
+ const slamLean=s.slamPhase==="startup"?-.2:s.slamPhase==="descent"?-.09:s.slamPhase==="impact"?.18:
+  s.slamPhase==="recovery"?.18*(1-Math.min(1,s.slamElapsed/SLAM.recovery)):0;
+ const lean=s.velocityX*s.facing*.012-hit*.18+(air?-s.velocityY*.008:0)+aerialTilt+runLean+turnLean+slamLean+
   (kick==="spin"?spinTurn*.3:kick?-.11*kickExtension:0)+(held?-.22:s.grabPhase==="windup"?-.13:0);
  // The silhouette narrows as it pivots through its edge-on midpoint. A
  // continuous signed factor avoids snapping even on rapid left/right taps.
  const visualFacing=Math.abs(facing)<.06?(facing<0?-.06:.06):facing;
- return {joints,head,hand,toolAngle,swing,scale,scaleX:1+squash,scaleY:1-squash,lean,hit,land,
+ const slamSquash=s.slamPhase==="impact"?.14:s.slamPhase==="recovery"?
+  .14*(1-Math.min(1,s.slamElapsed/SLAM.recovery)):0;
+ return {joints,head,hand,toolAngle,swing,scale,scaleX:1+squash+slamSquash,scaleY:1-squash-slamSquash,lean,hit,land,
   visualFacing,pivot,fastRun,idle};
 }
 /** Motion arcs use the same segment coordinates in both Canvas and WebGL. */
@@ -220,6 +239,17 @@ export function kickEffectSegments(s:DuelistRenderState):Segment[]{
    [.35+radius*Math.cos(b),-.44+radius*.52*Math.sin(b)]]);
  }
  return trail;
+}
+/** Common downward speed lines; the impact ring uses CombatFeedback's event. */
+export function slamEffectSegments(s:DuelistRenderState):Segment[]{
+ if(s.slamPhase!=="descent"&&s.slamPhase!=="startup")return [];
+ const r=s.slamPhase==="startup"?.25:.65;
+ return [
+  [[-.52,.62],[-.52,-r]],
+  [[.52,.62],[.52,-r]],
+  [[-.25,1.0],[-.25,.52-r*.2]],
+  [[.25,1.0],[.25,.52-r*.2]]
+ ];
 }
 /** Short shared grab wind-up traces in both WebGL and Canvas fallback. */
 export function grabEffectSegments(s:DuelistRenderState):Segment[]{
