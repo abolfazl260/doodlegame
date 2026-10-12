@@ -44,7 +44,10 @@ test("fast run has larger stride and counter-swing than slow walk",()=>{
 });
 
 test("reversal keeps logical facing and hitbox instant but visual orientation blends",()=>{
- const {game,input}=setup();input.state.moveX=1;tick(game,40);
+ const {game,input}=setup();
+ // Use the unobstructed left lane; the Classic map has a crate near center.
+ game.player.x=-10;
+ input.state.moveX=1;tick(game,40);
  const before=fighter(game);
  assert.equal(before.facing,1);
  assert.equal(before.visualFacing,1);
