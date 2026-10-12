@@ -26,7 +26,8 @@ test("privacy audit requires explicit review when runtime dependencies change",(
 test("public privacy policy is static, identifies DoodleGame and contains no tracking scripts",()=>{
   const html=readFileSync(new URL("../public/privacy.html",import.meta.url),"utf8");
   assert.match(html,/DoodleGame Privacy Policy/);
-  assert.match(html,/does not collect or share personal or sensitive user data/i);
+  assert.match(html,/regular web game and Android app do not require an account/i);
+  assert.match(html,/optional Telegram Mini App leaderboard/i);
   assert.doesNotMatch(html,/<script\b/i);
   assert.doesNotMatch(html,/google-analytics|gtag\(|facebook pixel|segment\.com/i);
 });
