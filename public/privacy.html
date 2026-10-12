@@ -19,14 +19,16 @@
 <body>
 <main>
  <h1>DoodleGame Privacy Policy</h1>
- <p class="meta">Last updated: October 8, 2026</p>
- <p class="summary"><strong>DoodleGame does not collect or share personal or sensitive user data.</strong> There are no accounts, ads, analytics, tracking, crash-reporting services, or cloud saves.</p>
+ <p class="meta">Last updated: October 12, 2026</p>
+ <p class="summary"><strong>The regular web game and Android app do not require an account.</strong> The optional Telegram Mini App leaderboard, once activated, uses verified Telegram identity and stores a display name and match results. There are no ads, analytics, tracking, or crash-reporting services.</p>
 
  <h2>What is saved?</h2>
- <p>Your chosen character names, language, combat sound and camera-shake preferences, and any manually downloaded game configuration are saved only in browser or app storage. Matches and weapon upgrades are held on your device for the current game session, not uploaded.</p>
+ <p>Your chosen character names, language, sound and camera-shake preferences, campaign progress, and downloaded game settings are saved in browser or app storage. Ordinary matches are local. If the optional Telegram leaderboard is enabled, completed single-player outcomes may additionally be recorded online.</p>
+ <h2>Optional Telegram leaderboard</h2>
+ <p>When launching the Mini App from Telegram, the app sends raw signed Telegram initData to a separate Cloudflare Worker solely to authenticate the account. The Worker verifies the signature using the bot secret and stores the Telegram numeric user ID, first name with last initial, and recorded match outcomes/timestamps in a D1 database. The top 20 names and win totals are visible to other participating players. Telegram handles, full surnames and chat messages are not published or collected by the leaderboard. The raw initData is not saved in the database. Results are reported by the game client and cannot be guaranteed cheat-free.</p>
 
  <h2>How do I delete the saved data?</h2>
- <p>Clear this site's or app's data, or uninstall DoodleGame. Your language choice will be reset and session data will be lost. There is no server-side account to delete.</p>
+ <p>Clear site or app data to delete local preferences. For the optional Telegram leaderboard, open the leaderboard inside the Telegram Mini App and choose "Delete my records" to delete your stored Telegram ID, display name and match history from the Worker database. Clearing local storage alone does not remove online records.</p>
 
  <h2>Questions or future changes</h2>
  <p>If future versions introduce data collection, this policy and the Google Play Data Safety disclosure will be updated before release. The privacy policy is also available inside the game.</p>
@@ -34,14 +36,16 @@
  <hr>
  <section lang="fa" dir="rtl">
   <h1>حریم خصوصی دودل‌گیم</h1>
-  <p class="meta">آخرین به‌روزرسانی: ۱۶ مهر ۱۴۰۵</p>
-  <p class="summary"><strong>دودل‌گیم اطلاعات شخصی یا حساس شما را جمع‌آوری نمی‌کند و به دیگران نمی‌دهد.</strong> بازی حساب کاربری، تبلیغات، ابزار ردیابی، تحلیل رفتار کاربران یا ذخیره ابری ندارد.</p>
+  <p class="meta">آخرین به‌روزرسانی: ۱۲ اکتبر ۲۰۲۶</p>
+  <p class="summary"><strong>نسخه عادی وب و اندروید نیازی به حساب کاربری ندارند.</strong> در صورت فعال‌شدن جدول رکورد اختیاری تلگرام، شناسه معتبر تلگرام، نام نمایشی و نتایج مبارزه برای رتبه‌بندی ذخیره می‌شود. بازی تبلیغات یا ابزار ردیابی و تحلیل رفتار ندارد.</p>
 
   <h2>چه چیزی روی دستگاه ذخیره می‌شود؟</h2>
-  <p>نام‌های انتخابی کاراکترها، انتخاب زبان، تنظیمات صدا و لرزش دوربین و پیکربندی بازی که دستی بروزرسانی شده است فقط در حافظه برنامه یا مرورگر ذخیره می‌شوند. اطلاعات مبارزه و ارتقای سلاح‌ها فقط در نشست فعلی بازی روی دستگاه نگه‌داری می‌شود و به سرور ارسال نمی‌شود.</p>
+  <p>نام کاراکترها، انتخاب زبان، تنظیمات صدا و لرزش دوربین، پیشرفت محلی و نقشه‌های دانلودشده در مرورگر یا دستگاه ذخیره می‌شوند. اگر جدول رکورد تلگرام فعال باشد، نتایج مبارزات تک‌نفره به سرور ارسال می‌شوند.</p>
+  <h2>جدول رکورد اختیاری تلگرام</h2>
+  <p>هنگام اجرای مینی‌اپ از تلگرام، داده امضاشده ورود برای اعتبارسنجی به Cloudflare Worker ارسال می‌شود. سرور پس از تأیید، شناسه عددی تلگرام، نام کوچک و حرف اول نام خانوادگی و نتیجه و زمان مبارزات را در D1 ذخیره می‌کند. نام نمایشی و تعداد بردهای ۲۰ نفر برتر برای سایر بازیکنان نمایش داده می‌شود. شناسه کاربری عمومی، نام خانوادگی کامل و پیام‌های چت دریافت یا منتشر نمی‌شوند. داده ورود خام در پایگاه‌داده ذخیره نمی‌شود. نتایج از کلاینت بازی گزارش می‌شوند و تضمین کاملاً ضدتقلب ندارند.</p>
 
   <h2>چطور اطلاعات ذخیره‌شده را پاک کنم؟</h2>
-  <p>داده‌های برنامه یا سایت را پاک کنید یا بازی را حذف کنید. انتخاب زبان به حالت پیش‌فرض برمی‌گردد و اطلاعات نشست فعلی از بین می‌رود. نیازی به درخواست حذف حساب نیست.</p>
+  <p>برای حذف داده‌های محلی، حافظه بازی یا سایت را پاک کنید. برای حذف اطلاعات سرور تلگرام، داخل مینی‌اپ جدول رکورد را باز کنید و گزینه «حذف رکورد من» را بزنید. پاک‌کردن داده‌های دستگاه، رکوردهای آنلاین را حذف نمی‌کند.</p>
 
   <h2>پرسش‌ها و تغییرات آینده</h2>
   <p>اگر در نسخه‌های بعد جمع‌آوری داده‌ای اضافه شود، پیش از انتشار، این متن و اطلاعات Data Safety گوگل پلی به‌روزرسانی خواهند شد. سیاست حریم خصوصی داخل بازی نیز در دسترس است.</p>
