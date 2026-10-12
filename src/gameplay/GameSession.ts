@@ -11,7 +11,7 @@ export type EnemyType="runner"|"tank"|"shooter"|"jumper"|"bomber"|"ninja"|"boss"
 export type EnvironmentKind="barrel"|"box"|"wall"|"bounce"|"trap"|"rock"|"crumble"|"fan"|"gravity"|"vent"|"fallingRock";
 export interface EnvironmentRenderState{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;readonly maxHp:number;readonly active:boolean;readonly rotation:number;readonly pulse:number;readonly warning:number;}
 export interface ArenaDebrisRenderState{readonly x:number;readonly y:number;readonly rotation:number;readonly size:number;readonly age:number;readonly life:number;}
-export interface DuelistRenderState{readonly weaponDrawTime:number;readonly weaponHolsterFrom:WeaponId|null;readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly aimAngle?:number|null;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly maxHealth:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;readonly gaitPhase:number;readonly landingTime:number;readonly hitTime:number;readonly bossPhase:number;readonly attackTelegraph:number;readonly kickKind:KickKind|null;readonly kickElapsed:number;readonly grabPhase:GrabPhase;readonly grabElapsed:number;}
+export interface DuelistRenderState{readonly jumpStage:0|1|2;readonly doubleJumpPoseTime:number;readonly wallJumpPoseTime:number;readonly weaponDrawTime:number;readonly weaponHolsterFrom:WeaponId|null;readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly aimAngle?:number|null;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly maxHealth:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;readonly gaitPhase:number;readonly landingTime:number;readonly hitTime:number;readonly bossPhase:number;readonly attackTelegraph:number;readonly kickKind:KickKind|null;readonly kickElapsed:number;readonly grabPhase:GrabPhase;readonly grabElapsed:number;}
 export interface ProjectileRenderState{readonly x:number;readonly y:number;readonly vx:number;readonly vy:number;readonly life:number;readonly weapon:WeaponId;readonly rotation:number;readonly age:number;}
 export interface ExplosionRenderState{readonly x:number;readonly y:number;age:number;readonly life:number;readonly radius:number;}
 export type BuiltInArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fortress"|"bridge"|"crater"|"vertical"|"ruins"|"conveyor"|"collapse"|"storm"|"reactor";
@@ -21,12 +21,15 @@ export interface HillState{readonly player:number;readonly opponent:number;reado
 export interface ArenaDefinition{readonly id:ArenaId;readonly name:string;readonly platforms:readonly Platform[];readonly spawnX:[number,number];readonly speedMultiplier:number;readonly jumpMultiplier:number;readonly gravity:number;readonly fallLimit:number|null;readonly movingPlatforms:boolean;readonly windStrength?:number;readonly gravityWell?:{readonly x:number;readonly y:number;readonly radius:number;readonly strength:number;};}
 export interface GameRenderState{readonly player:DuelistRenderState;readonly opponent:DuelistRenderState;readonly projectiles:readonly ProjectileRenderState[];readonly explosions:readonly ExplosionRenderState[];readonly platforms:readonly Platform[];readonly environment:readonly EnvironmentRenderState[];readonly debris:readonly ArenaDebrisRenderState[];readonly winner:"player"|"opponent"|"draw"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];readonly combatCues:readonly CombatCue[];readonly cameraShake:Readonly<{x:number;y:number}>;}
 export interface GameHudState{readonly weaponAimAngle?:number|null;readonly secondAimAngle?:number|null;readonly localPvP?:boolean;readonly playerHealth:number;readonly playerMaxHealth:number;readonly opponentHealth:number;readonly opponentMaxHealth:number;readonly weapon:WeaponId;readonly winner:"player"|"opponent"|"draw"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly playerFacing:number;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];readonly secondWeapon?:WeaponId;readonly secondBowCharge?:number;}
-interface Fighter{weaponDrawTime:number;weaponHolsterFrom:WeaponId|null;aimAngle:number|null;x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;gaitPhase:number;landingTime:number;hitTime:number;bossPhase:number;attackTelegraph:number;kickKind:KickKind|null;kickElapsed:number;kickHit:boolean;kickComboRemaining:number;grabPhase:GrabPhase;grabElapsed:number;grabCooldown:number;grabImmunity:number;grabOffsetY:number;}
+interface Fighter{jumpStage:0|1|2;doubleJumpPoseTime:number;wallJumpPoseTime:number;weaponDrawTime:number;weaponHolsterFrom:WeaponId|null;aimAngle:number|null;x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;gaitPhase:number;landingTime:number;hitTime:number;bossPhase:number;attackTelegraph:number;kickKind:KickKind|null;kickElapsed:number;kickHit:boolean;kickComboRemaining:number;grabPhase:GrabPhase;grabElapsed:number;grabCooldown:number;grabImmunity:number;grabOffsetY:number;}
 interface EnemyBrain{plan:EnemyPlan;thinkClock:number;chargeTime:number;chargeTotal:number;recoverTime:number;dodgeCooldown:number;jumpCooldown:number;transitionTime:number;phase:number;phaseAttacks:number;lastX:number;stuckTime:number;}
 interface Projectile{x:number;y:number;vx:number;vy:number;life:number;weapon:WeaponId;owner:"player"|"opponent";originX:number;returning:boolean;spin:number;age:number;bounce:number;ricochets:number;deflectCooldown?:number;damageScale?:number;sticky?:boolean;stuck?:boolean;clusterChild?:boolean;}
 interface EnvironmentBody{kind:EnvironmentKind;x:number;y:number;width:number;height:number;hp:number;maxHp:number;active:boolean;rotation:number;pulse:number;warning:number;falling:boolean;vx:number;vy:number;grounded:boolean;cooldown:number;timer:number;}
 /** A visual-only holster and draw; logical weapon switches immediately. */
 export const WEAPON_DRAW_DURATION=.18;
+/** Visual-only windows independent of jump collision and physics. */
+export const DOUBLE_JUMP_POSE_DURATION=.24;
+export const WALL_JUMP_POSE_DURATION=.16;
 const PH=.8,HH=1.8,G=-22,ACC=32,MAX=8,FRIC=26,AIR=5,JUMP=9.2,DASH_SPEED=14,DASH_TIME=.12,DASH_COOLDOWN=.65,WALL_JUMP_SPEED=9.6,MIN_MISSILE_ANGLE=12,MAX_MISSILE_ANGLE=78,MIN_MISSILE_POWER=8,MAX_MISSILE_POWER=18,HILL_TARGET=8,HILL_HALF_WIDTH=1.6;
 const ARENAS:Readonly<Record<BuiltInArenaId,ArenaDefinition>>={
  classic:{id:"classic",name:"CLASSIC",speedMultiplier:1,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-5,5],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-4,y:2,width:3.5,height:.35,surface:"ice"},{x:.5,y:3.7,width:3.5,height:.35,surface:"slippery"}]},
@@ -188,7 +191,7 @@ export class GameSession{
  private create(x:number,facing:number,enemyType:EnemyType|null):Fighter{
   const p=this.platformAtSpawn(x);
   const stats=enemyType===null?{health:100,weapon:"blade" as WeaponId,speed:1,jump:1}:{health:100,weapon:{runner:"blade",tank:"hammer",shooter:"blaster",jumper:"boomerang",bomber:"bomb",ninja:"uzi",boss:"hammer"}[enemyType] as WeaponId,speed:{runner:1.35,tank:.68,shooter:.82,jumper:1.05,bomber:.9,ninja:1.2,boss:.92}[enemyType],jump:{runner:1.1,tank:.8,shooter:.9,jumper:1.35,bomber:1,ninja:1.15,boss:1.1}[enemyType]};
-  return{weaponDrawTime:0,weaponHolsterFrom:null,aimAngle:null,x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.missileRules?"missile":stats.weapon,attackTime:0,cooldown:0,bowCharge:0,bowCharging:false,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0,gaitPhase:0,landingTime:0,hitTime:0,bossPhase:0,attackTelegraph:0,kickKind:null,kickElapsed:0,kickHit:false,kickComboRemaining:0,grabPhase:null,grabElapsed:0,grabCooldown:0,grabImmunity:0,grabOffsetY:0};
+  return{jumpStage:0,doubleJumpPoseTime:0,wallJumpPoseTime:0,weaponDrawTime:0,weaponHolsterFrom:null,aimAngle:null,x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.missileRules?"missile":stats.weapon,attackTime:0,cooldown:0,bowCharge:0,bowCharging:false,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0,gaitPhase:0,landingTime:0,hitTime:0,bossPhase:0,attackTelegraph:0,kickKind:null,kickElapsed:0,kickHit:false,kickComboRemaining:0,grabPhase:null,grabElapsed:0,grabCooldown:0,grabImmunity:0,grabOffsetY:0};
 }
  setArena(id:ArenaId){
   if(id.startsWith("extra-")&&!getDownloadedArena(id))return;
@@ -306,7 +309,7 @@ export class GameSession{
   const input=this.input.getState(),secondInput=this.localPvP?this.input.getPlayer2State?.()??IDLE_P2_INPUT:null,duration=Math.min(dt,.1),steps=Math.ceil(duration/(1/120));
   for(let i=0;i<steps;i++) {
    const frame=i===0?input:{...input,jumpPressed:false,dashPressed:false,attackPressed:false,grabPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};
-   for(const f of [this.player,this.opponent]){f.landingTime=Math.max(0,f.landingTime-duration/steps);f.hitTime=Math.max(0,f.hitTime-duration/steps);f.weaponDrawTime=Math.max(0,f.weaponDrawTime-duration/steps);if(f.weaponDrawTime===0)f.weaponHolsterFrom=null;}
+   for(const f of [this.player,this.opponent]){f.landingTime=Math.max(0,f.landingTime-duration/steps);f.hitTime=Math.max(0,f.hitTime-duration/steps);f.doubleJumpPoseTime=Math.max(0,f.doubleJumpPoseTime-duration/steps);f.wallJumpPoseTime=Math.max(0,f.wallJumpPoseTime-duration/steps);f.weaponDrawTime=Math.max(0,f.weaponDrawTime-duration/steps);if(f.weaponDrawTime===0)f.weaponHolsterFrom=null;}
    const before=this.platforms;
    const after=this.platformsAt(this.elapsed+duration/steps);
    for(const f of [this.player,this.opponent]){
@@ -476,10 +479,13 @@ export class GameSession{
   }
   return{x:ax,y:ay};
  }
+ private clearAirPose(f:Fighter){f.doubleJumpPoseTime=0;f.wallJumpPoseTime=0;}
+ private landAirPose(f:Fighter){this.clearAirPose(f);f.jumpStage=0;}
  private tryJump(f:Fighter){
   if(f.grounded){
     f.velocityY=JUMP*this.arena.jumpMultiplier;
     f.grounded=false;
+    f.jumpStage=1;this.clearAirPose(f);
     f.doubleJumpAvailable=true;
     f.airDashAvailable=true;
     return;
@@ -492,17 +498,19 @@ export class GameSession{
     f.doubleJumpAvailable=true;
     f.airDashAvailable=true;
     f.wallJumpCooldown=.18;
+    f.jumpStage=1;this.clearAirPose(f);f.wallJumpPoseTime=WALL_JUMP_POSE_DURATION;
     return;
   }
   if(f.doubleJumpAvailable){
     f.velocityY=JUMP*this.arena.jumpMultiplier*.92;
     f.doubleJumpAvailable=false;
+    f.jumpStage=2;this.clearAirPose(f);f.doubleJumpPoseTime=DOUBLE_JUMP_POSE_DURATION;
   }
  }
  private tryDash(f:Fighter){
   if(f.dashCooldown>0||(!f.grounded&&!f.airDashAvailable))return;
   f.velocityX=f.facing*DASH_SPEED;
-  if(!f.grounded){f.airDashAvailable=false;f.velocityY*=.35;}
+  if(!f.grounded){f.airDashAvailable=false;f.velocityY*=.35;this.clearAirPose(f);}
   f.dashCooldown=DASH_COOLDOWN;
  }
  private wallDirection(f:Fighter){
