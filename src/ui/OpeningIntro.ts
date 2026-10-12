@@ -314,6 +314,7 @@ export class OpeningIntro{
   nx:number,ny:number,rotation:number,paddle:number,scaleMultiplier=1,enemy=false){
   // Use the same articulated torso and head design as the in-game fighter.
   const state:DuelistRenderState={
+   slamPhase:null,slamElapsed:0,
    jumpStage:0,doubleJumpPoseTime:0,wallJumpPoseTime:0,
    visualFacing:enemy?-1:1,turnPoseTime:0,
    weaponDrawTime:0,weaponHolsterFrom:null,
