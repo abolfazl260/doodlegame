@@ -1,5 +1,5 @@
 import type {DuelistRenderState} from '../gameplay/GameSession';
-import {WEAPON_DRAW_DURATION,DOUBLE_JUMP_POSE_DURATION,WALL_JUMP_POSE_DURATION} from '../gameplay/GameSession.js';
+import {WEAPON_DRAW_DURATION,DOUBLE_JUMP_POSE_DURATION,WALL_JUMP_POSE_DURATION,TURN_POSE_DURATION} from '../gameplay/GameSession.js';
 import {KICK_SPECS,kickIsActive} from '../gameplay/KickCombat.js';
 export type Point = readonly [number, number];
 export type Segment = readonly [Point, Point];
@@ -57,6 +57,12 @@ export function airbornePose(s:DuelistRenderState){
 export function fighterVisual(s:DuelistRenderState) {
  const draw=weaponDrawPose(s),flight=airbornePose(s),weapon=draw.weapon;
  const speed=clamp(Math.abs(s.velocityX)/8), air=!s.grounded;
+ const fastRun=clamp((Math.abs(s.velocityX)-4.2)/4);
+ const hitOverride=s.hitTime>0||s.attackTime>0||s.kickKind!==null||
+  s.grabPhase!==null||s.health<=0||Math.abs(s.velocityX)>9;
+ const pivot=!air&&!hitOverride?clamp((s.turnPoseTime??0)/TURN_POSE_DURATION):0;
+ const idle=!air&&!hitOverride?Math.pow(1-speed,2):0;
+ const facing=Number.isFinite(s.visualFacing)?s.visualFacing:s.facing;
  const grabbing=s.grabPhase==="attempt"||s.grabPhase==="hold"||s.grabPhase==="windup";
  const held=s.grabPhase==="held";
  const phase=s.gaitPhase, stride=air?0:Math.sin(phase)*speed;
@@ -67,15 +73,25 @@ export function fighterVisual(s:DuelistRenderState) {
  const kickExtension=kick?Math.sin(Math.PI*clamp((kickProgress-(kick==="spin"?.2:.1))/(kick==="spin"?.65:.78))):0;
  const spinTurn=kick==="spin"?Math.sin(kickProgress*Math.PI*2):0;
  const swing=s.attackTime>0?Math.sin(progress*Math.PI):0;
- const breathe=Math.sin(s.animationTime*2.8)*.018;
- const hip:Point=[0,-.05-land*.15], shoulder:Point=[-.04,.4+breathe-land*.15];
- const head:Point=[-.02,.82+breathe-land*.15];
+ // Stationary breathing is subtle, tied to rendered time, never to world position.
+ const inhale=Math.sin(s.animationTime*2.7);
+ const breathe=inhale*.025*idle;
+ const hip:Point=[-.012*breathe,-.05-land*.15+breathe*.12];
+ const shoulder:Point=[-.04+breathe*.5,.4+breathe-land*.15];
+ const head:Point=[-.02+breathe*.32,.82+breathe*1.25-land*.15];
  const joints:Segment[]=[[hip,shoulder]];
  const add=(a:Point,b:Point,c:Point)=>joints.push([a,b],[b,c]);
  for(const side of [-1,1]) {
   const step=stride*side;
-  let foot:Point=air?[side*.32,-.52+(s.velocityY>0?.14:0)]:[side*.25+step*.42,-.9+Math.max(0,step)*.2];
-  let knee:Point=[side*.18+step*.16,-.43+(air?.14:land*.12)];
+  let foot:Point=air?[side*.32,-.52+(s.velocityY>0?.14:0)]:
+   [side*.25+step*(.42+fastRun*.23),-.9+Math.max(0,step)*(.2+fastRun*.20)];
+  let knee:Point=[side*.18+step*(.16+fastRun*.12),-.43+(air?.14:land*.12)+(!air?Math.max(0,step)*fastRun*.12:0)];
+  if(pivot>0){
+   // Keep the planted foot close to the body for a readable, brief pivot.
+   const plant=pivot*.35;
+   foot=[foot[0]*(1-plant)+side*.18*plant,foot[1]+plant*.09];
+   knee=[knee[0]*(1-plant),knee[1]+plant*.05];
+  }
   if(air&&flight.phase==="double"){
    const tuck=Math.sin(Math.PI*flight.progress);
    knee=[side*(.18+tuck*.08),-.3+tuck*.23];
@@ -106,7 +122,7 @@ export function fighterVisual(s:DuelistRenderState) {
   add(hip,knee,foot);
  }
  let hand:Point=[.46,.03];
- let back:Point=[-.45-stride*.16,.05+stride*.1];
+ let back:Point=[-.45-stride*(.16+fastRun*.29),.05+stride*(.1+fastRun*.19)+breathe*.45];
  let toolAngle=Math.sin(phase)*speed*.06;
  if(weapon==='blade'||weapon==='hammer') {
   const angles=weapon==='hammer'?(s.attackVariant===2?[.9,-1.2]:[-1.1,1.25]):(s.attackVariant===0?[.9,-1.2]:[-1.15,1.1]);
@@ -133,6 +149,20 @@ export function fighterVisual(s:DuelistRenderState) {
   back=[.05,.36+lift];hand=[.78,.36+lift];toolAngle=0;
  }
  if(held){back=[-.33,.51];hand=[.55,.5];toolAngle=0;}
+ if(!air&&!hitOverride&&!held&&!grabbing){
+  // Off-hand follows a longer counter-swing during fast running.
+  const counter=stride*fastRun;
+  back=[back[0]-.13*counter,back[1]+.13*counter];
+  if(s.aimAngle===null&&s.bowCharge<=0){
+   hand=[hand[0]+counter*.11+breathe*.27,hand[1]-counter*.11+breathe*.4];
+  }
+  // A grounded reversal briefly drops the shoulders and shifts weight.
+  if(pivot>0){
+   const turnEase=Math.sin(pivot*Math.PI);
+   back=[back[0]-.11*pivot,back[1]-.1*pivot];
+   if(s.aimAngle===null&&s.bowCharge<=0)hand=[hand[0]-.1*pivot,hand[1]-.05*pivot];
+  }
+ }
  // A free-falling fighter opens the off-hand and legs; attacking and weapon
  // aiming retain their live weapon pose, rather than sacrificing accuracy.
  if(air&&!kick&&!grabbing&&!held&&s.hitTime<=0&&s.health>0){
@@ -167,9 +197,15 @@ export function fighterVisual(s:DuelistRenderState) {
  const aerialTilt=flight.phase==="double"?.36*Math.sin(Math.PI*flight.progress):
   flight.phase==="wall"?-.18*Math.sin(Math.PI*flight.progress):
   flight.phase==="fall"?-.08*flight.progress:0;
- const lean=s.velocityX*s.facing*.012-hit*.18+(air?-s.velocityY*.008:0)+aerialTilt+
+ const runLean=fastRun*.065*(!air&&!hitOverride?1:0);
+ const turnLean=pivot*.16*Math.sign(s.velocityX||s.facing);
+ const lean=s.velocityX*s.facing*.012-hit*.18+(air?-s.velocityY*.008:0)+aerialTilt+runLean+turnLean+
   (kick==="spin"?spinTurn*.3:kick?-.11*kickExtension:0)+(held?-.22:s.grabPhase==="windup"?-.13:0);
- return {joints,head,hand,toolAngle,swing,scale,scaleX:1+squash,scaleY:1-squash,lean,hit,land};
+ // The silhouette narrows as it pivots through its edge-on midpoint. A
+ // continuous signed factor avoids snapping even on rapid left/right taps.
+ const visualFacing=Math.abs(facing)<.06?(facing<0?-.06:.06):facing;
+ return {joints,head,hand,toolAngle,swing,scale,scaleX:1+squash,scaleY:1-squash,lean,hit,land,
+  visualFacing,pivot,fastRun,idle};
 }
 /** Motion arcs use the same segment coordinates in both Canvas and WebGL. */
 export function kickEffectSegments(s:DuelistRenderState):Segment[]{
