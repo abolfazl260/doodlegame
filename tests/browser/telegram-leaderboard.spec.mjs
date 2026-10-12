@@ -32,9 +32,51 @@ test("Telegram profile and top wins are shown only after the Worker responds",as
  const button=page.locator(".game-ui__telegram-ranks");
  await expect(button).toHaveCount(1);
  await expect(page.locator(".telegram-leaderboard__profile")).toContainText("4 پیروزی");
+ await expect(button).toHaveAttribute("data-state","ready");
+ expect(await button.evaluate(el=>Boolean(el.closest(".game-ui__menu-extras")))).toBe(false);
  await button.evaluate(el=>el.click());
  await expect(page.locator(".telegram-leaderboard__entries li")).toHaveCount(2);
  expect(authSeen).toBe(true);
+});
+
+
+test("Telegram login is discoverable outside collapsed settings and explains rejected tokens",async({page})=>{
+ const sdk="window.Telegram={WebApp:{initData:'auth_date=123&user=test',viewportHeight:550,ready(){},expand(){},onEvent(){},offEvent(){}}};";
+ await page.route("https://telegram.org/js/telegram-web-app.js*",route=>route.fulfill({
+  status:200,contentType:"application/javascript",body:sdk
+ }));
+ await page.route("**/leaderboard-config.json",route=>route.fulfill({
+  status:200,contentType:"application/json",body:JSON.stringify({apiBaseUrl:"https://example.workers.dev"})
+ }));
+ await page.route("https://example.workers.dev/api/me",route=>route.fulfill({
+  status:401,contentType:"application/json",body:JSON.stringify({error:"Invalid or expired Telegram authorization"})
+ }));
+ await page.goto("/doodlegame/#tgWebAppPlatform=android&tgWebAppVersion=9.0");
+ const ranks=page.locator(".game-ui__telegram-ranks");
+ await expect(ranks).toHaveAttribute("data-state","error");
+ await expect(ranks).toContainText("اتصال برقرار نیست");
+ expect(await ranks.evaluate(el=>Boolean(el.closest(".game-ui__menu-extras")))).toBe(false);
+ await ranks.evaluate(el=>el.click());
+ await expect(page.locator(".telegram-leaderboard__status")).toContainText("توکن");
+});
+
+test("Telegram login explains uninitialized D1 tables instead of hiding server errors",async({page})=>{
+ const sdk="window.Telegram={WebApp:{initData:'auth_date=123&user=test',viewportHeight:550,ready(){},expand(){},onEvent(){},offEvent(){}}};";
+ await page.route("https://telegram.org/js/telegram-web-app.js*",route=>route.fulfill({
+  status:200,contentType:"application/javascript",body:sdk
+ }));
+ await page.route("**/leaderboard-config.json",route=>route.fulfill({
+  status:200,contentType:"application/json",body:JSON.stringify({apiBaseUrl:"https://example.workers.dev"})
+ }));
+ await page.route("https://example.workers.dev/api/me",route=>route.fulfill({
+  status:500,contentType:"application/json",body:JSON.stringify({error:"D1 database error"})
+ }));
+ await page.goto("/doodlegame/#tgWebAppPlatform=android&tgWebAppVersion=9.0");
+ const ranks=page.locator(".game-ui__telegram-ranks");
+ await expect(ranks).toHaveAttribute("data-state","error");
+ await ranks.evaluate(el=>el.click());
+ await expect(page.locator(".telegram-leaderboard__status")).toContainText("players");
+ await expect(page.locator(".telegram-leaderboard__status")).toContainText("matches");
 });
 
 test("normal web access never renders Telegram ranking UI or calls the API",async({page})=>{

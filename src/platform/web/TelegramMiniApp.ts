@@ -37,12 +37,14 @@ const safePixel=(value:unknown)=>typeof value==="number"&&Number.isFinite(value)
 export function installTelegramMiniApp(
  win:Window,
  doc:Document,
- callbacks:{getState:()=>GameState;onBack:()=>void;onResize:()=>void;onReady?:(app:TelegramWebApp)=>void}
+ callbacks:{getState:()=>GameState;onBack:()=>void;onResize:()=>void;onReady?:(app:TelegramWebApp)=>void;onFailure?:()=>void}
 ){
- if(!hasTelegramLaunchParams(win.location.search,win.location.hash)){
+ const host=win as TelegramWindow;
+ // Some Telegram clients expose WebApp before launch parameters are visible.
+ // Trust only SDK presence for the UI; actual identity always needs signed initData.
+ if(!hasTelegramLaunchParams(win.location.search,win.location.hash)&&!host.Telegram?.WebApp){
   return {active:false,requestFullscreen:()=>{},onGameState:()=>{},dispose:()=>{}};
  }
- const host=win as TelegramWindow;
  const root=doc.documentElement;
  root.classList.add("telegram-mini-app");
  let disposed=false;
@@ -100,8 +102,8 @@ export function installTelegramMiniApp(
   script=doc.createElement("script");
   script.src="https://telegram.org/js/telegram-web-app.js?64";
   script.async=true;
-  script.onload=initialize;
-  script.onerror=()=>{script=null;};
+  script.onload=()=>{initialize();if(!app&&!disposed)callbacks.onFailure?.();};
+  script.onerror=()=>{if(!disposed)callbacks.onFailure?.();script=null;};
   doc.head.appendChild(script);
  }
  return {
