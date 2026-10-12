@@ -141,8 +141,8 @@ export class TelegramLeaderboard{
    const data=await this.call("/api/me","GET");
    if(this.disposed)return;
    this.connected=true;
-   this.updateProfile(data.player);
    this.setConnectionStatus("هویت تأیید شد؛ پیروزی‌های تک‌نفره در این جدول ثبت می‌شوند.","ready");
+   this.updateProfile(data.player);
   }catch(error){
    if(this.disposed)return;
    const code=error instanceof LeaderboardApiError?error.status:0;
@@ -171,7 +171,10 @@ export class TelegramLeaderboard{
   return data;
  }
  private updateProfile(player?:Player){
-  if(this.profile&&player)this.profile.textContent=player.displayName+" · "+player.wins+" پیروزی ثبت‌شده";
+  if(!player)return;
+  if(this.profile)this.profile.textContent=player.displayName+" · "+player.wins+" پیروزی ثبت‌شده";
+  if(this.button?.dataset.state==="ready")
+   this.button.textContent="🏆 "+player.displayName+" · "+player.wins+" برد · رتبه‌بندی";
  }
  private async refresh(){
   if(!this.connected)return;
