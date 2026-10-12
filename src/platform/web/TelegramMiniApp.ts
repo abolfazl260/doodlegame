@@ -37,7 +37,7 @@ const safePixel=(value:unknown)=>typeof value==="number"&&Number.isFinite(value)
 export function installTelegramMiniApp(
  win:Window,
  doc:Document,
- callbacks:{getState:()=>GameState;onBack:()=>void;onResize:()=>void;onReady?:(app:TelegramWebApp)=>void}
+ callbacks:{getState:()=>GameState;onBack:()=>void;onResize:()=>void;onReady?:(app:TelegramWebApp)=>void;onFailure?:()=>void}
 ){
  if(!hasTelegramLaunchParams(win.location.search,win.location.hash)){
   return {active:false,requestFullscreen:()=>{},onGameState:()=>{},dispose:()=>{}};
@@ -100,8 +100,8 @@ export function installTelegramMiniApp(
   script=doc.createElement("script");
   script.src="https://telegram.org/js/telegram-web-app.js?64";
   script.async=true;
-  script.onload=initialize;
-  script.onerror=()=>{script=null;};
+  script.onload=()=>{initialize();if(!app&&!disposed)callbacks.onFailure?.();};
+  script.onerror=()=>{if(!disposed)callbacks.onFailure?.();script=null;};
   doc.head.appendChild(script);
  }
  return {
