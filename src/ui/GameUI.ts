@@ -1370,6 +1370,7 @@ export class GameUI{
   this.extraArenaRefresh.disabled=this.extraBusy||!this.extraActions.fetchArenaCatalog;
   this.extraArenaFeedback.textContent=this.extraStatus||(fa?
    "۱۶ زمین اصلی همیشه آفلاین هستند. زمین‌های جدید را یک بار دانلود کن.":"The 16 built-in arenas always work offline. Download extras once.");
+  const galleryScrollTop=this.extraArenaList.scrollTop;
   this.extraArenaList.replaceChildren();
   const installed=installedArenas();
   const entries=new Map<string,ArenaListing>();
@@ -1418,6 +1419,8 @@ export class GameUI{
    }
    card.append(picture,badge,title,row);this.extraArenaList.append(card);
   }
+  // Selecting a map, installing, or refreshing must not jump the gallery to its top.
+  this.extraArenaList.scrollTop=galleryScrollTop;
  }
 
   dispose(){
