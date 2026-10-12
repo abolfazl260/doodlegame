@@ -1,4 +1,4 @@
-import type {GameState} from "../../core/GameState";
+import {GameState} from "../../core/GameState";
 
 /**
  * Telegram Mini App bridge. Never trust initDataUnsafe or send Telegram identity
@@ -66,7 +66,7 @@ export function installTelegramMiniApp(
  };
  const syncBack=()=>{
   if(!app||disposed)return;
-  if(callbacks.getState()==="menu")app.BackButton?.hide?.();
+  if(callbacks.getState()===GameState.MENU)app.BackButton?.hide?.();
   else app.BackButton?.show?.();
  };
  const onGameState=()=>syncBack();
