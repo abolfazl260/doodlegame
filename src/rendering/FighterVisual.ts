@@ -1,5 +1,5 @@
 import type {DuelistRenderState} from '../gameplay/GameSession';
-import {WEAPON_DRAW_DURATION} from '../gameplay/GameSession.js';
+import {WEAPON_DRAW_DURATION,DOUBLE_JUMP_POSE_DURATION,WALL_JUMP_POSE_DURATION} from '../gameplay/GameSession.js';
 import {KICK_SPECS,kickIsActive} from '../gameplay/KickCombat.js';
 export type Point = readonly [number, number];
 export type Segment = readonly [Point, Point];
@@ -39,9 +39,23 @@ export function weaponDrawPose(s:DuelistRenderState){
 }
 const interpolate=(a:number,b:number,t:number)=>a+(b-a)*t;
 
+/** One visual state machine for both renderers, driven by actual movement only. */
+export function airbornePose(s:DuelistRenderState){
+ if(s.grounded||s.health<=0)return{phase:"grounded" as const,progress:0};
+ const interrupted=s.hitTime>0||s.kickKind!==null||s.grabPhase!==null||s.attackTime>0;
+ if(!interrupted&&s.jumpStage===2&&s.doubleJumpPoseTime>0){
+  return {phase:"double" as const,progress:clamp(1-s.doubleJumpPoseTime/DOUBLE_JUMP_POSE_DURATION)};
+ }
+ if(!interrupted&&s.wallJumpPoseTime>0){
+  return {phase:"wall" as const,progress:clamp(1-s.wallJumpPoseTime/WALL_JUMP_POSE_DURATION)};
+ }
+ if(s.velocityY>1.2)return{phase:"rise" as const,progress:clamp(s.velocityY/12)};
+ if(s.velocityY< -1.2)return{phase:"fall" as const,progress:clamp((-s.velocityY-1.2)/10)};
+ return{phase:"apex" as const,progress:1-clamp(Math.abs(s.velocityY)/1.2)};
+}
 /** World-space, articulated monochrome pose shared by WebGL and Canvas. */
 export function fighterVisual(s:DuelistRenderState) {
- const draw=weaponDrawPose(s),weapon=draw.weapon;
+ const draw=weaponDrawPose(s),flight=airbornePose(s),weapon=draw.weapon;
  const speed=clamp(Math.abs(s.velocityX)/8), air=!s.grounded;
  const grabbing=s.grabPhase==="attempt"||s.grabPhase==="hold"||s.grabPhase==="windup";
  const held=s.grabPhase==="held";
@@ -62,6 +76,25 @@ export function fighterVisual(s:DuelistRenderState) {
   const step=stride*side;
   let foot:Point=air?[side*.32,-.52+(s.velocityY>0?.14:0)]:[side*.25+step*.42,-.9+Math.max(0,step)*.2];
   let knee:Point=[side*.18+step*.16,-.43+(air?.14:land*.12)];
+  if(air&&flight.phase==="double"){
+   const tuck=Math.sin(Math.PI*flight.progress);
+   knee=[side*(.18+tuck*.08),-.3+tuck*.23];
+   foot=[side*(.31-tuck*.08),-.55+tuck*.33];
+  }else if(air&&flight.phase==="wall"){
+   const kickAway=Math.sin(Math.PI*flight.progress);
+   knee=[side*(.2+kickAway*.14),-.29+kickAway*.1];
+   foot=[side*(.32+kickAway*.27),-.52+kickAway*.12];
+  }else if(air&&flight.phase==="fall"){
+   const spread=flight.progress;
+   knee=[side*(.18+spread*.17),-.28+spread*.03];
+   foot=[side*(.32+spread*.25),-.56-spread*.14];
+  }else if(air&&flight.phase==="apex"){
+   knee=[side*.23,-.26];
+   foot=[side*.42,-.57];
+  }else if(air&&flight.phase==="rise"){
+   knee=[side*.19,-.32];
+   foot=[side*.3,-.48+(side===1?.10:0)];
+  }
   if(kick&&side===1){
    const sweep=kick==="spin"?Math.sin(kickProgress*Math.PI*2)*.48:0;
    knee=[.26+kickExtension*.25,-.43+kickExtension*.16+sweep*.12];
@@ -100,6 +133,25 @@ export function fighterVisual(s:DuelistRenderState) {
   back=[.05,.36+lift];hand=[.78,.36+lift];toolAngle=0;
  }
  if(held){back=[-.33,.51];hand=[.55,.5];toolAngle=0;}
+ // A free-falling fighter opens the off-hand and legs; attacking and weapon
+ // aiming retain their live weapon pose, rather than sacrificing accuracy.
+ if(air&&!kick&&!grabbing&&!held&&s.hitTime<=0&&s.health>0){
+  if(flight.phase==="double"){
+   const tuck=Math.sin(Math.PI*flight.progress);
+   back=[-.48+tuck*.20,.30+tuck*.37];
+   if(s.attackTime<=0&&s.aimAngle===null&&s.bowCharge<=0)hand=[hand[0]-tuck*.11,hand[1]+tuck*.36];
+  }else if(flight.phase==="wall"){
+   const push=Math.sin(Math.PI*flight.progress);
+   back=[-.58,.34+push*.2];
+  }else if(flight.phase==="fall"){
+   back=[-.5-flight.progress*.17,.22+flight.progress*.29];
+   if(s.attackTime<=0&&s.aimAngle===null&&s.bowCharge<=0)hand=[hand[0]+flight.progress*.09,hand[1]+flight.progress*.12];
+  }else if(flight.phase==="apex"){
+   back=[-.56,.31];
+  }else if(flight.phase==="rise"){
+   back=[-.46,.28];
+  }
+ }
  if(draw.phase!=="ready"){
   const amount=draw.phase==="holster"?draw.progress:1-draw.progress;
   const ease=amount*amount*(3-2*amount);
@@ -112,7 +164,11 @@ export function fighterVisual(s:DuelistRenderState) {
  add([.18,shoulder[1]],[.32,.2],hand);
  const scale=s.enemyType==='boss'?1.18:s.enemyType==='tank'?1.08:1;
  const squash=land*.16;
- const lean=s.velocityX*s.facing*.012-hit*.18+(air?-s.velocityY*.008:0)+(kick==="spin"?spinTurn*.3:kick?-.11*kickExtension:0)+(held?-.22:s.grabPhase==="windup"?-.13:0);
+ const aerialTilt=flight.phase==="double"?.36*Math.sin(Math.PI*flight.progress):
+  flight.phase==="wall"?-.18*Math.sin(Math.PI*flight.progress):
+  flight.phase==="fall"?-.08*flight.progress:0;
+ const lean=s.velocityX*s.facing*.012-hit*.18+(air?-s.velocityY*.008:0)+aerialTilt+
+  (kick==="spin"?spinTurn*.3:kick?-.11*kickExtension:0)+(held?-.22:s.grabPhase==="windup"?-.13:0);
  return {joints,head,hand,toolAngle,swing,scale,scaleX:1+squash,scaleY:1-squash,lean,hit,land};
 }
 /** Motion arcs use the same segment coordinates in both Canvas and WebGL. */
