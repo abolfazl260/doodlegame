@@ -1962,3 +1962,26 @@ html[dir="rtl"] .game-ui__character-name-field{direction:rtl}
 .game-ui__download-actions [aria-pressed="true"]{outline:2px solid #ffdc80}
 @media(max-width:700px){.game-ui__download-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:450px){.game-ui__download-grid{grid-template-columns:1fr}}
+
+
+/* Telegram Mini App only: native Telegram header/bottom UI and live viewport.
+   No effect on ordinary GitHub Pages visitors or the Android APK. */
+html.telegram-mini-app{
+ --safe-top:max(var(--tg-safe-top,0px),var(--safe-area-inset-top,env(safe-area-inset-top,0px)));
+ --safe-right:max(var(--tg-safe-right,0px),var(--safe-area-inset-right,env(safe-area-inset-right,0px)));
+ --safe-bottom:max(var(--tg-safe-bottom,0px),var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px)));
+ --safe-left:max(var(--tg-safe-left,0px),var(--safe-area-inset-left,env(safe-area-inset-left,0px)));
+ overscroll-behavior:none;
+}
+html.telegram-mini-app,
+html.telegram-mini-app body,
+html.telegram-mini-app #app{height:var(--tg-viewport-height,100dvh);min-height:0}
+html.telegram-mini-app .game-ui:not(.playing),
+html.telegram-mini-app .game-ui:not(.playing) .game-ui__menu{
+ max-height:calc(var(--tg-viewport-height,100dvh) - var(--safe-top) - var(--safe-bottom) - 1rem);
+}
+html.telegram-mini-app .game-ui.playing .health-bar,
+html.telegram-mini-app .game-ui.playing .game-ui__mobile-controls,
+html.telegram-mini-app .game-ui.playing .game-ui__mobile-pause{
+ -webkit-user-select:none;user-select:none;
+}
