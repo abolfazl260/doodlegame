@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "id": "extra-glacier",
-  "version": 2,
+  "version": 3,
   "names": {
     "fa": "قله یخی",
     "en": "FROST PEAK"
   },
-  "background": "background.webp",
+  "background": "background.svg",
   "arena": {
     "speedMultiplier": 1.02,
     "jumpMultiplier": 1.13,

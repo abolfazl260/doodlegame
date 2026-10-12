@@ -1985,3 +1985,138 @@ html.telegram-mini-app .game-ui.playing .game-ui__mobile-controls,
 html.telegram-mini-app .game-ui.playing .game-ui__mobile-pause{
  -webkit-user-select:none;user-select:none;
 }
+
+
+/* Mobile downloadable arena gallery — contained scroll instead of hiding cards
+   behind the sticky Back/Start footer. The game itself remains non-scrollable. */
+.game-ui:not(.playing) .game-ui__menu{
+ min-height:0;
+ scroll-padding-block:1rem 5.5rem;
+}
+.game-ui__downloadable-arenas{
+ min-width:0;
+ max-width:100%;
+ overflow:hidden;
+ grid-template-columns:minmax(0,1fr);
+ align-content:start;
+ scroll-margin-block:1rem 5.5rem;
+}
+.game-ui__download-grid{
+ min-width:0;
+ max-width:100%;
+ max-height:clamp(9rem,38dvh,18rem);
+ overflow-x:hidden;
+ overflow-y:auto;
+ overscroll-behavior:contain;
+ -webkit-overflow-scrolling:touch;
+ touch-action:pan-y;
+ scrollbar-width:thin;
+ scrollbar-color:#7299b5 #0a1828;
+ padding:.15rem .25rem .75rem .15rem;
+ scroll-padding-block:0 1rem;
+ align-content:start;
+}
+.game-ui__download-card{
+ position:relative;
+ width:100%;
+ max-width:100%;
+ min-width:0;
+ grid-template-columns:minmax(0,1fr);
+ border:1px solid #527b94;
+ background:linear-gradient(160deg,#10283b,#0b1425);
+ box-shadow:0 2px 0 #030810;
+}
+.game-ui__download-preview{
+ position:relative;
+ min-width:0;
+ overflow:hidden;
+ background-color:#132a35;
+ background-repeat:no-repeat;
+ background-size:cover;
+ background-position:center;
+ box-shadow:inset 0 0 0 1px #ffffff35;
+}
+.game-ui__download-preview::after{
+ content:"";
+ position:absolute;
+ inset:45% 0 0;
+ background:linear-gradient(transparent,#0815237a);
+ pointer-events:none;
+}
+.game-ui__download-badge{
+ position:absolute;
+ top:.65rem;
+ inset-inline-end:.65rem;
+ z-index:1;
+ padding:.17rem .4rem;
+ border:1px solid #ffffff6b;
+ border-radius:.28rem;
+ background:#091b2cd9;
+ color:#e9f5ff;
+ font-size:.61rem;
+ font-weight:900;
+ line-height:1.4;
+ pointer-events:none;
+}
+.game-ui__download-badge[data-owned="true"]{
+ border-color:#98e9ca;
+ color:#b6ffe0;
+ background:#123d38e8;
+}
+.game-ui__download-card>strong{
+ min-width:0;
+ color:#f4f7ff;
+ font-size:clamp(.7rem,1.65vmin,.8rem);
+ line-height:1.45;
+ text-align:start;
+}
+.game-ui__download-actions{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ align-items:stretch;
+ min-width:0;
+ gap:.35rem;
+}
+.game-ui__download-actions button{
+ min-width:0;
+ width:100%;
+ min-height:44px;
+ padding:.35rem .25rem;
+ line-height:1.3;
+ overflow-wrap:anywhere;
+}
+.game-ui__download-actions button:only-child{grid-column:1/-1}
+.game-ui__download-actions button[aria-pressed="true"]{
+ border-color:#fff0ad;
+ outline-offset:1px;
+}
+.game-ui__download-grid:focus-visible{
+ outline:2px solid #f2d98e;
+ outline-offset:2px;
+}
+@media(max-width:700px){
+ .game-ui__download-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:450px){
+ .game-ui__download-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-height:430px){
+ .game-ui:not(.playing) .game-ui__menu{scroll-padding-bottom:4.75rem}
+ .game-ui__downloadable-arenas{
+  margin-top:.45rem;
+  padding:.45rem;
+  gap:.32rem;
+ }
+ .game-ui__download-grid{
+  max-height:clamp(7.75rem,37dvh,12rem);
+ }
+ .game-ui__download-card{padding:.35rem;gap:.23rem}
+ .game-ui__download-preview{aspect-ratio:2.4/1}
+ .game-ui__download-actions button{min-height:40px}
+ .game-ui__download-feedback{font-size:.67rem}
+ .game-ui__download-refresh{min-height:38px}
+}
+@media(max-height:330px){
+ .game-ui__download-grid{max-height:clamp(6.8rem,33dvh,9rem)}
+ .game-ui__download-preview{aspect-ratio:2.8/1}
+}

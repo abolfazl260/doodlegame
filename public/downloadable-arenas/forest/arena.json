@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "id": "extra-forest",
-  "version": 2,
+  "version": 3,
   "names": {
     "fa": "جنگل مه‌آلود",
     "en": "MISTY FOREST"
   },
-  "background": "background.webp",
+  "background": "background.svg",
   "arena": {
     "speedMultiplier": 1,
     "jumpMultiplier": 1.13,
