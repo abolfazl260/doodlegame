@@ -81,9 +81,11 @@ export class TelegramLeaderboard{
   const actions=document.createElement("div");actions.className="telegram-leaderboard__actions";
   const reload=document.createElement("button");reload.type="button";reload.textContent="بروزرسانی";
   reload.onclick=()=>{void this.refresh();};
+  const forget=document.createElement("button");forget.type="button";forget.textContent="حذف رکورد من";
+  forget.onclick=()=>{void this.deleteAccount();};
   const close=document.createElement("button");close.type="button";close.textContent="بستن";
   close.onclick=()=>this.close();
-  actions.append(reload,close);
+  actions.append(reload,forget,close);
   panel.append(heading,profile,status,entries,actions);
   modal.append(panel);
   modal.addEventListener("pointerdown",event=>{if(event.target===modal)this.close();});
@@ -122,7 +124,7 @@ export class TelegramLeaderboard{
    console.warn("Telegram leaderboard unavailable:",error instanceof Error?error.message:"error");
   }
  }
- private async call(path:string,method:"GET"|"POST",body?:object):Promise<ApiResponse>{
+ private async call(path:string,method:"GET"|"POST"|"DELETE",body?:object):Promise<ApiResponse>{
   if(!this.apiBase||!this.initData)throw new Error("Leaderboard is not connected");
   const response=await fetch(this.apiBase+path,{
    method,
@@ -161,6 +163,16 @@ export class TelegramLeaderboard{
   }catch(error){
    if(!this.disposed)this.showStatus(error instanceof Error?error.message:"دریافت جدول ناموفق بود");
   }finally{if(this.refreshButton)this.refreshButton.disabled=false;}
+ }
+ private async deleteAccount(){
+  if(!this.connected||!window.confirm("رکوردها و نام نمایشی این حساب از جدول پاک شوند؟"))return;
+  try{
+   await this.call("/api/me","DELETE");
+   this.connected=false;this.ticket=null;
+   this.entries?.replaceChildren();
+   if(this.profile)this.profile.textContent="";
+   this.showStatus("اطلاعات این حساب حذف شد. برای ثبت دوباره بازی را از ربات باز کنید.");
+  }catch{this.showStatus("حذف رکورد ناموفق بود؛ اتصال را بررسی کنید.");}
  }
  private async beginMatch():Promise<Ticket|null>{
   try{
