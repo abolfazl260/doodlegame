@@ -122,7 +122,7 @@ export class CanvasRenderer implements Renderer{
  private draw(c:CanvasRenderingContext2D,s:DuelistRenderState,toX:(x:number)=>number,toY:(y:number)=>number,scale:number,enemy:boolean){
   const pose=fighterVisual(s);
   c.save();c.translate(toX(s.x),toY(s.y));
-  c.scale(s.facing*pose.scale*pose.scaleX,pose.scale*pose.scaleY);c.rotate(pose.lean);
+  c.scale(pose.visualFacing*pose.scale*pose.scaleX,pose.scale*pose.scaleY);c.rotate(pose.lean);
   c.strokeStyle=enemy?'#aaa':'#fff';c.fillStyle=enemy?'#aaa':'#fff';
   c.lineWidth=Math.max(2,scale*.045);c.lineCap='round';c.lineJoin='round';
   const lines=(segments:readonly Segment[])=>{c.beginPath();for(const [a,b] of segments){c.moveTo(a[0]*scale,-a[1]*scale);c.lineTo(b[0]*scale,-b[1]*scale);}c.stroke();};
