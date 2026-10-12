@@ -192,3 +192,21 @@ requested by the player; there is no background polling or analytics.
 install new application code. Publishing a signed Android release/Google Play
 update is required for changes to the bundled app itself. The repository currently
 has no GitHub Releases containing signed installable APKs.
+
+
+## Telegram Mini App
+
+The **existing HTTPS game** can be used as a Telegram Mini App without a
+separate build or hosting service:
+
+**https://abolfazl260.github.io/doodlegame/**
+
+The official Telegram WebApp bridge initializes **only when Telegram launch
+parameters are present**; the regular website and offline Android APK do not
+request the Telegram SDK. See [the deployment and BotFather checklist](docs/telegram-mini-app.md).
+
+Mini App integration currently provides safe-area/viewport handling, dark
+Telegram chrome, request-to-expand/fullscreen, disabled vertical swipe-dismiss,
+and an in-header Back button that pauses the match and then returns to the menu.
+It does not automatically create a bot, perform Telegram login, store Telegram
+user data, or add online multiplayer. Existing local multiplayer remains local.
