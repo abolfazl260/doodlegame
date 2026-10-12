@@ -13,6 +13,9 @@ type ApiResponse={ok?:boolean;error?:string;player?:Player;me?:Player;leaders?:L
  * client. The Worker verifies raw initData using the bot token kept as a secret.
  * Game results remain client-reported: this is not anti-cheat matchmaking.
  */
+class LeaderboardApiError extends Error{
+ constructor(readonly status:number,message:string){super(message);this.name="LeaderboardApiError";}
+}
 export class TelegramLeaderboard{
  private apiBase="";
  private initData="";
@@ -26,14 +29,16 @@ export class TelegramLeaderboard{
  private profile:HTMLElement|null=null;
  private entries:HTMLOListElement|null=null;
  private refreshButton:HTMLButtonElement|null=null;
+ private lastStatus="";
 
  constructor(private readonly root:HTMLElement){}
 
  connect(app:TelegramWebApp){
   if(this.disposed)return;
   this.ensureUi();
+  this.setConnectionStatus("در حال بررسی حساب تلگرام…","connecting");
   if(typeof app.initData!=="string"||!app.initData){
-   this.showStatus("برای شناسایی حساب، بازی را از دکمه Mini App ربات باز کنید.");
+   this.setConnectionStatus("اطلاعات ورود دریافت نشد. بازی را از دکمه Launch App ربات باز کن، نه لینک معمولی.","error");
    return;
   }
   this.initData=app.initData;
@@ -56,17 +61,26 @@ export class TelegramLeaderboard{
   }
   this.previousState=state;
  }
+ reportSdkFailure(){
+  if(this.disposed)return;
+  this.ensureUi();
+  this.setConnectionStatus("SDK تلگرام بارگیری نشد. اینترنت را بررسی کن و از دکمه Mini App ربات دوباره وارد شو.","error");
+ }
  dispose(){this.disposed=true;this.button?.remove();this.modal?.remove();this.ticket=null;}
 
  private ensureUi(){
   if(this.button)return;
-  const links=this.root.querySelector(".game-ui__menu-links");
-  if(!links)return;
+  const menu=this.root.querySelector(".game-ui__menu");
+  const header=menu?.querySelector(".game-ui__menu-header");
+  if(!menu||!header)return;
   const button=document.createElement("button");
   button.type="button";button.className="game-ui__telegram-ranks";
-  button.textContent="🏆 رتبه‌بندی تلگرام";
+  button.textContent="🏆 تلگرام · در حال اتصال…";
+  button.dataset.state="connecting";
   button.onclick=()=>{this.open();};
-  links.append(button);this.button=button;
+  // Always visible directly below the main menu header, not inside collapsed
+  // "Settings & Help", so players can discover failed authentication.
+  header.after(button);this.button=button;
 
   const modal=document.createElement("div");
   modal.className="telegram-leaderboard";modal.hidden=true;
@@ -91,10 +105,21 @@ export class TelegramLeaderboard{
   modal.addEventListener("pointerdown",event=>{if(event.target===modal)this.close();});
   document.body.append(modal);
   this.modal=modal;this.profile=profile;this.status=status;this.entries=entries;this.refreshButton=reload;
+  if(this.lastStatus)this.status.textContent=this.lastStatus;
  }
 
  private showStatus(message:string){
+  this.lastStatus=message;
   if(this.status)this.status.textContent=message;
+ }
+ private setConnectionStatus(message:string,state:"connecting"|"ready"|"error"){
+  this.showStatus(message);
+  if(this.button){
+   this.button.dataset.state=state;
+   this.button.textContent=state==="ready"?"🏆 تلگرام · متصل · رتبه‌بندی":
+    state==="connecting"?"🏆 تلگرام · در حال اتصال…":
+    "⚠️ تلگرام · اتصال برقرار نیست (جزئیات)";
+  }
  }
  private open(){
   if(!this.modal)return;
@@ -109,7 +134,7 @@ export class TelegramLeaderboard{
    const config:unknown=await response.json();
    const raw=(config&&typeof config==="object"&&"apiBaseUrl" in config)?(config as {apiBaseUrl:unknown}).apiBaseUrl:"";
    if(typeof raw!=="string"||!/^https:\/\/[^/\s]+(?:\/[^?\s]*)?$/.test(raw)){
-    this.showStatus("جدول رکورد هنوز روی سرور فعال نشده است.");
+    this.setConnectionStatus("آدرس سرور رتبه‌بندی تنظیم نشده است.","error");
     return;
    }
    this.apiBase=raw.replace(/\/+$/,"");
@@ -117,10 +142,17 @@ export class TelegramLeaderboard{
    if(this.disposed)return;
    this.connected=true;
    this.updateProfile(data.player);
-   this.showStatus("پیروزی‌های تک‌نفره در این جدول ثبت می‌شوند.");
+   this.setConnectionStatus("هویت تأیید شد؛ پیروزی‌های تک‌نفره در این جدول ثبت می‌شوند.","ready");
   }catch(error){
    if(this.disposed)return;
-   this.showStatus("اتصال به رتبه‌بندی برقرار نشد؛ دوباره از داخل تلگرام امتحان کنید.");
+   const code=error instanceof LeaderboardApiError?error.status:0;
+   const message=code===401?
+    "ورود تلگرام رد شد. توکن ذخیره‌شده در Worker باید متعلق به همین ربات باشد؛ Mini App را دوباره باز کن.":
+    code===503?"سرور کامل تنظیم نشده است؛ اتصال DB و Secret را بررسی کن.":
+    code>=500?"سرور خطا دارد؛ جدول‌های players و matches را در D1 و گزارش خطای Worker را بررسی کن.":
+    code===403?"Origin بازی در تنظیمات Worker مجاز نیست.":
+    "ارتباط با سرور برقرار نشد. اینترنت، URL سرور و دسترسی Workers را بررسی کن.";
+   this.setConnectionStatus(message,"error");
    console.warn("Telegram leaderboard unavailable:",error instanceof Error?error.message:"error");
   }
  }
@@ -132,8 +164,10 @@ export class TelegramLeaderboard{
    ...(body?{body:JSON.stringify(body)}:{}),
    cache:"no-store"
   });
-  const data=await response.json() as ApiResponse;
-  if(!response.ok||!data.ok)throw new Error(data.error??"Leaderboard request failed");
+  let data:ApiResponse;
+  try{data=await response.json() as ApiResponse;}
+  catch{throw new LeaderboardApiError(response.status,"Invalid API response");}
+  if(!response.ok||!data.ok)throw new LeaderboardApiError(response.status,data.error??"Leaderboard request failed");
   return data;
  }
  private updateProfile(player?:Player){
@@ -171,7 +205,7 @@ export class TelegramLeaderboard{
    this.connected=false;this.ticket=null;
    this.entries?.replaceChildren();
    if(this.profile)this.profile.textContent="";
-   this.showStatus("اطلاعات این حساب حذف شد. برای ثبت دوباره بازی را از ربات باز کنید.");
+   this.setConnectionStatus("اطلاعات این حساب حذف شد. برای ثبت دوباره بازی را از ربات باز کنید.","error");
   }catch{this.showStatus("حذف رکورد ناموفق بود؛ اتصال را بررسی کنید.");}
  }
  private async beginMatch():Promise<Ticket|null>{
