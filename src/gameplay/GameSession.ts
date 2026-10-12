@@ -370,8 +370,11 @@ export class GameSession{
  }}
  private updatePlayer(input:InputState,dt:number){
   const d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;
+  if(!input.attackHeld)this.player.slamAttackLatch=false;
   if(input.dashPressed&&this.player.grabPhase===null){this.cancelKick(this.player);this.tryDash(this.player);}
   if(input.jumpPressed&&this.player.grabPhase===null){this.cancelKick(this.player);this.tryJump(this.player);}
+  if(input.attackPressed&&input.moveY>=KICK_DOWN_THRESHOLD&&!this.player.grounded)this.startSlam(this.player);
+  this.progressSlam(this.player,dt);
   if(this.player.dashCooldown>0)this.player.dashCooldown=Math.max(0,this.player.dashCooldown-dt);
   if(this.player.wallJumpCooldown>0)this.player.wallJumpCooldown=Math.max(0,this.player.wallJumpCooldown-dt);
   if(this.player.grabPhase==="held")return;
@@ -380,8 +383,11 @@ export class GameSession{
 }
  private updateHumanOpponent(input:Readonly<InputState>,dt:number){
   const f=this.opponent,d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;
+  if(!input.attackHeld)f.slamAttackLatch=false;
   if(input.dashPressed&&f.grabPhase===null){this.cancelKick(f);this.tryDash(f);}
   if(input.jumpPressed&&f.grabPhase===null){this.cancelKick(f);this.tryJump(f);}
+  if(input.attackPressed&&input.moveY>=KICK_DOWN_THRESHOLD&&!f.grounded)this.startSlam(f);
+  this.progressSlam(f,dt);
   f.dashCooldown=Math.max(0,f.dashCooldown-dt);
   f.wallJumpCooldown=Math.max(0,f.wallJumpCooldown-dt);
   if(f.grabPhase==="held")return;
@@ -887,6 +893,8 @@ export class GameSession{
  }
  private handleHumanAttack(a:Fighter,t:Fighter,input:Readonly<InputState>,dt:number){
   if(a.grabPhase!==null)return;
+  if(input.attackCancelled&&a.slamPhase)this.cancelSlam(a);
+  if(a.slamPhase||a.slamAttackLatch)return;
   if(input.attackCancelled&&a.kickKind)this.cancelKick(a);
   this.progressKick(a,t,dt);
   if(a.kickKind)return;
@@ -923,7 +931,7 @@ export class GameSession{
  }
  private attack(a:Fighter,t:Fighter,pressed:boolean){
   const w=this.weaponStats[a.weapon];
-  if(!pressed||a.cooldown>0||a.kickKind||a.grabPhase!==null)return;
+  if(!pressed||a.cooldown>0||a.kickKind||a.slamPhase||a.grabPhase!==null)return;
   this.clearAirPose(a);this.cancelWeaponDraw(a);
   const upgraded=!this.localPvP&&a===this.player&&this.upgradedWeapons.has(a.weapon);
   const wall=this.wallDirection(a);
