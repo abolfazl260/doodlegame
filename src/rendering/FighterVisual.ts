@@ -159,7 +159,7 @@ export function fighterVisual(s:DuelistRenderState) {
   // A grounded reversal briefly drops the shoulders and shifts weight.
   if(pivot>0){
    const turnEase=Math.sin(pivot*Math.PI);
-   back=[back[0]-.11*pivot,back[1]-.1*pivot];
+   back=[back[0]-.11*pivot,back[1]-.1*pivot-.06*turnEase];
    if(s.aimAngle===null&&s.bowCharge<=0)hand=[hand[0]-.1*pivot,hand[1]-.05*pivot];
   }
  }
