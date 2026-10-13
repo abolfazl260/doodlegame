@@ -41,14 +41,14 @@ function harness(search="",hash="",version="9.0"){
   setState:(s)=>{state=s},callbacks};
 }
 
-test("strict Telegram platform+version detection accepts query or hash only",()=>{
+test("Telegram launch detection accepts partial SDK parameters after webview reloads",()=>{
  assert.equal(hasTelegramLaunchParams("",""),false);
- assert.equal(hasTelegramLaunchParams("?tgWebAppPlatform=android",""),false);
- assert.equal(hasTelegramLaunchParams("?tgWebAppVersion=9.0",""),false);
+ assert.equal(hasTelegramLaunchParams("?tgWebAppPlatform=android",""),true);
+ assert.equal(hasTelegramLaunchParams("?tgWebAppVersion=9.0",""),true);
  assert.equal(hasTelegramLaunchParams("?tgWebAppPlatform=android&tgWebAppVersion=9.0",""),true);
+ assert.equal(hasTelegramLaunchParams("","#tgWebAppData=opaque"),true);
  assert.equal(hasTelegramLaunchParams("","#tgWebAppPlatform=ios&tgWebAppVersion=8.0&tgWebAppData=test"),true);
  assert.equal(hasTelegramLaunchParams("?ref=telegram",""),false);
- assert.equal(hasTelegramLaunchParams("","#tgWebAppPlatform=fake"),false);
 });
 
 test("ordinary web and Android launches do not load external SDK or alter page",()=>{
@@ -59,6 +59,30 @@ test("ordinary web and Android launches do not load external SDK or alter page",
  assert.equal(h.classes.has("telegram-mini-app"),false);
  integration.requestFullscreen();integration.onGameState();integration.dispose();
  assert.equal(h.calls.length,0);
+});
+
+test("a user-triggered retry loads the SDK without any Telegram URL fields",()=>{
+ const h=harness();
+ let connected=0;
+ const integration=installTelegramMiniApp(h.win,h.doc,{...h.callbacks,onReady:()=>connected++});
+ assert.equal(integration.active,false);
+ assert.equal(h.appended,0);
+ integration.retryInitialization();
+ assert.equal(integration.active,true);
+ assert.equal(h.appended,1);
+ assert.equal(connected,1);
+ integration.retryInitialization();
+ assert.equal(h.appended,1,"retry must not duplicate Telegram SDK script");
+ integration.dispose();
+});
+
+test("Telegram user-agent can initialize even after URL launch parameters disappear",()=>{
+ const h=harness();
+ h.win.navigator={userAgent:"Mozilla/5.0 Telegram-Android/11.0"};
+ const integration=installTelegramMiniApp(h.win,h.doc,h.callbacks);
+ assert.equal(integration.active,true);
+ assert.equal(h.appended,1);
+ integration.dispose();
 });
 
 test("Telegram launch initializes SDK, viewport, safe areas and proper dark chrome",()=>{

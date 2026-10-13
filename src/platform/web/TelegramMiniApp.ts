@@ -3,7 +3,9 @@ import {GameState} from "../../core/GameState.js";
 /**
  * Telegram Mini App bridge. Never trust initDataUnsafe: raw initData is sent
  * only to the separate Worker API for server-side verification.
- * The official SDK is fetched only when Telegram launch parameters are present.
+ * Load the official SDK only on Telegram launch signals, or when the user
+ * explicitly opens the ranking panel to retry detection. Ordinary visitors
+ * never fetch it merely by loading the game.
  */
 export interface TelegramWebApp{
  initData?:string;
@@ -27,7 +29,9 @@ type TelegramWindow=Window&{Telegram?:{WebApp?:TelegramWebApp}};
 export function hasTelegramLaunchParams(search:string,hash:string){
  const matches=(part:string)=>{
   const data=new URLSearchParams(part.replace(/^[?#]/,""));
-  return Boolean(data.get("tgWebAppPlatform")&&data.get("tgWebAppVersion"));
+  // Some clients lose one launch field on webview navigation/reload. A single
+  // Telegram-specific field is enough to attempt the SDK, not to trust a user.
+  return Boolean(data.get("tgWebAppData")||data.get("tgWebAppPlatform")||data.get("tgWebAppVersion"));
  };
  return matches(search)||matches(hash);
 }
@@ -40,13 +44,16 @@ export function installTelegramMiniApp(
  callbacks:{getState:()=>GameState;onBack:()=>void;onResize:()=>void;onReady?:(app:TelegramWebApp)=>void;onFailure?:()=>void}
 ){
  const host=win as TelegramWindow;
- // Some Telegram clients expose WebApp before launch parameters are visible.
- // Trust only SDK presence for the UI; actual identity always needs signed initData.
- if(!hasTelegramLaunchParams(win.location.search,win.location.hash)&&!host.Telegram?.WebApp){
-  return {active:false,requestFullscreen:()=>{},onGameState:()=>{},dispose:()=>{}};
- }
  const root=doc.documentElement;
- root.classList.add("telegram-mini-app");
+ // UA is a *hint* for attempting initialization, never an identity signal.
+ // Android and desktop Telegram builds may use these UA tokens while omitting
+ // the usual launch fields after an in-app navigation or reload.
+ const userAgent=win.navigator?.userAgent??"";
+ const hasLaunchHint=hasTelegramLaunchParams(win.location.search,win.location.hash)||
+  /\bTelegram(?:-Android|-iOS)?(?:\/|\b)/i.test(userAgent)||
+  Boolean(host.Telegram?.WebApp?.initData);
+ let active=false;
+ let attempted=false;
  let disposed=false;
  let app:TelegramWebApp|null=null;
  let script:HTMLScriptElement|null=null;
@@ -79,6 +86,13 @@ export function installTelegramMiniApp(
   const current=host.Telegram?.WebApp;
   if(!current)return;
   app=current;
+  if(!hasLaunchHint&&!current.initData){
+   // The official SDK also initializes in ordinary browsers. A manual ranking
+   // retry should explain the missing identity, not activate Telegram chrome.
+   callbacks.onReady?.(current);
+   return;
+  }
+  root.classList.add("telegram-mini-app");
   try{current.setHeaderColor?.("#000000");}catch{/* older clients */}
   try{current.setBackgroundColor?.("#000000");}catch{/* older clients */}
   try{current.setBottomBarColor?.("#000000");}catch{/* older clients */}
@@ -97,17 +111,27 @@ export function installTelegramMiniApp(
    else app.expand?.();
   }catch{/* not all Telegram platforms permit fullscreen */}
  };
- if(host.Telegram?.WebApp)initialize();
- else{
-  script=doc.createElement("script");
-  script.src="https://telegram.org/js/telegram-web-app.js?64";
-  script.async=true;
-  script.onload=()=>{initialize();if(!app&&!disposed)callbacks.onFailure?.();};
-  script.onerror=()=>{if(!disposed)callbacks.onFailure?.();script=null;};
-  doc.head.appendChild(script);
- }
+ const beginInitialization=()=>{
+  if(disposed||attempted)return;
+  attempted=true;
+  active=true;
+  if(hasLaunchHint)root.classList.add("telegram-mini-app");
+  if(host.Telegram?.WebApp)initialize();
+  else{
+   script=doc.createElement("script");
+   script.src="https://telegram.org/js/telegram-web-app.js?64";
+   script.async=true;
+   script.onload=()=>{initialize();if(!app&&!disposed)callbacks.onFailure?.();};
+   script.onerror=()=>{if(!disposed)callbacks.onFailure?.();script=null;};
+   doc.head.appendChild(script);
+  }
+ };
+ if(hasLaunchHint||Boolean(host.Telegram?.WebApp))beginInitialization();
  return {
-  active:true,
+  get active(){return active;},
+  // Opening Rankings is an explicit user gesture, so clients without recognizable
+  // launch params may still obtain initData after loading Telegram's SDK.
+  retryInitialization:()=>{if(!attempted)beginInitialization();else if(!app&&host.Telegram?.WebApp)initialize();},
   requestFullscreen,
   onGameState,
   dispose:()=>{
@@ -122,6 +146,7 @@ export function installTelegramMiniApp(
    root.style.removeProperty("--tg-viewport-height");
    for(const side of ["top","right","bottom","left"])root.style.removeProperty("--tg-safe-"+side);
    root.classList.remove("telegram-mini-app");
+   active=false;
   }
  };
 }

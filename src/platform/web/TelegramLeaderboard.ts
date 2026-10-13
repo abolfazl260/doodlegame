@@ -31,7 +31,13 @@ export class TelegramLeaderboard{
  private refreshButton:HTMLButtonElement|null=null;
  private lastStatus="";
 
- constructor(private readonly root:HTMLElement){}
+ constructor(private readonly root:HTMLElement,private readonly retryTelegram?:()=>void){}
+
+ showEntryPoint(){
+  if(this.disposed)return;
+  this.ensureUi();
+  this.setConnectionStatus("برای ثبت پیروزی و مشاهده رتبه‌بندی، بازی را از Mini App ربات تلگرام باز کن.","external");
+ }
 
  connect(app:TelegramWebApp){
   if(this.disposed)return;
@@ -112,19 +118,24 @@ export class TelegramLeaderboard{
   this.lastStatus=message;
   if(this.status)this.status.textContent=message;
  }
- private setConnectionStatus(message:string,state:"connecting"|"ready"|"error"){
+ private setConnectionStatus(message:string,state:"external"|"connecting"|"ready"|"error"){
   this.showStatus(message);
   if(this.button){
    this.button.dataset.state=state;
    this.button.textContent=state==="ready"?"🏆 تلگرام · متصل · رتبه‌بندی":
     state==="connecting"?"🏆 تلگرام · در حال اتصال…":
+    state==="external"?"🏆 رتبه‌بندی تلگرام · بررسی ورود":
     "⚠️ تلگرام · اتصال برقرار نیست (جزئیات)";
   }
  }
  private open(){
   if(!this.modal)return;
   this.modal.hidden=false;
-  void this.refresh();
+  if(!this.connected&&!this.initData){
+   this.setConnectionStatus("در حال بررسی محیط تلگرام…","connecting");
+   this.retryTelegram?.();
+  }
+  if(this.connected)void this.refresh();
  }
  private close(){if(this.modal)this.modal.hidden=true;}
  private async load(){
@@ -177,7 +188,11 @@ export class TelegramLeaderboard{
    this.button.textContent="🏆 "+player.displayName+" · "+player.wins+" برد · رتبه‌بندی";
  }
  private async refresh(){
-  if(!this.connected)return;
+  if(!this.connected){
+   if(this.initData)await this.load();
+   else this.retryTelegram?.();
+   return;
+  }
   if(this.refreshButton)this.refreshButton.disabled=true;
   try{
    const data=await this.call("/api/leaderboard","GET");
