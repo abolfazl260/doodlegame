@@ -18,6 +18,7 @@ type HudState={
  characterId?:CharacterId;opponentCharacterId?:CharacterId;weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;
 };
 type Actions={
+ quickPlay?:()=>void;
  newRun?:()=>void;continueRun?:()=>void;leaveRun?:()=>void;
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;stopToMenu?:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
@@ -116,6 +117,13 @@ export class GameUI{
  private onlineModeName=document.createElement("span");
  private onlineModeBadge=document.createElement("span");
  private menuStepIndex=0;
+ private menuView:"landing"|"setup"|"progression"|"settings"="setup";
+ private landing=document.createElement("section");
+ private landingDefaults=document.createElement("p");
+ private landingQuick=document.createElement("button");
+ private landingContinue=document.createElement("button");
+ private landingRoutes=document.createElement("div");
+ private menuHome=document.createElement("button");
 
  private menuProgress=document.createElement("div");
  private menuModePanel=document.createElement("section");
@@ -242,6 +250,15 @@ export class GameUI{
   this.tutorialReplay.type="button";this.tutorialReplay.onclick=()=>{this.onboarding.replay();this.help.hidden=true;this.helpButton.focus();};
   this.help.append(this.tutorialReplay);
   this.extraActions=actions;
+  if(actions.quickPlay)this.menuView="landing";
+  this.landing.className="game-ui__landing";this.landing.hidden=true;
+  this.landingQuick.type="button";this.landingQuick.dataset.route="quick";this.landingQuick.onclick=()=>actions.quickPlay?.();
+  this.landingDefaults.className="game-ui__landing-defaults";
+  this.landingContinue.type="button";this.landingContinue.dataset.route="continue";this.landingContinue.onclick=()=>{this.openMenuRoute("progression");actions.continueRun?.();};
+  this.landingRoutes.className="game-ui__landing-routes";
+  for(const route of ["custom","local","arenas","progression","settings"] as const){const button=document.createElement("button");button.type="button";button.dataset.route=route;button.onclick=()=>this.openMenuRoute(route);this.landingRoutes.append(button);}
+  this.landing.append(this.landingQuick,this.landingDefaults,this.landingContinue,this.landingRoutes);
+  this.menuHome.type="button";this.menuHome.dataset.menuHome="true";this.menuHome.hidden=true;this.menuHome.onclick=()=>this.openMenuRoute("home");
   this.root.className="game-ui";
 
   this.languageControl.className="game-ui__language";
@@ -906,7 +923,8 @@ export class GameUI{
   this.menuExtras.append(this.menuLinks);
   this.menuProgressDetails.append(this.upgradePanel,this.runPanel);
   this.menuSetupSection.append(this.menuProgress,this.menuLead,this.menuModePanel,this.menuArenaPanel);
-  this.menu.append(this.menuHeader,this.menuResult,this.menuSetupSection,this.menuProgressDetails,this.menuExtras,this.buttons);
+  this.menuHeader.append(this.menuHome);
+  this.menu.append(this.menuHeader,this.landing,this.menuResult,this.menuSetupSection,this.menuProgressDetails,this.menuExtras,this.buttons);
   this.topHud.append(this.playerHealth,this.status,this.opponentHealth);
   for(const [index,pad] of this.aimPads.entries()){
    const player=index===0?1:2;
@@ -951,6 +969,37 @@ export class GameUI{
    this.applyLocale();
    if(this.readHud)this.render(this.currentState,this.readHud());
   });
+ }
+
+ private openMenuRoute(route:"home"|"custom"|"local"|"arenas"|"progression"|"settings"){
+  if(this.currentState!==GameState.MENU)return;
+  if(route==="local")this.extraActions.playerCountSelect?.(2);
+  this.menuView=route==="home"?"landing":route==="progression"||route==="settings"?route:"setup";
+  if(route==="custom"||route==="local")this.menuStepIndex=0;
+  if(route==="arenas")this.menuStepIndex=1;
+  this.menu.scrollTop=0;this.syncWizard(this.currentState,this.readHud?.()??null);
+  if(route==="home")this.landingQuick.focus();else this.menuHome.focus();
+ }
+ private syncMenuView(state:GameState,s:HudState|null){
+  if(!this.extraActions.quickPlay)return;
+  this.root.dataset.menuView=this.menuView;
+  const menu=state===GameState.MENU,setup=menu&&this.menuView==="setup";
+  this.setHidden(this.landing,!menu||this.menuView!=="landing");this.setHidden(this.menuHome,!menu||this.menuView==="landing");
+  if(!menu){this.setHidden(this.buttons,false);return;}
+  this.setHidden(this.menuSetupSection,!setup);this.setHidden(this.buttons,!setup);
+  const settings=this.menuView==="settings",progression=this.menuView==="progression";
+  this.setHidden(this.menuExtras,!settings);if(settings)this.menuExtras.open=true;
+  this.setHidden(this.menuProgressDetails,!progression);
+  if(progression){
+   this.menuProgressDetails.open=true;
+   const upgrades=Boolean(s&&!s.localPvP&&(s.upgradePoints>0||s.upgradedWeapons.length));
+   const reward=Boolean(s?.inRun&&s.progression?.run?.status==="victory");
+   this.setHidden(this.menuProgressTabs,!upgrades||reward);
+   this.setHidden(this.runPanel,!s?.progression||(!reward&&upgrades&&this.menuProgressView!=="run"));
+   this.setHidden(this.upgradePanel,!upgrades||Boolean(!reward&&s?.progression&&this.menuProgressView!=="upgrades"));
+  }
+  const run=s?.progression?.run;this.setHidden(this.landingContinue,!run||run.status==="complete");
+  this.setText(this.landingContinue,(this.i18n.messages.run?.continueRun??"Continue Run")+(run?" · "+run.stage+"/4":""));
  }
 
  private filterArenas(){
@@ -1026,9 +1075,10 @@ export class GameUI{
    (labels?.selectMode??this.i18n.messages.sections.gameMode);
   this.setText(this.menuProgress,(labels?.step??"STEP")+" "+
    (this.menuStepIndex+1)+" / "+MENU_STEPS.length+" · "+stepLabel);
+  this.syncMenuView(state,s);
  }
- advanceMenuStep(){if(this.currentState===GameState.MENU)this.changeMenuStep(this.menuStepIndex+1);}
- canStartMatch(){return this.currentState===GameState.MENU&&this.menuStepIndex===MENU_STEPS.length-1;}
+ advanceMenuStep(){if(this.currentState!==GameState.MENU)return;if(this.extraActions.quickPlay&&this.menuView==="landing"){this.extraActions.quickPlay();return;}if(this.menuView==="setup")this.changeMenuStep(this.menuStepIndex+1);}
+ canStartMatch(){return this.currentState===GameState.MENU&&this.menuView==="setup"&&this.menuStepIndex===MENU_STEPS.length-1;}
  setUpdateVisible(visible:boolean){this.updateButton.hidden=!visible;}
  setUpdateOutcome(result:"success"|"error"){this.updateButton.dataset.result=result;}
  bind(subscribe:(listener:(state:GameState)=>void)=>()=>void,read:()=>HudState){
@@ -1088,6 +1138,7 @@ export class GameUI{
    if(secondWeaponChanged&&state===GameState.PLAYING)this.cancelP2Attack();
    if(stateChanged){
     if(state===GameState.MENU){
+     if(this.extraActions.quickPlay)this.menuView=s.inRun&&s.progression?.run?.status==="victory"?"progression":"landing";
      this.menuStepIndex=0;
      this.menuProgressView=s.upgradePoints>0&&!s.inRun?"upgrades":"run";
     }
@@ -1501,6 +1552,9 @@ export class GameUI{
 
  private applyLocale(){
   const messages=this.i18n.messages;
+  if(messages.landing){this.landingQuick.textContent=messages.landing.quick;this.landingDefaults.textContent=messages.landing.defaults;this.menuHome.textContent=messages.landing.home;
+   for(const item of this.landingRoutes.children){const button=item as HTMLButtonElement,route=button.dataset.route as "custom"|"local"|"arenas"|"progression"|"settings";button.textContent=messages.landing[route];if(route==="local"){const hint=document.createElement("small");hint.textContent=messages.landing.localHint;button.append(hint);}}
+  }
   this.coachSkip.textContent=messages.tutorial?.skip??"Skip tutorial";this.tutorialReplay.textContent=messages.tutorial?.replay??"Replay touch tutorial";
   this.refreshCombatLabels();
   this.languageLabel.textContent=messages.language.label;

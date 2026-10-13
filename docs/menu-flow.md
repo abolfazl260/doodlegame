@@ -53,3 +53,11 @@ Built-in cards use static SVG schematics generated once from the exact shared `A
 Filters are multi-membership and derived from mechanics: Balanced (no major gap/motion/special mechanics and under 4.5 units high), Vertical (platforms at least 4.5 units), Moving Platforms, Gaps & Hazards (fall limits or trap/vent/crumble/falling-rock templates), and Special Mechanics (wind, gravity, conveyors or bounce). All always restores all 16. Filtering preserves the chosen arena and summary, and persists while navigating backward. Downloadable content stays in its own unfiltered section; install/delete/offline protocols are unchanged.
 
 When adding an arena, update shared definitions. `ArenaPreviews.ts` derives its schematic and categories automatically; maintain the UI ID list and localization, then run preview-coverage tests. Preview errors fall back to the name/feature label. [Before](screenshots/arenas/before-fa.png) / [after](screenshots/arenas/after-fa.png) show compact Persian layouts.
+
+## Main entry and Quick Play (#127)
+
+The production menu now opens on a landing page. Quick Play directly launches Solo Duel / Classic / Blade with the current name and character. Customize retains the complete two-step wizard; Local 2 Players is explicitly two humans on one device; Arenas jumps to step 2. Progression and Settings & Help have dedicated routes with Back to home. Pending Runs expose Continue on the landing, and pending upgrade rewards reopen intermission before the next fight.
+
+Quick Play uses a temporary setup snapshot. Main Menu restores the previous custom mode, arena, player count and preferred starting weapon; Replay repeats Quick Play. It does not consume/reset Run checkpoints or career rewards. Saved names/character/preferences remain untouched. Full design audit, journey map, two alternatives and the selected mockup are in [menu-design/decision.md](menu-design/decision.md). Compare [before](screenshots/menu/before-fa.png) and [after](screenshots/menu/after-fa.png).
+
+Standalone custom-setup test fixtures omit the optional Quick Play callback and continue directly into the wizard. The production app and the `?landing=1` integration fixture supply that callback; landing tests exercise all new routes plus actual Game lifecycle/snapshot/Run behavior. Menu updates remain outside the steady in-match HUD loop.
