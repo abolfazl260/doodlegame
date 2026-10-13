@@ -29,6 +29,22 @@ test("valid Telegram hash yields only safe server-derived identity",async()=>{
  assert.deepEqual(user,{id:"123456789",displayName:"Abolfazl T."});
  assert.equal(user.displayName.includes("do_not_show"),false);
 });
+test("Telegram initData including optional Ed25519 signature validates with bot-token HMAC",async()=>{
+ // Modern Telegram Mini Apps may send BOTH hash and signature. For the
+ // bot-token HMAC all fields except hash are signed; omitting signature
+ // incorrectly caused 401 even when the Worker secret matched the bot.
+ const raw=await sign({...sample(),signature:"eXample-telegram-ed25519-base64url-value"});
+ const user=await validateTelegramInitData(raw,TOKEN,NOW+1);
+ assert.deepEqual(user,{id:"123456789",displayName:"Abolfazl T."});
+ assert.equal(await validateTelegramInitData(
+  raw.replace("eXample-telegram-ed25519-base64url-value","modified-signature"),
+  TOKEN,NOW+1
+ ),null,"changing a signed signature field must invalidate the HMAC");
+ assert.equal(await validateTelegramInitData(
+  raw.replace(/&signature=[^&]+/,""),TOKEN,NOW+1
+ ),null,"dropping the signed signature field must invalidate the HMAC");
+});
+
 test("rejects tampering, stale, missing user, duplicate keys and wrong bot",async()=>{
  const good=await sign(sample());
  assert.equal(await validateTelegramInitData(good.replace("Abolfazl","Intruder"),TOKEN,NOW),null);
