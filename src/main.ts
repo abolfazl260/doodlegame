@@ -24,7 +24,7 @@ import {ThreeRenderer} from "./rendering/ThreeRenderer";
 import {createRendererWithFallback} from "./rendering/RendererFactory";
 import {GameUI} from "./ui/GameUI";
 import {OpeningIntro} from "./ui/OpeningIntro";
-import type {ArenaId,GameModeId} from "./gameplay/GameSession";
+import type {ArenaId,GameModeId,CharacterId} from "./gameplay/GameSession";
 
 const bootFallback=document.querySelector<HTMLElement>("#boot-fallback");
 const showBootError=(reason:unknown)=>{
@@ -76,6 +76,7 @@ try{
 
  restoreDownloadedArenas(storage);
  const session=new GameSession(input);
+ try{const saved=storage.get<unknown>("doodlegame.selectedCharacter");if(saved==="shadow"||saved==="bolt")session.setCharacterId(saved);}catch{ /* Storage can be unavailable in private browsing. */ }
  let appliedGameData:(ReturnType<typeof parseLiveGameData>)=null;
  try{appliedGameData=parseLiveGameData(storage.get<unknown>(GAME_DATA_STORAGE_KEY));}
  catch(error){console.warn("Invalid cached game data; using bundled defaults.",error);}
@@ -133,6 +134,7 @@ try{
   weaponPrevious:()=>game.selectWeapon(-1),
   weaponSelect:(id)=>game.selectWeaponById(id),
   selectStartingWeapon:(id)=>game.selectStartingWeapon(id),
+  characterSelect:(id:CharacterId)=>{game.selectCharacter(id);try{storage.set("doodlegame.selectedCharacter",id);}catch(error){console.warn("Could not save selected character.",error);}},
   upgradeWeapon:(id)=>game.upgradeWeapon(id),
   arenaSelect:(id:ArenaId)=>game.selectArena(id),
   fetchArenaCatalog:()=>loadArenaCatalog(),
