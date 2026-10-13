@@ -12,7 +12,7 @@ import type {ProgressionView} from "../progression/Progression";
 type HudState={
  tutorial?:TutorialSignals;
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
- bowCharge:number;missileAngle:number;missilePower:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
+ bowCharge:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
  progression?:ProgressionView|null;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;
  characterId?:CharacterId;opponentCharacterId?:CharacterId;weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;
 };
@@ -22,7 +22,6 @@ type Actions={
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  playerCountSelect?:(count:1|2)=>void;setWeaponAim?:(player:1|2,x:number,y:number)=>void;player2WeaponSelect?:(id:WeaponId)=>void;
  setCharacterName?:(player:1|2,name:string)=>void;characterSelect?:(id:CharacterId)=>void;
- setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
  setTouchMove:(x:number,y:number)=>void;touchGrab:()=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;
  setPlayer2TouchMove?:(x:number,y:number)=>void;player2Grab?:()=>void;player2AttackStart?:()=>void;player2AttackEnd?:()=>void;player2AttackCancel?:()=>void;player2WeaponNext?:()=>void;player2WeaponPrevious?:()=>void;
  toggleCombatSound:()=>void;toggleCameraShake:()=>void;updateData:()=>Promise<void>;
@@ -72,10 +71,6 @@ export class GameUI{
  private mobileAttackButton=document.createElement("button");
  private mobilePauseButton=document.createElement("button");
  private cancelPauseHold:()=>void=()=>{};
- private missileAimGuide=document.createElement("div");
- private missileAimValues=document.createElement("div");
- private missileAimPath:SVGPathElement|null=null;
- private lastAimGuide:{angle:number;power:number;facing:number;locale:string}|null=null;
  private cancelTouchControls:()=>void=()=>{};
  private cancelActiveTouchAttack:()=>void=()=>{};
  private removeTouchLifecycle:()=>void=()=>{};
@@ -174,7 +169,6 @@ export class GameUI{
  private title=document.createElement("h1");
  private topHud=document.createElement("div");
  private status=document.createElement("p");
- private details=document.createElement("p");
  private playerHealth=document.createElement("div");
  private opponentHealth=document.createElement("div");
  private buttons=document.createElement("div");
@@ -226,7 +220,6 @@ export class GameUI{
  private currentState=GameState.MENU;
  private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId;playerName?:string;secondPlayerName?:string;localPvP?:boolean;characterId?:CharacterId;opponentCharacterId?:CharacterId}|null=null;
  private lastHealth:{playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;locale:string}|null=null;
- private lastAim:{angle:number;power:number}|null=null;
  private lastBowPercent=NaN;
  private lastBowCharging=false;
  private lastHill:{player:number;opponent:number;target:number}|null=null;
@@ -347,27 +340,6 @@ export class GameUI{
   this.mobileWeaponSwitcher.append(this.nextWeaponButton);
   this.joystick.append(this.joystickThumb);
   this.mobileControls.append(this.joystick,this.mobileAttackButton,this.p2Controls);
-  this.missileAimGuide.className="game-ui__missile-aim-guide";
-  this.missileAimGuide.hidden=true;
-  this.missileAimGuide.setAttribute("aria-live","off");
-  this.missileAimValues.className="game-ui__missile-aim-values";
-  this.missileAimGuide.append(this.missileAimValues);
-  if(typeof document.createElementNS==="function"){
-   const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
-   svg.setAttribute("viewBox","0 0 220 118");
-   svg.setAttribute("aria-hidden","true");
-   const path=document.createElementNS("http://www.w3.org/2000/svg","path");
-   path.setAttribute("fill","none");
-   path.setAttribute("stroke","currentColor");
-   path.setAttribute("stroke-width","2.5");
-   path.setAttribute("stroke-dasharray","4 5");
-   path.setAttribute("stroke-linecap","round");
-   this.missileAimPath=path;
-   svg.append(path);
-   this.missileAimGuide.append(svg);
-  }
-  this.mobileControls.append(this.missileAimGuide);
-
   this.help.className="game-ui__help game-ui__menu-dialog";
   this.help.hidden=true;
   this.help.setAttribute("role","dialog");
@@ -392,7 +364,6 @@ export class GameUI{
 
   this.topHud.className="game-ui__top-hud";
   this.status.className="game-ui__status";
-  this.details.className="game-ui__details";
   this.playerHealth.className="health-bar health-bar--player";
   this.opponentHealth.className="health-bar health-bar--opponent";
   this.playerHealthLabel.className="health-label";
@@ -685,22 +656,20 @@ export class GameUI{
   // Missile gestures fire only on pointerup; cancellation never launches a missile.
   let attackPointer=-1;
   let attackWeapon:WeaponId|null=null;
-  let startX=0,startY=0,baseAngle=45,basePower=13,attackAt=0,attackStarted=false,grabTriggered=false;
+  let startX=0,startY=0,attackAt=0,attackStarted=false,grabTriggered=false;
   let attackTimer:ReturnType<typeof setTimeout>|null=null;
   const clearAttack=()=>{
    if(attackTimer!==null){clearTimeout(attackTimer);attackTimer=null;}
    const id=attackPointer;
    attackPointer=-1;
    attackWeapon=null;attackStarted=false;grabTriggered=false;
-   this.missileAimGuide.hidden=true;
-   this.mobileAttackButton.classList.remove("aiming");
    if(id!==-1&&this.mobileAttackButton.hasPointerCapture?.(id))this.mobileAttackButton.releasePointerCapture(id);
   };
   const cancelAttack=()=>{
    if(attackPointer===-1)return;
-   const weapon=attackWeapon,wasStarted=attackStarted;
+   const wasStarted=attackStarted;
    clearAttack();
-   if(weapon!=="missile"&&wasStarted)actions.touchAttackCancel();
+   if(wasStarted)actions.touchAttackCancel();
   };
   const cancelControls=()=>{
    this.cancelPauseHold();
@@ -771,7 +740,7 @@ export class GameUI{
    p2StartX=event.clientX;p2StartY=event.clientY;p2StartAt=Date.now();
    try{this.p2Attack.setPointerCapture(event.pointerId);}
    catch{p2AttackPointer=-1;return;}
-   p2Timer=setTimeout(()=>{
+   if(this.readHud?.().secondWeapon!=="missile")p2Timer=setTimeout(()=>{
     p2Timer=null;
     if(p2AttackPointer===event.pointerId&&!p2Grabbed&&this.currentState===GameState.PLAYING){
      p2Started=true;actions.player2AttackStart?.();
@@ -814,8 +783,6 @@ export class GameUI{
    startX=event.clientX;
    startY=event.clientY;
    attackAt=Date.now();attackStarted=false;grabTriggered=false;
-   baseAngle=hud.weaponAimAngle!=null?Math.atan2(Math.sin(hud.weaponAimAngle),Math.abs(Math.cos(hud.weaponAimAngle)))*180/Math.PI:hud.missileAngle;
-   basePower=hud.missilePower;
    try{this.mobileAttackButton.setPointerCapture?.(event.pointerId);}
    catch{
     // An inactive/uncapturable pointer must never leave ATTACK held.
@@ -824,11 +791,7 @@ export class GameUI{
     return;
    }
    haptic(16);
-   if(attackWeapon==="missile"){
-    this.mobileAttackButton.classList.add("aiming");
-    this.missileAimGuide.hidden=false;
-    this.updateMissileAimGuide(baseAngle,basePower,hud.playerFacing);
-   }else{
+   if(attackWeapon!=="missile"){
     attackTimer=setTimeout(()=>{
      attackTimer=null;
      if(attackPointer===event.pointerId&&!grabTriggered&&this.currentState===GameState.PLAYING){
@@ -839,24 +802,12 @@ export class GameUI{
   });
   this.mobileAttackButton.addEventListener("pointermove",event=>{
    if(attackPointer!==event.pointerId||grabTriggered)return;
-   const hud=this.readHud?.();
    if(!attackStarted&&grabGesture(startX,startY,event.clientX,event.clientY,Date.now()-attackAt)){
     grabTriggered=true;
     if(attackTimer!==null){clearTimeout(attackTimer);attackTimer=null;}
-    this.missileAimGuide.hidden=true;
     actions.touchGrab();haptic(20);return;
    }
-   if(attackWeapon!=="missile")return;
-   if(this.currentState!==GameState.PLAYING||!hud||hud.winner!==null||hud.weapon!=="missile"){cancelAttack();return;}
-   event.preventDefault();
-   const dx=event.clientX-startX,dy=startY-event.clientY;
-   const distance=Math.hypot(dx,dy);
-   // Short taps fire with the previously selected angle/power.
-   const angle=distance<12?baseAngle:Math.max(12,Math.min(78,Math.round(Math.atan2(Math.max(0,dy),Math.max(1,Math.abs(dx)))*180/Math.PI)));
-   const power=distance<12?basePower:Math.max(8,Math.min(18,Math.round((8+Math.min(1,distance/160)*10)*2)/2));
-   actions.setMissileAngle(angle);
-   actions.setMissilePower(power);
-   this.updateMissileAimGuide(angle,power,hud.playerFacing);
+
   });
   this.mobileAttackButton.addEventListener("pointerup",event=>{
    if(attackPointer!==event.pointerId)return;
@@ -866,10 +817,9 @@ export class GameUI{
    const began=attackStarted,alreadyGrabbed=grabTriggered;
    const mayFire=this.currentState===GameState.PLAYING&&hud?.winner===null&&hud.weapon===weapon;
    clearAttack();
-   if(!mayFire){if(weapon!=="missile"&&began)actions.touchAttackCancel();return;}
+   if(!mayFire){if(began)actions.touchAttackCancel();return;}
    if(swiped){if(!alreadyGrabbed)actions.touchGrab();return;}
-   if(weapon==="missile")actions.fireWeapon();
-   else{if(!began)actions.touchAttackStart();actions.touchAttackEnd();}
+   if(!began)actions.touchAttackStart();actions.touchAttackEnd();
   });
   this.mobileAttackButton.addEventListener("pointercancel",event=>{
    if(event.pointerId!==attackPointer)return;
@@ -934,7 +884,7 @@ export class GameUI{
   this.menuProgressDetails.append(this.upgradePanel,this.runPanel);
   this.menuSetupSection.append(this.menuProgress,this.menuLead,this.menuModePanel,this.menuArenaPanel);
   this.menu.append(this.menuHeader,this.menuResult,this.menuSetupSection,this.menuProgressDetails,this.menuExtras,this.buttons);
-  this.topHud.append(this.playerHealth,this.status,this.opponentHealth,this.details);
+  this.topHud.append(this.playerHealth,this.status,this.opponentHealth);
   for(const [index,pad] of this.aimPads.entries()){
    const player=index===0?1:2;
    pad.className="game-ui__aim-pad";pad.dataset.player=String(player);
@@ -1100,7 +1050,6 @@ export class GameUI{
   const upgradesChanged=!old||old.upgradedWeapons.length!==s.upgradedWeapons.length||
    s.upgradedWeapons.some((id,index)=>id!==old.upgradedWeapons[index]);
   const staticChanged=stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged||secondWeaponChanged||nameChanged||characterChanged;
-  const aimChanged=!this.lastAim||this.lastAim.angle!==s.missileAngle||this.lastAim.power!==s.missilePower;
   const missileRules=s.mode==="missile-duel";
 
   if(staticChanged){
@@ -1307,8 +1256,8 @@ export class GameUI{
     if(!playing||modeChanged||weaponChanged||secondWeaponChanged)this.closeWeaponPicker();
     this.setHidden(this.weaponList,!playing||!this.weaponPickerOpen);
     this.setHidden(this.p2WeaponControls,!playing||!(s.localPvP??s.mode==="local-pvp")||missileRules||s.mode==="random-weapons");
-    this.setHidden(this.aimPads[0],!playing);
-    this.setHidden(this.aimPads[1],!playing||!(s.localPvP??s.mode==="local-pvp"));
+    this.setHidden(this.aimPads[0],!playing||s.weapon==="missile");
+    this.setHidden(this.aimPads[1],!playing||s.secondWeapon==="missile"||!(s.localPvP??s.mode==="local-pvp"));
     this.setHidden(this.mobileWeaponSwitcher,!playing||missileRules||s.mode==="random-weapons");
     this.setHidden(this.bowPanel,!playing||s.weapon!=="bow");
     this.setHidden(this.mobileControls,!playing);
@@ -1347,13 +1296,6 @@ export class GameUI{
    this.aimPads[index].style.setProperty("--aim-angle",(-(angle??(index===0?0:Math.PI))*180/Math.PI)+"deg");
    this.lastAimDirections[index]=angle;
   }
-  if(aimChanged)this.lastAim={angle:s.missileAngle,power:s.missilePower};
-  if(staticChanged||(aimChanged&&s.weapon==="missile")){
-   const equipped=s.upgradedWeapons.includes(s.weapon)?messages.upgrades[s.weapon].name:messages.weapons[s.weapon];
-   this.setText(this.details,messages.modes[s.mode]+"  •  "+messages.details.equipped+" "+equipped+
-    (s.weapon==="missile"?"  •  "+messages.details.angle+" "+Math.round(s.missileAngle)+"°  •  "+
-     messages.details.power+" "+s.missilePower.toFixed(1):""));
-  }
   const hillChanged=!this.lastHill||this.lastHill.player!==s.hill.player||
    this.lastHill.opponent!==s.hill.opponent||this.lastHill.target!==s.hill.target;
   if(staticChanged||(s.mode==="king-of-hill"&&hillChanged)){
@@ -1375,9 +1317,6 @@ export class GameUI{
   if(s.mode==="king-of-hill"&&hillChanged)
    this.lastHill={player:s.hill.player,opponent:s.hill.opponent,target:s.hill.target};
 
-  // While aiming, joystick movement can flip the fighter without moving the attack pointer.
-  // Refresh only if direction/trajectory/locale changed; the guide caches its path.
-  if(!this.missileAimGuide.hidden)this.updateMissileAimGuide(s.missileAngle,s.missilePower,s.playerFacing);
   const bowPercent=Math.round(s.bowCharge*100),bowCharging=s.bowCharge>0;
   if(bowPercent!==this.lastBowPercent){
    this.bowMeter.firstElementChild?.setAttribute("style","width:"+bowPercent+"%");
@@ -1399,26 +1338,6 @@ export class GameUI{
   this.combatSoundButton.setAttribute("aria-pressed",String(this.combatSoundEnabled));
   this.combatShakeButton.setAttribute("aria-pressed",String(this.combatShakeEnabled));
  }
- private updateMissileAimGuide(angle:number,power:number,playerFacing:number){
-  const facing=playerFacing<0?-1:1,locale=this.i18n.locale;
-  const previous=this.lastAimGuide;
-  if(previous&&previous.angle===angle&&previous.power===power&&previous.facing===facing&&previous.locale===locale)return;
-  this.lastAimGuide={angle,power,facing,locale};
-  const details=this.i18n.messages.details;
-  this.missileAimValues.textContent=details.angle+" "+Math.round(angle)+"°  ·  "+details.power+" "+power.toFixed(1);
-  if(!this.missileAimPath)return;
-  const radians=angle*Math.PI/180,vx=Math.cos(radians)*power*facing,vy=Math.sin(radians)*power;
-  const startX=facing===1?8:212;
-  const points:string[]=[];
-  // Use the same facing multiplier as GameSession's missile launch velocity.
-  for(let i=0;i<=28;i++){
-   const t=i*.1,x=startX+vx*t*4.6,y=109-(vy*t-3.9*t*t)*4.6;
-   if(x<1||x>219||y<4||y>117)break;
-   points.push((points.length?"L":"M")+x.toFixed(1)+" "+y.toFixed(1));
-  }
-  this.missileAimPath.setAttribute("d",points.join(" "));
- }
-
  private async loadExtraCatalog(){
   if(this.extraBusy||!this.extraActions.fetchArenaCatalog)return;
   this.extraBusy=true;this.extraStatus=this.i18n.locale==="fa"?"در حال بررسی زمین‌ها…":"Checking arenas…";

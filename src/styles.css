@@ -603,32 +603,16 @@ html[dir="rtl"] .opening-intro__skip{
 @media (orientation:portrait){#orientation-guard{display:flex}}
 
 /* Issue #50: touch missile aiming replaces the on-screen sliders. */
-.game-ui__missile-aim-guide[hidden]{display:none!important}
+
 @media (pointer:coarse){
- .game-ui.playing .game-ui__missile-aim-guide:not([hidden]){
-  position:absolute;
-  display:flex;
-  flex-direction:column;
-  right:calc(var(--safe-right) + .75rem);
-  bottom:calc(var(--safe-bottom) + clamp(60px,15vmin,78px) + 1.45rem);
-  width:clamp(8rem,27vw,11.5rem);
-  max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 1.5rem);
-  padding:.3rem .45rem;
-  border:1px solid #aaa;
-  border-radius:.65rem;
-  background:#050505ce;
-  color:#fff;
-  z-index:22;
-  pointer-events:none;
-  direction:ltr;
- }
- .game-ui__missile-aim-guide svg{display:block;width:100%;height:auto;max-height:7rem;overflow:hidden}
- .game-ui__missile-aim-values{font-size:.65rem;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:center}
- .game-ui__mobile-button--attack.aiming{opacity:1;border-color:#fff;box-shadow:0 0 0 3px #ffffff44}
+
+
+
+
 }
 @media (pointer:coarse) and (max-height:360px){
- .game-ui.playing .game-ui__missile-aim-guide:not([hidden]){width:clamp(7.5rem,22vw,10rem);padding:.2rem .35rem}
- .game-ui__missile-aim-guide svg{max-height:4.5rem}
+
+
 }
 
 /* Issue #51: compact combat feedback preferences in both landscape and mobile menus. */
@@ -701,10 +685,7 @@ html[dir="rtl"] .opening-intro__skip{
  background:color-mix(in srgb,var(--arena-hud-bg) 65%,var(--arena-accent));
 }
 .game-ui.playing .game-ui__bow-panel,
-.game-ui.playing .game-ui__missile-aim-guide:not([hidden]){
- border-color:var(--arena-secondary);
- background:var(--arena-hud-bg);
-}
+
 .game-ui.playing .game-ui__weapon-list button.active{
  border-color:var(--arena-accent);
  background:var(--arena-hud-bg);
@@ -742,11 +723,8 @@ html[dir="rtl"] .opening-intro__skip{
 }
 
 
-/* Aim feedback must stay visible above the decorative skin when dragging missiles. */
-.game-ui.playing .game-ui__mobile-button--attack.aiming{
- border-color:#fff;
- box-shadow:0 0 0 3px #ffffff70,0 0 22px var(--arena-accent);
-}
+
+
 
 /* A discreet two-second pause control centered between the HP bars.
    The press duration is enforced in GameUI, including for desktop pointers. */
@@ -820,7 +798,7 @@ body{touch-action:pan-y}
 }
 
 /* One top HUD layout for desktop and phones: HP | status | HP;
-   detailed weapon text occupies its own row rather than crossing the bars. */
+   relevant status remains below the health bars. */
 .game-ui__top-hud{display:none}
 .game-ui.playing .game-ui__top-hud{
  position:absolute;
@@ -829,7 +807,7 @@ body{touch-action:pan-y}
  right:calc(var(--safe-right) + 1rem);
  display:grid;
  grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr);
- grid-template-rows:auto auto auto;
+ grid-template-rows:auto auto;
  gap:.25rem .5rem;
  align-items:center;
  direction:ltr; /* Stable player-left / opponent-right layout across locales. */
@@ -860,8 +838,7 @@ body{touch-action:pan-y}
  min-height:1.35rem;
  line-height:1.2;
 }
-.game-ui.playing .game-ui__top-hud .game-ui__status,
-.game-ui.playing .game-ui__top-hud .game-ui__details{
+.game-ui.playing .game-ui__top-hud .game-ui__status{
  position:static;
  left:auto;
  top:auto;
@@ -881,19 +858,9 @@ body{touch-action:pan-y}
  font-weight:800;
  font-size:clamp(.7rem,1.8vmin,.85rem);
 }
-.game-ui.playing .game-ui__top-hud .game-ui__details{
- grid-column:1/-1;
- grid-row:3;
- white-space:nowrap;
- overflow:hidden;
- text-overflow:ellipsis;
- padding-inline:.25rem;
- font-size:clamp(.66rem,1.65vmin,.78rem);
- line-height:1.25;
-}
+
 /* Language direction affects the text, never the physical HP positions. */
-html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status,
-html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__details{direction:rtl}
+html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rtl}
 /* Values retain legibility on both the colored fill and the empty track. */
 .health-label__current{
  color:#fff;

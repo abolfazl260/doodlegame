@@ -95,22 +95,14 @@ function setup(weapon="missile"){
  return {ui,hud,calls};
 }
 
-test("missile drag updates aim and fires once on pointerup",()=>{
- const {ui,calls}=setup();
- ui.mobileAttackButton.emit("pointerdown",{pointerId:7});
- assert.equal(ui.mobileAttackButton.hasPointerCapture(7),true);
- assert.equal(ui.missileAimGuide.hidden,false);
- ui.mobileAttackButton.emit("pointermove",{pointerId:7,clientX:440,clientY:140});
- assert.ok(calls.some(([name])=>name==="angle"));
- assert.ok(calls.some(([name])=>name==="power"));
- assert.ok(ui.missileAimPath.getAttribute("d").startsWith("M"));
- ui.mobileAttackButton.emit("pointerup",{pointerId:7,clientX:440,clientY:140});
- assert.equal(calls.filter(([name])=>name==="fire").length,1);
- assert.equal(calls.some(([name])=>name==="start"),false);
- assert.equal(ui.missileAimGuide.hidden,true);
+test("missile drag never aims; one release sends one standard attack",()=>{
+ const {ui,calls}=setup();ui.mobileAttackButton.emit("pointerdown",{pointerId:7});
+ ui.mobileAttackButton.emit("pointermove",{pointerId:7,clientX:420,clientY:180});
+ assert.equal(calls.some(([name])=>name==="angle"||name==="power"),false);
+ ui.mobileAttackButton.emit("pointerup",{pointerId:7,clientX:420,clientY:180});
+ assert.deepEqual(calls.filter(([name])=>name==="start"||name==="end").map(([name])=>name),["start","end"]);
  ui.mobileAttackButton.emit("lostpointercapture",{pointerId:7});
- assert.equal(calls.filter(([name])=>name==="fire").length,1);
- ui.dispose();
+ assert.equal(calls.filter(([name])=>name==="start").length,1);ui.dispose();
 });
 
 test("short missile tap retains aim; other pointer cannot fire; cancellation never fires",()=>{
@@ -119,15 +111,15 @@ test("short missile tap retains aim; other pointer cannot fire; cancellation nev
  ui.mobileAttackButton.emit("pointerdown",{pointerId:6});
  ui.mobileAttackButton.emit("pointermove",{pointerId:5,clientX:498,clientY:198});
  ui.mobileAttackButton.emit("pointerup",{pointerId:6});
- assert.equal(calls.some(([name])=>name==="fire"),false);
+ assert.equal(calls.some(([name])=>name==="start"),false);
  ui.mobileAttackButton.emit("pointercancel",{pointerId:5});
  ui.mobileAttackButton.emit("pointerup",{pointerId:5});
- assert.equal(calls.some(([name])=>name==="fire"),false);
+ assert.equal(calls.some(([name])=>name==="start"),false);
  assert.equal(hud.missileAngle,45);
  assert.equal(hud.missilePower,13);
  ui.mobileAttackButton.emit("pointerdown",{pointerId:8});
  ui.mobileAttackButton.emit("pointerup",{pointerId:8});
- assert.equal(calls.filter(([name])=>name==="fire").length,1);
+ assert.equal(calls.filter(([name])=>name==="start").length,1);
  ui.dispose();
 });
 
@@ -136,15 +128,15 @@ test("pausing, blur and capture loss cancel missile aim safely",()=>{
  ui.mobileAttackButton.emit("pointerdown",{pointerId:9});
  globalListeners.get("blur")();
  ui.mobileAttackButton.emit("pointerup",{pointerId:9});
- assert.equal(calls.some(([name])=>name==="fire"),false);
+ assert.equal(calls.some(([name])=>name==="start"),false);
  ui.mobileAttackButton.emit("pointerdown",{pointerId:11});
  ui.mobileAttackButton.emit("lostpointercapture",{pointerId:11});
  ui.mobileAttackButton.emit("pointerup",{pointerId:11});
- assert.equal(calls.some(([name])=>name==="fire"),false);
+ assert.equal(calls.some(([name])=>name==="start"),false);
  ui.mobileAttackButton.emit("pointerdown",{pointerId:12});
  ui.render(states.PAUSED,hud);
  ui.mobileAttackButton.emit("pointerup",{pointerId:12});
- assert.equal(calls.some(([name])=>name==="fire"),false);
+ assert.equal(calls.some(([name])=>name==="start"),false);
  ui.dispose();
 });
 
@@ -155,7 +147,7 @@ test("joystick can move simultaneously with missile gesture; other weapons prese
  ui.mobileAttackButton.emit("pointermove",{pointerId:2,clientX:425,clientY:135});
  ui.mobileAttackButton.emit("pointerup",{pointerId:2});
  assert.ok(calls.some(([name,x])=>name==="move"&&x>0));
- assert.equal(calls.filter(([name])=>name==="fire").length,1);
+ assert.equal(calls.filter(([name])=>name==="start").length,1);
  ui.joystick.emit("pointerup",{pointerId:1});
  hud.weapon="bow";
  ui.render(states.PLAYING,hud);
@@ -185,64 +177,31 @@ test("input and session cancel a charged bow without launching it",()=>{
  session.dispose();
 });
 
-test("missile aiming uses the touch trajectory guide without a separate center panel",()=>{
- const css=readFileSync("src/styles.css","utf8");
- const ui=readFileSync("src/ui/GameUI.ts","utf8");
- assert.doesNotMatch(css,/game-ui__missile-panel/);
- assert.doesNotMatch(ui,/angleInput\.type="range"/);
- assert.doesNotMatch(ui,/this\.missilePanel/);
- assert.match(css,/\.game-ui\.playing \.game-ui__missile-aim-guide:not\(\[hidden\]\)/);
- assert.match(css,/var\(--safe-right\)/);
- assert.match(css,/var\(--safe-bottom\)/);
- assert.match(ui,/actions\.setMissileAngle\(angle\)/);
- assert.match(ui,/actions\.setMissilePower\(power\)/);
- assert.match(ui,/if\(weapon==="missile"\)actions\.fireWeapon\(\)/);
+test("no missile controls, trajectory guide or extra HUD details exist",()=>{
+ const css=readFileSync("src/styles.css","utf8"),source=readFileSync("src/ui/GameUI.ts","utf8");
+ assert.doesNotMatch(source,/missileAim|setMissileAngle|setMissilePower|this\.details/);
+ assert.doesNotMatch(css,/game-ui__missile-aim|game-ui__details/);
+ const {ui}=setup();assert.equal(ui.topHud.children.length,3);assert.equal(ui.aimPads[0].hidden,true);ui.dispose();
 });
 
-function previewXs(d){
- return [...d.matchAll(/[ML]([0-9.]+) ([0-9.]+)/g)].map(m=>Number(m[1]));
-}
-
-test("HUD facing agrees with actual missile launch direction and preview SVG",()=>{
- const input=new WebInput({});
- const session=new GameSession(input);
- try{
-  session.setMode("missile-duel");
-  for(const facing of [1,-1]){
-   session.reset(false);
-   session.player.facing=facing;
-   const hud=session.getHudState();
-   assert.equal(hud.playerFacing,facing);
-   session.fireWeapon();
-   const projectile=session.getRenderState().projectiles.at(-1);
-   assert.equal(Math.sign(projectile.vx),facing);
-   const {ui,hud:fake}=setup();
-   fake.playerFacing=hud.playerFacing;
-   ui.mobileAttackButton.emit("pointerdown",{pointerId:71});
-   const xs=previewXs(ui.missileAimPath.getAttribute("d"));
-   assert.ok(xs.length>2);
-   assert.equal(Math.sign(xs.at(-1)-xs[0]),facing);
-   ui.mobileAttackButton.emit("pointercancel",{pointerId:71});
-   ui.dispose();
-  }
- }finally{session.dispose();}
+test("fixed missile arc is mirrored by facing for both humans and ignores shared aim",()=>{
+ const input=new WebInput({}),session=new GameSession(input);session.setLocalPvP(true);session.setMode("missile-duel");
+ for(const who of [1,2])for(const facing of [-1,1]){
+  session.reset(false);const f=who===1?session.player:session.opponent;f.facing=facing;f.aimAngle=Math.PI/2;
+  session.setWeaponAim(who,-facing,0);assert.equal(f.facing,facing);
+  if(who===1)input.touchAttack();else input.player2TouchAttackStart();session.update(1/60);
+  const projectile=session.getRenderState().projectiles.find(p=>p.owner===(who===1?"player":"opponent"));
+  assert.ok(projectile);assert.equal(Math.sign(projectile.vx),facing);assert.ok(Math.abs(Math.abs(projectile.vx)-projectile.vy)<.15);
+  input.resetTransientState();
+ }
+ session.dispose();
 });
 
-test("missile guide updates when joystick changes facing during a held aim",()=>{
- const {ui,hud}=setup();
- ui.mobileAttackButton.emit("pointerdown",{pointerId:81});
- const right=ui.missileAimPath.getAttribute("d");
- assert.equal(Math.sign(previewXs(right).at(-1)-previewXs(right)[0]),1);
- hud.playerFacing=-1;
- ui.render(states.PLAYING,hud);
- const left=ui.missileAimPath.getAttribute("d");
- assert.notEqual(left,right);
- assert.equal(Math.sign(previewXs(left).at(-1)-previewXs(left)[0]),-1);
- hud.playerFacing=1;
- ui.render(states.PLAYING,hud);
- assert.equal(ui.missileAimPath.getAttribute("d"),right);
- ui.mobileAttackButton.emit("pointerup",{pointerId:81});
- ui.dispose();
+test("missile hold can be cancelled without a shot and never auto-repeats",async()=>{
+ const {ui,calls}=setup();ui.mobileAttackButton.emit("pointerdown",{pointerId:81});
+ await new Promise(resolve=>setTimeout(resolve,180));assert.equal(calls.some(([n])=>n==="start"),false);
+ ui.mobileAttackButton.emit("pointercancel",{pointerId:81});ui.mobileAttackButton.emit("pointerup",{pointerId:81});
+ assert.equal(calls.some(([n])=>n==="start"),false);ui.dispose();
 });
 
 test("pause requires a full two-second pointer hold; quick taps and stray pointers do nothing",async()=>{

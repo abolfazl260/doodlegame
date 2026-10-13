@@ -47,31 +47,14 @@ test("pause remains hittable with a two-second hold on a small landscape screen"
  expect(await page.evaluate(()=>window.__weaponFixture.state())).toBe("PAUSED");
 });
 
-test("missile preview mirrors when the fighter faces left during a held aim",async({page})=>{
+test("missile attack fires once through standard input and has no aim UI",async({page})=>{
  await page.evaluate(()=>window.__weaponFixture.setMode("missile-duel"));
- const attack=page.locator(".game-ui__mobile-button--attack");
- const rect=await attack.boundingBox();
- expect(rect).toBeTruthy();
- await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);
- await page.mouse.down();
- try{
-  await expect(page.locator(".game-ui__missile-aim-guide")).toBeVisible();
-  const path=page.locator(".game-ui__missile-aim-guide path");
-  const direction=async()=>{
-   const d=await path.getAttribute("d");
-   const xs=[...d.matchAll(/[ML]([0-9.]+) ([0-9.]+)/g)].map(m=>Number(m[1]));
-   return Math.sign(xs.at(-1)-xs[0]);
-  };
-  expect(await direction()).toBe(1);
-  await page.evaluate(()=>window.__weaponFixture.setFacing(-1));
-  expect(await page.evaluate(()=>window.__weaponFixture.facing())).toBe(-1);
-  expect(await direction()).toBe(-1);
-  await page.evaluate(()=>window.__weaponFixture.setFacing(1));
-  expect(await direction()).toBe(1);
- }finally{await page.mouse.up();}
- await expect(page.locator(".game-ui__missile-aim-guide")).toBeHidden();
+ await expect(page.locator(".game-ui__missile-aim-guide,.game-ui__details")).toHaveCount(0);
+ await expect(page.locator('.game-ui__aim-pad[data-player="1"]')).toBeHidden();
+ await page.locator(".game-ui__mobile-button--attack").tap();
+ await page.evaluate(()=>window.__weaponFixture.tick());expect(await page.evaluate(()=>window.__weaponFixture.projectiles())).toBe(1);
+ await page.evaluate(()=>window.__weaponFixture.tick(10));expect(await page.evaluate(()=>window.__weaponFixture.projectiles())).toBe(1);
 });
-
 
 test("touch Pause exposes localized Main Menu and returns to the menu without hardware Back",async({page})=>{
  const pause=page.locator(".game-ui__mobile-pause");
