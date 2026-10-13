@@ -59,17 +59,17 @@ test("Online Multiplayer stays disabled for touch, keyboard, and both locales",a
  await expect(page.locator(".game-ui__menu-arena-panel")).toBeVisible();
 });
 
-test("missile duel has no center slider panel and still shows angle and power",async({page})=>{
+test("missile duel has no aim controls or extra HUD details",async({page})=>{
  await page.locator('.game-ui__mode-card[data-mode="missile-duel"]').tap();
  await page.locator('button[data-action="next"]').tap();
  await page.locator('button[data-action="start"]').tap();
  await expect(page.locator(".game-ui.playing")).toBeVisible();
  await expect(page.locator(".game-ui__missile-panel")).toHaveCount(0);
  await expect(page.locator(".game-ui__mobile-button--attack")).toBeVisible();
- await expect(page.locator(".game-ui__missile-aim-guide")).toHaveCount(1);
+ await expect(page.locator(".game-ui__missile-aim-guide,.game-ui__details")).toHaveCount(0);
  const hudText=await page.locator(".game-ui.playing").innerText();
- expect(hudText).toMatch(/(?:زاویه|ANGLE)/i);
- expect(hudText).toMatch(/(?:قدرت|POWER)/i);
+ expect(hudText).not.toMatch(/(?:زاویه|ANGLE)/i);
+ expect(hudText).not.toMatch(/(?:قدرت|POWER)/i);
 });
 
 test("player-count cards preserve all mode choices and arena is selected on the next screen",async({page})=>{

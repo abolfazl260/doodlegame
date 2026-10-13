@@ -9,7 +9,7 @@ test.beforeEach(async({page})=>{
  await expect(page.locator(".game-ui.playing")).toBeVisible();
 });
 
-test("health bars flank the status, and long weapon details occupy their own row",async({page})=>{
+test("health bars flank the status without an extra weapon details row",async({page})=>{
  for(const mode of ["duel","king-of-hill","missile-duel"]){
   await page.evaluate(mode=>window.__weaponFixture.setMode(mode),mode);
   const rects=await page.evaluate(()=>{
@@ -19,14 +19,12 @@ test("health bars flank the status, and long weapon details occupy their own row
    };
    return {
     left:rect(".health-bar--player"),right:rect(".health-bar--opponent"),
-    status:rect(".game-ui__status"),details:rect(".game-ui__details"),
+    status:rect(".game-ui__status"),
     top:rect(".game-ui__top-hud")
    };
   });
   expect(rects.left.right).toBeLessThanOrEqual(rects.status.left+1);
   expect(rects.status.right).toBeLessThanOrEqual(rects.right.left+1);
-  expect(rects.details.top).toBeGreaterThanOrEqual(Math.max(rects.left.bottom,rects.right.bottom)-1);
-  expect(rects.details.right).toBeLessThanOrEqual(568);
   expect(rects.left.height).toBeGreaterThanOrEqual(30);
   expect(rects.right.height).toBeGreaterThanOrEqual(30);
  }
@@ -47,20 +45,11 @@ test("health bars flank the status, and long weapon details occupy their own row
  expect(r.y+r.height).toBeLessThanOrEqual(bar.y+bar.height+1);
 });
 
-test("short-screen Pause layout cannot cover the visible missile aim guide",async({page})=>{
- await page.setViewportSize({width:568,height:260});
- await page.evaluate(()=>window.__weaponFixture.setMode("missile-duel"));
- const attack=page.locator(".game-ui__mobile-button--attack");
- const a=await attack.boundingBox();
- await page.mouse.move(a.x+a.width/2,a.y+a.height/2);
- await page.mouse.down();
- try{
-  const guide=page.locator(".game-ui__missile-aim-guide");
-  await expect(guide).toBeVisible();
-  const p=await page.locator(".game-ui__mobile-pause").boundingBox(),g=await guide.boundingBox();
-  expect(p).toBeTruthy();expect(g).toBeTruthy();
-  expect(p.x+p.width).toBeLessThanOrEqual(g.x+1);
- }finally{await page.mouse.up();}
+test("short-screen Missile attack has no aim guide and Pause stays separate",async({page})=>{
+ await page.setViewportSize({width:568,height:260});await page.evaluate(()=>window.__weaponFixture.setMode("missile-duel"));
+ await expect(page.locator(".game-ui__missile-aim-guide")).toHaveCount(0);
+ const pause=await page.locator(".game-ui__mobile-pause").boundingBox(),attack=await page.locator(".game-ui__mobile-button--attack").boundingBox();
+ expect(pause.x+pause.width).toBeLessThan(attack.x);await expect(page.locator(".game-ui__mobile-button--attack")).toBeVisible();
 });
 
 test("short landscape menu scrolls internally and keeps Resume tappable",async({page})=>{
