@@ -31,7 +31,9 @@ export async function validateTelegramInitData(raw,botToken,now=Math.floor(Date.
  if(!signature||!/^[a-fA-F0-9]{64}$/.test(signature))return null;
  const authDate=Number(params.get("auth_date"));
  if(!Number.isSafeInteger(authDate)||authDate>now+60||authDate<now-MAX_AGE_SECONDS)return null;
- const dataCheck=[...params.entries()].filter(([key])=>key!=="hash"&&key!=="signature")
+ // Bot-token HMAC includes the Ed25519 `signature` field when Telegram supplies it.
+ // Excluding signature applies only to *third-party* Ed25519 verification.
+ const dataCheck=[...params.entries()].filter(([key])=>key!=="hash")
   .sort(([a],[b])=>a<b?-1:a>b?1:0).map(([key,value])=>key+"="+value).join("\n");
  const secret=await hmac(encoder.encode("WebAppData"),botToken);
  const expected=hex(await hmac(secret,dataCheck));
