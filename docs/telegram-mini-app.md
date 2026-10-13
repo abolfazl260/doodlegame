@@ -11,9 +11,12 @@ verified leaderboard uses its own Cloudflare Worker + D1 database and secret.
 
 ## What the integration provides
 
-- **Only Telegram launches** (both `tgWebAppPlatform` and
-  `tgWebAppVersion` in the URL query or fragment) fetch the official
+- Telegram launch hints (even if one launch field is lost on a webview reload),
+  a recognized Telegram user agent, or the player's explicit tap on the
+  **Rankings** button can request the official
   `https://telegram.org/js/telegram-web-app.js?64` script.
+  Merely opening the page in a regular browser does not fetch the SDK.
+  Only *server-verified* `initData` can create or update a player account.
 - `Telegram.WebApp.ready()` and `expand()`; a fullscreen request is made
   on the game's user-initiated **Start** action where supported.
 - Black in-app header, background and bottom bar, and disabled swipe-to-dismiss
@@ -93,7 +96,7 @@ Telegram Main Mini App.
    Use the **actual** Worker URL and commit the file to `main` so GitHub
    Pages redeploys. This is a public API URL, not a secret.
 4. Open the bot's **Main Mini App**, not the raw website in an ordinary browser.
-   Tap **More/Extra → 🏆 رتبه‌بندی تلگرام** in the game menu. Your verified
+   Tap **🏆 رتبه‌بندی تلگرام** directly below the game title. Your verified
    name and recorded wins should be visible. Win a single-player match and
    refresh the ranking. Test on Android and iOS, plus score deletion.
 5. To delete your online leaderboard account and result history, use
@@ -124,8 +127,10 @@ Data collection is disclosed in `public/privacy.html`.
 2. In the Telegram launch, the game menu has an immediately visible connection
    banner **below the title**, with a **connected** or **error** state.
    Tap it to read the specific error. The ranking control is no longer buried
-   inside collapsed settings. The banner is absent from an ordinary web/Android
-   launch.
+   inside collapsed settings. A visible **Rankings → Check login** button
+   also appears in the ordinary web menu, where it can trigger a one-time,
+   user-initiated Telegram SDK retry. It cannot grant Telegram identity to an
+   ordinary browser. The standalone Android APK is unchanged.
 3. If the banner says **login rejected (HTTP 401)**, check that the secret
    `TELEGRAM_BOT_TOKEN` in **Cloudflare Worker → Settings → Variables and
    Secrets** belongs to the **same Telegram bot** as the Main Mini App. Do not
