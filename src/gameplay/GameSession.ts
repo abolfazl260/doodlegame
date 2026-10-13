@@ -153,6 +153,9 @@ const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:numb
 };
 const ORDER:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
 const IDLE_P2_INPUT:Readonly<InputState>={moveX:0,moveY:0,pointerX:0,pointerY:0,pointerDown:false,pointerPressed:false,pointerReleased:false,attackHeld:false,attackCancelled:false,jumpPressed:false,dashPressed:false,attackPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};
+/** Read-only baseline geometry shared with static menu previews. */
+export const getBuiltInArenaPreviewDefinition=()=>Object.fromEntries(Object.entries(ARENAS).map(([id,arena])=>[id,{arena,environment:ENVIRONMENT_TEMPLATES[id as BuiltInArenaId]}])) as Readonly<Record<BuiltInArenaId,{arena:ArenaDefinition;environment:readonly EnvironmentTemplate[]}>>;
+
 export class GameSession{
  private tutorialActions={move:0,jump:0,attack:0,double:0,grab:0,kick:0};
  private runStage:1|2|3|4|null=null;

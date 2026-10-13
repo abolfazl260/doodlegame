@@ -45,3 +45,11 @@ Do not add an enabled online matchmaking option without an actual connection imp
 - Mode/arena heading width is constrained to its parent grid; the generic 44rem section title must never push the left card column outside the menu.
 - The Run, upgrades and settings are secondary, collapsed sections and do not appear on the dedicated arena screen.
 - Responsive browser assertions check RTL horizontal bounds at 1488×1055, the next/back/start labels in both languages, and step isolation on compact landscape screens.
+
+## Arena discovery (#125)
+
+Built-in cards use static SVG schematics generated once from the exact shared `ARENAS` platform geometry and `ENVIRONMENT_TEMPLATES`. No network assets or live scene renderers are needed. Platforms, gaps, destructible cover, actual hazards, conveyors, wind and gravity wells use distinct shapes/markers. Moving arenas show baseline geometry with dashed motion cues, not an animated simulation.
+
+Filters are multi-membership and derived from mechanics: Balanced (no major gap/motion/special mechanics and under 4.5 units high), Vertical (platforms at least 4.5 units), Moving Platforms, Gaps & Hazards (fall limits or trap/vent/crumble/falling-rock templates), and Special Mechanics (wind, gravity, conveyors or bounce). All always restores all 16. Filtering preserves the chosen arena and summary, and persists while navigating backward. Downloadable content stays in its own unfiltered section; install/delete/offline protocols are unchanged.
+
+When adding an arena, update shared definitions. `ArenaPreviews.ts` derives its schematic and categories automatically; maintain the UI ID list and localization, then run preview-coverage tests. Preview errors fall back to the name/feature label. [Before](screenshots/arenas/before-fa.png) / [after](screenshots/arenas/after-fa.png) show compact Persian layouts.

@@ -21,6 +21,7 @@ export type Messages={
  pvp:{p1:string;p2:string;winner1:string;winner2:string;draw:string;hint:string};
  run:{title:string;newRun:string;continueRun:string;next:string;retry:string;leave:string;wave:string;boss:string;ready:string;victory:string;defeat:string;complete:string;choose:string;career:string;points:string;medals:Record<"rookie"|"veteran"|"champion",string>;requirements:Record<"rookie"|"veteran"|"champion",string>};
  tutorial:{move:string;jump:string;attack:string;missile:string;double:string;grab:string;kick:string;ready:string;skip:string;replay:string};
+ arenaCategories:Readonly<Record<import("../ui/ArenaPreviews").ArenaCategory,string>>;
  helpHtml:string;
  arenas:Readonly<Record<BuiltInArenaId,string>>;
  modes:Readonly<Record<GameModeId,string>>;
@@ -31,6 +32,7 @@ export type Messages={
 const STORAGE_KEY="doodlegame.locale";
 
 const EN:Messages={
+ arenaCategories:{all:"All arenas",balanced:"Balanced",vertical:"Vertical",moving:"Moving platforms",hazards:"Gaps & hazards",special:"Special mechanics"},
  tutorial:{move:"Move: drag the stick left or right.",jump:"Jump: push the stick up.",attack:"Attack: tap ATTACK. Hold and release for Bow.",missile:"Missile: tap ATTACK to fire a fixed arc.",double:"Double jump: center the stick, then push up again in the air.",grab:"Grab: swipe up on ATTACK near your opponent.",kick:"Kick combo: hold the stick down, tap ATTACK, release and tap again.",ready:"You’re ready!",skip:"Skip tutorial",replay:"Replay touch tutorial"},
  language:{label:"Language",english:"English",persian:"فارسی"},
  title:"DOODLEGAME DUEL",
@@ -76,6 +78,7 @@ const EN:Messages={
 };
 
 const FA:Messages={
+ arenaCategories:{all:"همه زمین‌ها",balanced:"متعادل",vertical:"عمودی",moving:"سکوهای متحرک",hazards:"شکاف و خطر",special:"مکانیک ویژه"},
  tutorial:{move:"حرکت: گوی را به چپ یا راست بکش.",jump:"پرش: گوی را به بالا ببر.",attack:"حمله: حمله را بزن. برای کمان نگه دار و رها کن.",missile:"موشک: برای شلیک با مسیر ثابت، حمله را بزن.",double:"پرش دوم: در هوا گوی را به مرکز و دوباره بالا ببر.",grab:"گرفتن: نزدیک حریف، روی حمله به بالا بکش.",kick:"ترکیب لگد: گوی پایین؛ حمله بزن، رها کن و دوباره بزن.",ready:"آماده‌ای!",skip:"رد کردن آموزش",replay:"تکرار آموزش لمسی"},
  language:{label:"زبان",english:"English",persian:"فارسی"},
  title:"دوئل دودل‌گیم",
