@@ -79,11 +79,58 @@ test("Telegram login explains uninitialized D1 tables instead of hiding server e
  await expect(page.locator(".telegram-leaderboard__status")).toContainText("matches");
 });
 
-test("normal web access never renders Telegram ranking UI or calls the API",async({page})=>{
+test("ordinary browser shows an optional Telegram entry point without contacting the API",async({page})=>{
  let requests=0;
  await page.route("**/leaderboard-config.json",route=>{requests++;return route.abort();});
  await page.goto("/doodlegame/");
  await expect(page.locator("#boot-fallback")).toHaveCount(0);
- await expect(page.locator(".game-ui__telegram-ranks")).toHaveCount(0);
+ await expect(page.locator(".game-ui__telegram-ranks")).toHaveCount(1);
+ await expect(page.locator(".game-ui__telegram-ranks")).toHaveAttribute("data-state","external");
  expect(requests).toBe(0);
+});
+
+
+test("rankings reconnect when Telegram SDK has signed initData but URL has lost both launch markers",async({page})=>{
+ const worker="https://doodlegame-test.workers.dev";
+ const signed="auth_date=123&user=example&hash=server-verified";
+ let sdkLoads=0,authSeen=0;
+ await page.route("https://telegram.org/js/telegram-web-app.js*",route=>{
+  sdkLoads++;
+  return route.fulfill({
+   status:200,contentType:"application/javascript",
+   body:"window.Telegram={WebApp:{initData:"+JSON.stringify(signed)+",ready(){},expand(){},onEvent(){},offEvent(){}}};"
+  });
+ });
+ await page.route("**/leaderboard-config.json",route=>route.fulfill({
+  status:200,contentType:"application/json",body:JSON.stringify({apiBaseUrl:worker})
+ }));
+ await page.route(worker+"/api/me",route=>{
+  if(route.request().headers().authorization==="tma "+signed)authSeen++;
+  return route.fulfill({status:200,contentType:"application/json",
+   body:JSON.stringify({ok:true,player:{displayName:"New Player",wins:0}})});
+ });
+ await page.goto("/doodlegame/");
+ await expect(page.locator("#boot-fallback")).toHaveCount(0);
+ const ranks=page.locator(".game-ui__telegram-ranks");
+ await expect(ranks).toHaveAttribute("data-state","external");
+ expect(sdkLoads).toBe(0);
+ // The player deliberately opens rankings, so an SDK retry is permitted.
+ await ranks.evaluate(el=>el.click());
+ await expect(ranks).toHaveAttribute("data-state","ready");
+ await expect(ranks).toContainText("New Player");
+ expect(sdkLoads).toBe(1);
+ expect(authSeen).toBe(1);
+});
+
+test("Telegram SDK with no identity shows explicit error rather than hiding the ranking button",async({page})=>{
+ await page.route("https://telegram.org/js/telegram-web-app.js*",route=>route.fulfill({
+  status:200,contentType:"application/javascript",
+  body:"window.Telegram={WebApp:{initData:'',ready(){},expand(){},onEvent(){},offEvent(){}}};"
+ }));
+ await page.goto("/doodlegame/");
+ const ranks=page.locator(".game-ui__telegram-ranks");
+ await expect(ranks).toHaveAttribute("data-state","external");
+ await ranks.evaluate(el=>el.click());
+ await expect(ranks).toHaveAttribute("data-state","error");
+ await expect(page.locator(".telegram-leaderboard__status")).toContainText("اطلاعات ورود دریافت نشد");
 });
