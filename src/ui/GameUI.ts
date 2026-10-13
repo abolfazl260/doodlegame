@@ -101,6 +101,9 @@ export class GameUI{
  private menuProgressView:"run"|"upgrades"="run";
  private menuExtrasTitle=document.createElement("summary");
  private menuSettings=document.createElement("div");
+ private onlineModeButton=document.createElement("button");
+ private onlineModeName=document.createElement("span");
+ private onlineModeBadge=document.createElement("span");
  private menuStepIndex=0;
 
  private menuProgress=document.createElement("div");
@@ -479,6 +482,16 @@ export class GameUI{
    card.onclick=()=>actions.modeSelect(id);
    this.menuSettings.append(card);
   }
+  // This is a UI-only placeholder, not a GameModeId or a playable session.
+  this.onlineModeButton.type="button";
+  this.onlineModeButton.className="game-ui__mode-card game-ui__mode-card--coming-soon";
+  this.onlineModeButton.dataset.mode="online";
+  this.onlineModeButton.disabled=true;
+  this.onlineModeButton.setAttribute("aria-disabled","true");
+  this.onlineModeName.className="game-ui__online-mode-name";
+  this.onlineModeBadge.className="game-ui__coming-soon-badge";
+  this.onlineModeButton.append(this.onlineModeName,this.onlineModeBadge);
+  this.menuSettings.append(this.onlineModeButton);
   for(const [index,id] of ARENA_IDS.entries()){
    const theme=getArenaTheme(id),card=document.createElement("button");
    card.type="button";card.className="game-ui__arena-card";
@@ -1127,6 +1140,8 @@ export class GameUI{
    if(state===GameState.MENU||state===GameState.GAME_OVER){
     if(modeChanged||localeChanged||stateChanged){
      for(const item of this.menuSettings.children){
+      // Never let the Online placeholder participate in game-mode selection.
+      if(item===this.onlineModeButton)continue;
       const card=item as HTMLButtonElement,id=card.dataset.mode as GameModeId;
       const visible=id!=="local-pvp";
       this.setHidden(card,!visible);
@@ -1505,7 +1520,12 @@ export class GameUI{
   // their labels with undefined when locale changes.
   this.setText(this.stepNextButton,messages.menu?.nextArena??"NEXT · CHOOSE ARENA");
   this.setText(this.stepBackButton,messages.menu?.back??"BACK");
+  this.onlineModeName.textContent=messages.menu?.onlineMode??"ONLINE";
+  this.onlineModeBadge.textContent=messages.menu?.comingSoon??"COMING SOON";
+  this.onlineModeButton.setAttribute("aria-label",this.onlineModeName.textContent+" · "+this.onlineModeBadge.textContent);
+  this.onlineModeButton.title=this.onlineModeBadge.textContent;
   for(const item of this.menuSettings.children){
+   if(item===this.onlineModeButton)continue;
    const card=item as HTMLButtonElement,id=card.dataset.mode as GameModeId;
    card.textContent=messages.modes[id];
    card.title=messages.menu?.modeDescriptions[id]??"";
