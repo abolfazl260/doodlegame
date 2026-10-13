@@ -109,7 +109,7 @@ export class ThreeRenderer implements Renderer{
     geometry.setAttribute("position",new THREE.BufferAttribute(positions,3));
     geometry.computeBoundingSphere();
     const color=tone==="accent"?(art.material==="earth"?theme.secondary:art.material==="frost"?"#e2f8ff":palette.edge):palette.edge;
-    const material=new THREE.LineBasicMaterial({color,transparent:true,opacity:tone==="edge"?.87:tone==="detail"?.55:.75,depthTest:false});
+    const material=new THREE.LineBasicMaterial({color,transparent:true,opacity:tone==="edge"?.87:tone==="detail"?.55:.75});
     const line=new THREE.LineSegments(geometry,material);
     group.add(line);layers.push({line,strokes,positions});
    }
