@@ -1,4 +1,4 @@
-import {fighterVisual,characterMarkings,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
+import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,characterMarkings,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
 import type {Renderer} from "./Renderer";
 import {PlatformInkCache,platformInkReaction} from "./PlatformDecorations.js";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
@@ -142,27 +142,57 @@ export class CanvasRenderer implements Renderer{
  }
  private drawFortress(c:CanvasRenderingContext2D,scale:number,toX:(x:number)=>number,toY:(y:number)=>number){c.save();c.fillStyle="#444";c.strokeStyle="#777";c.lineWidth=Math.max(1,scale*.04);for(const side of [-1,1]){const x=side*10.2;c.fillRect(toX(x-1.35),toY(2.95),2.7*scale,3.2*scale);for(let i=0;i<3;i++){const tx=side*(9.65+i*.75);c.fillRect(toX(tx-.375),toY(4.2),.75*scale,4.4*scale);}for(let i=0;i<5;i++){const mx=side*(8.95+i*.62);c.fillRect(toX(mx-.16),toY(4.38),.32*scale,.55*scale);}c.strokeRect(toX(side*8.1),toY(2.65),.95*scale,.35*scale);}c.restore();}
  private draw(c:CanvasRenderingContext2D,s:DuelistRenderState,toX:(x:number)=>number,toY:(y:number)=>number,scale:number,enemy:boolean){
-  const pose=fighterVisual(s);
+  const pose=fighterVisual(s),ink=fighterInkPalette(enemy),width=FIGHTER_INK_WIDTH;
+  // A subtle ground marker helps track fighters against detailed arena art.
+  if(s.grounded){
+   c.save();c.globalAlpha=.25;c.fillStyle=ink.halo;
+   c.beginPath();c.ellipse(toX(s.x),toY(s.y-.9*pose.scale*pose.scaleY),scale*.43*pose.scale,Math.max(1,scale*.047),0,0,Math.PI*2);c.fill();
+   c.restore();
+  }
   c.save();c.translate(toX(s.x),toY(s.y));
   c.scale(pose.visualFacing*pose.scale*pose.scaleX,pose.scale*pose.scaleY);c.rotate(pose.lean);
-  c.strokeStyle=enemy?'#aaa':'#fff';c.fillStyle=enemy?'#aaa':'#fff';
-  c.lineWidth=Math.max(2,scale*.045);c.lineCap='round';c.lineJoin='round';
-  const lines=(segments:readonly Segment[])=>{c.beginPath();for(const [a,b] of segments){c.moveTo(a[0]*scale,-a[1]*scale);c.lineTo(b[0]*scale,-b[1]*scale);}c.stroke();};
-  lines(pose.joints);
-  c.beginPath();c.arc(pose.head[0]*scale,-pose.head[1]*scale,.24*scale*(1+pose.hit*.08),0,Math.PI*2);c.fill();
-  c.fillStyle=enemy?'#fff':'#000';c.beginPath();c.arc((pose.head[0]+.08)*scale,-(pose.head[1]+.04)*scale,.035*scale,0,Math.PI*2);c.fill();
-  c.strokeStyle=s.characterId==='bolt'?'#70def0':'#f45b76';lines(characterMarkings(s,pose.head));
-  if(s.attackTelegraph>0){c.strokeStyle='#fff';c.globalAlpha=.95;lines(telegraphSegments(s));c.globalAlpha=1;}
-  c.strokeStyle='#fff';
-  c.save();c.translate(pose.hand[0]*scale,-pose.hand[1]*scale);c.rotate(-pose.toolAngle);lines(toolSegments(s));
-  if(s.attackTime>0&&(s.weapon==='blaster'||s.weapon==='uzi')){const x=s.weapon==='uzi'?.54:.66;lines([[[x,0],[x+.22,.1]],[[x,0],[x+.22,-.1]],[[x,0],[x+.3,0]]]);}
+  c.lineCap="round";c.lineJoin="round";
+  const lines=(segments:readonly Segment[],color:string,weight:number)=>{
+   c.strokeStyle=color;c.lineWidth=Math.max(1.6,scale*weight);c.beginPath();
+   for(const [a,b] of segments){c.moveTo(a[0]*scale,-a[1]*scale);c.lineTo(b[0]*scale,-b[1]*scale);}
+   c.stroke();
+  };
+  // Pale halo / dark border / saturated core: readable over bright *and* dark backgrounds.
+  lines(pose.body,ink.halo,width.body.halo);
+  lines(pose.body,ink.outline,width.body.outline);
+  lines(pose.body,ink.core,width.body.core);
+  lines(pose.costume,ink.outline,width.costume.outline);
+  lines(pose.costume,ink.core,width.costume.core);
+  const head=(radius:number,color:string)=>{
+   c.fillStyle=color;c.beginPath();c.arc(pose.head[0]*scale,-pose.head[1]*scale,radius*scale*(1+pose.hit*.08),0,Math.PI*2);c.fill();
+  };
+  head(width.head.halo,ink.halo);
+  head(width.head.outline,ink.outline);
+  head(width.head.core,ink.core);
+  c.fillStyle=ink.eye;c.beginPath();
+  c.arc((pose.head[0]+.105)*scale,-(pose.head[1]+.04)*scale,width.eye*scale,0,Math.PI*2);c.fill();
+  c.fillStyle="#fff";c.beginPath();
+  c.arc((pose.head[0]+.12)*scale,-(pose.head[1]+.057)*scale,width.eye*scale*.26,0,Math.PI*2);c.fill();
+  const accent=s.characterId==="bolt"?"#70def0":ink.accent;
+  const marks=characterMarkings(s,pose.head);
+  lines(marks,ink.outline,width.marking.outline);
+  lines(marks,accent,width.marking.core);
+  if(s.attackTelegraph>0){c.globalAlpha=.95;lines(telegraphSegments(s),ink.halo,.047);c.globalAlpha=1;}
+  c.save();c.translate(pose.hand[0]*scale,-pose.hand[1]*scale);c.rotate(-pose.toolAngle);
+  const weapon=toolSegments(s);
+  lines(weapon,ink.outline,width.weapon.outline);
+  lines(weapon,ink.core,width.weapon.core);
+  if(s.attackTime>0&&(s.weapon==="blaster"||s.weapon==="uzi")){
+   const x=s.weapon==="uzi"?.54:.66;
+   lines([[[x,0],[x+.22,.1]],[[x,0],[x+.22,-.1]],[[x,0],[x+.3,0]]],ink.halo,.052);
+  }
   c.restore();
-  c.globalAlpha=.5;
-  if(Math.abs(s.velocityX)>9)lines([[[-.45,-.3],[-1.1,-.3]],[[-.45,0],[-1.1,0]],[[-.45,.3],[-1.1,.3]]]);
-  if(pose.land>0)lines([[[-.3,-.88],[-.6-pose.land*.2,-.82]],[[.3,-.88],[.6+pose.land*.2,-.82]]]);
-  lines(kickEffectSegments(s));
-  lines(slamEffectSegments(s));
-  lines(grabEffectSegments(s));
+  c.globalAlpha=.6;
+  if(Math.abs(s.velocityX)>9)lines([[[-.45,-.3],[-1.1,-.3]],[[-.45,0],[-1.1,0]],[[-.45,.3],[-1.1,.3]]],ink.halo,.05);
+  if(pose.land>0)lines([[[-.3,-.88],[-.6-pose.land*.2,-.82]],[[.3,-.88],[.6+pose.land*.2,-.82]]],ink.halo,.05);
+  lines(kickEffectSegments(s),ink.halo,.06);
+  lines(slamEffectSegments(s),ink.halo,.055);
+  lines(grabEffectSegments(s),ink.halo,.055);
   c.restore();
  }
  dispose(){this.platformInk.clear();this.backdropCanvas=null;this.backdropArena=null;}
