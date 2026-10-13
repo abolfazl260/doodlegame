@@ -350,19 +350,103 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
  }
  return lines;
 }
+
+/** Clothing follows the animated pose, without changing combat hitboxes. */
+export function fighterOutfit(s:DuelistRenderState,pose:ReturnType<typeof fighterVisual>){
+ const body=pose.body;
+ const partial=(segment:Segment,start:number):Segment=>{
+  const [a,b]=segment;
+  return [[a[0]+(b[0]-a[0])*start,a[1]+(b[1]-a[1])*start],b];
+ };
+ const shoulder=(segment:Segment,end:number):Segment=>{
+  const [a,b]=segment;
+  return [a,[a[0]+(b[0]-a[0])*end,a[1]+(b[1]-a[1])*end]];
+ };
+ const [hx,hy]=pose.head;
+ const sway=Math.sin(s.animationTime*6)*.025;
+ const vest=[body[0]];
+ const gear=[partial(body[2],.48),partial(body[4],.48),
+  partial(body[6],.42),partial(body[8],.42),
+  shoulder(body[5],.58),shoulder(body[7],.58)];
+ const trim:Segment[]=[
+  [[-.18,.27],[.015,.12]],[[.015,.12],[.18,.27]],
+  [[-.17,-.015],[.15,-.015]], [[-.055,.13],[.055,.13]]
+ ];
+ // Bolt has an armored crest; Shadow has swept hair.
+ const hair:Segment[]=s.characterId==="bolt"?[
+  [[hx-.24,hy+.22],[hx-.12,hy+.37]],
+  [[hx-.12,hy+.37],[hx+.14,hy+.37]],
+  [[hx+.14,hy+.37],[hx+.25,hy+.21]]
+ ]:[
+  [[hx-.28,hy+.21],[hx-.17,hy+.43+sway]],
+  [[hx-.17,hy+.43+sway],[hx-.045,hy+.33]],
+  [[hx-.045,hy+.33],[hx+.08,hy+.49+sway]],
+  [[hx+.08,hy+.49+sway],[hx+.24,hy+.24]]
+ ];
+ return {vest,gear,trim,hair};
+}
+
+/** Distinct colored inlays for every equipped weapon. */
+export function weaponAccentColor(s:DuelistRenderState):string {
+ switch(weaponDrawPose(s).weapon){
+  case "blade":return "#65e6ff";
+  case "hammer":return "#ffbd66";
+  case "blaster":return "#fbe27e";
+  case "uzi":return "#ffba68";
+  case "bow":return "#68d9ff";
+  case "boomerang":return "#5db7ff";
+  case "bomb":return "#ff8c56";
+  case "missile":return "#ff776c";
+ }
+}
+export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
+ if(s.grabPhase!==null&&s.grabPhase!==undefined)return [];
+ switch(weaponDrawPose(s).weapon){
+  case "blade":return [
+   [[.26,-.045],[.78,-.027]],[[.78,-.027],[.94,0]],[[.16,-.14],[.16,.14]]
+  ];
+  case "hammer":return [
+   [[.57,.17],[.84,.17]],[[.79,-.16],[.79,.15]],[[.59,-.17],[.59,.17]]
+  ];
+  case "blaster":return [
+   [[-.07,.1],[.3,.1]],[[.39,.01],[.65,.01]],[[.08,-.19],[.12,-.19]]
+  ];
+  case "uzi":return [
+   [[-.07,.1],[.18,.1]],[[.27,.01],[.51,.01]],[[.08,-.19],[.12,-.19]]
+  ];
+  case "bow":return [
+   [[.1,-.43],[.2,-.24]],[[.2,.24],[.1,.43]],[[.69,0],[.82,0]]
+  ];
+  case "boomerang":return [
+   [[-.04,-.015],[.14,-.24]],[[.14,-.24],[.43,-.25]]
+  ];
+  case "bomb":return [
+   [[-.13,.08],[-.07,.15]],[[.07,-.13],[.14,-.045]],[[.09,.31],[.06,.39]]
+  ];
+  case "missile":return [
+   [[-.12,.065],[.29,.065]],[[.38,-.09],[.38,.09]],[[.51,-.065],[.61,0]]
+  ];
+ }
+ return [];
+}
+
 /** High-contrast 3-layer ink stays legible on both light and dark arenas. */
 export const FIGHTER_INK_WIDTH={
  body:{halo:.25,outline:.19,core:.13},
  costume:{outline:.14,core:.067},
- weapon:{outline:.135,core:.075},
+ weapon:{outline:.15,core:.086,accent:.05},
+ vest:{outline:.48,core:.39},
+ gear:{outline:.24,core:.17},
+ hair:{outline:.145,core:.095},
+ trim:.052,
  marking:{outline:.125,core:.069},
  head:{halo:.355,outline:.318,core:.274},
  eye:.062
 } as const;
 export function fighterInkPalette(enemy:boolean){
  return enemy
-  ?{core:"#ffc48b",outline:"#181725",halo:"#fff2d7",accent:"#ff628b",eye:"#171522"}
-  :{core:"#f9fbff",outline:"#091628",halo:"#8be0ff",accent:"#f45b76",eye:"#091628"};
+  ?{core:"#ffc48b",outline:"#181725",halo:"#fff2d7",accent:"#ff628b",eye:"#171522",suit:"#80364f",armor:"#d75160",trim:"#ffcf8c",hair:"#352638",metal:"#e5eaf3"}
+  :{core:"#f9fbff",outline:"#091628",halo:"#8be0ff",accent:"#35bafb",eye:"#091628",suit:"#17618d",armor:"#248fc7",trim:"#aff2ff",hair:"#20344f",metal:"#e5efff"};
 }
 
 /**
