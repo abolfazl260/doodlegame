@@ -55,7 +55,7 @@ const messages={
  status:{win:"WIN",lose:"LOSE",hill:"HILL"},
  details:{equipped:"EQUIPPED",angle:"ANGLE",power:"POWER"},
  sections:{gameMode:"MODE",arena:"ARENA",weapon:"WEAPON"},
- menu:{onlineMode:"ONLINE",comingSoon:"COMING SOON"},
+ menu:{onlineMode:"ONLINE",comingSoon:"COMING SOON",modeDescriptions:Object.fromEntries(modes.map(key=>[key,key]))},
  characterNames:{playerOne:"PLAYER 1",playerTwo:"PLAYER 2",leftPlayer:"LEFT CHARACTER · P1",rightPlayer:"RIGHT CHARACTER · P2",opponent:"OPPONENT",optional:"Optional name",wins:"WINS"},
  pvp:{p1:"P1",p2:"P2",hint:"Shared-screen controls",winner1:"P1 wins",winner2:"P2 wins",draw:"Draw"},
  panels:{weaponUpgrades:"UPGRADES",missileControl:"MISSILE",bowDraw:"BOW",releaseToFire:"RELEASE"},
