@@ -156,6 +156,8 @@ const IDLE_P2_INPUT:Readonly<InputState>={moveX:0,moveY:0,pointerX:0,pointerY:0,
 /** Read-only baseline geometry shared with static menu previews. */
 export const getBuiltInArenaPreviewDefinition=()=>Object.fromEntries(Object.entries(ARENAS).map(([id,arena])=>[id,{arena,environment:ENVIRONMENT_TEMPLATES[id as BuiltInArenaId]}])) as Readonly<Record<BuiltInArenaId,{arena:ArenaDefinition;environment:readonly EnvironmentTemplate[]}>>;
 
+export type MatchSetupSnapshot={arena:ArenaId;mode:GameModeId;localPvP:boolean;startingWeapon:WeaponId};
+
 export class GameSession{
  private tutorialActions={move:0,jump:0,attack:0,double:0,grab:0,kick:0};
  private runStage:1|2|3|4|null=null;
@@ -253,6 +255,8 @@ export class GameSession{
   this.reset(false);
  }
  leaveRun(){this.runStage=null;}
+ getMatchSetup():MatchSetupSnapshot{return{arena:this.arenaId,mode:this.modeId,localPvP:this.localPvP,startingWeapon:this.startingWeapon};}
+ restoreMatchSetup(setup:MatchSetupSnapshot){this.startingWeapon=setup.startingWeapon;this.setMode(setup.mode);this.setLocalPvP(setup.localPvP);this.setArena(setup.arena);}
  setStartingWeapon(id:WeaponId){
   if(this.modeId==="random-weapons"||!this.availableWeapons().includes(id))return false;
   this.startingWeapon=id;

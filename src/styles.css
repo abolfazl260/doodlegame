@@ -2219,3 +2219,19 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui__help-content p{position:static!important;transform:none!important;white-space:normal!important;font-size:.875rem;line-height:1.6;margin:0}
 .game-ui__guide-keys{display:block;margin-top:.4rem;padding:.3rem .45rem;background:#080f1f;border:1px solid #677d98;border-radius:5px;white-space:normal;overflow-wrap:anywhere;font-size:.8125rem;line-height:1.6;text-align:left;unicode-bidi:isolate}
 .game-ui__help-content summary:focus-visible{outline:3px solid #f7d981;outline-offset:-3px}
+
+/* Selected menu hierarchy: one primary Quick Play, explicit secondary routes. */
+.game-ui__landing[hidden],.game-ui__controls[hidden]{display:none!important}
+.game-ui__landing{display:grid;gap:.45rem;width:100%;min-width:0;text-align:start}
+.game-ui .game-ui__landing button{min-height:48px;min-width:0;white-space:normal;overflow-wrap:anywhere;font-size:.9375rem}
+.game-ui .game-ui__landing button[data-route="quick"]{width:100%;background:#ffd779;color:#152238;border:2px solid #fff0bb;box-shadow:0 3px 0 #806332;font-size:1.2rem;font-weight:950}
+.game-ui .game-ui__landing button[data-route="continue"]{background:#243d59;border-color:#a1bddc;color:#f4f7ff}
+.game-ui__landing-defaults{font-size:.8125rem;line-height:1.45;margin:0;color:#d3e0ef;text-align:center}
+.game-ui__landing-routes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.4rem;min-width:0}
+.game-ui .game-ui__landing-routes button{background:#172940;border:1px solid #8ca1bc;color:#f0f5ff;text-align:start;padding:.55rem .7rem}
+.game-ui__landing-routes small{display:block;color:#c5d7eb;font-size:.8125rem;line-height:1.4;margin-top:.2rem}
+.game-ui .game-ui__menu-header button[data-menu-home]{grid-column:1/-1;min-height:44px;font-size:.8125rem;padding:.3rem .6rem;background:#182b44;border-color:#89a2c3;text-align:start}
+.game-ui[data-menu-view="progression"] .game-ui__menu-progress-details>summary,
+.game-ui[data-menu-view="settings"] .game-ui__menu-extras>summary{display:none}
+.game-ui[data-menu-view="landing"] .game-ui__menu{gap:.5rem}
+@media(max-height:360px){.game-ui__landing-routes{gap:.3rem}.game-ui .game-ui__landing button{min-height:44px;padding:.4rem .55rem}.game-ui .game-ui__landing button[data-route="quick"]{min-height:50px}.game-ui__landing{gap:.3rem}}

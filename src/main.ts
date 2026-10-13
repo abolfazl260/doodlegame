@@ -123,6 +123,7 @@ try{
  const readHud=()=>({...game.getHudState(),playerName:playerNames.get(1),secondPlayerName:playerNames.get(2)});
  const ui=new GameUI(root,{
   start:startGame,
+  quickPlay:()=>{if(landscape?.isPortrait())return;telegram?.requestFullscreen();landscape?.requestLandscape();input.resetTransientState();game.quickPlay();},
   pause:pauseGame,
   resume:resumeGame,
   restart:restartGame,

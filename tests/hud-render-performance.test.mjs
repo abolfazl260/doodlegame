@@ -75,7 +75,7 @@ function getMessages(fa=false){
   upgrades:Object.fromEntries(weapons.map(id=>[id,{name:id+"+",description:"Upgrade "+id}]))
  };
 }
-function setup(){
+function setup(withLanding=false){
  const listeners=[];
  const i18n={
   locale:"en",messages:getMessages(),
@@ -87,7 +87,7 @@ function setup(){
   "setMissileAngle","setMissilePower","fireWeapon","setTouchMove",
   "touchAttackStart","touchAttackEnd","touchAttackCancel","toggleCombatSound","toggleCameraShake"
  ].map(name=>[name,()=>{}]));
- actions.updateData=async()=>{};
+ actions.updateData=async()=>{};if(withLanding)actions.quickPlay=()=>{};
  const hud={playerHealth:100,playerMaxHealth:100,opponentHealth:100,opponentMaxHealth:100,
   weapon:"blade",winner:null,arena:"classic",mode:"duel",hill:{player:0,opponent:0,target:8},
   bowCharge:0,missileAngle:45,missilePower:13,upgradePoints:0,upgradedWeapons:[]};
@@ -184,4 +184,10 @@ test("king-of-hill score updates without scanning menu settings",()=>{
  ui.render(states.PLAYING,hud);
  assert.equal(counters.writes,0);
  ui.dispose();
+});
+
+test("production landing routing adds zero unchanged in-match HUD writes",()=>{
+ const {ui,hud}=setup(true);ui.render(states.PLAYING,hud);counters.writes=0;counters.optionReads=0;
+ for(let frame=0;frame<120;frame++)ui.render(states.PLAYING,hud);
+ assert.equal(counters.writes,0);assert.equal(counters.optionReads,0);ui.dispose();
 });

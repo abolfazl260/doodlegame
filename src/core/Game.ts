@@ -1,7 +1,8 @@
-import {GameLoop} from "./GameLoop";import {GameState,GameStateManager} from "./GameState";import type {FrameScheduler} from "./FrameScheduler";import type {Renderer} from "../rendering/Renderer";import type {GameSession,ArenaId,GameModeId,CharacterId} from "../gameplay/GameSession";import type {UpgradeSnapshot,Progression} from "../progression/Progression";
+import {GameLoop} from "./GameLoop.js";import {GameState,GameStateManager} from "./GameState.js";import type {FrameScheduler} from "./FrameScheduler";import type {Renderer} from "../rendering/Renderer";import type {GameSession,ArenaId,GameModeId,CharacterId} from "../gameplay/GameSession";import type {UpgradeSnapshot,Progression} from "../progression/Progression";
 export class Game{
  private state=new GameStateManager();private loop:GameLoop;private initialized=false;private disposed=false;
  private inRun=false;
+ private quickPlaySnapshot:import("../gameplay/GameSession").MatchSetupSnapshot|null=null;
  private normalSnapshot:({arena:ArenaId;mode:GameModeId;localPvP:boolean;upgrades:UpgradeSnapshot})|null=null;
  constructor(private readonly renderer:Renderer,private readonly session:GameSession,scheduler:FrameScheduler,onError:(error:unknown)=>void,private readonly progression?:Progression){
   this.loop=new GameLoop(scheduler,dt=>this.update(dt),()=>this.renderer.render(this.session.getRenderState()),onError);
@@ -14,6 +15,7 @@ export class Game{
   }
  }
  initialize(){this.assertNotDisposed();if(this.initialized)return;this.initialized=true;this.renderer.resize();this.renderer.render(this.session.getRenderState());}
+ quickPlay(){this.ready();if(this.state.getState()!==GameState.MENU)return false;if(this.inRun)this.leaveRun();this.quickPlaySnapshot=this.session.getMatchSetup();this.session.setLocalPvP(false);this.session.setMode("duel");this.session.setArena("classic");this.session.setStartingWeapon("blade");this.start();return true;}
  start(){this.ready();this.session.cancelTransientActions();if(this.inRun)this.leaveRun();const s=this.state.getState();if(s===GameState.MENU||s===GameState.GAME_OVER){this.session.reset();this.state.transitionTo(GameState.PLAYING);}else if(s===GameState.PAUSED)this.state.transitionTo(GameState.PLAYING);this.loop.start();}
  pause(){this.ready();if(this.state.getState()===GameState.PLAYING){this.loop.stop();this.session.cancelTransientActions();this.state.transitionTo(GameState.PAUSED);}}
  resume(){this.ready();if(this.state.getState()===GameState.PAUSED){this.session.cancelTransientActions();this.state.transitionTo(GameState.PLAYING);this.loop.start();}}
@@ -24,7 +26,7 @@ export class Game{
   }
   this.state.transitionTo(GameState.GAME_OVER);
  }}
- stop(){if(this.disposed)return;this.loop.stop();this.session.cancelTransientActions();if(this.inRun){this.progression?.suspend(this.session.getUpgradeSnapshot());this.leaveRun();return;}if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);}
+ stop(){if(this.disposed)return;this.loop.stop();this.session.cancelTransientActions();if(this.inRun){this.progression?.suspend(this.session.getUpgradeSnapshot());this.leaveRun();return;}if(this.quickPlaySnapshot){this.session.restoreMatchSetup(this.quickPlaySnapshot);this.quickPlaySnapshot=null;}if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);}
  restart(){this.ready();this.loop.stop();this.session.cancelTransientActions();this.state.reset();this.start();}
  selectWeapon(direction:1|-1){this.ready();this.session.selectWeapon(direction);}
  selectPlayer2Weapon(direction:1|-1){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectPlayer2Weapon(direction);}
