@@ -131,6 +131,7 @@ export class GameUI{
  private characterPickerTitle=document.createElement("h3");
  private characterPickerHint=document.createElement("p");
  private characterCards=document.createElement("div");
+ private characterLabels=new Map<CharacterId,{name:HTMLElement;description:HTMLElement}>();
  private playerNameLabel=document.createElement("label");
  private secondNameLabel=document.createElement("label");
  private playerNameCaption=document.createElement("span");
@@ -498,6 +499,7 @@ export class GameUI{
    const name=document.createElement("strong");name.className="game-ui__character-name";
    const desc=document.createElement("span");desc.className="game-ui__character-description";
    copy.append(name,desc);card.append(portrait,copy);
+   this.characterLabels.set(id,{name,description:desc});
    card.onclick=()=>actions.characterSelect?.(id);
    this.characterCards.append(card);
   }
@@ -1526,8 +1528,9 @@ export class GameUI{
   this.characterCards.setAttribute("aria-label",this.characterPickerTitle.textContent);
   for(const item of this.characterCards.children){
    const card=item as HTMLButtonElement,id=card.dataset.character as CharacterId;
-   (card.querySelector(".game-ui__character-name") as HTMLElement).textContent=CHARACTER_TEXT[this.i18n.locale][id].name;
-   (card.querySelector(".game-ui__character-description") as HTMLElement).textContent=CHARACTER_TEXT[this.i18n.locale][id].description;
+   const copy=this.characterLabels.get(id);
+   if(copy){copy.name.textContent=CHARACTER_TEXT[this.i18n.locale][id].name;
+    copy.description.textContent=CHARACTER_TEXT[this.i18n.locale][id].description;}
    card.setAttribute("aria-label",CHARACTER_TEXT[this.i18n.locale][id].name);
   }
   this.playerNameInput.placeholder=messages.characterNames.optional;
