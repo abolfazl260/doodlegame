@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-clockwork-city",
+  "version": 1,
+  "names": {
+    "fa": "شهر ساعت‌ها",
+    "en": "CLOCKWORK CITY"
+  },
+  "background": "background.svg",
+  "arena": {
+    "speedMultiplier": 1,
+    "jumpMultiplier": 1.2,
+    "gravity": -22,
+    "fallLimit": null,
+    "movingPlatforms": true,
+    "spawnX": [
+      -8,
+      8
+    ],
+    "platforms": [
+      {
+        "x": -12,
+        "y": -0.25,
+        "width": 24,
+        "height": 0.5,
+        "surface": "ice"
+      },
+      {
+        "x": -9.7,
+        "y": 1.38,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": -4.6,
+        "y": 2.6,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": 1.1,
+        "y": 2.6,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": 6,
+        "y": 1.38,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "oneWay"
+      }
+    ]
+  },
+  "theme": {
+    "skin": "neon",
+    "backdrop": "city",
+    "skyTop": "#2a293e",
+    "skyBottom": "#8b7a8a",
+    "silhouette": "#4d3c55",
+    "platform": "#4d3c55",
+    "platformEdge": "#e8cb9d",
+    "accent": "#e8cb9d",
+    "secondary": "#8b7a8a",
+    "hudBackground": "#2a293e"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-sunken-ruins",
+  "version": 1,
+  "names": {
+    "fa": "ویرانه‌های غرق‌شده",
+    "en": "SUNKEN RUINS"
+  },
+  "background": "background.svg",
+  "arena": {
+    "speedMultiplier": 1,
+    "jumpMultiplier": 1,
+    "gravity": -22,
+    "fallLimit": null,
+    "movingPlatforms": true,
+    "spawnX": [
+      -8,
+      8
+    ],
+    "platforms": [
+      {
+        "x": -12,
+        "y": -0.25,
+        "width": 24,
+        "height": 0.5,
+        "surface": "slippery"
+      },
+      {
+        "x": -9.1,
+        "y": 1.45,
+        "width": 4,
+        "height": 0.34,
+        "surface": "slippery"
+      },
+      {
+        "x": -3.3,
+        "y": 2.5,
+        "width": 3.5,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": 3,
+        "y": 3.6,
+        "width": 3.5,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": 6.2,
+        "y": 1.3,
+        "width": 3.1,
+        "height": 0.35
+      }
+    ]
+  },
+  "theme": {
+    "skin": "doodle",
+    "backdrop": "mountains",
+    "skyTop": "#103847",
+    "skyBottom": "#498f8e",
+    "silhouette": "#23566a",
+    "platform": "#23566a",
+    "platformEdge": "#acf4e4",
+    "accent": "#acf4e4",
+    "secondary": "#498f8e",
+    "hudBackground": "#103847"
+  }
+}

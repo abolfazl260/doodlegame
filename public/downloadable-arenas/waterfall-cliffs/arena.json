@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-waterfall-cliffs",
+  "version": 1,
+  "names": {
+    "fa": "صخره‌های آبشار",
+    "en": "WATERFALL CLIFFS"
+  },
+  "background": "background.svg",
+  "arena": {
+    "speedMultiplier": 1,
+    "jumpMultiplier": 1.2,
+    "gravity": -22,
+    "fallLimit": null,
+    "movingPlatforms": true,
+    "spawnX": [
+      -8,
+      8
+    ],
+    "platforms": [
+      {
+        "x": -12,
+        "y": -0.25,
+        "width": 24,
+        "height": 0.5
+      },
+      {
+        "x": -9.4,
+        "y": 1.55,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "conveyorRight"
+      },
+      {
+        "x": 5.8,
+        "y": 1.5,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "conveyorLeft"
+      },
+      {
+        "x": -2.6,
+        "y": 3.3,
+        "width": 5,
+        "height": 0.3,
+        "surface": "oneWay"
+      }
+    ]
+  },
+  "theme": {
+    "skin": "fantasy",
+    "backdrop": "mountains",
+    "skyTop": "#193c50",
+    "skyBottom": "#6596a1",
+    "silhouette": "#2d6176",
+    "platform": "#2d6176",
+    "platformEdge": "#c9fff3",
+    "accent": "#c9fff3",
+    "secondary": "#6596a1",
+    "hudBackground": "#193c50"
+  }
+}

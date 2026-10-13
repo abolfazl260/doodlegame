@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-golden-palace",
+  "version": 1,
+  "names": {
+    "fa": "کاخ طلایی",
+    "en": "GOLDEN PALACE"
+  },
+  "background": "background.svg",
+  "arena": {
+    "speedMultiplier": 1,
+    "jumpMultiplier": 1.1,
+    "gravity": -22,
+    "fallLimit": null,
+    "movingPlatforms": true,
+    "spawnX": [
+      -8,
+      8
+    ],
+    "platforms": [
+      {
+        "x": -12,
+        "y": -0.25,
+        "width": 24,
+        "height": 0.5
+      },
+      {
+        "x": -9.4,
+        "y": 1.55,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "conveyorRight"
+      },
+      {
+        "x": 5.6,
+        "y": 1.55,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "conveyorLeft"
+      },
+      {
+        "x": -2.5,
+        "y": 3.15,
+        "width": 5,
+        "height": 0.3,
+        "surface": "oneWay"
+      }
+    ]
+  },
+  "theme": {
+    "skin": "fantasy",
+    "backdrop": "mountains",
+    "skyTop": "#372039",
+    "skyBottom": "#ab7774",
+    "silhouette": "#643c53",
+    "platform": "#643c53",
+    "platformEdge": "#ffdfa6",
+    "accent": "#ffdfa6",
+    "secondary": "#ab7774",
+    "hudBackground": "#372039"
+  }
+}

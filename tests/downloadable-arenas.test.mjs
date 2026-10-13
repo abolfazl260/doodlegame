@@ -29,6 +29,12 @@ const responses=new Map([
  [base+"webp-demo/arena.json",JSON.stringify(webpDescriptor)],
  [base+"webp-demo/background.webp",webpBytes]
 ]);
+// Serve every catalog entry from the local test fixtures.
+for(const e of JSON.parse(asset("catalog.json")).arenas){
+ responses.set(base+e.path,asset(e.path));
+ const svgPath=e.path.replace(/arena\.json$/,"background.svg");
+ responses.set(base+svgPath,asset(svgPath));
+}
 const mockFetch=async url=>{
  if(!responses.has(url))return new Response("Not found",{status:404});
  return new Response(responses.get(url),{status:200});
@@ -39,10 +45,12 @@ const memory=()=>{
 };
 const input={getState:()=>({moveX:0,moveY:0,jumpPressed:false,attackHeld:false,attackPressed:false,attackReleased:false,aimUpHeld:false,aimDownHeld:false,weaponNext:false,weaponPrevious:false}),resetTransientState(){},setLocalPvPEnabled(){}};
 
-test("GitHub catalog exposes five optional arenas while 16 bundled arenas remain",async()=>{
+test("GitHub catalog exposes 25 optional arenas while 16 bundled arenas remain",async()=>{
  const list=await loadArenaCatalog(mockFetch);
- assert.deepEqual(list.map(x=>x.id),["extra-forest","extra-desert","extra-glacier","extra-volcano","extra-neon-city"]);
- assert.deepEqual(list.map(x=>x.version),[3,3,3,3,3]);
+ assert.equal(list.length,25);
+ assert.deepEqual(list.slice(0,5).map(x=>x.id),["extra-forest","extra-desert","extra-glacier","extra-volcano","extra-neon-city"]);
+ assert.deepEqual(list.slice(0,5).map(x=>x.version),[3,3,3,3,3]);
+ assert.ok(list.slice(5).every(x=>x.version===1));
  const session=new GameSession(input);
  assert.equal(session.getRenderState().arena,"classic");
  session.setArena("extra-missing");
@@ -107,6 +115,39 @@ test("three additional themed maps install from GitHub, play and persist offline
  for(const id of newIds)removeDownloadedArena(id,storage);
 });
 
+test("all 20 new GitHub arenas install, play, and restore offline alongside the original five",async()=>{
+ const list=await loadArenaCatalog(mockFetch),newEntries=list.slice(5);
+ assert.equal(newEntries.length,20);
+ const storage=memory(),installed=[],images=new Set(),layouts=new Set();
+ try{
+  for(const entry of list){
+   const descriptor=JSON.parse(asset(entry.path));
+   const svg=asset(entry.path.replace(/arena\.json$/,"background.svg"));
+   assert.equal(descriptor.id,entry.id);
+   assert.deepEqual(descriptor.names,entry.names);
+   assert.equal(descriptor.version,entry.version);
+   assert.ok(validArenaSvg(svg),entry.id+" SVG validation");
+   assert.ok(parseDownloadedArena({...descriptor,backgroundSvg:svg}),entry.id+" layout validation");
+   if(newEntries.includes(entry)){
+    images.add(svg);layouts.add(JSON.stringify(descriptor.arena.platforms));
+   }
+   const pack=await installDownloadedArena(entry,storage,mockFetch);
+   installed.push(pack.id);
+   const game=new GameSession(input);
+   game.setArena(pack.id);
+   assert.equal(game.getRenderState().arena,pack.id);
+   assert.equal(game.getArena().platforms.length,descriptor.arena.platforms.length);
+  }
+  assert.equal(images.size,20,"unique artwork for every new location");
+  assert.equal(layouts.size,20,"unique platform layout for every new location");
+  assert.equal(installedArenas().length,25);
+  assert.equal(storage.get(DOWNLOADED_ARENAS_KEY).length,25);
+  restoreDownloadedArenas(storage);
+  assert.equal(installedArenas().length,25);
+ }finally{
+  for(const id of installed)removeDownloadedArena(id,storage);
+ }
+});
 test("version-2 WebP maps remain usable offline and can upgrade to version-3 SVG",async()=>{
  const storage=memory();
  const former=JSON.parse(asset("forest/arena.json"));
