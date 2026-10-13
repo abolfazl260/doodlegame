@@ -349,10 +349,17 @@ export class GameUI{
   this.help.hidden=true;
   this.help.setAttribute("role","dialog");
   this.help.setAttribute("aria-modal","true");
+  this.help.addEventListener("keydown",event=>{
+   if(event.key!=="Tab")return;
+   const targets=Array.from(this.help.querySelectorAll<HTMLElement>("summary,button,a[href]")).filter(n=>n.getClientRects().length>0);
+   const first=targets[0],last=targets.at(-1);
+   if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+   else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+  });
   this.helpContent.className="game-ui__help-content";
   this.helpCloseButton.type="button";
   this.helpCloseButton.className="game-ui__dialog-close";
-  this.help.append(this.helpContent,this.helpCloseButton);
+  this.help.append(this.helpContent,this.tutorialReplay,this.helpCloseButton);
 
   this.privacy.className="game-ui__privacy game-ui__menu-dialog";
   this.privacy.hidden=true;
@@ -1474,6 +1481,24 @@ export class GameUI{
   this.mobileAttackButton.classList.toggle("tutorial-target",Boolean(eligible&&step&&!ready&&this.coach.dataset.target==="attack"));
  }
 
+ private renderGuide(){
+  const messages=this.i18n.messages,guide=messages.guide;
+  // Lightweight DOM test fixtures may supply only legacy localization fields.
+  if(!guide){this.helpContent.innerHTML="";return;}
+  this.helpContent.replaceChildren();
+  const title=document.createElement("h2");title.textContent=messages.buttons.help;this.helpContent.append(title);
+  const entries=(section:HTMLElement,list:readonly {title:string;body:string;keys?:string}[])=>{
+   for(const entry of list){const article=document.createElement("article"),heading=document.createElement("h3"),body=document.createElement("p");heading.textContent=entry.title;body.textContent=entry.body;article.append(heading,body);
+    if(entry.keys){const keys=document.createElement("bdi");keys.dir="ltr";keys.className="game-ui__guide-keys";keys.textContent=entry.keys;article.append(keys);}section.append(article);}
+  };
+  for(const id of ["controls","advanced","weapons","modes","progression","local"] as const){
+   const section=document.createElement("details"),summary=document.createElement("summary");section.dataset.guideSection=id;section.open=id==="controls";summary.textContent=guide.sections[id];section.append(summary);
+   if(id==="weapons")entries(section,WEAPON_IDS.map(weapon=>({title:messages.weapons[weapon],body:guide.weapons[weapon]+" "+guide.upgradeLabel+": "+messages.upgrades[weapon].name+" — "+messages.upgrades[weapon].description})));
+   else if(id==="modes")entries(section,[...MODE_IDS,"local-pvp" as const].map(mode=>({title:messages.modes[mode],body:guide.modes[mode]})));
+   else entries(section,guide[id]);this.helpContent.append(section);
+  }
+ }
+
  private applyLocale(){
   const messages=this.i18n.messages;
   this.coachSkip.textContent=messages.tutorial?.skip??"Skip tutorial";this.tutorialReplay.textContent=messages.tutorial?.replay??"Replay touch tutorial";
@@ -1522,10 +1547,7 @@ export class GameUI{
   this.rotateHint.textContent=messages.rotateHint;
   this.updateButton.textContent=messages.buttons.update;
   this.helpButton.textContent=messages.buttons.help;
-  this.helpContent.innerHTML=messages.helpHtml+
-   (this.i18n.locale==="fa"
-    ? "<p>گرفتن حریف: کلید C (بازیکن دوم: Numpad1) یا کشیدن سریع انگشت از دکمه حمله به سمت بالا. حریف باید نزدیک و روبه‌رو باشد.</p>"
-    : "<p>Grab &amp; Throw: Press C (P2: Numpad1) or swipe up quickly from ATTACK. The target must be close and in front.</p>");
+  this.renderGuide();
   this.help.setAttribute("aria-label",messages.buttons.help);
   this.privacy.setAttribute("aria-label",messages.privacy.title);
   this.helpCloseButton.textContent=messages.privacy.close;

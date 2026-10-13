@@ -2210,3 +2210,12 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui__arena-feature{order:2;font-size:.8125rem;line-height:1.35;color:#d2dff0;overflow-wrap:anywhere}
 .game-ui__arena-filters{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;padding-bottom:4px;scrollbar-width:thin}
 .game-ui .game-ui__arena-filters button{flex:0 0 auto}
+
+.game-ui__help-content h2{font-size:1.1rem;margin:0 0 .65rem}
+.game-ui__help-content details{border:1px solid #7990aa;border-radius:8px;margin:.45rem 0;background:#142238}
+.game-ui__help-content summary{padding:.5rem .7rem;min-height:44px;font-size:.9375rem;font-weight:800;cursor:pointer;touch-action:manipulation}
+.game-ui__help-content article{padding:.55rem .75rem;border-top:1px solid #50637d}
+.game-ui__help-content h3{font-size:.9375rem;margin:0 0 .25rem;color:#ffe29a}
+.game-ui__help-content p{position:static!important;transform:none!important;white-space:normal!important;font-size:.875rem;line-height:1.6;margin:0}
+.game-ui__guide-keys{display:block;margin-top:.4rem;padding:.3rem .45rem;background:#080f1f;border:1px solid #677d98;border-radius:5px;white-space:normal;overflow-wrap:anywhere;font-size:.8125rem;line-height:1.6;text-align:left;unicode-bidi:isolate}
+.game-ui__help-content summary:focus-visible{outline:3px solid #f7d981;outline-offset:-3px}
