@@ -1,4 +1,4 @@
-import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,characterMarkings,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
+import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,characterMarkings,fighterOutfit,weaponAccentColor,weaponAccentSegments,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
 import type {Renderer} from "./Renderer";
 import {PlatformInkCache,platformInkReaction} from "./PlatformDecorations.js";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
@@ -161,6 +161,12 @@ export class CanvasRenderer implements Renderer{
   lines(pose.body,ink.halo,width.body.halo);
   lines(pose.body,ink.outline,width.body.outline);
   lines(pose.body,ink.core,width.body.core);
+  const outfit=fighterOutfit(s,pose);
+  lines(outfit.vest,ink.outline,width.vest.outline);
+  lines(outfit.vest,ink.suit,width.vest.core);
+  lines(outfit.gear,ink.outline,width.gear.outline);
+  lines(outfit.gear,ink.armor,width.gear.core);
+  lines(outfit.trim,ink.trim,width.trim);
   lines(pose.costume,ink.outline,width.costume.outline);
   lines(pose.costume,ink.core,width.costume.core);
   const head=(radius:number,color:string)=>{
@@ -169,6 +175,12 @@ export class CanvasRenderer implements Renderer{
   head(width.head.halo,ink.halo);
   head(width.head.outline,ink.outline);
   head(width.head.core,ink.core);
+  lines(outfit.hair,ink.outline,width.hair.outline);
+  lines(outfit.hair,s.characterId==="bolt"?ink.armor:ink.hair,width.hair.core);
+  c.fillStyle=ink.eye;c.beginPath();
+  c.arc((pose.head[0]-.105)*scale,-(pose.head[1]+.03)*scale,width.eye*scale*.78,0,Math.PI*2);c.fill();
+  c.fillStyle="#fff";c.beginPath();
+  c.arc((pose.head[0]-.095)*scale,-(pose.head[1]+.05)*scale,width.eye*scale*.20,0,Math.PI*2);c.fill();
   c.fillStyle=ink.eye;c.beginPath();
   c.arc((pose.head[0]+.105)*scale,-(pose.head[1]+.04)*scale,width.eye*scale,0,Math.PI*2);c.fill();
   c.fillStyle="#fff";c.beginPath();
@@ -181,7 +193,8 @@ export class CanvasRenderer implements Renderer{
   c.save();c.translate(pose.hand[0]*scale,-pose.hand[1]*scale);c.rotate(-pose.toolAngle);
   const weapon=toolSegments(s);
   lines(weapon,ink.outline,width.weapon.outline);
-  lines(weapon,ink.core,width.weapon.core);
+  lines(weapon,ink.metal,width.weapon.core);
+  lines(weaponAccentSegments(s),weaponAccentColor(s),width.weapon.accent);
   if(s.attackTime>0&&(s.weapon==="blaster"||s.weapon==="uzi")){
    const x=s.weapon==="uzi"?.54:.66;
    lines([[[x,0],[x+.22,.1]],[[x,0],[x+.22,-.1]],[[x,0],[x+.3,0]]],ink.halo,.052);
