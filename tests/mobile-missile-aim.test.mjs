@@ -6,6 +6,7 @@ import {getDownloadedArena,installedArenas,arenaImageDataUrl} from "../.test-bui
 import {WebInput} from "../.test-build/platform/web/WebInput.js";
 import {GameSession} from "../.test-build/gameplay/GameSession.js";
 
+import {ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl} from "../.test-build/ui/ArenaPreviews.js";
 import {MobileOnboarding} from "../.test-build/ui/MobileOnboarding.js";
 const states={MENU:"MENU",PLAYING:"PLAYING",PAUSED:"PAUSED",GAME_OVER:"GAME_OVER"};
 const compiled=readFileSync(".test-build/ui/GameUI.js","utf8");
@@ -15,8 +16,8 @@ const themeImport=compiled.split("\n").find(line=>line.startsWith("import ")&&li
 assert.ok(themeImport,"compiled UI imports arena themes");
 const extraImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("DownloadableArenas"));
 assert.ok(extraImport,"compiled UI imports downloaded arenas");
-const runnable=compiled.replace(/^import .*MobileOnboarding.*$/m,"").replace(gameStateImport,"const GameState=states;").replace(themeImport,"").replace(extraImport,"").replace("export class GameUI","class GameUI");
-const {GameUI}=new Function("states","getArenaTheme","getDownloadedArena","installedArenas","arenaImageDataUrl","MobileOnboarding",runnable+";return {GameUI};")(states,getArenaTheme,getDownloadedArena,installedArenas,arenaImageDataUrl,MobileOnboarding);
+const runnable=compiled.replace(/^import .*ArenaPreviews.*$/m,"").replace(/^import .*MobileOnboarding.*$/m,"").replace(gameStateImport,"const GameState=states;").replace(themeImport,"").replace(extraImport,"").replace("export class GameUI","class GameUI");
+const {GameUI}=new Function("states","getArenaTheme","getDownloadedArena","installedArenas","arenaImageDataUrl","MobileOnboarding","ARENA_CATEGORY_IDS","arenaCategories","arenaPreviewUrl",runnable+";return {GameUI};")(states,getArenaTheme,getDownloadedArena,installedArenas,arenaImageDataUrl,MobileOnboarding,ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl);
 
 class Node{
  constructor(tag="div"){

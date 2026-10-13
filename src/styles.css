@@ -2195,3 +2195,18 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  .game-ui.playing .game-ui__top-hud .game-ui__status{margin-top:12px}
 }
 .game-ui.playing .game-ui__mobile-pause:not([hidden]){left:calc((100% + var(--safe-left) - var(--safe-right)) / 2)}
+
+/* Locally derived static geometry previews and reversible feature filters. */
+.game-ui__arena-filters{display:flex;flex-wrap:wrap;gap:.35rem;min-width:0}
+.game-ui .game-ui__arena-filters button{min-width:0;min-height:44px;padding:.35rem .6rem;font-size:.8125rem;background:#18273c;border-color:#8298b4;white-space:normal}
+.game-ui .game-ui__arena-filters button[aria-pressed="true"]{background:#ffd779;color:#152137;border-color:#fff0bc}
+.game-ui .game-ui__arena-filters button[aria-pressed="true"]::before{content:"✓ ";font-weight:900}
+.game-ui .game-ui__arena-card{min-height:148px;justify-content:flex-start;gap:.25rem;padding:.4rem}
+.game-ui .game-ui__arena-card::after{display:none}
+.game-ui__arena-preview{display:block;width:100%;height:64px;object-fit:contain;order:0;border-radius:5px;pointer-events:none}
+.game-ui__arena-preview[hidden],.game-ui__arena-card[hidden]{display:none!important}
+.game-ui__arena-card .game-ui__arena-name{order:1;z-index:1}
+.game-ui__arena-number{position:absolute;top:.55rem;inset-inline-start:.6rem;z-index:1;background:#0e1b2bdc;border-radius:3px;padding:2px}
+.game-ui__arena-feature{order:2;font-size:.8125rem;line-height:1.35;color:#d2dff0;overflow-wrap:anywhere}
+.game-ui__arena-filters{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;padding-bottom:4px;scrollbar-width:thin}
+.game-ui .game-ui__arena-filters button{flex:0 0 auto}

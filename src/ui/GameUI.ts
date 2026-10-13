@@ -1,3 +1,4 @@
+import {ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl,type ArenaCategory} from "./ArenaPreviews";
 import {MobileOnboarding,type TutorialSignals} from "./MobileOnboarding";
 import type {Storage} from "../storage/Storage";
 import {GameState} from "../core/GameState";
@@ -119,6 +120,10 @@ export class GameUI{
  private menuProgress=document.createElement("div");
  private menuModePanel=document.createElement("section");
  private menuArenaPanel=document.createElement("section");
+ private arenaFilter:ArenaCategory="all";
+ private arenaFilters=document.createElement("div");
+ private arenaEmpty=document.createElement("p");
+ private arenaFeatures=new Map<BuiltInArenaId,HTMLElement>();
  private arenaCards=document.createElement("div");
  private extraArenaSection=document.createElement("section");
  private extraArenaHeading=document.createElement("h3");
@@ -528,10 +533,20 @@ export class GameUI{
    ordinal.textContent=String(index+1).padStart(2,"0");
    const label=document.createElement("strong");
    label.className="game-ui__arena-name";
-   card.append(ordinal,label);
+   const preview=document.createElement("img");preview.className="game-ui__arena-preview";preview.alt="";preview.setAttribute("aria-hidden","true");preview.width=240;preview.height=96;preview.src=arenaPreviewUrl(id as BuiltInArenaId);preview.onerror=()=>{preview.hidden=true;};
+   const feature=document.createElement("span");feature.className="game-ui__arena-feature";this.arenaFeatures.set(id as BuiltInArenaId,feature);
+   card.append(ordinal,label,preview,feature);
    card.onclick=()=>actions.arenaSelect(id);
    this.arenaCards.append(card);
   }
+  this.arenaFilters.className="game-ui__arena-filters";this.arenaFilters.setAttribute("role","group");
+  this.arenaEmpty.hidden=true;
+  for(const category of ARENA_CATEGORY_IDS){
+   if(category!=="all"&&!ARENA_IDS.some(id=>arenaCategories(id as BuiltInArenaId).includes(category)))continue;
+   const button=document.createElement("button");button.type="button";button.dataset.arenaCategory=category;
+   button.onclick=()=>{this.arenaFilter=category;this.filterArenas();};this.arenaFilters.append(button);
+  }
+  this.filterArenas();
   for(const id of WEAPON_IDS){
    const card=document.createElement("button");
    card.type="button";card.className="game-ui__loadout-card";
@@ -542,7 +557,7 @@ export class GameUI{
   }
   // Name inputs belong to player setup, not the map selection screen.
   this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.characterNames,this.characterPicker,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
-  this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaCards,this.extraArenaSection,this.weaponDetails,this.matchSummary);
+  this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaFilters,this.arenaEmpty,this.arenaCards,this.extraArenaSection,this.weaponDetails,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
   this.rotateHint.className="game-ui__rotate-hint";
 
@@ -929,6 +944,13 @@ export class GameUI{
    this.applyLocale();
    if(this.readHud)this.render(this.currentState,this.readHud());
   });
+ }
+
+ private filterArenas(){
+  let count=0;
+  for(const item of this.arenaCards.children){const card=item as HTMLButtonElement;const show=this.arenaFilter==="all"||arenaCategories(card.dataset.arena as BuiltInArenaId).includes(this.arenaFilter);this.setHidden(card,!show);if(show)count++;}
+  this.setHidden(this.arenaEmpty,count>0);
+  for(const item of this.arenaFilters.children){const button=item as HTMLButtonElement;button.setAttribute("aria-pressed",String(button.dataset.arenaCategory===this.arenaFilter));}
  }
 
  private changeMenuStep(index:number){
@@ -1552,8 +1574,12 @@ export class GameUI{
    const card=item as HTMLButtonElement;
    const label=card.children[1] as HTMLElement;
    label.textContent=messages.arenas[card.dataset.arena as BuiltInArenaId];
-   card.setAttribute("aria-label",messages.arenas[card.dataset.arena as BuiltInArenaId]);
+   const id=card.dataset.arena as BuiltInArenaId,categories=arenaCategories(id),labels=categories.map(c=>messages.arenaCategories?.[c]??c);
+   this.setText(this.arenaFeatures.get(id)!,labels.join(" · "));
+   card.setAttribute("aria-label",messages.arenas[id]+" · "+labels.join(" · "));
   }
+  for(const item of this.arenaFilters.children){const button=item as HTMLButtonElement;button.textContent=messages.arenaCategories?.[button.dataset.arenaCategory as ArenaCategory]??button.dataset.arenaCategory??"";}
+  this.arenaFilters.setAttribute("aria-label",messages.sections.arena);this.arenaEmpty.textContent=this.i18n.locale==="fa"?"زمینی در این دسته نیست.":"No arenas in this category.";
   for(const item of this.weaponCards.children){
    const card=item as HTMLButtonElement;
    card.textContent=messages.weapons[card.dataset.startingWeapon as WeaponId];
