@@ -56,6 +56,10 @@ test('WebGL fighters use real, outlined thick meshes that remain readable on mob
   assert.ok(view.headOutline.geometry.parameters.radius>view.head.geometry.parameters.radius);
   assert.ok(view.bodyHalo.geometry.getAttribute("position").array.length===view.bodyCore.geometry.getAttribute("position").array.length);
  }
+ const reused=player.bodyCore.geometry.getAttribute("position").array;
+ renderer.draw(player,{...s,weapon:"blade",velocityX:5,gaitPhase:1.4});
+ assert.strictEqual(player.bodyCore.geometry.getAttribute("position").array,reused,
+  "animation must reuse its GPU buffer rather than allocate fresh arrays each frame");
  assert.notEqual(player.bodyCore.material.color.getHex(),enemy.bodyCore.material.color.getHex(),
   "player and enemy must have distinct high-visibility colors");
  assert.notEqual(player.bodyHalo.material.color.getHex(),player.bodyOutline.material.color.getHex());
