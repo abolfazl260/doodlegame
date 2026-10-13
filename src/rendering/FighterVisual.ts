@@ -38,6 +38,25 @@ export function weaponDrawPose(s:DuelistRenderState){
  return {weapon:s.weapon,phase:"draw" as const,progress:(progress-.31)/.69};
 }
 const interpolate=(a:number,b:number,t:number)=>a+(b-a)*t;
+/** Distinct face markings rendered consistently by WebGL and Canvas. */
+export function characterMarkings(s:DuelistRenderState,head:Point):Segment[]{
+ const [x,y]=head;
+ if(s.characterId==="bolt")return [
+  [[x-.22,y+.085],[x+.22,y+.085]],
+  [[x-.22,y+.085],[x-.18,y-.06]],
+  [[x-.18,y-.06],[x+.18,y-.06]],
+  [[x+.18,y-.06],[x+.22,y+.085]],
+  [[x-.09,y-.13],[x+.09,y-.13]]
+ ];
+ const flap=Math.sin(s.animationTime*8)*.06;
+ return [
+  [[x-.23,y+.055],[x+.23,y+.055]],
+  [[x-.19,y-.06],[x+.17,y-.06]],
+  [[x-.20,y-.09],[x-.47,y-.15+flap]],
+  [[x-.47,y-.15+flap],[x-.73,y-.23+flap]],
+  [[x-.20,y-.13],[x-.44,y-.3+flap*.5]]
+ ];
+}
 
 /** One visual state machine for both renderers, driven by actual movement only. */
 export function airbornePose(s:DuelistRenderState){
@@ -207,6 +226,28 @@ export function fighterVisual(s:DuelistRenderState) {
  }
  add([-.18,shoulder[1]],[-.3,.19],back);
  add([.18,shoulder[1]],[.32,.2],hand);
+ // Cosmetic silhouettes are independent from damage and physics.
+ if(s.characterId==="bolt"){
+  joints.push(
+   [[head[0]-.28,head[1]+.07],[head[0]-.28,head[1]+.29]],
+   [[head[0]-.28,head[1]+.29],[head[0]+.28,head[1]+.29]],
+   [[head[0]+.28,head[1]+.29],[head[0]+.28,head[1]+.07]],
+   [[head[0],head[1]+.3],[head[0],head[1]+.49]],
+   [[head[0]-.08,head[1]+.49],[head[0]+.08,head[1]+.49]],
+   [[-.18,shoulder[1]-.04],[-.37,shoulder[1]-.12]],
+   [[.18,shoulder[1]-.04],[.37,shoulder[1]-.12]]
+  );
+ }else{
+  const sway=Math.sin(s.animationTime*7)*.08;
+  joints.push(
+   [[head[0]-.28,head[1]],[head[0]-.19,head[1]+.28]],
+   [[head[0]-.19,head[1]+.28],[head[0]+.20,head[1]+.28]],
+   [[head[0]+.20,head[1]+.28],[head[0]+.28,head[1]]],
+   [[-.16,.25],[-.46,.24+sway]],
+   [[-.46,.24+sway],[-.82,.18+sway]],
+   [[-.2,.15],[-.55,.02+sway]]
+  );
+ }
  const scale=s.enemyType==='boss'?1.18:s.enemyType==='tank'?1.08:1;
  const squash=land*.16;
  const aerialTilt=flight.phase==="double"?.36*Math.sin(Math.PI*flight.progress):
