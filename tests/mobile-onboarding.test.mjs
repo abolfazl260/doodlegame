@@ -26,3 +26,12 @@ test('real joystick accepted jumps count; third jump and cancelled attack do not
  input.setTouchMove(0,0);input.setTouchMove(0,-.8);game.update(1/60);assert.equal(game.getHudState().tutorial.double,1);
  input.touchAttack();input.touchAttackCancel();game.update(1/60);assert.equal(game.getHudState().tutorial.attack,0);
 });
+
+test('Bow coaching counts a fired arrow and never a cancelled charge',()=>{
+ const input=new WebInput({}),game=new GameSession(input);game.setStartingWeapon('bow');
+ input.touchAttack();for(let frame=0;frame<12;frame++)game.update(1/60);
+ assert.ok(game.getHudState().bowCharge>0);assert.equal(game.getHudState().tutorial.attack,0);
+ input.touchAttackCancel();game.update(1/60);assert.equal(game.getHudState().tutorial.attack,0);
+ input.touchAttack();game.update(1/60);input.touchAttackRelease();game.update(1/60);
+ assert.equal(game.getHudState().tutorial.attack,1);assert.ok(game.getRenderState().projectiles.some(p=>p.weapon==='bow'&&p.owner==='player'));game.dispose();
+});

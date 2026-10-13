@@ -373,10 +373,10 @@ export class GameSession{
  this.progressGrab(this.opponent,this.player,dt);
  this.resolveCharacterCollisions(previousPlayerX,previousOpponentX);this.resolveEnvironmentFighter(this.player);this.resolveEnvironmentFighter(this.opponent);
  this.updateAim(this.player,input,dt);
- const beforeCooldown=this.player.cooldown,beforeCharging=this.player.bowCharging;
+ const beforeCooldown=this.player.cooldown;
  this.handleHumanAttack(this.player,this.opponent,input,dt);
  if(input.mobileMoveX&&Math.sign(input.mobileMoveX)===Math.sign(this.player.x-previousPlayerX))this.tutorialActions.move+=Math.abs(this.player.x-previousPlayerX);
- if(input.mobileAttack&&!input.attackCancelled&&(this.player.cooldown>beforeCooldown||(!beforeCharging&&this.player.bowCharging))){this.tutorialActions.attack++;if(this.player.kickKind==="spin")this.tutorialActions.kick++;}
+ if(input.mobileAttack&&!input.attackCancelled&&this.player.cooldown>beforeCooldown){this.tutorialActions.attack++;if(this.player.kickKind==="spin")this.tutorialActions.kick++;}
  if(this.localPvP&&secondInput){
   this.updateAim(this.opponent,secondInput,dt);
   this.handleHumanAttack(this.opponent,this.player,secondInput,dt);
