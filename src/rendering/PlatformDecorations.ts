@@ -118,7 +118,8 @@ export function platformInkReaction(stroke:PlatformInkStroke,p:Platform,state:Ga
  if(!enabled||stroke.motion==="none")return 0;
  const x=p.x+stroke.anchorX,top=p.y+p.height;
  let reaction=0;
- for(const fighter of [state.player,state.opponent]){
+ for(let i=0;i<2;i++){
+  const fighter=i===0?state.player:state.opponent;
   if(!fighter.grounded||fighter.landingTime<=0)continue;
   const proximity=Math.max(0,1-Math.abs(fighter.x-x)/1.5);
   const feet=fighter.y-.9;
