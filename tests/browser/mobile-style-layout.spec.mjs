@@ -23,8 +23,8 @@ test("health bars flank the status without an extra weapon details row",async({p
     top:rect(".game-ui__top-hud")
    };
   });
-  expect(rects.left.right).toBeLessThanOrEqual(rects.status.left+1);
-  expect(rects.status.right).toBeLessThanOrEqual(rects.right.left+1);
+  expect(rects.left.right).toBeLessThanOrEqual(rects.right.left);
+  if(mode!=="king-of-hill")await expect(page.locator(".game-ui__status")).toBeHidden();
   expect(rects.left.height).toBeGreaterThanOrEqual(30);
   expect(rects.right.height).toBeGreaterThanOrEqual(30);
  }

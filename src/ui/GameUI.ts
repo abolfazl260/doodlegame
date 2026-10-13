@@ -364,6 +364,7 @@ export class GameUI{
 
   this.topHud.className="game-ui__top-hud";
   this.status.className="game-ui__status";
+  this.status.setAttribute("aria-live","off");
   this.playerHealth.className="health-bar health-bar--player";
   this.opponentHealth.className="health-bar health-bar--opponent";
   this.playerHealthLabel.className="health-label";
@@ -1116,6 +1117,8 @@ export class GameUI{
     this.setText(this.opponentHealthName,(s.localPvP??s.mode==="local-pvp")?
      (s.secondPlayerName||messages.characterNames.playerTwo):
      CHARACTER_TEXT[locale][s.opponentCharacterId??"shadow"].name);
+    this.playerHealthName.title=this.playerHealthName.textContent??"";
+    this.opponentHealthName.title=this.opponentHealthName.textContent??"";
    }
    if(characterChanged||localeChanged||stateChanged){
     for(const item of this.characterCards.children){
@@ -1301,7 +1304,7 @@ export class GameUI{
   if(staticChanged||(s.mode==="king-of-hill"&&hillChanged)){
    const status=s.winner?(s.winner==="player"?messages.status.win:messages.status.lose):
     s.mode==="king-of-hill"?messages.status.hill+"  "+s.hill.player.toFixed(1)+" — "+
-     s.hill.opponent.toFixed(1)+" / "+s.hill.target.toFixed(0):messages.modes[s.mode];
+     s.hill.opponent.toFixed(1)+" / "+s.hill.target.toFixed(0):"";
    // No winner while a match is active. Avoid evaluating result labels on every HUD update.
    let pvpResult="";
    if((s.localPvP??s.mode==="local-pvp")){
@@ -1311,6 +1314,7 @@ export class GameUI{
     else if(s.winner==="opponent")pvpResult=s.secondPlayerName?
      s.secondPlayerName+" "+messages.characterNames.wins:messages.pvp.winner2;
    }
+   this.setHidden(this.status,!s.winner&&s.mode!=="king-of-hill");
    this.setText(this.status,(s.localPvP??s.mode==="local-pvp")&&s.winner?pvpResult:status);
    if(state===GameState.GAME_OVER)this.setText(this.menuResult,(s.localPvP??s.mode==="local-pvp")?pvpResult:status);
   }
