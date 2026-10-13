@@ -13,14 +13,9 @@ export class ThreeRenderer implements Renderer{
  private player=this.fighter(0xffffff,false);private opponent=this.fighter(0x555555,true);private platforms:THREE.Mesh[]=[];private platformEdges:THREE.Mesh[]=[];private themeArena:GameRenderState["arena"]|null=null;private themeBackgroundImage:HTMLImageElement|undefined;private themeTexture:THREE.CanvasTexture|null=null;private projectiles:THREE.Mesh[]=[];private missileTrails:THREE.Mesh[]=[];private missileFlashes:THREE.Mesh[]=[];
  private projectileGeometry=new THREE.CircleGeometry(.09,10);private bowProjectiles:THREE.LineSegments[]=[];private explosionVisuals:THREE.Group[]=[];private combatVisuals:THREE.Group[]=[];private cameraFrame:CombatCameraFrame|null=null;private framedArena:GameRenderState["arena"]|null=null;private bombVisuals:THREE.Group[]=[];private platformMaterial=new THREE.MeshBasicMaterial({color:0x777777});private icePlatformMaterial=new THREE.MeshBasicMaterial({color:0x9a9a9a});private slipperyPlatformMaterial=new THREE.MeshBasicMaterial({color:0x858585});private oneWayPlatformMaterial=new THREE.MeshBasicMaterial({color:0x6f6f6f});private conveyorLeftPlatformMaterial=new THREE.MeshBasicMaterial({color:0x5a5a5a});private conveyorRightPlatformMaterial=new THREE.MeshBasicMaterial({color:0xaaaaaa});private environmentGroup=new THREE.Group();private environmentVisuals:THREE.Group[]=[];private debrisVisuals:THREE.Mesh[]=[];private environmentArena:GameRenderState["arena"]|null=null;private fortressGroup:THREE.Group;
  constructor(private readonly canvas:HTMLCanvasElement,private readonly animateDecorations=true){this.fortressGroup=this.buildFortress();this.renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:"high-performance"});this.contextLifecycle=new WebGLContextLifecycle(canvas,()=>this.resize());this.renderer.setClearColor(0,1);this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));this.camera.position.z=20;for(const _ of [0,1,2,3,4,5,6,7]){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),this.platformMaterial);this.platforms.push(m);this.scene.add(m);const edge=new THREE.Mesh(new THREE.BoxGeometry(1,1,.02),new THREE.MeshBasicMaterial({color:0xffffff}));this.platformEdges.push(edge);this.scene.add(edge);}this.scene.add(this.player.group,this.opponent.group,this.fortressGroup,this.environmentGroup);this.resize();}
- private fighter(color:number,enemy:boolean){
+ private fighter(_color:number,enemy:boolean){
   const group=new THREE.Group(),ink=fighterInkPalette(enemy),width=FIGHTER_INK_WIDTH;
-  const material=new THREE.LineBasicMaterial({color});
-  // Keep the legacy line geometry for tooling/tests; the actual rendered silhouette
-  // uses triangles because WebGL line widths are capped to one pixel on mobile.
-  const limbs=new THREE.LineSegments(new THREE.BufferGeometry(),material);limbs.visible=false;
-  const tool=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffffff}));tool.visible=false;
-  const band=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xd11f2f}));band.visible=false;
+  // Solid meshes replace legacy one-pixel GL line geometry entirely.
   const stroke=(hex:string,z:number)=>{
    const m=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:hex,side:THREE.DoubleSide}));
    m.position.z=z;return m;
@@ -42,8 +37,8 @@ export class ThreeRenderer implements Renderer{
   effect.position.z=.082;
   group.add(bodyHalo,bodyOutline,bodyCore,costumeOutline,costumeCore,
    headHalo,headOutline,head,markingOutline,markingCore,eye,eyeGlint,
-   toolOutline,toolCore,limbs,tool,band,effect);
-  return {group,limbs,tool,head,headHalo,headOutline,eye,eyeGlint,band,effect,
+   toolOutline,toolCore,effect);
+  return {group,head,headHalo,headOutline,eye,eyeGlint,effect,
    bodyHalo,bodyOutline,bodyCore,costumeOutline,costumeCore,markingOutline,markingCore,toolOutline,toolCore,enemy};
  }
  private setCapsules(mesh:THREE.Mesh,segments:readonly Segment[],width:number){
@@ -244,7 +239,6 @@ export class ThreeRenderer implements Renderer{
   view.group.position.set(s.x,s.y,.1);
   view.group.scale.set(pose.visualFacing*pose.scale*pose.scaleX,pose.scale*pose.scaleY,1);
   view.group.rotation.z=-Math.sign(pose.visualFacing)*pose.lean;
-  this.setLines(view.limbs,segmentPositions(pose.joints));
   this.setCapsules(view.bodyHalo,pose.body,width.body.halo);
   this.setCapsules(view.bodyOutline,pose.body,width.body.outline);
   this.setCapsules(view.bodyCore,pose.body,width.body.core);
@@ -257,12 +251,10 @@ export class ThreeRenderer implements Renderer{
   view.eye.position.x=pose.head[0]+.105;view.eye.position.y=pose.head[1]+.04;
   view.eyeGlint.position.x=pose.head[0]+.12;view.eyeGlint.position.y=pose.head[1]+.057;
   const marks=characterMarkings(s,pose.head);
-  this.setLines(view.band,segmentPositions(marks));
   this.setCapsules(view.markingOutline,marks,width.marking.outline);
   this.setCapsules(view.markingCore,marks,width.marking.core);
   (view.markingCore.material as THREE.MeshBasicMaterial).color.set(s.characterId==="bolt"?0x70def0:0xf45b76);
   const weapon=toolSegments(s);
-  this.setLines(view.tool,segmentPositions(weapon));
   this.setCapsules(view.toolOutline,weapon,width.weapon.outline);
   this.setCapsules(view.toolCore,weapon,width.weapon.core);
   for(const part of [view.toolOutline,view.toolCore]){
