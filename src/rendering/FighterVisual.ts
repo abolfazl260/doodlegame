@@ -226,6 +226,9 @@ export function fighterVisual(s:DuelistRenderState) {
  }
  add([-.18,shoulder[1]],[-.3,.19],back);
  add([.18,shoulder[1]],[.32,.2],hand);
+ // Body and costume marks use different ink widths: arms and legs stay bold,
+ // while hoods, scarves and armor keep their identifying contours.
+ const bodyCount=joints.length;
  // Cosmetic silhouettes are independent from damage and physics.
  if(s.characterId==="bolt"){
   joints.push(
@@ -264,7 +267,7 @@ export function fighterVisual(s:DuelistRenderState) {
  const visualFacing=Math.abs(facing)<.06?(facing<0?-.06:.06):facing;
  const slamSquash=s.slamPhase==="impact"?.14:s.slamPhase==="recovery"?
   .14*(1-Math.min(1,s.slamElapsed/SLAM.recovery)):0;
- return {joints,head,hand,toolAngle,swing,scale,scaleX:1+squash+slamSquash,scaleY:1-squash-slamSquash,lean,hit,land,
+ return {joints,body:joints.slice(0,bodyCount),costume:joints.slice(bodyCount),head,hand,toolAngle,swing,scale,scaleX:1+squash+slamSquash,scaleY:1-squash-slamSquash,lean,hit,land,
   visualFacing,pivot,fastRun,idle};
 }
 /** Motion arcs use the same segment coordinates in both Canvas and WebGL. */
@@ -346,6 +349,63 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
    line([.35,-.11],[.35,.11]);rect(-.24,-.25,.18,.13);break;
  }
  return lines;
+}
+/** High-contrast 3-layer ink stays legible on both light and dark arenas. */
+export const FIGHTER_INK_WIDTH={
+ body:{halo:.25,outline:.19,core:.13},
+ costume:{outline:.14,core:.067},
+ weapon:{outline:.135,core:.075},
+ marking:{outline:.125,core:.069},
+ head:{halo:.355,outline:.318,core:.274},
+ eye:.062
+} as const;
+export function fighterInkPalette(enemy:boolean){
+ return enemy
+  ?{core:"#ffc48b",outline:"#181725",halo:"#fff2d7",accent:"#ff628b",eye:"#171522"}
+  :{core:"#f9fbff",outline:"#091628",halo:"#8be0ff",accent:"#f45b76",eye:"#091628"};
+}
+
+/**
+ * Solid 2D capsules for WebGL. WebGL ignores LineBasicMaterial.linewidth on
+ * many Android GPUs, so real triangles (not thick lines) are required.
+ * A narrow rectangle and two four-facet round caps make each stroke.
+ * The generated geometry is purely visual and does not affect hitboxes.
+ */
+export function capsulePositions(segments:readonly Segment[],width:number,reuse?:Float32Array):Float32Array{
+ const size=segments.length*90;
+ const positions=reuse?.length===size?reuse:new Float32Array(size);
+ const radius=width*.5;
+ let offset=0;
+ const triangle=(ax:number,ay:number,bx:number,by:number,cx:number,cy:number)=>{
+  positions[offset++]=ax;positions[offset++]=ay;positions[offset++]=0;
+  positions[offset++]=bx;positions[offset++]=by;positions[offset++]=0;
+  positions[offset++]=cx;positions[offset++]=cy;positions[offset++]=0;
+ };
+ // Four-segment semicircles; the trigonometric coefficients are constants.
+ const c=[0,Math.SQRT1_2,1,Math.SQRT1_2,0];
+ const si=[-1,-Math.SQRT1_2,0,Math.SQRT1_2,1];
+ for(const [a,b] of segments){
+  const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy);
+  if(len<1e-7){positions.fill(0,offset,offset+90);offset+=90;continue;}
+  const ux=dx/len,uy=dy/len,nx=-uy,ny=ux;
+  const ax=a[0]+nx*radius,ay=a[1]+ny*radius;
+  const bx=a[0]-nx*radius,by=a[1]-ny*radius;
+  const cx=b[0]+nx*radius,cy=b[1]+ny*radius;
+  const dx2=b[0]-nx*radius,dy2=b[1]-ny*radius;
+  triangle(ax,ay,bx,by,cx,cy);
+  triangle(cx,cy,bx,by,dx2,dy2);
+  for(let end=0;end<2;end++){
+   const x=end?b[0]:a[0],y=end?b[1]:a[1],direction=end?1:-1;
+   for(let step=0;step<4;step++){
+    const x1=x+radius*(direction*ux*c[step]+nx*si[step]);
+    const y1=y+radius*(direction*uy*c[step]+ny*si[step]);
+    const x2=x+radius*(direction*ux*c[step+1]+nx*si[step+1]);
+    const y2=y+radius*(direction*uy*c[step+1]+ny*si[step+1]);
+    triangle(x,y,x1,y1,x2,y2);
+   }
+  }
+ }
+ return positions;
 }
 export function segmentPositions(segments:readonly Segment[]) {
  const data=new Float32Array(segments.length*6);

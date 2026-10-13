@@ -22,8 +22,11 @@ test('WebGL fighter draw places both fighters and produces valid geometries for 
  for(const weapon of ['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile'])for(const facing of [-1,1]){
   const s={...base,x:3,y:4,weapon,facing,attackTime:.1,bowCharge:1};renderer.draw(view,s);
   assert.equal(view.group.position.x,3);assert.equal(view.group.position.y,4);
-  for(const line of [view.limbs,view.tool,view.effect]){
-   const array=line.geometry.getAttribute('position').array;assert.equal(array.length%6,0);assert.ok([...array].every(Number.isFinite));
+  const effects=view.effect.geometry.getAttribute('position').array;
+  assert.equal(effects.length%6,0);assert.ok([...effects].every(Number.isFinite));
+  for(const mesh of [view.bodyCore,view.costumeCore,view.toolCore]){
+   const array=mesh.geometry.getAttribute('position').array;
+   assert.ok(array.length>0&&array.length%9===0);assert.ok([...array].every(Number.isFinite));
   }
  }
  view.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose()});
@@ -39,6 +42,61 @@ test('Canvas render balances transformations and opacity for missiles and every 
  }
  delete globalThis.window;
 });
+test('WebGL fighters use real, outlined thick meshes that remain readable on mobile GPUs',async()=>{
+ const {ThreeRenderer}=await rendererModule('ThreeRenderer');
+ const renderer=Object.create(ThreeRenderer.prototype),s=state().player;
+ const player=renderer.fighter(0xffffff,false),enemy=renderer.fighter(0x555555,true);
+ for(const view of [player,enemy]){
+  renderer.draw(view,{...s,characterId:"bolt",x:1,y:2,weapon:"bow",bowCharge:1,attackTime:.08});
+  assert.equal("limbs" in view,false,"legacy GL line meshes should no longer be allocated");
+  for(const name of ["bodyHalo","bodyOutline","bodyCore","costumeOutline","costumeCore","markingOutline","markingCore","toolOutline","toolCore"]){
+   const mesh=view[name],array=mesh.geometry.getAttribute("position").array;
+   assert.ok(mesh.isMesh, name+" must use filled GPU geometry");
+   assert.ok(array.length>0&&array.length%9===0, name+" must be triangles");
+   assert.ok([...array].every(Number.isFinite), name+" should remain finite");
+  }
+  assert.ok(view.headHalo.geometry.parameters.radius>view.headOutline.geometry.parameters.radius);
+  assert.ok(view.headOutline.geometry.parameters.radius>view.head.geometry.parameters.radius);
+  assert.ok(view.bodyHalo.geometry.getAttribute("position").array.length===view.bodyCore.geometry.getAttribute("position").array.length);
+ }
+ const reused=player.bodyCore.geometry.getAttribute("position").array;
+ renderer.draw(player,{...s,weapon:"blade",velocityX:5,gaitPhase:1.4});
+ assert.strictEqual(player.bodyCore.geometry.getAttribute("position").array,reused,
+  "animation must reuse its GPU buffer rather than allocate fresh arrays each frame");
+ assert.notEqual(player.bodyCore.material.color.getHex(),enemy.bodyCore.material.color.getHex(),
+  "player and enemy must have distinct high-visibility colors");
+ assert.notEqual(player.bodyHalo.material.color.getHex(),player.bodyOutline.material.color.getHex());
+ for(const view of [player,enemy])view.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
+});
+
+test('Canvas fallback draws the same multi-layer body, head and weapon silhouette',async()=>{
+ const {CanvasRenderer}=await rendererModule('CanvasRenderer');
+ const widths=[],colors=[],circles=[];
+ let lineWidth=1,strokeStyle="#fff",fillStyle="#fff";
+ const context=new Proxy({
+  save(){},restore(){},translate(){},scale(){},rotate(){},beginPath(){},moveTo(){},lineTo(){},
+  set lineWidth(value){lineWidth=value;},get lineWidth(){return lineWidth;},
+  set strokeStyle(value){strokeStyle=value;},get strokeStyle(){return strokeStyle;},
+  set fillStyle(value){fillStyle=value;},get fillStyle(){return fillStyle;},
+  stroke(){widths.push(lineWidth);colors.push(strokeStyle);},
+  fill(){colors.push(fillStyle);},arc(_x,_y,radius){circles.push(radius);}
+ },{get(t,k){return k in t?t[k]:()=>{}},set(t,k,v){t[k]=v;return true}});
+ const old=globalThis.window;globalThis.window={devicePixelRatio:1};
+ try{
+  const renderer=new CanvasRenderer({clientWidth:800,clientHeight:500,getContext(){return context}});
+  const s=state().player;
+  renderer.draw(context,{...s,grounded:false,characterId:"shadow"},x=>x,y=>y,40,false);
+  assert.ok(widths.some(w=>w>=40*.25),"halo must have a wide ink stroke");
+  assert.ok(widths.some(w=>w>=40*.13&&w<40*.19),"body core is visibly thicker than legacy lines");
+  assert.ok(circles.some(r=>r>=40*.35),"head silhouette must be enlarged");
+  assert.ok(colors.includes("#8be0ff"),"bright outer halo must be present");
+  widths.length=0;colors.length=0;
+  renderer.draw(context,{...s,grounded:false},x=>x,y=>y,40,true);
+  assert.ok(colors.includes("#ffc48b"),"enemy must use distinct warm body colors");
+  renderer.dispose();
+ }finally{if(old===undefined)delete globalThis.window;else globalThis.window=old;}
+});
+
 test('bomb and multi-stage explosion geometry stays finite throughout its lifetime',async()=>{
  const {ThreeRenderer}=await rendererModule('ThreeRenderer');const renderer=Object.create(ThreeRenderer.prototype);
  const bomb=renderer.buildBomb();assert.equal(bomb.children.length,4);

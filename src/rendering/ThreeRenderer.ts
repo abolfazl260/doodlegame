@@ -1,4 +1,4 @@
-import {fighterVisual,characterMarkings,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments} from './FighterVisual';
+import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,capsulePositions,characterMarkings,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
 import * as THREE from "three";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
 import {getDownloadedImage} from "../gameplay/DownloadableArenas.js";
@@ -13,18 +13,47 @@ export class ThreeRenderer implements Renderer{
  private player=this.fighter(0xffffff,false);private opponent=this.fighter(0x555555,true);private platforms:THREE.Mesh[]=[];private platformEdges:THREE.Mesh[]=[];private themeArena:GameRenderState["arena"]|null=null;private themeBackgroundImage:HTMLImageElement|undefined;private themeTexture:THREE.CanvasTexture|null=null;private projectiles:THREE.Mesh[]=[];private missileTrails:THREE.Mesh[]=[];private missileFlashes:THREE.Mesh[]=[];
  private projectileGeometry=new THREE.CircleGeometry(.09,10);private bowProjectiles:THREE.LineSegments[]=[];private explosionVisuals:THREE.Group[]=[];private combatVisuals:THREE.Group[]=[];private cameraFrame:CombatCameraFrame|null=null;private framedArena:GameRenderState["arena"]|null=null;private bombVisuals:THREE.Group[]=[];private platformMaterial=new THREE.MeshBasicMaterial({color:0x777777});private icePlatformMaterial=new THREE.MeshBasicMaterial({color:0x9a9a9a});private slipperyPlatformMaterial=new THREE.MeshBasicMaterial({color:0x858585});private oneWayPlatformMaterial=new THREE.MeshBasicMaterial({color:0x6f6f6f});private conveyorLeftPlatformMaterial=new THREE.MeshBasicMaterial({color:0x5a5a5a});private conveyorRightPlatformMaterial=new THREE.MeshBasicMaterial({color:0xaaaaaa});private environmentGroup=new THREE.Group();private environmentVisuals:THREE.Group[]=[];private debrisVisuals:THREE.Mesh[]=[];private environmentArena:GameRenderState["arena"]|null=null;private fortressGroup:THREE.Group;
  constructor(private readonly canvas:HTMLCanvasElement,private readonly animateDecorations=true){this.fortressGroup=this.buildFortress();this.renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:"high-performance"});this.contextLifecycle=new WebGLContextLifecycle(canvas,()=>this.resize());this.renderer.setClearColor(0,1);this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));this.camera.position.z=20;for(const _ of [0,1,2,3,4,5,6,7]){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),this.platformMaterial);this.platforms.push(m);this.scene.add(m);const edge=new THREE.Mesh(new THREE.BoxGeometry(1,1,.02),new THREE.MeshBasicMaterial({color:0xffffff}));this.platformEdges.push(edge);this.scene.add(edge);}this.scene.add(this.player.group,this.opponent.group,this.fortressGroup,this.environmentGroup);this.resize();}
- private fighter(color:number,enemy:boolean){
-  const group=new THREE.Group();
-  const material=new THREE.LineBasicMaterial({color});
-  const limbs=new THREE.LineSegments(new THREE.BufferGeometry(),material);
-  const tool=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffffff}));
-  const head=new THREE.Mesh(new THREE.CircleGeometry(.24,20),new THREE.MeshBasicMaterial({color}));
-  const eye=new THREE.Mesh(new THREE.CircleGeometry(.035,8),new THREE.MeshBasicMaterial({color:enemy?0xffffff:0x000000}));
-  const band=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xd11f2f}));
-  band.visible=true;band.position.z=.08;
+ private fighter(_color:number,enemy:boolean){
+  const group=new THREE.Group(),ink=fighterInkPalette(enemy),width=FIGHTER_INK_WIDTH;
+  // Solid meshes replace legacy one-pixel GL line geometry entirely.
+  const stroke=(hex:string,z:number)=>{
+   const m=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:hex,side:THREE.DoubleSide}));
+   m.position.z=z;return m;
+  };
+  const bodyHalo=stroke(ink.halo,.005),bodyOutline=stroke(ink.outline,.009),bodyCore=stroke(ink.core,.013);
+  const costumeOutline=stroke(ink.outline,.019),costumeCore=stroke(ink.core,.023);
+  const headCircle=(radius:number,hex:string,z:number)=>{
+   const m=new THREE.Mesh(new THREE.CircleGeometry(radius,28),new THREE.MeshBasicMaterial({color:hex}));
+   m.position.z=z;return m;
+  };
+  const headHalo=headCircle(width.head.halo,ink.halo,.028);
+  const headOutline=headCircle(width.head.outline,ink.outline,.032);
+  const head=headCircle(width.head.core,ink.core,.036);
+  const markingOutline=stroke(ink.outline,.042),markingCore=stroke(ink.accent,.046);
+  const eye=headCircle(width.eye,ink.eye,.052);
+  const eyeGlint=headCircle(width.eye*.26,"#ffffff",.056);
+  const toolOutline=stroke(ink.outline,.068),toolCore=stroke(ink.core,.072);
   const effect=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
-  group.add(limbs,tool,head,eye,band,effect);
-  return {group,limbs,tool,head,eye,band,effect,enemy};
+  effect.position.z=.082;
+  group.add(bodyHalo,bodyOutline,bodyCore,costumeOutline,costumeCore,
+   headHalo,headOutline,head,markingOutline,markingCore,eye,eyeGlint,
+   toolOutline,toolCore,effect);
+  return {group,head,headHalo,headOutline,eye,eyeGlint,effect,
+   bodyHalo,bodyOutline,bodyCore,costumeOutline,costumeCore,markingOutline,markingCore,toolOutline,toolCore,enemy};
+ }
+ private setCapsules(mesh:THREE.Mesh,segments:readonly Segment[],width:number){
+  const old=mesh.geometry.getAttribute("position") as THREE.BufferAttribute|undefined;
+  const data=capsulePositions(segments,width,old?.array as Float32Array|undefined);
+  if(old&&old.array===data){
+   old.needsUpdate=true;
+  }else{
+   mesh.geometry.dispose();
+   const geometry=new THREE.BufferGeometry();
+   geometry.setAttribute("position",new THREE.BufferAttribute(data,3));
+   mesh.geometry=geometry;
+  }
+  mesh.visible=data.length>0;
+  if(data.length)mesh.geometry.computeBoundingSphere();
  }
  private setLines(lines:THREE.LineSegments,data:Float32Array){
   const attribute=lines.geometry.getAttribute('position');
@@ -206,28 +235,41 @@ export class ThreeRenderer implements Renderer{
  }
  render(state:GameRenderState){if(!this.contextLifecycle.canRender())return;this.applyArenaTheme(state.arena);this.fortressGroup.visible=state.arena==="fortress";if(this.environmentArena!==state.arena){for(const g of this.environmentVisuals){this.environmentGroup.remove(g);g.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});}this.environmentVisuals=[];this.environmentArena=state.arena;}this.draw(this.player,state.player);this.draw(this.opponent,state.opponent);for(let i=0;i<this.platforms.length;i++){const p=state.platforms[i],m=this.platforms[i];const edge=this.platformEdges[i];if(!p){m.visible=false;edge.visible=false;if(this.platformInkGroups[i])this.platformInkGroups[i].visible=false;continue;}m.visible=true;edge.visible=true;m.material=p.surface==="ice"?this.icePlatformMaterial:p.surface==="slippery"?this.slipperyPlatformMaterial:p.surface==="oneWay"?this.oneWayPlatformMaterial:p.surface==="conveyorLeft"?this.conveyorLeftPlatformMaterial:p.surface==="conveyorRight"?this.conveyorRightPlatformMaterial:this.platformMaterial;m.position.set(p.x+p.width/2,p.y+p.height/2,-.05);m.scale.set(p.width,p.height,1);edge.position.set(p.x+p.width/2,p.y+p.height-Math.min(.055,p.height*.3),.01);edge.scale.set(p.width,.07,1);(edge.material as THREE.MeshBasicMaterial).color.set(platformColors(getArenaTheme(state.arena),p.surface).edge);this.drawPlatformInk(state,p,i);}while(this.projectiles.length<state.projectiles.length){const m=new THREE.Mesh(this.projectileGeometry,new THREE.MeshBasicMaterial({color:0xffffff}));this.projectiles.push(m);this.scene.add(m);const arrowGeometry=new THREE.BufferGeometry();arrowGeometry.setAttribute("position",new THREE.BufferAttribute(new Float32Array(36),3));const arrow=new THREE.LineSegments(arrowGeometry,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.95}));this.bowProjectiles.push(arrow);this.scene.add(arrow);const trail=new THREE.Mesh(new THREE.BoxGeometry(1,.045,.02),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.34,depthTest:false}));this.missileTrails.push(trail);this.scene.add(trail);const flash=new THREE.Mesh(new THREE.CircleGeometry(.16,8),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthTest:false}));this.missileFlashes.push(flash);this.scene.add(flash);const bomb=this.buildBomb();this.bombVisuals.push(bomb);this.scene.add(bomb);}while(this.environmentVisuals.length<state.environment.length){const env=state.environment[this.environmentVisuals.length];const g=this.buildEnvironment(env.kind);this.environmentVisuals.push(g);this.environmentGroup.add(g);}while(this.explosionVisuals.length<state.explosions.length){const g=this.buildExplosion();this.explosionVisuals.push(g);this.scene.add(g);}this.explosionVisuals.forEach((g,i)=>{const e=state.explosions[i];if(!e){g.visible=false;return;}this.drawExplosion(g,e);});this.environmentVisuals.forEach((g,i)=>{const e=state.environment[i];if(!e){g.visible=false;return;}g.visible=e.active;g.position.set(e.x,e.y,.02);g.rotation.z=e.rotation;g.scale.set(e.width,e.height,1);if(e.pulse>0)g.scale.multiplyScalar(1+Math.min(.08,e.pulse*.04));const warn=g.userData.warning as THREE.Group;const strength=e.kind==="vent"?Math.max(e.warning,e.pulse):e.warning;warn.visible=e.active&&strength>0;if(warn.visible){warn.scale.setScalar(1+strength*.16);for(const child of warn.children){const mat=(child as THREE.Mesh).material as THREE.MeshBasicMaterial;mat.opacity=Math.min(.9,.32+strength*.6);}}});this.projectiles.forEach((m,i)=>{const p=state.projectiles[i];m.visible=Boolean(p&&p.weapon!=="bomb");const bomb=this.bombVisuals[i];bomb.visible=Boolean(p&&p.weapon==="bomb");if(p&&p.weapon==="bomb"){bomb.position.set(p.x,p.y,.2);bomb.rotation.z=p.rotation;const warning=p.life<.55?1+Math.sin(p.age*45)*.1:1;bomb.scale.setScalar(warning);bomb.children[3].scale.setScalar(.7+.6*Math.abs(Math.sin(p.age*38)));}this.missileTrails[i].visible=Boolean(p&&p.weapon==="missile");this.missileFlashes[i].visible=false;if(this.bowProjectiles[i])this.bowProjectiles[i].visible=Boolean(p&&p.weapon==="bow");if(p){m.position.set(p.x,p.y,.1);m.rotation.z=p.rotation;const speed=Math.hypot(p.vx,p.vy);if(p.weapon==="bow"&&this.bowProjectiles[i]){const q=this.bowProjectiles[i],a=q.geometry.attributes.position.array as Float32Array,L=.56,H=.11;a.set([-L,0,0,L,0,0,L,0,0,L-H,-H*.65,0,L,0,0,L-H,H*.65,0,-L,0,0,-L+H*.9,-H,0,-L,0,0,-L+H*.9,H,0]);q.position.set(p.x,p.y,.14);q.rotation.z=p.rotation;q.geometry.attributes.position.needsUpdate=true;}m.scale.set(Math.max(1,speed/10),1,1);const size=p.weapon==="bomb"?.1:p.weapon==="boomerang"?.13:p.weapon==="bow"?.055:p.weapon==="missile"?.12:.09;m.scale.set(p.weapon==="bow"?2.8:p.weapon==="missile"?4.6:1,p.weapon==="bow"?.45:p.weapon==="missile"?.72:1,1);m.scale.multiplyScalar(size/.09);if(p.weapon==="missile"){const len=Math.max(.45,Math.min(1.6,.38+speed*.055));const nx=speed>0.01?p.vx/speed:0,ny=speed>0.01?p.vy/speed:0;const trail=this.missileTrails[i];trail.position.set(p.x-nx*(.38+len*.35),p.y-ny*(.38+len*.35),.06);trail.rotation.z=p.rotation;trail.scale.set(len,1,1);const flame=this.missileFlashes[i];flame.position.set(p.x-nx*.34,p.y-ny*.34,.08);flame.rotation.z=p.rotation;flame.scale.setScalar(.7+Math.min(1.2,speed/12));flame.visible=true;((flame.material as THREE.MeshBasicMaterial).opacity)=.55*(.72+.28*Math.sin(p.age*55));}if(p.weapon==="bomb"&&p.life<.6)m.scale.multiplyScalar(Math.floor(p.life*18)%2===0?.35:1);}});this.drawArenaDebris(state);this.drawCombatCues(state);const aspect=Math.max(1,this.canvas.clientWidth)/Math.max(1,this.canvas.clientHeight);const previous=this.framedArena===state.arena?this.cameraFrame:null;this.cameraFrame=combatCameraFrame(state,aspect,previous);this.framedArena=state.arena;const vh=this.cameraFrame.height;this.camera.left=-aspect*vh/2;this.camera.right=aspect*vh/2;this.camera.top=vh/2;this.camera.bottom=-vh/2;this.camera.updateProjectionMatrix();this.camera.position.x=this.cameraFrame.x+state.cameraShake.x;this.camera.position.y=this.cameraFrame.y+state.cameraShake.y;this.renderer.render(this.scene,this.camera);}
  private draw(view:ReturnType<ThreeRenderer['fighter']>,s:DuelistRenderState){
-  const pose=fighterVisual(s);
+  const pose=fighterVisual(s),width=FIGHTER_INK_WIDTH;
   view.group.position.set(s.x,s.y,.1);
   view.group.scale.set(pose.visualFacing*pose.scale*pose.scaleX,pose.scale*pose.scaleY,1);
   view.group.rotation.z=-Math.sign(pose.visualFacing)*pose.lean;
-  this.setLines(view.limbs,segmentPositions(pose.joints));
-  view.head.position.set(pose.head[0],pose.head[1],.02);
-  view.eye.position.set(pose.head[0]+.08,pose.head[1]+.04,.04);
-  this.setLines(view.tool,segmentPositions(toolSegments(s)));
-  view.tool.position.set(pose.hand[0],pose.hand[1],.08);
-  view.tool.rotation.z=pose.toolAngle;
-  (view.band.material as THREE.LineBasicMaterial).color.set(s.characterId==='bolt'?0x70def0:0xf45b76);
-  this.setLines(view.band,segmentPositions(characterMarkings(s,pose.head)));
-  const effect=[...telegraphSegments(s),...kickEffectSegments(s),...slamEffectSegments(s),...grabEffectSegments(s)] as import('./FighterVisual').Segment[];
-  if(s.attackTime>0&&(s.weapon==='blaster'||s.weapon==='uzi')){
-   const x=pose.hand[0]+(s.weapon==='uzi'?.54:.66),y=pose.hand[1];
+  this.setCapsules(view.bodyHalo,pose.body,width.body.halo);
+  this.setCapsules(view.bodyOutline,pose.body,width.body.outline);
+  this.setCapsules(view.bodyCore,pose.body,width.body.core);
+  this.setCapsules(view.costumeOutline,pose.costume,width.costume.outline);
+  this.setCapsules(view.costumeCore,pose.costume,width.costume.core);
+  for(const circle of [view.headHalo,view.headOutline,view.head]){
+   circle.position.x=pose.head[0];circle.position.y=pose.head[1];
+   circle.scale.setScalar(1+pose.hit*.08);
+  }
+  view.eye.position.x=pose.head[0]+.105;view.eye.position.y=pose.head[1]+.04;
+  view.eyeGlint.position.x=pose.head[0]+.12;view.eyeGlint.position.y=pose.head[1]+.057;
+  const marks=characterMarkings(s,pose.head);
+  this.setCapsules(view.markingOutline,marks,width.marking.outline);
+  this.setCapsules(view.markingCore,marks,width.marking.core);
+  (view.markingCore.material as THREE.MeshBasicMaterial).color.set(s.characterId==="bolt"?0x70def0:0xf45b76);
+  const weapon=toolSegments(s);
+  this.setCapsules(view.toolOutline,weapon,width.weapon.outline);
+  this.setCapsules(view.toolCore,weapon,width.weapon.core);
+  for(const part of [view.toolOutline,view.toolCore]){
+   part.position.x=pose.hand[0];part.position.y=pose.hand[1];
+   part.rotation.z=pose.toolAngle;
+  }
+  const effect=[...telegraphSegments(s),...kickEffectSegments(s),...slamEffectSegments(s),...grabEffectSegments(s)] as Segment[];
+  if(s.attackTime>0&&(s.weapon==="blaster"||s.weapon==="uzi")){
+   const x=pose.hand[0]+(s.weapon==="uzi"?.54:.66),y=pose.hand[1];
    effect.push([[x,y],[x+.22,y+.1]],[[x,y],[x+.22,y-.1]],[[x,y],[x+.3,y]]);
   }
   if(Math.abs(s.velocityX)>9)for(const y of [-.3,0,.3])effect.push([[-.45,y],[-1.1,y]]);
   if(pose.land>0)effect.push([[-.3,-.88],[-.6-pose.land*.2,-.82]],[[.3,-.88],[.6+pose.land*.2,-.82]]);
   this.setLines(view.effect,segmentPositions(effect));
   (view.effect.material as THREE.LineBasicMaterial).opacity=effect.length?(s.attackTelegraph>0?.95:.6):0;
-  view.head.scale.setScalar(1+pose.hit*.08);
  }
  dispose(){this.platformInk.clear();this.contextLifecycle.dispose();this.themeTexture?.dispose();this.themeTexture=null;for(const m of this.missileTrails)this.scene.remove(m);for(const m of this.missileFlashes)this.scene.remove(m);for(const m of this.bowProjectiles)this.scene.remove(m);this.renderer.dispose();this.renderer.forceContextLoss();this.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});this.scene.clear();this.projectileGeometry.dispose();this.platformMaterial.dispose();this.icePlatformMaterial.dispose();this.slipperyPlatformMaterial.dispose();this.oneWayPlatformMaterial.dispose();this.conveyorLeftPlatformMaterial.dispose();this.conveyorRightPlatformMaterial.dispose();this.environmentVisuals.forEach(g=>g.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}}));}
 }
