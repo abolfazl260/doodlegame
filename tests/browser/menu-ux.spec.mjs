@@ -188,7 +188,7 @@ test("pause shows Resume without match setup and Run remains reachable from the 
 test("reference-screen layout keeps every RTL card inside the menu and shows labeled CTA",async({page})=>{
  await page.setViewportSize({width:1488,height:1055});
  const next=page.locator('button[data-action="next"]');
- await expect(next).toHaveText(/مرحله بعد/);
+ await expect(next).toHaveText(/بعدی/);
  await expect(page.locator(".game-ui__menu-progress-details")).not.toHaveAttribute("open","");
  await expect(page.locator(".game-ui__menu-arena-panel")).toBeHidden();
  const measures=await page.evaluate(()=>{
@@ -217,15 +217,15 @@ test("reference-screen layout keeps every RTL card inside the menu and shows lab
  await expect(page.locator('button[data-action="back"]')).toHaveText("بازگشت");
  await expect(page.locator('button[data-action="start"]')).toHaveText("شروع");
  await page.locator('button[data-action="back"]').tap();
- await expect(next).toHaveText(/مرحله بعد/);
+ await expect(next).toHaveText(/بعدی/);
 });
 
 test("wizard navigation labels persist after changing language and only one step is visible",async({page})=>{
  const next=page.locator('button[data-action="next"]');
  const back=page.locator('button[data-action="back"]');
- await expect(next).toHaveText(/مرحله بعد/);
+ await expect(next).toHaveText(/بعدی/);
  await page.locator(".game-ui__language button").tap();
- await expect(next).toHaveText("NEXT · CHOOSE ARENA");
+ await expect(next).toHaveText("NEXT · ARENA");
  await next.tap();
  await expect(back).toHaveText("BACK");
  await expect(page.locator(".game-ui__menu-arena-panel")).toBeVisible();
@@ -235,7 +235,7 @@ test("wizard navigation labels persist after changing language and only one step
  await page.locator(".game-ui__language button").tap();
  await expect(back).toHaveText("بازگشت");
  await back.tap();
- await expect(next).toHaveText(/مرحله بعد/);
+ await expect(next).toHaveText(/بعدی/);
 });
 
 
@@ -299,7 +299,7 @@ test("2048x1807 upgrade screen uses one optional view at a time and keeps CTA ta
  await expect(page.locator(".game-ui__upgrade-panel")).toBeVisible();
  await expect(page.locator(".game-ui__run-panel")).toBeHidden();
  const next=page.locator('button[data-action="next"]');
- await expect(next).toHaveText(/مرحله بعد/);
+ await expect(next).toHaveText(/بعدی/);
  await expect(next).toBeInViewport();
  await next.tap();
  await expect(drawer).toBeHidden();

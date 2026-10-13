@@ -1562,8 +1562,8 @@ export class GameUI{
   this.secondNameCaption.textContent=messages.characterNames.playerTwo;
   this.characterPickerTitle.textContent=this.i18n.locale==="fa"?"شخصیت خودت را انتخاب کن":"CHOOSE YOUR CHARACTER";
   this.characterPickerHint.textContent=this.i18n.locale==="fa"?
-   "شخصیت حریف در هر مسابقه تصادفی انتخاب می‌شود. توانایی‌های دو شخصیت برابر است.":
-   "Your opponent's character is random each match. Both fighters have equal abilities.";
+   "توانایی‌ها برابرند؛ شخصیت حریف تصادفی است.":
+   "Equal abilities. Your opponent’s character is random.";
   this.characterCards.setAttribute("aria-label",this.characterPickerTitle.textContent);
   for(const item of this.characterCards.children){
    const card=item as HTMLButtonElement,id=card.dataset.character as CharacterId;

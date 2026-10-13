@@ -2181,3 +2181,35 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui__coach[hidden]{display:none}.tutorial-target{outline:3px solid #f9cf62;outline-offset:4px}
 .game-ui__coach button:focus-visible{outline:3px solid white}
 @media(max-height:360px){.game-ui__coach{bottom:calc(var(--safe-bottom) + 98px);width:min(230px,40vw);padding:5px 9px}}
+
+/* Readability floor: reclaim space with scrolling and layout, never tiny copy. */
+.game-ui{--ui-copy:.8125rem;--ui-label:.875rem;--ui-action:1rem}
+.game-ui__menu-progress,.game-ui__menu-lead,.game-ui__menu-setup-title,
+.game-ui__mode-description,.game-ui__match-summary,.game-ui__arena-selection-summary,
+.game-ui__character-picker-hint,.game-ui__character-description,.game-ui__character-name-caption,
+.game-ui__upgrade-hint,.game-ui__upgrade-summary,.game-ui__upgrade-points,.game-ui__run-message,
+.game-ui__run-progress,.game-ui__pvp-hint,.game-ui__download-feedback,
+.game-ui__download-description,.game-ui__download-meta{font-size:var(--ui-copy);line-height:1.45;overflow-wrap:anywhere;color:#d2deef}
+.game-ui .game-ui__mode-card,.game-ui .game-ui__quick-mode,.game-ui__arena-name,
+.game-ui__character-name,.game-ui .game-ui__upgrade-card,.game-ui__weapon-card,
+.game-ui__weapon-details summary,.game-ui__menu-extras summary,.game-ui__character-picker-title,
+.game-ui__download-card>strong{font-size:var(--ui-label);line-height:1.35;white-space:normal;overflow-wrap:anywhere}
+.game-ui .game-ui__menu button,.game-ui .game-ui__menu summary{min-height:44px}
+.game-ui__menu button,.game-ui__menu summary{font-size:max(var(--ui-copy),.8125rem)}
+.game-ui__menu-dialog,.game-ui__help-content,.game-ui__privacy-content{font-size:.875rem;line-height:1.6;overflow-wrap:anywhere;min-width:0}
+.game-ui__menu-dialog button{font-size:.875rem;min-height:44px}
+.game-ui__menu :is(button,summary,p,h2,h3,span){max-width:100%}
+.game-ui__character-card{align-items:center}
+.game-ui__character-description{color:#cfdbeb}
+.game-ui.playing .game-ui__coach p{position:static;transform:none;white-space:normal;text-align:start}
+@media(max-height:440px),(max-width:600px){
+ .game-ui__character-picker{padding:.35rem;gap:.3rem}
+ .game-ui .game-ui__character-card{min-height:76px;align-items:flex-start}
+ .game-ui__character-portrait{flex-basis:44px;width:44px;height:50px}
+ .game-ui__menu :is(.game-ui__section-title,.game-ui__run-heading){font-size:var(--ui-label)}
+ .game-ui__arena-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .game-ui__menu-mode-panel,.game-ui__menu-arena-panel{gap:.35rem}
+ .game-ui__menu-header{gap:.35rem}
+ .game-ui__menu-dialog{padding:.65rem;max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 16px)}
+}
+@media(max-width:600px){.game-ui__character-cards{grid-template-columns:1fr}}
