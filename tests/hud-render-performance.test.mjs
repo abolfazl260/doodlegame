@@ -4,6 +4,7 @@ import {readFileSync} from "node:fs";
 import {getArenaTheme} from "../.test-build/themes/ArenaThemes.js";
 import {getDownloadedArena,installedArenas,arenaImageDataUrl} from "../.test-build/gameplay/DownloadableArenas.js";
 
+import {MobileOnboarding} from "../.test-build/ui/MobileOnboarding.js";
 const states={MENU:"MENU",PLAYING:"PLAYING",PAUSED:"PAUSED",GAME_OVER:"GAME_OVER"};
 const compiled=readFileSync(".test-build/ui/GameUI.js","utf8");
 const gameStateImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("GameState"));
@@ -11,8 +12,8 @@ const themeImport=compiled.split("\n").find(line=>line.startsWith("import ")&&li
 assert.ok(gameStateImport&&themeImport);
 const extraImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("DownloadableArenas"));
 assert.ok(extraImport,"compiled UI imports downloaded arenas");
-const runnable=compiled.replace(gameStateImport,"const GameState=states;").replace(themeImport,"").replace(extraImport,"").replace("export class GameUI","class GameUI");
-const {GameUI}=new Function("states","getArenaTheme","getDownloadedArena","installedArenas","arenaImageDataUrl",runnable+";return {GameUI};")(states,getArenaTheme,getDownloadedArena,installedArenas,arenaImageDataUrl);
+const runnable=compiled.replace(/^import .*MobileOnboarding.*$/m,"").replace(gameStateImport,"const GameState=states;").replace(themeImport,"").replace(extraImport,"").replace("export class GameUI","class GameUI");
+const {GameUI}=new Function("states","getArenaTheme","getDownloadedArena","installedArenas","arenaImageDataUrl","MobileOnboarding",runnable+";return {GameUI};")(states,getArenaTheme,getDownloadedArena,installedArenas,arenaImageDataUrl,MobileOnboarding);
 
 const counters={writes:0,optionReads:0};
 class SpyNode{

@@ -1,3 +1,5 @@
+import {MobileOnboarding,type TutorialSignals} from "./MobileOnboarding";
+import type {Storage} from "../storage/Storage";
 import {GameState} from "../core/GameState";
 
 import {getArenaTheme} from "../themes/ArenaThemes";
@@ -8,6 +10,7 @@ import type {WeaponId} from "../input/Input";
 import type {ProgressionView} from "../progression/Progression";
 
 type HudState={
+ tutorial?:TutorialSignals;
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;missileAngle:number;missilePower:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
  progression?:ProgressionView|null;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;
@@ -46,6 +49,13 @@ const CHARACTER_TEXT={
 const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";
 
 export class GameUI{
+ private onboarding:MobileOnboarding;
+ private coach=document.createElement("aside");
+ private coachText=document.createElement("p");
+ private coachSkip=document.createElement("button");
+ private tutorialReplay=document.createElement("button");
+ private coachReadyUntil=0;
+ private tutorialView="";
  private root=document.createElement("section");
  private mobileControls=document.createElement("div");
  private p2Controls=document.createElement("div");
@@ -225,7 +235,14 @@ export class GameUI{
  private setText(node:HTMLElement,value:string){if(node.textContent!==value)node.textContent=value;}
  private setHidden(node:HTMLElement,hidden:boolean){if(node.hidden!==hidden)node.hidden=hidden;}
 
- constructor(container:HTMLElement,actions:Actions,private readonly i18n:I18n){
+ constructor(container:HTMLElement,actions:Actions,private readonly i18n:I18n,storage?:Storage){
+  this.onboarding=new MobileOnboarding(storage);
+  this.coach.className="game-ui__coach";this.coach.hidden=true;
+  this.coachText.setAttribute("role","status");this.coachText.setAttribute("aria-live","polite");
+  this.coachSkip.type="button";this.coachSkip.onclick=()=>{this.onboarding.skip();this.coach.hidden=true;this.joystick.classList.remove("tutorial-target");this.mobileAttackButton.classList.remove("tutorial-target");};
+  this.coach.append(this.coachText,this.coachSkip);
+  this.tutorialReplay.type="button";this.tutorialReplay.onclick=()=>{this.onboarding.replay();this.help.hidden=true;this.helpButton.focus();};
+  this.help.append(this.tutorialReplay);
   this.extraActions=actions;
   this.root.className="game-ui";
 
@@ -948,6 +965,7 @@ export class GameUI{
   }
   this.root.append(this.mobileWeaponSwitcher,this.p2WeaponControls,...this.aimPads);
   this.root.append(this.menu,this.help,this.privacy,this.topHud,this.mobilePauseButton,this.weaponList,this.bowPanel,this.mobileControls,this.rotateHint);
+  this.root.append(this.coach);
   container.append(this.root);
   this.root.addEventListener("keydown",event=>{
    if(event.key!=="Escape")return;
@@ -1066,6 +1084,7 @@ export class GameUI{
 
  render(state:GameState,s:HudState){
   this.currentState=state;
+  this.renderTutorial(state,s);
   const messages=this.i18n.messages,locale=this.i18n.locale,old=this.lastView;
   const arenaName=(id:ArenaId)=>getDownloadedArena(id)?.names[locale]??messages.arenas[id as BuiltInArenaId]??id;
   const stateChanged=!old||old.state!==state;
@@ -1491,8 +1510,28 @@ export class GameUI{
   this.root.remove();
  }
 
+ private renderTutorial(state:GameState,s:HudState){
+  if(!s.tutorial)return;
+  const mobile=typeof window.matchMedia==="function"&&window.matchMedia("(pointer: coarse)").matches;
+  if(state===GameState.MENU||state===GameState.GAME_OVER){this.onboarding.dismiss();}
+  const eligible=mobile&&state===GameState.PLAYING&&!s.localPvP&&!s.winner&&!document.hidden&&window.innerWidth>window.innerHeight;
+  const step=s.tutorial?this.onboarding.update(s.tutorial,eligible,s.weapon==="missile"):null;
+  if(step==="ready")this.coachReadyUntil=performance.now()+1800;
+  const ready=eligible&&this.coachReadyUntil>performance.now();
+  const view=[step,ready,eligible,this.i18n.locale,s.weapon].join("|");
+  if(view===this.tutorialView)return;this.tutorialView=view;
+  this.setHidden(this.coach,!eligible||(!step&&!ready));
+  this.coach.dataset.target=step==="move"||step==="jump"||step==="double"?"stick":"attack";
+  const copy=this.i18n.messages.tutorial;
+  this.setText(this.coachText,ready?copy.ready:step?step==="attack"&&s.weapon==="missile"?copy.missile:copy[step]:"");
+  this.coach.dir=this.i18n.locale==="fa"?"rtl":"ltr";
+  this.joystick.classList.toggle("tutorial-target",Boolean(eligible&&step&&!ready&&this.coach.dataset.target==="stick"));
+  this.mobileAttackButton.classList.toggle("tutorial-target",Boolean(eligible&&step&&!ready&&this.coach.dataset.target==="attack"));
+ }
+
  private applyLocale(){
   const messages=this.i18n.messages;
+  this.coachSkip.textContent=messages.tutorial?.skip??"Skip tutorial";this.tutorialReplay.textContent=messages.tutorial?.replay??"Replay touch tutorial";
   this.refreshCombatLabels();
   this.languageLabel.textContent=messages.language.label;
   const currentLanguage=this.i18n.locale==="fa"?messages.language.persian:messages.language.english;

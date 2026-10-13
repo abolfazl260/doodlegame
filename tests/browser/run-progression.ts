@@ -40,6 +40,7 @@ const ui=new GameUI(root,{
  setWeaponAim:(player,x,y)=>game.setWeaponAim(player,x,y),
  modeSelect:id=>game.selectMode(id),setCharacterName:(player,name)=>{playerNames.set(player,name);ui.render(game.getState(),readHud());},setMissileAngle:n=>game.setMissileAngle(n),
  setMissilePower:n=>game.setMissilePower(n),fireWeapon:()=>game.fireWeapon(),
+ touchGrab:()=>input.triggerTouchGrab(),
  setTouchMove:(x,y)=>input.setTouchMove(x,y),
  touchAttackStart:()=>input.touchAttack(true),
  touchAttackEnd:()=>input.touchAttackRelease(),
@@ -51,7 +52,7 @@ const ui=new GameUI(root,{
  player2WeaponNext:()=>game.selectPlayer2Weapon(1),
  player2WeaponPrevious:()=>game.selectPlayer2Weapon(-1),
  toggleCombatSound(){},toggleCameraShake(){},updateData:async()=>{}
-},i18n);
+},i18n,storage);
 game.initialize();
 ui.bind(listener=>game.subscribe(listener),readHud);
 const fixture={

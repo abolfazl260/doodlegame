@@ -48,7 +48,7 @@ export class Game{
  setWeaponAim(player:1|2,x:number,y:number){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.setWeaponAim(player,x,y);}
  setMissileAngle(angle:number){this.ready();this.session.setMissileAngle(angle);}
  setMissilePower(power:number){this.ready();this.session.setMissilePower(power);}
- fireWeapon(){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.fireWeapon();}
+ fireWeapon(mobile=false){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.fireWeapon(mobile);}
  cancelTouchAttack(){this.ready();this.session.cancelTouchAttack();}
  selectArena(id:ArenaId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return;if(current===GameState.GAME_OVER)this.loop.stop();this.session.setArena(id);if(current===GameState.GAME_OVER)this.state.reset();else this.state.notify();}
  selectMode(id:GameModeId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return;if(current===GameState.GAME_OVER)this.loop.stop();this.session.setMode(id);if(current===GameState.GAME_OVER)this.state.reset();else this.state.notify();}
