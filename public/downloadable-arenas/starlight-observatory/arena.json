@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-starlight-observatory",
+  "version": 1,
+  "names": {
+    "fa": "رصدخانه ستارگان",
+    "en": "STARLIGHT OBSERVATORY"
+  },
+  "background": "background.svg",
+  "arena": {
+    "speedMultiplier": 1,
+    "jumpMultiplier": 1.1,
+    "gravity": -22,
+    "fallLimit": null,
+    "movingPlatforms": true,
+    "spawnX": [
+      -8,
+      8
+    ],
+    "platforms": [
+      {
+        "x": -12,
+        "y": -0.25,
+        "width": 24,
+        "height": 0.5,
+        "surface": "ice"
+      },
+      {
+        "x": -9.7,
+        "y": 1.38,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": -4.4,
+        "y": 2.5,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": 1,
+        "y": 2.8,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": 6.2,
+        "y": 1.3,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "oneWay"
+      }
+    ]
+  },
+  "theme": {
+    "skin": "neon",
+    "backdrop": "city",
+    "skyTop": "#0e1435",
+    "skyBottom": "#535a8b",
+    "silhouette": "#283157",
+    "platform": "#283157",
+    "platformEdge": "#d3e7ff",
+    "accent": "#d3e7ff",
+    "secondary": "#535a8b",
+    "hudBackground": "#0e1435"
+  }
+}

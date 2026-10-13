@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-cherry-blossom",
+  "version": 1,
+  "names": {
+    "fa": "باغ شکوفه‌های گیلاس",
+    "en": "CHERRY BLOSSOM"
+  },
+  "background": "background.svg",
+  "arena": {
+    "speedMultiplier": 1.1,
+    "jumpMultiplier": 1.2,
+    "gravity": -19,
+    "fallLimit": -5.6,
+    "movingPlatforms": true,
+    "spawnX": [
+      -8,
+      8
+    ],
+    "platforms": [
+      {
+        "x": -12,
+        "y": -0.25,
+        "width": 9.3,
+        "height": 0.5
+      },
+      {
+        "x": 2.7,
+        "y": -0.25,
+        "width": 9.3,
+        "height": 0.5
+      },
+      {
+        "x": -6.5,
+        "y": 1.8,
+        "width": 3.1,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": 3.5,
+        "y": 2.1,
+        "width": 3.1,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": -1.7,
+        "y": 3.5,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "oneWay"
+      }
+    ]
+  },
+  "theme": {
+    "skin": "fantasy",
+    "backdrop": "mountains",
+    "skyTop": "#362843",
+    "skyBottom": "#b28b9d",
+    "silhouette": "#62415e",
+    "platform": "#62415e",
+    "platformEdge": "#ffcee7",
+    "accent": "#ffcee7",
+    "secondary": "#b28b9d",
+    "hudBackground": "#362843"
+  }
+}

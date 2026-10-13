@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-bamboo-valley",
+  "version": 1,
+  "names": {
+    "fa": "دره بامبو",
+    "en": "BAMBOO VALLEY"
+  },
+  "background": "background.svg",
+  "arena": {
+    "speedMultiplier": 1,
+    "jumpMultiplier": 1.1,
+    "gravity": -22,
+    "fallLimit": null,
+    "movingPlatforms": true,
+    "spawnX": [
+      -8,
+      8
+    ],
+    "platforms": [
+      {
+        "x": -12,
+        "y": -0.25,
+        "width": 24,
+        "height": 0.5,
+        "surface": "slippery"
+      },
+      {
+        "x": -9.1,
+        "y": 1.45,
+        "width": 4,
+        "height": 0.34,
+        "surface": "slippery"
+      },
+      {
+        "x": -3.5,
+        "y": 2.55,
+        "width": 3.5,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": 3.1,
+        "y": 3.45,
+        "width": 3.5,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": 6,
+        "y": 1.4,
+        "width": 3.1,
+        "height": 0.35
+      }
+    ]
+  },
+  "theme": {
+    "skin": "fantasy",
+    "backdrop": "mountains",
+    "skyTop": "#173333",
+    "skyBottom": "#53836d",
+    "silhouette": "#1b5145",
+    "platform": "#1b5145",
+    "platformEdge": "#bcf7b7",
+    "accent": "#bcf7b7",
+    "secondary": "#53836d",
+    "hudBackground": "#173333"
+  }
+}

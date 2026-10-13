@@ -45,6 +45,186 @@
         "en": "NEON ROOFTOPS"
       },
       "path": "neon-city/arena.json"
+    },
+    {
+      "id": "extra-moon-temple",
+      "version": 1,
+      "names": {
+        "fa": "معبد ماه",
+        "en": "MOON TEMPLE"
+      },
+      "path": "moon-temple/arena.json"
+    },
+    {
+      "id": "extra-coral-reef",
+      "version": 1,
+      "names": {
+        "fa": "صخره‌های مرجانی",
+        "en": "CORAL REEF"
+      },
+      "path": "coral-reef/arena.json"
+    },
+    {
+      "id": "extra-bamboo-valley",
+      "version": 1,
+      "names": {
+        "fa": "دره بامبو",
+        "en": "BAMBOO VALLEY"
+      },
+      "path": "bamboo-valley/arena.json"
+    },
+    {
+      "id": "extra-thunder-citadel",
+      "version": 1,
+      "names": {
+        "fa": "دژ آذرخش",
+        "en": "THUNDER CITADEL"
+      },
+      "path": "thunder-citadel/arena.json"
+    },
+    {
+      "id": "extra-crystal-caves",
+      "version": 1,
+      "names": {
+        "fa": "غار بلورین",
+        "en": "CRYSTAL CAVES"
+      },
+      "path": "crystal-caves/arena.json"
+    },
+    {
+      "id": "extra-golden-palace",
+      "version": 1,
+      "names": {
+        "fa": "کاخ طلایی",
+        "en": "GOLDEN PALACE"
+      },
+      "path": "golden-palace/arena.json"
+    },
+    {
+      "id": "extra-ghost-harbor",
+      "version": 1,
+      "names": {
+        "fa": "بندر ارواح",
+        "en": "GHOST HARBOR"
+      },
+      "path": "ghost-harbor/arena.json"
+    },
+    {
+      "id": "extra-clockwork-city",
+      "version": 1,
+      "names": {
+        "fa": "شهر ساعت‌ها",
+        "en": "CLOCKWORK CITY"
+      },
+      "path": "clockwork-city/arena.json"
+    },
+    {
+      "id": "extra-autumn-grove",
+      "version": 1,
+      "names": {
+        "fa": "بیشه پاییزی",
+        "en": "AUTUMN GROVE"
+      },
+      "path": "autumn-grove/arena.json"
+    },
+    {
+      "id": "extra-cloud-gardens",
+      "version": 1,
+      "names": {
+        "fa": "باغ‌های ابری",
+        "en": "CLOUD GARDENS"
+      },
+      "path": "cloud-gardens/arena.json"
+    },
+    {
+      "id": "extra-sandstorm-basin",
+      "version": 1,
+      "names": {
+        "fa": "حوضه طوفان شن",
+        "en": "SANDSTORM BASIN"
+      },
+      "path": "sandstorm-basin/arena.json"
+    },
+    {
+      "id": "extra-aurora-fjord",
+      "version": 1,
+      "names": {
+        "fa": "آبدره شفق",
+        "en": "AURORA FJORD"
+      },
+      "path": "aurora-fjord/arena.json"
+    },
+    {
+      "id": "extra-sunken-ruins",
+      "version": 1,
+      "names": {
+        "fa": "ویرانه‌های غرق‌شده",
+        "en": "SUNKEN RUINS"
+      },
+      "path": "sunken-ruins/arena.json"
+    },
+    {
+      "id": "extra-mushroom-forest",
+      "version": 1,
+      "names": {
+        "fa": "جنگل قارچ‌ها",
+        "en": "MUSHROOM FOREST"
+      },
+      "path": "mushroom-forest/arena.json"
+    },
+    {
+      "id": "extra-satellite-station",
+      "version": 1,
+      "names": {
+        "fa": "ایستگاه فضایی",
+        "en": "SATELLITE STATION"
+      },
+      "path": "satellite-station/arena.json"
+    },
+    {
+      "id": "extra-waterfall-cliffs",
+      "version": 1,
+      "names": {
+        "fa": "صخره‌های آبشار",
+        "en": "WATERFALL CLIFFS"
+      },
+      "path": "waterfall-cliffs/arena.json"
+    },
+    {
+      "id": "extra-obsidian-maze",
+      "version": 1,
+      "names": {
+        "fa": "هزارتوی آبسیدین",
+        "en": "OBSIDIAN MAZE"
+      },
+      "path": "obsidian-maze/arena.json"
+    },
+    {
+      "id": "extra-starlight-observatory",
+      "version": 1,
+      "names": {
+        "fa": "رصدخانه ستارگان",
+        "en": "STARLIGHT OBSERVATORY"
+      },
+      "path": "starlight-observatory/arena.json"
+    },
+    {
+      "id": "extra-canyon-railway",
+      "version": 1,
+      "names": {
+        "fa": "راه‌آهن دره",
+        "en": "CANYON RAILWAY"
+      },
+      "path": "canyon-railway/arena.json"
+    },
+    {
+      "id": "extra-cherry-blossom",
+      "version": 1,
+      "names": {
+        "fa": "باغ شکوفه‌های گیلاس",
+        "en": "CHERRY BLOSSOM"
+      },
+      "path": "cherry-blossom/arena.json"
     }
   ]
 }

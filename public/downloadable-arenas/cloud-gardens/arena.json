@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-cloud-gardens",
+  "version": 1,
+  "names": {
+    "fa": "باغ‌های ابری",
+    "en": "CLOUD GARDENS"
+  },
+  "background": "background.svg",
+  "arena": {
+    "speedMultiplier": 1.1,
+    "jumpMultiplier": 1.1,
+    "gravity": -19,
+    "fallLimit": -5.6,
+    "movingPlatforms": true,
+    "spawnX": [
+      -8,
+      8
+    ],
+    "platforms": [
+      {
+        "x": -12,
+        "y": -0.25,
+        "width": 9.3,
+        "height": 0.5
+      },
+      {
+        "x": 2.7,
+        "y": -0.25,
+        "width": 9.3,
+        "height": 0.5
+      },
+      {
+        "x": -6.7,
+        "y": 1.9,
+        "width": 3.1,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": 3.6,
+        "y": 1.9,
+        "width": 3.1,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": -1.9,
+        "y": 3.6,
+        "width": 3.8,
+        "height": 0.3,
+        "surface": "oneWay"
+      }
+    ]
+  },
+  "theme": {
+    "skin": "fantasy",
+    "backdrop": "clouds",
+    "skyTop": "#244b70",
+    "skyBottom": "#a0bad2",
+    "silhouette": "#547e9a",
+    "platform": "#547e9a",
+    "platformEdge": "#e1fbff",
+    "accent": "#e1fbff",
+    "secondary": "#a0bad2",
+    "hudBackground": "#244b70"
+  }
+}
