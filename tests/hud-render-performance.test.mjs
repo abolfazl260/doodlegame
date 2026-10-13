@@ -163,6 +163,13 @@ test("menu state, locale, upgrades and game-over updates retain their behavior",
  ui.dispose();
 });
 
+test("Duel hides redundant status; names stay accessible and results replace it",()=>{
+ const {ui,hud,i18n}=setup();i18n.messages.pvp={p1:"P1",p2:"P2",winner1:"P1 won",winner2:"P2 won",draw:"Draw"};ui.render(states.PLAYING,hud);assert.equal(ui.status.hidden,true);assert.equal(ui.status.textContent,"");
+ hud.localPvP=true;hud.playerName="A very long first player name";hud.secondPlayerName="بازیکن دوم با نام بلند";ui.render(states.PLAYING,hud);
+ assert.equal(ui.playerHealthName.title,hud.playerName);assert.equal(ui.opponentHealthName.title,hud.secondPlayerName);
+ hud.winner="player";ui.render(states.GAME_OVER,hud);assert.equal(ui.status.hidden,false);assert.ok(ui.menuResult.textContent.includes(hud.playerName));ui.dispose();
+});
+
 test("king-of-hill score updates without scanning menu settings",()=>{
  const {ui,hud}=setup();
  hud.mode="king-of-hill";
