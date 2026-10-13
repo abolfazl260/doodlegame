@@ -20,6 +20,45 @@ async function holdToPause(page){
  await page.mouse.up();
 }
 
+test("Online Multiplayer stays disabled for touch, keyboard, and both locales",async({page})=>{
+ const online=page.locator('.game-ui__mode-card[data-mode="online"]');
+ await expect(online).toBeVisible();
+ await expect(online).toBeDisabled();
+ await expect(online).toHaveAttribute("aria-disabled","true");
+ await expect(online).toContainText("بازی آنلاین");
+ await expect(online).toContainText("به‌زودی");
+ await expect(page.locator("html")).toHaveAttribute("dir","rtl");
+ const before=await page.evaluate(()=>({mode:window.__runFixture.view().mode,state:window.__runFixture.state()}));
+ const didFocus=await online.evaluate(button=>{
+  button.focus();
+  button.click();
+  button.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,pointerId:4}));
+  button.dispatchEvent(new PointerEvent("pointerup",{bubbles:true,pointerId:4}));
+  button.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",code:"Enter",bubbles:true}));
+  button.dispatchEvent(new KeyboardEvent("keydown",{key:" ",code:"Space",bubbles:true}));
+  return document.activeElement===button;
+ });
+ expect(didFocus).toBe(false);
+ expect(await page.evaluate(()=>({mode:window.__runFixture.view().mode,state:window.__runFixture.state()}))).toEqual(before);
+ await expect(page.locator(".game-ui__menu-arena-panel")).toBeHidden();
+ await page.locator(".game-ui__language button").tap();
+ await expect(page.locator("html")).toHaveAttribute("dir","ltr");
+ await expect(online).toContainText("ONLINE");
+ await expect(online).toContainText("COMING SOON");
+ await expect(online).toBeDisabled();
+ await page.setViewportSize({width:640,height:320});
+ const fits=await online.evaluate(button=>{
+  const box=button.getBoundingClientRect();
+  const grid=button.parentElement.getBoundingClientRect();
+  return box.width>0&&box.left>=grid.left-1&&box.right<=grid.right+1;
+ });
+ expect(fits).toBe(true);
+ await page.locator('.game-ui__mode-card[data-mode="low-gravity"]').tap();
+ await expect(page.locator('.game-ui__mode-card[data-mode="low-gravity"]')).toHaveAttribute("aria-pressed","true");
+ await page.locator('button[data-action="next"]').tap();
+ await expect(page.locator(".game-ui__menu-arena-panel")).toBeVisible();
+});
+
 test("missile duel has no center slider panel and still shows angle and power",async({page})=>{
  await page.locator('.game-ui__mode-card[data-mode="missile-duel"]').tap();
  await page.locator('button[data-action="next"]').tap();
@@ -38,14 +77,14 @@ test("player-count cards preserve all mode choices and arena is selected on the 
  const versus=page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]');
  const cards=page.locator(".game-ui__mode-card:visible");
  await expect(solo).toHaveAttribute("aria-pressed","true");
- await expect(cards).toHaveCount(7);
+ await expect(cards).toHaveCount(8);
  await versus.tap();
  expect((await page.evaluate(()=>window.__runFixture.view())).localPvP).toBe(true);
  await expect(versus).toHaveAttribute("aria-pressed","true");
- await expect(cards).toHaveCount(7);
+ await expect(cards).toHaveCount(8);
  await expect(page.locator(".game-ui__pvp-hint")).toBeVisible();
  await solo.tap();
- await expect(cards).toHaveCount(7);
+ await expect(cards).toHaveCount(8);
  await page.locator('.game-ui__mode-card[data-mode="low-gravity"]').tap();
  await expect(page.locator('.game-ui__mode-card[data-mode="low-gravity"]')).toHaveAttribute("aria-pressed","true");
  await expect(page.locator(".game-ui__mode-description")).toContainText("پرش‌های");
