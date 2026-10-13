@@ -1,7 +1,7 @@
 import {GameState} from "../core/GameState";
 
 import {getArenaTheme} from "../themes/ArenaThemes";
-import type {ArenaId,BuiltInArenaId,GameModeId,HillState} from "../gameplay/GameSession";
+import type {ArenaId,BuiltInArenaId,GameModeId,HillState,CharacterId} from "../gameplay/GameSession";
 import {getDownloadedArena,installedArenas,arenaImageDataUrl,type ArenaListing,type DownloadedArenaId} from "../gameplay/DownloadableArenas.js";
 import type {I18n} from "../i18n/I18n";
 import type {WeaponId} from "../input/Input";
@@ -11,14 +11,14 @@ type HudState={
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;missileAngle:number;missilePower:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
  progression?:ProgressionView|null;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;
- weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;
+ characterId?:CharacterId;opponentCharacterId?:CharacterId;weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;
 };
 type Actions={
  newRun?:()=>void;continueRun?:()=>void;leaveRun?:()=>void;
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;stopToMenu?:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  playerCountSelect?:(count:1|2)=>void;setWeaponAim?:(player:1|2,x:number,y:number)=>void;player2WeaponSelect?:(id:WeaponId)=>void;
- setCharacterName?:(player:1|2,name:string)=>void;
+ setCharacterName?:(player:1|2,name:string)=>void;characterSelect?:(id:CharacterId)=>void;
  setMissileAngle:(angle:number)=>void;setMissilePower:(power:number)=>void;fireWeapon:()=>void;
  setTouchMove:(x:number,y:number)=>void;touchGrab:()=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;
  setPlayer2TouchMove?:(x:number,y:number)=>void;player2Grab?:()=>void;player2AttackStart?:()=>void;player2AttackEnd?:()=>void;player2AttackCancel?:()=>void;player2WeaponNext?:()=>void;player2WeaponPrevious?:()=>void;
@@ -38,6 +38,11 @@ const MENU_STEPS:readonly MenuStep[]=["mode","arena"];
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
+const CHARACTER_IDS:readonly CharacterId[]=["shadow","bolt"];
+const CHARACTER_TEXT={
+ en:{shadow:{name:"SHADOW",description:"Ninja · hood and flowing scarf"},bolt:{name:"BOLT",description:"Robot · armor and electric visor"}},
+ fa:{shadow:{name:"شَدو",description:"نینجا · شنل و شال متحرک"},bolt:{name:"بولت",description:"ربات · زره و نقاب الکتریکی"}}
+} as const;
 const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";
 
 export class GameUI{
@@ -122,6 +127,11 @@ export class GameUI{
  private arenaShortcut=document.createElement("button");
  private arenaSelectionSummary=document.createElement("p");
  private characterNames=document.createElement("div");
+ private characterPicker=document.createElement("section");
+ private characterPickerTitle=document.createElement("h3");
+ private characterPickerHint=document.createElement("p");
+ private characterCards=document.createElement("div");
+ private characterLabels=new Map<CharacterId,{name:HTMLElement;description:HTMLElement}>();
  private playerNameLabel=document.createElement("label");
  private secondNameLabel=document.createElement("label");
  private playerNameCaption=document.createElement("span");
@@ -204,7 +214,7 @@ export class GameUI{
  private readHud:(()=>HudState)|null=null;
  private hudFrame:number|null=null;
  private currentState=GameState.MENU;
- private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId;playerName?:string;secondPlayerName?:string;localPvP?:boolean}|null=null;
+ private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId;playerName?:string;secondPlayerName?:string;localPvP?:boolean;characterId?:CharacterId;opponentCharacterId?:CharacterId}|null=null;
  private lastHealth:{playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;locale:string}|null=null;
  private lastAim:{angle:number;power:number}|null=null;
  private lastBowPercent=NaN;
@@ -470,6 +480,30 @@ export class GameUI{
    label.append(caption,input);this.characterNames.append(label);
   }
   this.secondNameLabel.hidden=true;
+  this.characterPicker.className="game-ui__character-picker";
+  this.characterPickerTitle.className="game-ui__character-picker-title";
+  this.characterCards.className="game-ui__character-cards";
+  this.characterCards.setAttribute("role","group");
+  this.characterPickerHint.className="game-ui__character-picker-hint";
+  for(const id of CHARACTER_IDS){
+   const card=document.createElement("button");
+   card.type="button";card.className="game-ui__character-card";
+   card.dataset.character=id;card.setAttribute("aria-pressed","false");
+   const portrait=document.createElement("span");
+   portrait.className="game-ui__character-portrait game-ui__character-portrait--"+id;
+   portrait.setAttribute("aria-hidden","true");
+   portrait.innerHTML=id==="shadow"?
+    '<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M36 21 L40 11 H57 L61 21"/><circle cx="48" cy="28" r="12"/><path d="M37 29 H59 M38 34 H57 M36 34 L18 28 L6 33 M36 38 L18 42 M48 40 V65 M48 48 L31 59 M48 48 L65 59 M48 65 L37 85 M48 65 L59 85"/><path d="M42 27 H46 M53 27 H56" stroke="#0c1726"/></svg>':
+    '<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M35 19 H61 V40 H35 Z M48 19 V8 M43 8 H53 M35 29 H61 M39 34 H57 M48 40 V65 M48 48 L28 56 L25 68 M48 48 L68 56 L71 68 M48 65 L38 86 M48 65 L58 86 M36 45 L29 44 M60 45 L67 44"/><path d="M41 29 H55" stroke="#70def0"/></svg>';
+   const copy=document.createElement("span");copy.className="game-ui__character-copy";
+   const name=document.createElement("strong");name.className="game-ui__character-name";
+   const desc=document.createElement("span");desc.className="game-ui__character-description";
+   copy.append(name,desc);card.append(portrait,copy);
+   this.characterLabels.set(id,{name,description:desc});
+   card.onclick=()=>actions.characterSelect?.(id);
+   this.characterCards.append(card);
+  }
+  this.characterPicker.append(this.characterPickerTitle,this.characterCards,this.characterPickerHint);
   this.weaponCards.className="game-ui__weapon-grid";
   this.weaponDetails.className="game-ui__weapon-details";
   this.weaponDetailsTitle.className="game-ui__weapon-details-title";
@@ -518,7 +552,7 @@ export class GameUI{
    this.weaponCards.append(card);
   }
   // Name inputs belong to player setup, not the map selection screen.
-  this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.characterNames,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
+  this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.characterNames,this.characterPicker,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
   this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaCards,this.extraArenaSection,this.weaponDetails,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
   this.rotateHint.className="game-ui__rotate-hint";
@@ -1040,12 +1074,13 @@ export class GameUI{
   const weaponChanged=!old||old.weapon!==s.weapon,winnerChanged=!old||old.winner!==s.winner;
   const secondWeaponChanged=!old||old.secondWeapon!==s.secondWeapon;
   const nameChanged=!old||old.playerName!==s.playerName||old.secondPlayerName!==s.secondPlayerName;
+  const characterChanged=!old||old.characterId!==s.characterId||old.opponentCharacterId!==s.opponentCharacterId;
   const progressKey=s.progression?JSON.stringify(s.progression):"";
   const progressChanged=!old||old.progressKey!==progressKey||old.inRun!==Boolean(s.inRun);
   const pointsChanged=!old||old.upgradePoints!==s.upgradePoints;
   const upgradesChanged=!old||old.upgradedWeapons.length!==s.upgradedWeapons.length||
    s.upgradedWeapons.some((id,index)=>id!==old.upgradedWeapons[index]);
-  const staticChanged=stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged||secondWeaponChanged||nameChanged;
+  const staticChanged=stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged||secondWeaponChanged||nameChanged||characterChanged;
   const aimChanged=!this.lastAim||this.lastAim.angle!==s.missileAngle||this.lastAim.power!==s.missilePower;
   const missileRules=s.mode==="missile-duel";
 
@@ -1108,9 +1143,17 @@ export class GameUI{
     this.setText(this.secondNameCaption,(s.localPvP??s.mode==="local-pvp")?
      messages.characterNames.rightPlayer:messages.characterNames.playerTwo);
    }
-   if(nameChanged||localeChanged||modeChanged||stateChanged){
-    this.setText(this.playerHealthName,s.playerName||messages.characterNames.playerOne);
-    this.setText(this.opponentHealthName,(s.localPvP??s.mode==="local-pvp")?(s.secondPlayerName||messages.characterNames.playerTwo):messages.characterNames.opponent);
+   if(nameChanged||localeChanged||modeChanged||stateChanged||characterChanged){
+    this.setText(this.playerHealthName,s.playerName||CHARACTER_TEXT[locale][s.characterId??"shadow"].name);
+    this.setText(this.opponentHealthName,(s.localPvP??s.mode==="local-pvp")?
+     (s.secondPlayerName||messages.characterNames.playerTwo):
+     CHARACTER_TEXT[locale][s.opponentCharacterId??"shadow"].name);
+   }
+   if(characterChanged||localeChanged||stateChanged){
+    for(const item of this.characterCards.children){
+     const card=item as HTMLButtonElement;
+     card.setAttribute("aria-pressed",String(card.dataset.character===(s.characterId??"shadow")));
+    }
    }
    if(modeChanged||localeChanged||stateChanged){
     this.setHidden(this.pvpHint,!(s.localPvP??s.mode==="local-pvp")||(state!==GameState.MENU&&state!==GameState.GAME_OVER));
@@ -1129,10 +1172,10 @@ export class GameUI{
     this.setText(this.arenaSelectionSummary,(messages.menu?.selectedArena??"SELECTED ARENA")+
      ": "+arenaName(s.arena));
    }
-   if(modeChanged||arenaChanged||weaponChanged||localeChanged||stateChanged||nameChanged){
-    this.setText(this.matchSummary,(messages.menu?.ready??"READY")+": "+
-     (s.playerName?s.playerName+" · ":"")+
-     messages.modes[s.mode]+" · "+arenaName(s.arena)+" · "+
+   if(modeChanged||arenaChanged||weaponChanged||localeChanged||stateChanged||nameChanged||characterChanged){
+     this.setText(this.matchSummary,(messages.menu?.ready??"READY")+": "+
+     (s.playerName?s.playerName+" · ":"")+CHARACTER_TEXT[locale][s.characterId??"shadow"].name+" · "+
+      messages.modes[s.mode]+" · "+arenaName(s.arena)+" · "+
      messages.weapons[s.weapon]);
    }
    const upgraded=new Set(s.upgradedWeapons);
@@ -1258,7 +1301,8 @@ export class GameUI{
    this.syncWizard(state,s);
    this.lastView={state,locale,arena:s.arena,mode:s.mode,weapon:s.weapon,winner:s.winner,
     upgradePoints:s.upgradePoints,upgradedWeapons:[...s.upgradedWeapons],progressKey,inRun:Boolean(s.inRun),secondWeapon:s.secondWeapon,
-    playerName:s.playerName,secondPlayerName:s.secondPlayerName,localPvP:s.localPvP};
+    playerName:s.playerName,secondPlayerName:s.secondPlayerName,localPvP:s.localPvP,
+     characterId:s.characterId,opponentCharacterId:s.opponentCharacterId};
   }
 
   if(!this.hpFormatter||this.hpFormatterLocale!==locale){
@@ -1477,6 +1521,18 @@ export class GameUI{
   this.startingWeaponTitle.textContent=messages.sections.weapon;
   this.playerNameCaption.textContent=messages.characterNames.playerOne;
   this.secondNameCaption.textContent=messages.characterNames.playerTwo;
+  this.characterPickerTitle.textContent=this.i18n.locale==="fa"?"شخصیت خودت را انتخاب کن":"CHOOSE YOUR CHARACTER";
+  this.characterPickerHint.textContent=this.i18n.locale==="fa"?
+   "شخصیت حریف در هر مسابقه تصادفی انتخاب می‌شود. توانایی‌های دو شخصیت برابر است.":
+   "Your opponent's character is random each match. Both fighters have equal abilities.";
+  this.characterCards.setAttribute("aria-label",this.characterPickerTitle.textContent);
+  for(const item of this.characterCards.children){
+   const card=item as HTMLButtonElement,id=card.dataset.character as CharacterId;
+   const copy=this.characterLabels.get(id);
+   if(copy){copy.name.textContent=CHARACTER_TEXT[this.i18n.locale][id].name;
+    copy.description.textContent=CHARACTER_TEXT[this.i18n.locale][id].description;}
+   card.setAttribute("aria-label",CHARACTER_TEXT[this.i18n.locale][id].name);
+  }
   this.playerNameInput.placeholder=messages.characterNames.optional;
   this.secondNameInput.placeholder=messages.characterNames.optional;
   this.rotateHint.textContent=messages.rotateHint;

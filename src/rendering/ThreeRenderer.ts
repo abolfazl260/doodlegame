@@ -1,4 +1,4 @@
-import {fighterVisual,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments} from './FighterVisual';
+import {fighterVisual,characterMarkings,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments} from './FighterVisual';
 import * as THREE from "three";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
 import {getDownloadedImage} from "../gameplay/DownloadableArenas.js";
@@ -19,7 +19,7 @@ export class ThreeRenderer implements Renderer{
   const head=new THREE.Mesh(new THREE.CircleGeometry(.24,20),new THREE.MeshBasicMaterial({color}));
   const eye=new THREE.Mesh(new THREE.CircleGeometry(.035,8),new THREE.MeshBasicMaterial({color:enemy?0xffffff:0x000000}));
   const band=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xd11f2f}));
-  band.visible=enemy;
+  band.visible=true;band.position.z=.08;
   const effect=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
   group.add(limbs,tool,head,eye,band,effect);
   return {group,limbs,tool,head,eye,band,effect,enemy};
@@ -167,14 +167,8 @@ export class ThreeRenderer implements Renderer{
   this.setLines(view.tool,segmentPositions(toolSegments(s)));
   view.tool.position.set(pose.hand[0],pose.hand[1],.08);
   view.tool.rotation.z=pose.toolAngle;
-  if(view.enemy){
-   const wave=Math.sin(s.animationTime*11)*(.04+Math.abs(s.velocityX)*.01);
-   this.setLines(view.band,segmentPositions([
-    [[-.24,pose.head[1]+.06],[.24,pose.head[1]+.06]],
-    [[-.2,pose.head[1]+.06],[-.55,pose.head[1]+wave]],
-    [[-.55,pose.head[1]+wave],[-.76,pose.head[1]-.08+wave]]
-   ]));
-  }
+  (view.band.material as THREE.LineBasicMaterial).color.set(s.characterId==='bolt'?0x70def0:0xf45b76);
+  this.setLines(view.band,segmentPositions(characterMarkings(s,pose.head)));
   const effect=[...telegraphSegments(s),...kickEffectSegments(s),...slamEffectSegments(s),...grabEffectSegments(s)] as import('./FighterVisual').Segment[];
   if(s.attackTime>0&&(s.weapon==='blaster'||s.weapon==='uzi')){
    const x=pose.hand[0]+(s.weapon==='uzi'?.54:.66),y=pose.hand[1];

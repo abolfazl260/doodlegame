@@ -1,4 +1,4 @@
-import {GameLoop} from "./GameLoop";import {GameState,GameStateManager} from "./GameState";import type {FrameScheduler} from "./FrameScheduler";import type {Renderer} from "../rendering/Renderer";import type {GameSession,ArenaId,GameModeId} from "../gameplay/GameSession";import type {UpgradeSnapshot,Progression} from "../progression/Progression";
+import {GameLoop} from "./GameLoop";import {GameState,GameStateManager} from "./GameState";import type {FrameScheduler} from "./FrameScheduler";import type {Renderer} from "../rendering/Renderer";import type {GameSession,ArenaId,GameModeId,CharacterId} from "../gameplay/GameSession";import type {UpgradeSnapshot,Progression} from "../progression/Progression";
 export class Game{
  private state=new GameStateManager();private loop:GameLoop;private initialized=false;private disposed=false;
  private inRun=false;
@@ -28,6 +28,7 @@ export class Game{
  restart(){this.ready();this.loop.stop();this.session.cancelTransientActions();this.state.reset();this.start();}
  selectWeapon(direction:1|-1){this.ready();this.session.selectWeapon(direction);}
  selectPlayer2Weapon(direction:1|-1){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectPlayer2Weapon(direction);}
+ selectCharacter(id:CharacterId){this.ready();const state=this.state.getState();if(state!==GameState.MENU&&state!==GameState.GAME_OVER)return;this.session.setCharacterId(id);this.state.notify();}
  selectStartingWeapon(id:import("../input/Input").WeaponId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return false;const selected=this.session.setStartingWeapon(id);if(selected)this.state.notify();return selected;}
  selectWeaponById(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectWeaponById(id);}
  upgradeWeapon(id:import("../input/Input").WeaponId){
