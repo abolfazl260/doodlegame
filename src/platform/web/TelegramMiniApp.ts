@@ -50,7 +50,7 @@ export function installTelegramMiniApp(
  // the usual launch fields after an in-app navigation or reload.
  const userAgent=win.navigator?.userAgent??"";
  const hasLaunchHint=hasTelegramLaunchParams(win.location.search,win.location.hash)||
-  /\\bTelegram(?:-Android|-iOS)?(?:\\/|\\b)/i.test(userAgent)||
+  /\bTelegram(?:-Android|-iOS)?(?:\/|\b)/i.test(userAgent)||
   Boolean(host.Telegram?.WebApp?.initData);
  let active=false;
  let attempted=false;
