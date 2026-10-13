@@ -55,6 +55,7 @@ const messages={
  status:{win:"WIN",lose:"LOSE",hill:"HILL"},
  details:{equipped:"EQUIPPED",angle:"ANGLE",power:"POWER"},
  sections:{gameMode:"MODE",arena:"ARENA",weapon:"WEAPON"},
+ menu:{onlineMode:"ONLINE",comingSoon:"COMING SOON"},
  characterNames:{playerOne:"PLAYER 1",playerTwo:"PLAYER 2",leftPlayer:"LEFT CHARACTER · P1",rightPlayer:"RIGHT CHARACTER · P2",opponent:"OPPONENT",optional:"Optional name",wins:"WINS"},
  pvp:{p1:"P1",p2:"P2",hint:"Shared-screen controls",winner1:"P1 wins",winner2:"P2 wins",draw:"Draw"},
  panels:{weaponUpgrades:"UPGRADES",missileControl:"MISSILE",bowDraw:"BOW",releaseToFire:"RELEASE"},
@@ -81,7 +82,7 @@ function setup(hudOverride={}){
   setTouchMove(){},touchAttackStart(){},touchAttackEnd(){}
  };
  const listeners=new Set();
- const persianMessages={...messages,title:"دوئل دودل",language:{label:"زبان",english:"English",persian:"فارسی"},buttons:{...messages.buttons,start:"شروع"}};
+ const persianMessages={...messages,title:"دوئل دودل",language:{label:"زبان",english:"English",persian:"فارسی"},buttons:{...messages.buttons,start:"شروع"},menu:{...messages.menu,onlineMode:"بازی آنلاین",comingSoon:"به‌زودی"}};
  const i18n={
   messages,locale:"en",
   setLocale(locale){
@@ -103,7 +104,7 @@ function setup(hudOverride={}){
 
 test("wizard selects player count and mode cards before arena and optional weapon cards",()=>{
  const {ui,calls,hud}=setup();
- assert.equal(ui.menuSettings.children.length,7);
+ assert.equal(ui.menuSettings.children.length,8);
  assert.equal(ui.arenaCards.children.length,16);
  assert.equal(ui.weaponCards.children.length,8);
  assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"true");
@@ -135,6 +136,32 @@ test("wizard selects player count and mode cards before arena and optional weapo
  assert.equal(ui.menuModePanel.hidden,false);
  assert.equal(ui.stepNextButton.hidden,false);
  assert.equal(hud.mode,"low-gravity","navigation preserves the selected mode");
+});
+
+test("Online Multiplayer is a localized, non-interactive mode placeholder",()=>{
+ const {ui,calls,hud}=setup();
+ const online=ui.menuSettings.children.find(button=>button.dataset.mode==="online");
+ assert.equal(online,ui.onlineModeButton);
+ assert.equal(online.disabled,true);
+ assert.equal(online.getAttribute("aria-disabled"),"true");
+ assert.equal(online.onclick,undefined,"Online must not be connected to modeSelect");
+ assert.equal(online.children[0].textContent,"ONLINE");
+ assert.equal(online.children[1].textContent,"COMING SOON");
+ const before=calls.length;
+ online.click();
+ assert.equal(calls.length,before);
+ assert.equal(ui.menuStepIndex,0);
+ assert.equal(hud.mode,"duel");
+ ui.i18n.setLocale("fa");
+ assert.equal(online.children[0].textContent,"بازی آنلاین");
+ assert.equal(online.children[1].textContent,"به‌زودی");
+ assert.equal(online.disabled,true);
+ assert.equal(online.getAttribute("aria-disabled"),"true");
+ online.click();
+ assert.equal(calls.length,before);
+ assert.equal(ui.menuStepIndex,0);
+ ui.menuSettings.children.find(button=>button.dataset.mode==="low-gravity").click();
+ assert.deepEqual(calls.at(-1),["mode","low-gravity"],"offline modes remain selectable");
 });
 
 test("native Enter navigation advances the wizard once and only starts from the arena step",()=>{
@@ -324,13 +351,13 @@ test("player-count and mode cards are separate, with all modes available for 2P"
  assert.deepEqual(calls.at(-1),["mode","local-pvp"]);
  assert.equal(ui.quickPvpButton.getAttribute("aria-pressed"),"true");
  assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"false");
- assert.equal(ui.menuSettings.children.filter(c=>!c.hidden).length,7);
+ assert.equal(ui.menuSettings.children.filter(c=>!c.hidden).length,8);
  assert.equal(ui.menuSettings.children.some(c=>c.dataset.mode==="local-pvp"),false);
  assert.equal(ui.pvpHint.hidden,false);
  ui.quickDuelButton.click();
  assert.deepEqual(calls.at(-1),["mode","duel"]);
  hud.mode="duel";hud.arena="ruins";hud.weapon="bow";ui.render(states.MENU,hud);
- assert.equal(ui.menuSettings.children.filter(c=>!c.hidden).length,7);
+ assert.equal(ui.menuSettings.children.filter(c=>!c.hidden).length,8);
  assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"true");
  ui.stepNextButton.click();
  assert.match(ui.matchSummary.textContent,/ruins/);
