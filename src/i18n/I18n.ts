@@ -20,6 +20,7 @@ export type Messages={
  upgrade:{points:string;choose:string;earn:string;upgraded:string;upgrade:string;locked:string};
  pvp:{p1:string;p2:string;winner1:string;winner2:string;draw:string;hint:string};
  run:{title:string;newRun:string;continueRun:string;next:string;retry:string;leave:string;wave:string;boss:string;ready:string;victory:string;defeat:string;complete:string;choose:string;career:string;points:string;medals:Record<"rookie"|"veteran"|"champion",string>;requirements:Record<"rookie"|"veteran"|"champion",string>};
+ tutorial:{move:string;jump:string;attack:string;missile:string;double:string;grab:string;kick:string;ready:string;skip:string;replay:string};
  helpHtml:string;
  arenas:Readonly<Record<BuiltInArenaId,string>>;
  modes:Readonly<Record<GameModeId,string>>;
@@ -30,6 +31,7 @@ export type Messages={
 const STORAGE_KEY="doodlegame.locale";
 
 const EN:Messages={
+ tutorial:{move:"Move: drag the stick left or right.",jump:"Jump: push the stick up.",attack:"Attack: tap ATTACK. Hold and release for Bow.",missile:"Missile: press, drag to aim, release to fire.",double:"Double jump: center the stick, then push up again in the air.",grab:"Grab: swipe up on ATTACK near your opponent.",kick:"Kick combo: hold the stick down, tap ATTACK, release and tap again.",ready:"You’re ready!",skip:"Skip tutorial",replay:"Replay touch tutorial"},
  language:{label:"Language",english:"English",persian:"فارسی"},
  title:"DOODLEGAME DUEL",
  rotateHint:"Rotate your device to landscape to play.",
@@ -74,6 +76,7 @@ const EN:Messages={
 };
 
 const FA:Messages={
+ tutorial:{move:"حرکت: گوی را به چپ یا راست بکش.",jump:"پرش: گوی را به بالا ببر.",attack:"حمله: حمله را بزن. برای کمان نگه دار و رها کن.",missile:"موشک: نگه دار، برای نشانه‌گیری بکش و برای شلیک رها کن.",double:"پرش دوم: در هوا گوی را به مرکز و دوباره بالا ببر.",grab:"گرفتن: نزدیک حریف، روی حمله به بالا بکش.",kick:"ترکیب لگد: گوی پایین؛ حمله بزن، رها کن و دوباره بزن.",ready:"آماده‌ای!",skip:"رد کردن آموزش",replay:"تکرار آموزش لمسی"},
  language:{label:"زبان",english:"English",persian:"فارسی"},
  title:"دوئل دودل‌گیم",
  rotateHint:"برای اجرای بازی دستگاه را افقی بچرخانید.",

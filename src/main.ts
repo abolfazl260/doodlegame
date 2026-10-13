@@ -154,7 +154,7 @@ try{
   setCharacterName:(player,name)=>{playerNames.set(player,name);ui.render(game.getState(),readHud());},
   setMissileAngle:(angle)=>game.setMissileAngle(angle),
   setMissilePower:(power)=>game.setMissilePower(power),
-  fireWeapon:()=>game.fireWeapon(),
+  fireWeapon:()=>game.fireWeapon(true),
   setTouchMove:(x,y)=>input.setTouchMove(x,y),
   touchGrab:()=>input.triggerTouchGrab(),
   touchAttackStart:()=>input.touchAttack(true),
@@ -187,7 +187,7 @@ try{
    saveSetting("doodlegame.cameraShake",shakeEnabled);
    ui.setCombatPreferences(soundEnabled,shakeEnabled);
   }
- },i18n);
+ },i18n,storage);
 
  ui.setCombatPreferences(soundEnabled,shakeEnabled);
  ui.setUpdateVisible(Capacitor.getPlatform()==="android");

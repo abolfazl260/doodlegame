@@ -24,7 +24,7 @@ export class WebInput implements InputSource {
   // Re-entering the upper zone after leaving it permits the next jump.
   if(this.touchMoveY>=JOYSTICK_JUMP_REARM)this.touchJumpArmed=true;
   else if(this.touchJumpArmed&&this.touchMoveY<=JOYSTICK_JUMP_THRESHOLD){
-   this.state.jumpPressed=true;
+   this.state.jumpPressed=true;this.state.mobileJump=true;
    this.touchJumpArmed=false;
   }
   this.movement();
@@ -43,16 +43,16 @@ export class WebInput implements InputSource {
   }
   this.movement();
  }
- triggerTouchGrab(player:1|2=1){if(player===2){if(this.pvp)this.p2.grabPressed=true;}else this.state.grabPressed=true;}
+ triggerTouchGrab(player:1|2=1){if(player===2){if(this.pvp)this.p2.grabPressed=true;}else {this.state.grabPressed=true;this.state.mobileGrab=true;}}
  player2TouchAttackStart(){this.p2.attackCancelled=false;this.p2.attackPressed=true;this.p2TouchAttackHeld=true;this.p2.attackHeld=true;}
  player2TouchAttackRelease(){this.p2TouchAttackHeld=false;this.p2.pointerReleased=true;this.p2.attackHeld=Array.from(this.keys).some(code=>P2_ATTACK.has(code));}
  player2TouchAttackCancel(){this.p2TouchAttackHeld=false;this.p2.attackPressed=false;this.p2.pointerReleased=false;this.p2.attackHeld=Array.from(this.keys).some(code=>P2_ATTACK.has(code));this.p2.attackCancelled=!this.p2.attackHeld;}
- touchAttack(held=true){this.state.attackCancelled=false;this.state.attackPressed=true;this.touchAttackHeld=held;this.state.attackHeld=true;}
- touchAttackRelease(){this.touchAttackHeld=false;this.state.pointerReleased=true;this.state.attackHeld=Array.from(this.keys).some(code=>ATTACK.has(code));}
- touchAttackCancel(){this.touchAttackHeld=false;this.state.attackPressed=false;this.state.pointerReleased=false;this.state.attackHeld=this.state.pointerDown||Array.from(this.keys).some(code=>ATTACK.has(code));this.state.attackCancelled=!this.state.attackHeld;}
+ touchAttack(held=true){this.state.mobileAttack=true;this.state.attackCancelled=false;this.state.attackPressed=true;this.touchAttackHeld=held;this.state.attackHeld=true;}
+ touchAttackRelease(){this.state.mobileAttack=true;this.touchAttackHeld=false;this.state.pointerReleased=true;this.state.attackHeld=Array.from(this.keys).some(code=>ATTACK.has(code));}
+ touchAttackCancel(){this.state.mobileAttack=false;this.touchAttackHeld=false;this.state.attackPressed=false;this.state.pointerReleased=false;this.state.attackHeld=this.state.pointerDown||Array.from(this.keys).some(code=>ATTACK.has(code));this.state.attackCancelled=!this.state.attackHeld;}
  resetTransientState(){this.keys.clear();this.reset();}
  stop(){if(!this.active)return;this.active=false;window.removeEventListener("keydown",this.keyDown);window.removeEventListener("keyup",this.keyUp);window.removeEventListener("blur",this.blur);this.canvas.removeEventListener("pointerdown",this.down);this.canvas.removeEventListener("pointermove",this.move);this.canvas.removeEventListener("pointerup",this.up);this.canvas.removeEventListener("pointercancel",this.cancel);this.canvas.removeEventListener("lostpointercapture",this.captureLost);this.canvas.removeEventListener("contextmenu",this.context);this.resetTransientState();}
- getState(){return this.state;} endFrame(){this.state.pointerPressed=false;this.state.pointerReleased=false;this.state.attackCancelled=false;this.state.jumpPressed=false;this.state.dashPressed=false;this.state.grabPressed=false;this.state.attackPressed=false;this.state.attackHeld=this.touchAttackHeld||this.state.pointerDown||Array.from(this.keys).some(code=>ATTACK.has(code));this.state.weaponNextPressed=false;this.state.weaponPreviousPressed=false;
+ getState(){this.state.mobileMoveX=this.touchMoveX;return this.state;} endFrame(){this.state.mobileJump=false;this.state.mobileGrab=false;this.state.mobileAttack=this.touchAttackHeld;this.state.pointerPressed=false;this.state.pointerReleased=false;this.state.attackCancelled=false;this.state.jumpPressed=false;this.state.dashPressed=false;this.state.grabPressed=false;this.state.attackPressed=false;this.state.attackHeld=this.touchAttackHeld||this.state.pointerDown||Array.from(this.keys).some(code=>ATTACK.has(code));this.state.weaponNextPressed=false;this.state.weaponPreviousPressed=false;
   this.p2.pointerPressed=false;this.p2.pointerReleased=false;this.p2.attackCancelled=false;
   this.p2.jumpPressed=false;this.p2.dashPressed=false;this.p2.grabPressed=false;this.p2.attackPressed=false;
   this.p2.weaponNextPressed=false;this.p2.weaponPreviousPressed=false;
@@ -155,7 +155,7 @@ export class WebInput implements InputSource {
  }
  private gameKey(code:string){return Boolean(P1[code]||P2[code]||JUMP.has(code)||DASH.has(code)||ATTACK.has(code)||code===GRAB_KEY||["KeyQ","KeyE","KeyO","KeyP","KeyR","KeyF","PageUp","PageDown"].includes(code)||
   (this.pvp&&(P2_ATTACK.has(code)||P2_JUMP.has(code)||P2_DASH.has(code)||code===P2_GRAB_KEY||["BracketLeft","BracketRight"].includes(code))));}
- private reset(){this.state.aimUpHeld=false;this.state.aimDownHeld=false;this.p2.aimUpHeld=false;this.p2.aimDownHeld=false;const pointerId=this.activePointerId;this.activePointerId=null;if(pointerId!==null&&this.canvas.hasPointerCapture(pointerId))this.canvas.releasePointerCapture(pointerId);this.touchMoveX=0;this.touchMoveY=0;this.touchJumpArmed=true;this.touchAttackHeld=false;this.state.moveX=0;this.state.moveY=0;this.state.pointerDown=false;this.state.pointerPressed=false;this.state.pointerReleased=false;this.state.attackHeld=false;this.state.attackCancelled=true;this.state.jumpPressed=false;this.state.dashPressed=false;this.state.grabPressed=false;this.state.attackPressed=false;this.state.weaponNextPressed=false;this.state.weaponPreviousPressed=false;
+ private reset(){this.state.mobileJump=false;this.state.mobileGrab=false;this.state.mobileAttack=false;this.state.mobileMoveX=0;this.state.aimUpHeld=false;this.state.aimDownHeld=false;this.p2.aimUpHeld=false;this.p2.aimDownHeld=false;const pointerId=this.activePointerId;this.activePointerId=null;if(pointerId!==null&&this.canvas.hasPointerCapture(pointerId))this.canvas.releasePointerCapture(pointerId);this.touchMoveX=0;this.touchMoveY=0;this.touchJumpArmed=true;this.touchAttackHeld=false;this.state.moveX=0;this.state.moveY=0;this.state.pointerDown=false;this.state.pointerPressed=false;this.state.pointerReleased=false;this.state.attackHeld=false;this.state.attackCancelled=true;this.state.jumpPressed=false;this.state.dashPressed=false;this.state.grabPressed=false;this.state.attackPressed=false;this.state.weaponNextPressed=false;this.state.weaponPreviousPressed=false;
   this.p2TouchX=0;this.p2TouchY=0;this.p2TouchAttackHeld=false;this.p2JumpArmed=true;
   this.p2.moveX=0;this.p2.moveY=0;this.p2.attackHeld=false;this.p2.attackPressed=false;this.p2.attackCancelled=true;
   this.p2.pointerReleased=false;this.p2.jumpPressed=false;this.p2.dashPressed=false;this.p2.grabPressed=false;

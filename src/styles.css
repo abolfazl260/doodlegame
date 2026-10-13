@@ -2173,3 +2173,11 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  .game-ui__character-picker-hint{font-size:.58rem}
 }
 @media(max-width:360px){.game-ui__character-cards{grid-template-columns:1fr}}
+
+/* First-match coaching sits above controls and never captures game touches. */
+.game-ui__coach{position:absolute;bottom:calc(var(--safe-bottom) + 124px);left:calc(var(--safe-left) + 12px);width:min(260px,42vw);padding:8px 12px;border:2px solid #f9cf62;border-radius:12px;background:#171a2ff2;color:#fff;z-index:14;pointer-events:none;font-size:13px;line-height:1.4}
+.game-ui__coach[data-target="attack"]{left:auto;right:calc(var(--safe-right) + 12px)}
+.game-ui__coach p{margin:0 0 4px}.game-ui__coach button{pointer-events:auto;min-height:44px;font-size:13px;background:#303650;color:#fff;border:1px solid #f9cf62;border-radius:8px;padding:4px 10px}
+.game-ui__coach[hidden]{display:none}.tutorial-target{outline:3px solid #f9cf62;outline-offset:4px}
+.game-ui__coach button:focus-visible{outline:3px solid white}
+@media(max-height:360px){.game-ui__coach{bottom:calc(var(--safe-bottom) + 98px);width:min(230px,40vw);padding:5px 9px}}
