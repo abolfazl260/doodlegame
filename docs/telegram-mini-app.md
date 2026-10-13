@@ -135,6 +135,17 @@ Data collection is disclosed in `public/privacy.html`.
    `TELEGRAM_BOT_TOKEN` in **Cloudflare Worker → Settings → Variables and
    Secrets** belongs to the **same Telegram bot** as the Main Mini App. Do not
    share or log the token. Close the Mini App fully and relaunch it.
+   If the secret is correct but login still returns 401, verify the **live**
+   Worker code is up-to-date: Telegram can send both `hash` and
+   `signature` in `initData`. When validating with the **bot token**, the
+   data-check-string must exclude `hash` only (not `signature`).
+   In `leaderboard-worker/src/index.js`, use
+   `filter(([key])=>key!=="hash")`. The exception that removes both
+   `hash` and `signature` belongs only to the separate Ed25519 public-key
+   validation method. A GitHub Pages deploy does **not** redeploy a manually
+   managed Cloudflare Worker: publish the updated Worker code in Cloudflare's
+   editor or deploy through Wrangler. Do not expose the bot secret in logs.
+
 4. If it says **server error (HTTP 5xx)**, in **Cloudflare → Storage &
    Databases → D1 → doodlegame-telegram-leaderboard → Console**, run:
    ```sql
