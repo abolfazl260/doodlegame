@@ -89,7 +89,7 @@ try{
  const game=new Game(presentationRenderer,session,new WebFrameScheduler(),error=>console.error("DoodleGame error:",error),progression);
  let landscape:ReturnType<typeof installLandscapeOrientation>|null=null;
  let telegram:ReturnType<typeof installTelegramMiniApp>|null=null;
- const rankings=new TelegramLeaderboard(root);
+ const rankings=new TelegramLeaderboard(root,()=>telegram?.retryInitialization());
  let pausedForPortrait=false;
  const pauseGame=()=>{input.resetTransientState();game.pause();};
  const resumeGame=()=>{if(landscape?.isPortrait())return;input.resetTransientState();game.resume();};
@@ -192,6 +192,9 @@ try{
  ui.bind(listener=>game.subscribe(listener),readHud);
  input.start();
  game.initialize();
+ // A visible entry point is essential when Telegram strips launch parameters.
+ // Normal browser users can inspect the requirement without an API request.
+ if(Capacitor.getPlatform()==="web")rankings.showEntryPoint();
  telegram=installTelegramMiniApp(window,document,{
   getState:()=>game.getState(),
   onBack:()=>{
