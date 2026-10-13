@@ -4,10 +4,12 @@ import {WEBP_SAMPLE_BASE64,WEBP_SAMPLE_DESCRIPTOR,WEBP_SAMPLE_LISTING} from "../
 
 test.use({viewport:{width:844,height:390},hasTouch:true,isMobile:true});
 const raw="https://raw.githubusercontent.com/abolfazl260/doodlegame/main/public/downloadable-arenas/";
+const fixtureCatalog=JSON.parse(readFileSync(new URL("../../public/downloadable-arenas/catalog.json",import.meta.url),"utf8"));
+const availablePaths=new Set(["catalog.json",...fixtureCatalog.arenas.flatMap(e=>[e.path,e.path.replace(/arena\.json$/,"background.svg")])]);
 async function mockGithub(page){
  await page.route(raw+"**",route=>{
   const relative=route.request().url().slice(raw.length);
-  if(!/^(catalog\.json|(?:forest|desert|glacier|volcano|neon-city)\/(?:arena\.json|background\.(?:svg|webp)))$/.test(relative))
+  if(!availablePaths.has(relative))
    return route.fulfill({status:404,body:"Not found"});
   const image=relative.endsWith(".webp");
   const body=readFileSync(new URL("../../public/downloadable-arenas/"+relative,import.meta.url),image?undefined:"utf8");
@@ -29,7 +31,7 @@ test("players can download new GitHub arenas, choose them, and replay them offli
  await expect(extras).toBeVisible();
  await extras.locator(".game-ui__download-refresh").tap();
  const cards=extras.locator(".game-ui__download-card");
- await expect(cards).toHaveCount(5);
+ await expect(cards).toHaveCount(25);
  await cards.first().locator(".game-ui__download-install").tap();
  await expect(cards.first().locator(".game-ui__download-play")).toBeVisible();
  await cards.first().locator(".game-ui__download-play").tap();
@@ -53,7 +55,7 @@ test("three new landscapes can each be downloaded, selected and reused offline",
  await mockGithub(page);
  await visitArenaStep(page);
  await page.locator(".game-ui__download-refresh").tap();
- await expect(page.locator(".game-ui__download-card")).toHaveCount(5);
+ await expect(page.locator(".game-ui__download-card")).toHaveCount(25);
  const newlyAdded=[
   {id:"extra-glacier",fa:"قله یخی"},
   {id:"extra-volcano",fa:"آتشفشان سوزان"},
@@ -87,7 +89,7 @@ test("short landscape gallery keeps all downloadable cards independently reachab
  await visitArenaStep(page);
  await page.locator(".game-ui__download-refresh").tap();
  const grid=page.locator(".game-ui__download-grid");
- await expect(grid.locator(".game-ui__download-card")).toHaveCount(5);
+ await expect(grid.locator(".game-ui__download-card")).toHaveCount(25);
  // Previously the full gallery expanded under the sticky Start/Back footer.
  const before=await grid.evaluate(node=>{
   const css=getComputedStyle(node);
@@ -106,7 +108,7 @@ test("short landscape gallery keeps all downloadable cards independently reachab
  await last.locator(".game-ui__download-install").tap();
  await expect(last.locator(".game-ui__download-play")).toBeVisible();
  await last.locator(".game-ui__download-play").tap();
- await expect(page.locator(".game-ui__arena-selection-summary")).toContainText("بام‌های نئونی");
+ await expect(page.locator(".game-ui__arena-selection-summary")).toContainText("باغ شکوفه‌های گیلاس");
  await expect(page.locator('button[data-action="start"]')).toBeInViewport();
 });
 
@@ -135,7 +137,7 @@ test("WebP arena downloads as binary, displays its thumbnail and plays again off
  });
  await visitArenaStep(page);
  await page.locator(".game-ui__download-refresh").tap();
- await expect(page.locator(".game-ui__download-card")).toHaveCount(6);
+ await expect(page.locator(".game-ui__download-card")).toHaveCount(26);
  const card=page.locator(".game-ui__download-card").filter({hasText:"نمای آزمایشی WebP"});
  await card.locator(".game-ui__download-install").tap();
  await expect(card.locator(".game-ui__download-play")).toBeVisible();

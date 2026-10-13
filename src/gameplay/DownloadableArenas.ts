@@ -5,7 +5,7 @@ import type {Storage} from "../storage/Storage.js";
 export const ARENA_CATALOG_URL="https://raw.githubusercontent.com/abolfazl260/doodlegame/main/public/downloadable-arenas/catalog.json";
 const ASSETS_BASE="https://raw.githubusercontent.com/abolfazl260/doodlegame/main/public/downloadable-arenas/";
 export const DOWNLOADED_ARENAS_KEY="doodlegame.downloadableArenas.v1";
-const MAX_PACKS=8,MAX_CATALOG_BYTES=16000,MAX_ARENA_BYTES=14000,MAX_IMAGE_BYTES=60000;
+export const MAX_PACKS=25,MAX_CATALOG_BYTES=16000,MAX_ARENA_BYTES=14000,MAX_IMAGE_BYTES=60000;
 // WebP is kept in local device storage as base64; cap raw files to 384 KiB.
 export const MAX_WEBP_BYTES=384*1024;
 export type DownloadedArenaId=`extra-${string}`;
@@ -196,7 +196,7 @@ export async function loadArenaCatalog(fetcher:typeof fetch=fetch):Promise<Arena
 }
 export async function installDownloadedArena(listing:ArenaListing,storage:Storage,fetcher:typeof fetch=fetch):Promise<DownloadedArena>{
  if(!isId(listing.id)||!/^([a-z0-9-]{2,32})\/arena\.json$/.test(listing.path))throw new Error("Invalid arena path");
- if(!packs.has(listing.id)&&packs.size>=MAX_PACKS)throw new Error("Maximum of 8 downloaded arenas");
+ if(!packs.has(listing.id)&&packs.size>=MAX_PACKS)throw new Error(`Maximum of ${MAX_PACKS} downloaded arenas`);
  const descriptor=JSON.parse(await fetchText(ASSETS_BASE+listing.path,MAX_ARENA_BYTES,fetcher)) as unknown;
  if(!plain(descriptor)||descriptor.id!==listing.id||descriptor.version!==listing.version||
   (descriptor.background!=="background.svg"&&descriptor.background!=="background.webp"))throw new Error("Arena descriptor does not match catalog");
