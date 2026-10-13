@@ -47,9 +47,10 @@ export class ThreeRenderer implements Renderer{
    bodyHalo,bodyOutline,bodyCore,costumeOutline,costumeCore,markingOutline,markingCore,toolOutline,toolCore,enemy};
  }
  private setCapsules(mesh:THREE.Mesh,segments:readonly Segment[],width:number){
-  const data=capsulePositions(segments,width),old=mesh.geometry.getAttribute("position") as THREE.BufferAttribute|undefined;
-  if(old&&old.array.length===data.length){
-   (old.array as Float32Array).set(data);old.needsUpdate=true;
+  const old=mesh.geometry.getAttribute("position") as THREE.BufferAttribute|undefined;
+  const data=capsulePositions(segments,width,old?.array as Float32Array|undefined);
+  if(old&&old.array===data){
+   old.needsUpdate=true;
   }else{
    mesh.geometry.dispose();
    const geometry=new THREE.BufferGeometry();
