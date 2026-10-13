@@ -69,8 +69,8 @@ try{
  if(!soundEnabled)combatAudio.setMuted(true);
  combatAudio.setAmbientActive(true);
  const renderer=createRendererWithFallback(
-  ()=>new ThreeRenderer(canvas),
-  ()=>new CanvasRenderer(canvas),
+  ()=>new ThreeRenderer(canvas,!reducedMotion),
+  ()=>new CanvasRenderer(canvas,!reducedMotion),
   error=>console.warn("WebGL renderer unavailable; using canvas fallback.",error)
  );
 
