@@ -42,7 +42,7 @@ const EN:Messages={
  sections:{gameMode:"GAME MODE",arena:"ARENA",weapon:"START WEAPON"},
  characterNames:{playerOne:"CHARACTER NAME",playerTwo:"SECOND PLAYER NAME",leftPlayer:"LEFT CHARACTER · P1",rightPlayer:"RIGHT CHARACTER · P2",opponent:"OPPONENT",optional:"Enter name (optional)",wins:"WINS"},
  menu:{
-  kickoff:"CHOOSE YOUR FIGHT",setup:"MATCH SETUP",players:"NUMBER OF PLAYERS",progressOptions:"RUN & WEAPON UPGRADES",selectMode:"CHOOSE GAME MODE",chooseArena:"CHOOSE YOUR ARENA",mapShortcut:"CHOOSE ARENA",selectedArena:"SELECTED ARENA",step:"STEP",nextArena:"NEXT · CHOOSE ARENA",nextAllArenas:"NEXT · ALL 16 ARENAS",allArenas:"ALL 16 ARENAS",back:"BACK",loadout:"STARTING WEAPON · OPTIONAL",quickDuel:"SOLO PLAYER",quickPvp:"TWO PLAYERS · LOCAL",onlineMode:"ONLINE",comingSoon:"COMING SOON",
+  kickoff:"CHOOSE YOUR FIGHT",setup:"MATCH SETUP",players:"NUMBER OF PLAYERS",progressOptions:"RUN & WEAPON UPGRADES",selectMode:"CHOOSE GAME MODE",chooseArena:"CHOOSE YOUR ARENA",mapShortcut:"CHOOSE ARENA",selectedArena:"SELECTED ARENA",step:"STEP",nextArena:"NEXT · ARENA",nextAllArenas:"NEXT · ALL 16 ARENAS",allArenas:"ALL 16 ARENAS",back:"BACK",loadout:"STARTING WEAPON · OPTIONAL",quickDuel:"SOLO PLAYER",quickPvp:"TWO PLAYERS · LOCAL",onlineMode:"ONLINE",comingSoon:"COMING SOON",
   ready:"YOUR MATCH",options:"SETTINGS & HELP",
   modeDescriptions:{
    duel:"A classic one-on-one fight.",
@@ -87,7 +87,7 @@ const FA:Messages={
  sections:{gameMode:"حالت بازی",arena:"میدان",weapon:"سلاح شروع"},
  characterNames:{playerOne:"نام کاراکتر",playerTwo:"نام بازیکن دوم",leftPlayer:"نام کاراکتر سمت چپ · بازیکن ۱",rightPlayer:"نام کاراکتر سمت راست · بازیکن ۲",opponent:"حریف",optional:"نام دلخواه (اختیاری)",wins:"برنده شد"},
  menu:{
-  kickoff:"نوع بازی را انتخاب کن",setup:"تنظیم مسابقه",players:"تعداد بازیکنان",progressOptions:"مسیر چهار مبارزه‌ای و ارتقاها",selectMode:"انتخاب حالت بازی",chooseArena:"زمین بازی را انتخاب کن",mapShortcut:"انتخاب زمین",selectedArena:"زمین انتخاب‌شده",step:"مرحله",nextArena:"مرحله بعد · انتخاب زمین",nextAllArenas:"مرحله بعد · انتخاب ۱۶ نقشه",allArenas:"انتخاب از ۱۶ نقشه",back:"بازگشت",loadout:"سلاح شروع · اختیاری",quickDuel:"یک نفره",quickPvp:"دو نفره · محلی",onlineMode:"بازی آنلاین",comingSoon:"به‌زودی",
+  kickoff:"نوع بازی را انتخاب کن",setup:"تنظیم مسابقه",players:"تعداد بازیکنان",progressOptions:"مسیر چهار مبارزه‌ای و ارتقاها",selectMode:"انتخاب حالت بازی",chooseArena:"زمین بازی را انتخاب کن",mapShortcut:"انتخاب زمین",selectedArena:"زمین انتخاب‌شده",step:"مرحله",nextArena:"بعدی · زمین",nextAllArenas:"بعدی · ۱۶ زمین",allArenas:"انتخاب از ۱۶ نقشه",back:"بازگشت",loadout:"سلاح شروع · اختیاری",quickDuel:"یک نفره",quickPvp:"دو نفره · محلی",onlineMode:"بازی آنلاین",comingSoon:"به‌زودی",
   ready:"مسابقه شما",options:"تنظیمات و راهنما",
   modeDescriptions:{
    duel:"مبارزهٔ کلاسیک یک‌به‌یک.",
