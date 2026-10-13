@@ -22,8 +22,11 @@ test('WebGL fighter draw places both fighters and produces valid geometries for 
  for(const weapon of ['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile'])for(const facing of [-1,1]){
   const s={...base,x:3,y:4,weapon,facing,attackTime:.1,bowCharge:1};renderer.draw(view,s);
   assert.equal(view.group.position.x,3);assert.equal(view.group.position.y,4);
-  for(const line of [view.limbs,view.tool,view.effect]){
-   const array=line.geometry.getAttribute('position').array;assert.equal(array.length%6,0);assert.ok([...array].every(Number.isFinite));
+  const effects=view.effect.geometry.getAttribute('position').array;
+  assert.equal(effects.length%6,0);assert.ok([...effects].every(Number.isFinite));
+  for(const mesh of [view.bodyCore,view.costumeCore,view.toolCore]){
+   const array=mesh.geometry.getAttribute('position').array;
+   assert.ok(array.length>0&&array.length%9===0);assert.ok([...array].every(Number.isFinite));
   }
  }
  view.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose()});
@@ -45,7 +48,7 @@ test('WebGL fighters use real, outlined thick meshes that remain readable on mob
  const player=renderer.fighter(0xffffff,false),enemy=renderer.fighter(0x555555,true);
  for(const view of [player,enemy]){
   renderer.draw(view,{...s,characterId:"bolt",x:1,y:2,weapon:"bow",bowCharge:1,attackTime:.08});
-  assert.equal(view.limbs.visible,false,"legacy one-pixel GL lines should not replace filled strokes");
+  assert.equal("limbs" in view,false,"legacy GL line meshes should no longer be allocated");
   for(const name of ["bodyHalo","bodyOutline","bodyCore","costumeOutline","costumeCore","markingOutline","markingCore","toolOutline","toolCore"]){
    const mesh=view[name],array=mesh.geometry.getAttribute("position").array;
    assert.ok(mesh.isMesh, name+" must use filled GPU geometry");
