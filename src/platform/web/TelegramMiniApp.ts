@@ -86,6 +86,13 @@ export function installTelegramMiniApp(
   const current=host.Telegram?.WebApp;
   if(!current)return;
   app=current;
+  if(!hasLaunchHint&&!current.initData){
+   // The official SDK also initializes in ordinary browsers. A manual ranking
+   // retry should explain the missing identity, not activate Telegram chrome.
+   callbacks.onReady?.(current);
+   return;
+  }
+  root.classList.add("telegram-mini-app");
   try{current.setHeaderColor?.("#000000");}catch{/* older clients */}
   try{current.setBackgroundColor?.("#000000");}catch{/* older clients */}
   try{current.setBottomBarColor?.("#000000");}catch{/* older clients */}
@@ -108,7 +115,7 @@ export function installTelegramMiniApp(
   if(disposed||attempted)return;
   attempted=true;
   active=true;
-  root.classList.add("telegram-mini-app");
+  if(hasLaunchHint)root.classList.add("telegram-mini-app");
   if(host.Telegram?.WebApp)initialize();
   else{
    script=doc.createElement("script");
