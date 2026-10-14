@@ -42,11 +42,27 @@ const MENU_STEPS:readonly MenuStep[]=["mode","arena"];
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
-const CHARACTER_IDS:readonly CharacterId[]=["shadow","bolt"];
+const CHARACTER_IDS:readonly CharacterId[]=["shadow","bolt","ember","frost"];
 const CHARACTER_TEXT={
- en:{shadow:{name:"SHADOW",description:"Ninja · hood and flowing scarf"},bolt:{name:"BOLT",description:"Robot · armor and electric visor"}},
- fa:{shadow:{name:"شَدو",description:"نینجا · شنل و شال متحرک"},bolt:{name:"بولت",description:"ربات · زره و نقاب الکتریکی"}}
+ en:{
+  shadow:{name:"SHADOW",description:"Ninja · hood and flowing scarf"},
+  bolt:{name:"BOLT",description:"Robot · armor and electric visor"},
+  ember:{name:"EMBER",description:"Fire warrior · flame crest and ember scarf"},
+  frost:{name:"FROST",description:"Ice guardian · crystal crown and winter cape"}
+ },
+ fa:{
+  shadow:{name:"شَدو",description:"نینجا · شنل و شال متحرک"},
+  bolt:{name:"بولت",description:"ربات · زره و نقاب الکتریکی"},
+  ember:{name:"اِمبر",description:"جنگجوی آتش · تاج شعله‌ای و شال آتشین"},
+  frost:{name:"فراست",description:"نگهبان یخ · تاج بلوری و شنل زمستانی"}
+ }
 } as const;
+const CHARACTER_PORTRAITS:Record<CharacterId,string>={
+ shadow:'<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M36 21 L40 11 H57 L61 21"/><circle cx="48" cy="28" r="12"/><path d="M37 29 H59 M38 34 H57 M36 34 L18 28 L6 33 M36 38 L18 42 M48 40 V65 M48 48 L31 59 M48 48 L65 59 M48 65 L37 85 M48 65 L59 85"/><path d="M42 27 H46 M53 27 H56" stroke="#0c1726"/></svg>',
+ bolt:'<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M35 19 H61 V40 H35 Z M48 19 V8 M43 8 H53 M35 29 H61 M39 34 H57 M48 40 V65 M48 48 L28 56 L25 68 M48 48 L68 56 L71 68 M48 65 L38 86 M48 65 L58 86 M36 45 L29 44 M60 45 L67 44"/><path d="M41 29 H55" stroke="#70def0"/></svg>',
+ ember:'<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M29 27 L25 12 L39 19 L45 5 L55 20 L70 11 L65 28"/><path d="M33 27 Q48 13 63 27 L60 39 Q48 49 36 39 Z"/><path d="M39 32 H44 M53 32 H58 M43 39 L53 39"/><path d="M36 43 L25 53 L9 48 L18 59 L7 67 M60 43 L70 52 L86 43 M38 47 L30 63 L38 74 L35 89 M58 47 L66 63 L58 74 L62 89 M36 56 L48 60 L60 56"/><path d="M49 47 L43 58 L51 64 L48 69" stroke="#ffe79f"/></svg>',
+ frost:'<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M28 30 L21 13 L39 22 L48 6 L57 22 L75 13 L68 30"/><path d="M33 28 L63 28 L61 40 L48 47 L35 40 Z M37 33 H59 M41 39 H55"/><path d="M34 44 L17 51 L11 70 L31 60 M62 44 L79 51 L85 70 L65 60 M48 48 L48 69 M48 53 L33 62 M48 53 L63 62 M48 69 L35 88 M48 69 L61 88"/><path d="M48 49 L41 57 L48 66 L55 57 Z" stroke="#defcff"/></svg>'
+};
 const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";
 
 export class GameUI{
@@ -510,9 +526,7 @@ export class GameUI{
    const portrait=document.createElement("span");
    portrait.className="game-ui__character-portrait game-ui__character-portrait--"+id;
    portrait.setAttribute("aria-hidden","true");
-   portrait.innerHTML=id==="shadow"?
-    '<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M36 21 L40 11 H57 L61 21"/><circle cx="48" cy="28" r="12"/><path d="M37 29 H59 M38 34 H57 M36 34 L18 28 L6 33 M36 38 L18 42 M48 40 V65 M48 48 L31 59 M48 48 L65 59 M48 65 L37 85 M48 65 L59 85"/><path d="M42 27 H46 M53 27 H56" stroke="#0c1726"/></svg>':
-    '<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M35 19 H61 V40 H35 Z M48 19 V8 M43 8 H53 M35 29 H61 M39 34 H57 M48 40 V65 M48 48 L28 56 L25 68 M48 48 L68 56 L71 68 M48 65 L38 86 M48 65 L58 86 M36 45 L29 44 M60 45 L67 44"/><path d="M41 29 H55" stroke="#70def0"/></svg>';
+   portrait.innerHTML=CHARACTER_PORTRAITS[id];
    const copy=document.createElement("span");copy.className="game-ui__character-copy";
    const name=document.createElement("strong");name.className="game-ui__character-name";
    const desc=document.createElement("span");desc.className="game-ui__character-description";
