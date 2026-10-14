@@ -99,7 +99,21 @@ Weapons have different damage, range, cooldown, knockback, and projectile behavi
 
 The visual weapon system is intentionally detailed while retaining the monochrome doodle/stick-figure style. The bow includes a shaped body, limbs, riser/grip details, string geometry, arrow shaft, nock, and fletching details.
 
-### Controls
+#### Selectable characters
+
+Four code-drawn 2D fighters are available in the setup screen:
+
+- **Shadow** — hooded shadow fighter with a flowing scarf.
+- **Bolt** — armored robot with an electric visor.
+- **Ninja** — black-clad fighter with a red headband and face mask.
+- **Hero 1** — round white-headed sword fighter with a red scarf.
+
+Character selection is saved locally and restored when the game restarts.
+All four characters share the same abilities and combat hitboxes. Their
+articulated poses and outfit details render in both Three.js and the Canvas
+fallback; opponents randomly use one of the four appearances.
+
+## Controls
 
 | Action | Keyboard |
 |---|---|
