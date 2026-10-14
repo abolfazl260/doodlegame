@@ -80,6 +80,7 @@ function setup(hudOverride={}){
   modeSelect:id=>calls.push(["mode",id]),
   updateData:async()=>{calls.push(["update"]);},
   setMissileAngle(){},setMissilePower(){},fireWeapon(){},
+  characterSelect:id=>calls.push(["character",id]),
   setCharacterName:(player,name)=>{calls.push(["name",player,name]);hud[player===1?"playerName":"secondPlayerName"]=name;},
   setTouchMove(){},touchAttackStart(){},touchAttackEnd(){}
  };
@@ -103,6 +104,31 @@ function setup(hudOverride={}){
  ui.bind(()=>()=>{},()=>hud);
  return {ui,calls,hud,container};
 }
+
+test("four playable characters have real selectable portraits and localized names",()=>{
+ const {ui,calls,hud}=setup({characterId:"shadow"});
+ const cards=ui.characterCards.children;
+ assert.deepEqual(cards.map(card=>card.dataset.character),["shadow","bolt","ember","frost"]);
+ for(const card of cards){
+  assert.match(card.children[0].innerHTML,/<svg/,"each fighter needs a vector portrait");
+  assert.ok(card.children[1].children[0].textContent.length>0);
+ }
+ const ember=cards.find(card=>card.dataset.character==="ember");
+ const frost=cards.find(card=>card.dataset.character==="frost");
+ ember.click();
+ assert.deepEqual(calls.at(-1),["character","ember"]);
+ hud.characterId="ember";ui.render(states.MENU,hud);
+ assert.equal(ember.getAttribute("aria-pressed"),"true");
+ assert.equal(frost.getAttribute("aria-pressed"),"false");
+ frost.click();
+ assert.deepEqual(calls.at(-1),["character","frost"]);
+ hud.characterId="frost";ui.render(states.MENU,hud);
+ assert.equal(frost.getAttribute("aria-pressed"),"true");
+ ui.i18n.setLocale("fa");
+ assert.equal(ember.children[1].children[0].textContent,"اِمبر");
+ assert.equal(frost.children[1].children[0].textContent,"فراست");
+ assert.equal(frost.getAttribute("aria-pressed"),"true");
+});
 
 test("wizard selects player count and mode cards before arena and optional weapon cards",()=>{
  const {ui,calls,hud}=setup();
