@@ -142,7 +142,7 @@ export class CanvasRenderer implements Renderer{
  }
  private drawFortress(c:CanvasRenderingContext2D,scale:number,toX:(x:number)=>number,toY:(y:number)=>number){c.save();c.fillStyle="#444";c.strokeStyle="#777";c.lineWidth=Math.max(1,scale*.04);for(const side of [-1,1]){const x=side*10.2;c.fillRect(toX(x-1.35),toY(2.95),2.7*scale,3.2*scale);for(let i=0;i<3;i++){const tx=side*(9.65+i*.75);c.fillRect(toX(tx-.375),toY(4.2),.75*scale,4.4*scale);}for(let i=0;i<5;i++){const mx=side*(8.95+i*.62);c.fillRect(toX(mx-.16),toY(4.38),.32*scale,.55*scale);}c.strokeRect(toX(side*8.1),toY(2.65),.95*scale,.35*scale);}c.restore();}
  private draw(c:CanvasRenderingContext2D,s:DuelistRenderState,toX:(x:number)=>number,toY:(y:number)=>number,scale:number,enemy:boolean){
-  const pose=fighterVisual(s),ink=fighterInkPalette(enemy),width=FIGHTER_INK_WIDTH;
+  const pose=fighterVisual(s),ink=fighterInkPalette(enemy,s.characterId),width=FIGHTER_INK_WIDTH;
   // A subtle ground marker helps track fighters against detailed arena art.
   if(s.grounded){
    c.save();c.globalAlpha=.25;c.fillStyle=ink.halo;
@@ -185,7 +185,7 @@ export class CanvasRenderer implements Renderer{
   c.arc((pose.head[0]+.105)*scale,-(pose.head[1]+.04)*scale,width.eye*scale,0,Math.PI*2);c.fill();
   c.fillStyle="#fff";c.beginPath();
   c.arc((pose.head[0]+.12)*scale,-(pose.head[1]+.057)*scale,width.eye*scale*.26,0,Math.PI*2);c.fill();
-  const accent=s.characterId==="bolt"?"#70def0":ink.accent;
+  const accent=ink.accent;
   const marks=characterMarkings(s,pose.head);
   lines(marks,ink.outline,width.marking.outline);
   lines(marks,accent,width.marking.core);
