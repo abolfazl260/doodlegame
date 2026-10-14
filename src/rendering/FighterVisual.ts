@@ -48,6 +48,28 @@ export function characterMarkings(s:DuelistRenderState,head:Point):Segment[]{
   [[x+.18,y-.06],[x+.22,y+.085]],
   [[x-.09,y-.13],[x+.09,y-.13]]
  ];
+ if(s.characterId==="ember"){
+  const flare=Math.sin(s.animationTime*9)*.055;
+  return [
+   [[x-.22,y+.075],[x+.23,y+.075]],
+   [[x-.17,y-.075],[x+.16,y-.075]],
+   [[x-.23,y+.12],[x-.39,y+.34+flare]],
+   [[x-.39,y+.34+flare],[x-.19,y+.26]],
+   [[x+.20,y+.12],[x+.37,y+.28+flare]],
+   [[x+.37,y+.28+flare],[x+.27,y+.08]]
+  ];
+ }
+ if(s.characterId==="frost"){
+  return [
+   [[x-.24,y+.095],[x+.24,y+.095]],
+   [[x-.21,y+.095],[x-.16,y-.10]],
+   [[x+.21,y+.095],[x+.16,y-.10]],
+   [[x-.16,y-.10],[x+.16,y-.10]],
+   [[x-.27,y+.19],[x-.36,y+.40]],
+   [[x+.27,y+.19],[x+.36,y+.40]],
+   [[x-.10,y-.16],[x+.10,y-.16]]
+  ];
+ }
  const flap=Math.sin(s.animationTime*8)*.06;
  return [
   [[x-.23,y+.055],[x+.23,y+.055]],
@@ -240,6 +262,27 @@ export function fighterVisual(s:DuelistRenderState) {
    [[-.18,shoulder[1]-.04],[-.37,shoulder[1]-.12]],
    [[.18,shoulder[1]-.04],[.37,shoulder[1]-.12]]
   );
+ }else if(s.characterId==="ember"){
+  const flare=Math.sin(s.animationTime*8)*.09;
+  joints.push(
+   [[head[0]-.28,head[1]+.07],[head[0]-.39,head[1]+.32+flare]],
+   [[head[0]-.39,head[1]+.32+flare],[head[0]-.14,head[1]+.25]],
+   [[head[0]+.10,head[1]+.32],[head[0]+.30,head[1]+.10]],
+   [[-.18,.28],[-.44,.30+flare]],
+   [[-.44,.30+flare],[-.74,.07+flare]],
+   [[-.16,-.12],[-.55,-.30+flare]]
+  );
+ }else if(s.characterId==="frost"){
+  const drift=Math.sin(s.animationTime*4)*.045;
+  joints.push(
+   [[head[0]-.28,head[1]+.06],[head[0]-.37,head[1]+.28]],
+   [[head[0]-.37,head[1]+.28],[head[0]-.18,head[1]+.35]],
+   [[head[0]-.08,head[1]+.32],[head[0],head[1]+.54]],
+   [[head[0],head[1]+.54],[head[0]+.11,head[1]+.33]],
+   [[head[0]+.20,head[1]+.32],[head[0]+.34,head[1]+.17]],
+   [[-.17,.3],[-.48,.22+drift]],
+   [[-.48,.22+drift],[-.67,-.23+drift]]
+  );
  }else{
   const sway=Math.sin(s.animationTime*7)*.08;
   joints.push(
@@ -372,17 +415,47 @@ export function fighterOutfit(s:DuelistRenderState,pose:ReturnType<typeof fighte
   [[-.18,.27],[.015,.12]],[[.015,.12],[.18,.27]],
   [[-.17,-.015],[.15,-.015]], [[-.055,.13],[.055,.13]]
  ];
- // Bolt has an armored crest; Shadow has swept hair.
- const hair:Segment[]=s.characterId==="bolt"?[
-  [[hx-.24,hy+.22],[hx-.12,hy+.37]],
-  [[hx-.12,hy+.37],[hx+.14,hy+.37]],
-  [[hx+.14,hy+.37],[hx+.25,hy+.21]]
- ]:[
-  [[hx-.28,hy+.21],[hx-.17,hy+.43+sway]],
-  [[hx-.17,hy+.43+sway],[hx-.045,hy+.33]],
-  [[hx-.045,hy+.33],[hx+.08,hy+.49+sway]],
-  [[hx+.08,hy+.49+sway],[hx+.24,hy+.24]]
- ];
+ if(s.characterId==="ember"){
+  trim.push([[0,.15],[.09,.035]],[[.09,.035],[.035,-.08]],
+   [[-.17,-.19],[.10,-.32]]);
+ }else if(s.characterId==="frost"){
+  trim.push([[0,.21],[-.12,.06]],[[-.12,.06],[0,-.045]],
+   [[0,-.045],[.12,.06]],[[.12,.06],[0,.21]]);
+ }
+ let hair:Segment[];
+ if(s.characterId==="bolt"){
+  hair=[
+   [[hx-.24,hy+.22],[hx-.12,hy+.37]],
+   [[hx-.12,hy+.37],[hx+.14,hy+.37]],
+   [[hx+.14,hy+.37],[hx+.25,hy+.21]]
+  ];
+ }else if(s.characterId==="ember"){
+  const flame=Math.sin(s.animationTime*8)*.04;
+  hair=[
+   [[hx-.31,hy+.20],[hx-.25,hy+.47+flame]],
+   [[hx-.25,hy+.47+flame],[hx-.10,hy+.34]],
+   [[hx-.10,hy+.34],[hx+.035,hy+.58+flame]],
+   [[hx+.035,hy+.58+flame],[hx+.14,hy+.32]],
+   [[hx+.14,hy+.32],[hx+.31,hy+.45-flame]],
+   [[hx+.31,hy+.45-flame],[hx+.27,hy+.17]]
+  ];
+ }else if(s.characterId==="frost"){
+  hair=[
+   [[hx-.30,hy+.19],[hx-.22,hy+.44]],
+   [[hx-.22,hy+.44],[hx-.10,hy+.33]],
+   [[hx-.10,hy+.33],[hx,hy+.56]],
+   [[hx,hy+.56],[hx+.11,hy+.33]],
+   [[hx+.11,hy+.33],[hx+.24,hy+.46]],
+   [[hx+.24,hy+.46],[hx+.30,hy+.19]]
+  ];
+ }else{
+  hair=[
+   [[hx-.28,hy+.21],[hx-.17,hy+.43+sway]],
+   [[hx-.17,hy+.43+sway],[hx-.045,hy+.33]],
+   [[hx-.045,hy+.33],[hx+.08,hy+.49+sway]],
+   [[hx+.08,hy+.49+sway],[hx+.24,hy+.24]]
+  ];
+ }
  return {vest,gear,trim,hair};
 }
 
@@ -443,10 +516,20 @@ export const FIGHTER_INK_WIDTH={
  head:{halo:.355,outline:.318,core:.274},
  eye:.062
 } as const;
-export function fighterInkPalette(enemy:boolean){
- return enemy
+export function fighterInkPalette(enemy:boolean,characterId:DuelistRenderState["characterId"]="shadow"){
+ // The bright player / warm opponent halos remain readable across every skin.
+ const base=enemy
   ?{core:"#ffc48b",outline:"#181725",halo:"#fff2d7",accent:"#ff628b",eye:"#171522",suit:"#80364f",armor:"#d75160",trim:"#ffcf8c",hair:"#352638",metal:"#e5eaf3"}
   :{core:"#f9fbff",outline:"#091628",halo:"#8be0ff",accent:"#35bafb",eye:"#091628",suit:"#17618d",armor:"#248fc7",trim:"#aff2ff",hair:"#20344f",metal:"#e5efff"};
+ switch(characterId){
+  case "ember":return {...base,accent:"#ff914f",suit:enemy?"#7b3030":"#612737",
+   armor:"#e45d38",trim:"#ffcf6d",hair:"#ff9b43",metal:"#fce4c6"};
+  case "frost":return {...base,accent:"#a6f3ff",suit:enemy?"#3c405d":"#26476d",
+   armor:"#71b6ee",trim:"#d7faff",hair:"#b9eaff",metal:"#e9faff"};
+  case "bolt":return {...base,accent:"#70def0",suit:enemy?"#435069":"#295b7a",
+   armor:enemy?"#e27877":"#49aed8",trim:"#b6f8ff",hair:"#385775"};
+  default:return base;
+ }
 }
 
 /**
