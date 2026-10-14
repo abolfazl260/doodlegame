@@ -42,10 +42,10 @@ const MENU_STEPS:readonly MenuStep[]=["mode","arena"];
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
-const CHARACTER_IDS:readonly CharacterId[]=["shadow","bolt"];
+const CHARACTER_IDS:readonly CharacterId[]=["shadow","bolt","ninja","hero1"];
 const CHARACTER_TEXT={
- en:{shadow:{name:"SHADOW",description:"Ninja · hood and flowing scarf"},bolt:{name:"BOLT",description:"Robot · armor and electric visor"}},
- fa:{shadow:{name:"شَدو",description:"نینجا · شنل و شال متحرک"},bolt:{name:"بولت",description:"ربات · زره و نقاب الکتریکی"}}
+ en:{shadow:{name:"SHADOW",description:"Hooded shadow fighter · flowing scarf"},bolt:{name:"BOLT",description:"Robot · armor and electric visor"},ninja:{name:"NINJA",description:"Black suit · red headband and mask"},hero1:{name:"HERO 1",description:"White head · red scarf and sword"}},
+ fa:{shadow:{name:"شَدو",description:"مبارز سایه · شنل و شال متحرک"},bolt:{name:"بولت",description:"ربات · زره و نقاب الکتریکی"},ninja:{name:"نینجا",description:"لباس مشکی · پیشانی‌بند و نقاب قرمز"},hero1:{name:"هیرو ۱",description:"سر سفید · شال قرمز و شمشیر"}}
 } as const;
 const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";
 
@@ -510,7 +510,11 @@ export class GameUI{
    const portrait=document.createElement("span");
    portrait.className="game-ui__character-portrait game-ui__character-portrait--"+id;
    portrait.setAttribute("aria-hidden","true");
-   portrait.innerHTML=id==="shadow"?
+   portrait.innerHTML=id==="ninja"?
+     '<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg"><g stroke="#050914" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M34 39 L27 62 L18 72 M62 39 L69 62 L78 72 M41 65 L36 88 M55 65 L60 88" stroke="#252b36" stroke-width="9" fill="none"/><path d="M38 38 H58 L61 66 H35 Z" fill="#222935"/><circle cx="48" cy="25" r="18" fill="#161b24"/><path d="M30 21 H66 V29 H30 Z" fill="#e34b4b"/><path d="M30 23 L16 17 L5 24 L21 30" fill="#c4373b"/><path d="M32 29 H64 L59 38 H37 Z" fill="#070b12"/><path d="M38 30 L45 32 L39 35 M58 30 L51 32 L57 35" stroke="#f7f8fc" stroke-width="2" fill="none"/></g></svg>':
+    id==="hero1"?
+     '<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg"><g stroke="#0a1524" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M35 45 L27 62 L19 70 M60 45 L69 61 L76 70 M40 66 L35 88 M56 66 L61 88" stroke-width="9" stroke="#151e2b" fill="none"/><path d="M38 41 H59 L61 67 H35 Z" fill="#303b48"/><path d="M35 46 H61 L54 56 L42 56 Z" fill="#ed554d"/><path d="M35 49 L22 46 L7 62 L22 55" fill="#d94343"/><circle cx="48" cy="24" r="19" fill="#f8fbff"/><path d="M36 22 L44 27 L39 30 M60 22 L52 27 L57 30" stroke-width="4.5" fill="none"/><path d="M68 57 L83 29 L89 24 L84 35 L60 65" stroke="#dce5f0" stroke-width="5" fill="none"/></g></svg>':
+    id==="shadow"?
     '<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M36 21 L40 11 H57 L61 21"/><circle cx="48" cy="28" r="12"/><path d="M37 29 H59 M38 34 H57 M36 34 L18 28 L6 33 M36 38 L18 42 M48 40 V65 M48 48 L31 59 M48 48 L65 59 M48 65 L37 85 M48 65 L59 85"/><path d="M42 27 H46 M53 27 H56" stroke="#0c1726"/></svg>':
     '<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M35 19 H61 V40 H35 Z M48 19 V8 M43 8 H53 M35 29 H61 M39 34 H57 M48 40 V65 M48 48 L28 56 L25 68 M48 48 L68 56 L71 68 M48 65 L38 86 M48 65 L58 86 M36 45 L29 44 M60 45 L67 44"/><path d="M41 29 H55" stroke="#70def0"/></svg>';
    const copy=document.createElement("span");copy.className="game-ui__character-copy";
