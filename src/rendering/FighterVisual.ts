@@ -48,6 +48,30 @@ export function characterMarkings(s:DuelistRenderState,head:Point):Segment[]{
   [[x+.18,y-.06],[x+.22,y+.085]],
   [[x-.09,y-.13],[x+.09,y-.13]]
  ];
+ if(s.characterId==="ninja"){
+  const flutter=Math.sin(s.animationTime*9)*.085;
+  // Tied red headband, lower-face mask and wind-blown ribbons.
+  return [
+   [[x-.25,y+.14],[x+.25,y+.14]],
+   [[x-.25,y+.07],[x+.25,y+.07]],
+   [[x-.25,y+.1],[x-.53,y+.21+flutter]],
+   [[x-.53,y+.21+flutter],[x-.84,y+.12+flutter]],
+   [[x-.26,y+.05],[x-.51,y-.025+flutter]],
+   [[x-.24,y-.15],[x+.23,y-.15]]
+  ];
+ }
+ if(s.characterId==="hero1"){
+  const flutter=Math.sin(s.animationTime*7)*.075;
+  // Bright red scarf with an animated tail behind the sword hero.
+  return [
+   [[-.19,.42],[.20,.43]],
+   [[.20,.43],[.1,.25]],
+   [[-.19,.42],[-.47,.44+flutter]],
+   [[-.47,.44+flutter],[-.82,.31+flutter]],
+   [[-.19,.35],[-.53,.25+flutter]],
+   [[-.53,.25+flutter],[-.74,.20+flutter]]
+  ];
+ }
  const flap=Math.sin(s.animationTime*8)*.06;
  return [
   [[x-.23,y+.055],[x+.23,y+.055]],
@@ -240,6 +264,23 @@ export function fighterVisual(s:DuelistRenderState) {
    [[-.18,shoulder[1]-.04],[-.37,shoulder[1]-.12]],
    [[.18,shoulder[1]-.04],[.37,shoulder[1]-.12]]
   );
+ }else if(s.characterId==="ninja"){
+  const sway=Math.sin(s.animationTime*8)*.035;
+  joints.push(
+   [[head[0]-.29,head[1]],[head[0]-.22,head[1]+.28]],
+   [[head[0]-.22,head[1]+.28],[head[0]+.20,head[1]+.28]],
+   [[head[0]+.20,head[1]+.28],[head[0]+.29,head[1]]],
+   [[-.19,.14],[-.32,-.16]],
+   [[-.32,-.16],[-.47,-.41+sway]],
+   [[.18,-.02],[-.10,-.16]]
+  );
+ }else if(s.characterId==="hero1"){
+  const sway=Math.sin(s.animationTime*7)*.05;
+  joints.push(
+   [[-.19,.11],[.19,.11]],
+   [[-.15,-.08],[-.22,-.31+sway]],
+   [[.15,-.08],[.25,-.29-sway]]
+  );
  }else{
   const sway=Math.sin(s.animationTime*7)*.08;
   joints.push(
@@ -368,15 +409,26 @@ export function fighterOutfit(s:DuelistRenderState,pose:ReturnType<typeof fighte
  const gear=[partial(body[2],.48),partial(body[4],.48),
   partial(body[6],.42),partial(body[8],.42),
   shoulder(body[5],.58),shoulder(body[7],.58)];
- const trim:Segment[]=[
+ const trim:Segment[]=s.characterId==="ninja"?[
+  [[-.19,.28],[.19,.28]], [[-.19,.09],[.19,.09]],
+  [[-.18,-.05],[.18,-.05]]
+ ]:s.characterId==="hero1"?[
+  [[-.18,-.07],[.18,-.07]], [[-.07,-.075],[-.07,-.18]],
+  [[-.19,.19],[.19,.19]]
+ ]:[
   [[-.18,.27],[.015,.12]],[[.015,.12],[.18,.27]],
   [[-.17,-.015],[.15,-.015]], [[-.055,.13],[.055,.13]]
  ];
- // Bolt has an armored crest; Shadow has swept hair.
+ // Robot crest, ninja cowl, bare-faced Hero 1, and swept Shadow hair.
  const hair:Segment[]=s.characterId==="bolt"?[
   [[hx-.24,hy+.22],[hx-.12,hy+.37]],
   [[hx-.12,hy+.37],[hx+.14,hy+.37]],
   [[hx+.14,hy+.37],[hx+.25,hy+.21]]
+ ]:s.characterId==="hero1"?[]:s.characterId==="ninja"?[
+  [[hx-.28,hy+.09],[hx-.26,hy+.25]],
+  [[hx-.26,hy+.25],[hx-.10,hy+.34]],
+  [[hx-.10,hy+.34],[hx+.17,hy+.31]],
+  [[hx+.17,hy+.31],[hx+.28,hy+.09]]
  ]:[
   [[hx-.28,hy+.21],[hx-.17,hy+.43+sway]],
   [[hx-.17,hy+.43+sway],[hx-.045,hy+.33]],
@@ -443,7 +495,15 @@ export const FIGHTER_INK_WIDTH={
  head:{halo:.355,outline:.318,core:.274},
  eye:.062
 } as const;
-export function fighterInkPalette(enemy:boolean){
+export function fighterInkPalette(enemy:boolean,characterId:DuelistRenderState["characterId"]="shadow"){
+ if(characterId==="ninja")return{
+  core:"#202632",outline:"#080c14",halo:"#e4e9ed",accent:"#e64e53",
+  eye:"#ffffff",suit:"#181c25",armor:"#363b47",trim:"#e55756",hair:"#10141c",metal:"#dbe3f0"
+ };
+ if(characterId==="hero1")return{
+  core:"#f8f9f6",outline:"#111624",halo:"#ffeddb",accent:"#ee4f4b",
+  eye:"#121722",suit:"#353d49",armor:"#161c28",trim:"#e6b56c",hair:"#e6e7e6",metal:"#e7edf7"
+ };
  return enemy
   ?{core:"#ffc48b",outline:"#181725",halo:"#fff2d7",accent:"#ff628b",eye:"#171522",suit:"#80364f",armor:"#d75160",trim:"#ffcf8c",hair:"#352638",metal:"#e5eaf3"}
   :{core:"#f9fbff",outline:"#091628",halo:"#8be0ff",accent:"#35bafb",eye:"#091628",suit:"#17618d",armor:"#248fc7",trim:"#aff2ff",hair:"#20344f",metal:"#e5efff"};
