@@ -13,7 +13,7 @@ export class CanvasRenderer implements Renderer{
       const px=toX(p.x),py=toY(p.y);c.lineWidth=Math.max(1,scale*.035);
       if(p.weapon==="boomerang"){
         c.save();c.translate(px,py);c.rotate(-p.rotation);c.beginPath();c.arc(0,0,Math.max(3,scale*.18),-.95,.95);c.stroke();c.beginPath();c.arc(0,0,Math.max(2,scale*.11),.95,2.15);c.stroke();c.restore();
-      }else if(p.weapon==="bow"){const len=scale*.58;c.save();c.translate(px,py);c.rotate(-p.rotation);c.lineWidth=Math.max(2,scale*.045);c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.16,-scale*.11);c.moveTo(len,0);c.lineTo(len-scale*.16,scale*.11);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len+scale*.11,-scale*.09);c.moveTo(-len,0);c.lineTo(-len+scale*.11,scale*.09);c.stroke();c.globalAlpha=.22;c.lineWidth=Math.max(1,scale*.03);c.beginPath();c.moveTo(-len*.85,0);c.lineTo(-len*1.65,0);c.stroke();c.restore();}else if(p.weapon==="missile"){const speed=Math.hypot(p.vx,p.vy);const trail=Math.max(scale*.55,Math.min(scale*1.9,scale*(.55+speed*.045)));const nx=speed>.01?p.vx/speed:1,ny=speed>.01?p.vy/speed:0;c.save();c.globalAlpha=.28;c.lineWidth=Math.max(2,scale*.075);c.beginPath();c.moveTo(px-nx*.10*scale,py+ny*.10*scale);c.lineTo(px-nx*trail,py+ny*trail);c.stroke();c.globalAlpha=.9;c.fillStyle="#fff";c.beginPath();c.arc(px-nx*trail,py+ny*trail,Math.max(2,scale*.055),0,Math.PI*2);c.fill();c.globalAlpha=.9;c.save();c.translate(px,py);c.rotate(-p.rotation);const len=scale*.62;c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len+scale*.14,-scale*.09);c.moveTo(-len,0);c.lineTo(-len+scale*.14,scale*.09);c.stroke();c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.12,-scale*.07);c.moveTo(len,0);c.lineTo(len-scale*.12,scale*.07);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len-scale*.18,-scale*.10);c.moveTo(-len,0);c.lineTo(-len-scale*.18,scale*.10);c.stroke();c.restore();c.restore();}else if(p.weapon==="bomb"){
+      }else if(p.weapon==="bow"){const len=scale*.58;c.save();c.translate(px,py);c.rotate(-p.rotation);c.lineWidth=Math.max(2,scale*.045);c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.16,-scale*.11);c.moveTo(len,0);c.lineTo(len-scale*.16,scale*.11);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len+scale*.11,-scale*.09);c.moveTo(-len,0);c.lineTo(-len+scale*.11,scale*.09);c.stroke();c.globalAlpha=.22;c.lineWidth=Math.max(1,scale*.03);c.beginPath();c.moveTo(-len*.85,0);c.lineTo(-len*1.65,0);c.stroke();c.restore();}else if(p.weapon==="missile"){const speed=Math.hypot(p.vx,p.vy);const trail=Math.max(scale*.55,Math.min(scale*1.9,scale*(.55+speed*.045)));const nx=speed>.01?p.vx/speed:1,ny=speed>.01?p.vy/speed:0;c.save();c.globalAlpha=.28;c.lineWidth=Math.max(2,scale*.075);c.beginPath();c.moveTo(px-nx*.10*scale,py+ny*.10*scale);c.lineTo(px-nx*trail,py+ny*trail);c.stroke();c.globalAlpha=.9;c.fillStyle=s.characterId==="ninja"?"#0e131c":"#fff";c.beginPath();c.arc(px-nx*trail,py+ny*trail,Math.max(2,scale*.055),0,Math.PI*2);c.fill();c.globalAlpha=.9;c.save();c.translate(px,py);c.rotate(-p.rotation);const len=scale*.62;c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len+scale*.14,-scale*.09);c.moveTo(-len,0);c.lineTo(-len+scale*.14,scale*.09);c.stroke();c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.12,-scale*.07);c.moveTo(len,0);c.lineTo(len-scale*.12,scale*.07);c.stroke();c.beginPath();c.moveTo(-len,0);c.lineTo(-len-scale*.18,-scale*.10);c.moveTo(-len,0);c.lineTo(-len-scale*.18,scale*.10);c.stroke();c.restore();c.restore();}else if(p.weapon==="bomb"){
         c.save();c.translate(px,py);c.rotate(-p.rotation);
         const warning=p.life<.55?1+Math.sin(p.age*45)*.1:1;c.scale(warning,warning);
         c.fillStyle='#252525';c.strokeStyle='#fff';c.lineWidth=Math.max(2,scale*.025);
@@ -142,7 +142,7 @@ export class CanvasRenderer implements Renderer{
  }
  private drawFortress(c:CanvasRenderingContext2D,scale:number,toX:(x:number)=>number,toY:(y:number)=>number){c.save();c.fillStyle="#444";c.strokeStyle="#777";c.lineWidth=Math.max(1,scale*.04);for(const side of [-1,1]){const x=side*10.2;c.fillRect(toX(x-1.35),toY(2.95),2.7*scale,3.2*scale);for(let i=0;i<3;i++){const tx=side*(9.65+i*.75);c.fillRect(toX(tx-.375),toY(4.2),.75*scale,4.4*scale);}for(let i=0;i<5;i++){const mx=side*(8.95+i*.62);c.fillRect(toX(mx-.16),toY(4.38),.32*scale,.55*scale);}c.strokeRect(toX(side*8.1),toY(2.65),.95*scale,.35*scale);}c.restore();}
  private draw(c:CanvasRenderingContext2D,s:DuelistRenderState,toX:(x:number)=>number,toY:(y:number)=>number,scale:number,enemy:boolean){
-  const pose=fighterVisual(s),ink=fighterInkPalette(enemy),width=FIGHTER_INK_WIDTH;
+  const pose=fighterVisual(s),ink=fighterInkPalette(enemy,s.characterId),width=FIGHTER_INK_WIDTH;
   // A subtle ground marker helps track fighters against detailed arena art.
   if(s.grounded){
    c.save();c.globalAlpha=.25;c.fillStyle=ink.halo;
@@ -179,13 +179,13 @@ export class CanvasRenderer implements Renderer{
   lines(outfit.hair,s.characterId==="bolt"?ink.armor:ink.hair,width.hair.core);
   c.fillStyle=ink.eye;c.beginPath();
   c.arc((pose.head[0]-.105)*scale,-(pose.head[1]+.03)*scale,width.eye*scale*.78,0,Math.PI*2);c.fill();
-  c.fillStyle="#fff";c.beginPath();
+  c.fillStyle=s.characterId==="ninja"?"#0e131c":"#fff";c.beginPath();
   c.arc((pose.head[0]-.095)*scale,-(pose.head[1]+.05)*scale,width.eye*scale*.20,0,Math.PI*2);c.fill();
   c.fillStyle=ink.eye;c.beginPath();
   c.arc((pose.head[0]+.105)*scale,-(pose.head[1]+.04)*scale,width.eye*scale,0,Math.PI*2);c.fill();
   c.fillStyle="#fff";c.beginPath();
   c.arc((pose.head[0]+.12)*scale,-(pose.head[1]+.057)*scale,width.eye*scale*.26,0,Math.PI*2);c.fill();
-  const accent=s.characterId==="bolt"?"#70def0":ink.accent;
+  const accent=s.characterId==="bolt"?"#70def0":s.characterId==="shadow"?ink.accent:ink.accent;
   const marks=characterMarkings(s,pose.head);
   lines(marks,ink.outline,width.marking.outline);
   lines(marks,accent,width.marking.core);
