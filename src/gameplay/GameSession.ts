@@ -8,8 +8,8 @@ import {getDownloadedArena} from "./DownloadableArenas.js";
 export type PlatformSurface="normal"|"ice"|"slippery"|"oneWay"|"conveyorLeft"|"conveyorRight";
 export interface Platform{readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly surface?:PlatformSurface;}
 export type EnemyType="runner"|"tank"|"shooter"|"jumper"|"bomber"|"ninja"|"boss";
-export type CharacterId="shadow"|"bolt";
-const CHARACTER_IDS:readonly CharacterId[]=["shadow","bolt"];
+export type CharacterId="shadow"|"bolt"|"ember"|"frost"|"sprout"|"pixel";
+export const CHARACTER_IDS:readonly CharacterId[]=["shadow","bolt","ember","frost","sprout","pixel"];
 export type EnvironmentKind="barrel"|"box"|"wall"|"bounce"|"trap"|"rock"|"crumble"|"fan"|"gravity"|"vent"|"fallingRock";
 export interface EnvironmentRenderState{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;readonly maxHp:number;readonly active:boolean;readonly rotation:number;readonly pulse:number;readonly warning:number;}
 export interface ArenaDebrisRenderState{readonly x:number;readonly y:number;readonly rotation:number;readonly size:number;readonly age:number;readonly life:number;}
