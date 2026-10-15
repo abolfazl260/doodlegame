@@ -212,7 +212,7 @@ try{
  }
  const unsubscribeTelegram=game.subscribe(()=>telegram?.onGameState?.());
  const unsubscribeRankings=game.subscribe(state=>rankings.onGameState(state,game.getHudState()));
- telegram.onGameState?.();
+ telegram?.onGameState?.();
  const intro=new OpeningIntro(root,i18n.locale);
  // Hide the living background during gameplay; restore it without replaying
  // the long introduction if the player returns to the main menu.
