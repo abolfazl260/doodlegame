@@ -42,11 +42,33 @@ const MENU_STEPS:readonly MenuStep[]=["mode","arena"];
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
-const CHARACTER_IDS:readonly CharacterId[]=["shadow","bolt"];
+const CHARACTER_IDS:readonly CharacterId[]=["shadow","bolt","ember","frost","sprout","pixel"];
 const CHARACTER_TEXT={
- en:{shadow:{name:"SHADOW",description:"Ninja · hood and flowing scarf"},bolt:{name:"BOLT",description:"Robot · armor and electric visor"}},
- fa:{shadow:{name:"شَدو",description:"نینجا · شنل و شال متحرک"},bolt:{name:"بولت",description:"ربات · زره و نقاب الکتریکی"}}
+ en:{
+  shadow:{name:"SHADOW",description:"Ninja · flowing scarf"},
+  bolt:{name:"BOLT",description:"Robot · electric visor"},
+  ember:{name:"EMBER",description:"Fire runner · bouncing flame"},
+  frost:{name:"FROST",description:"Ice scout · trailing cape"},
+  sprout:{name:"SPROUT",description:"Forest sprite · leafy antenna"},
+  pixel:{name:"PIXEL",description:"Arcade bot · twitching antenna"}
+ },
+ fa:{
+  shadow:{name:"شدو",description:"نینجا · شال متحرک"},
+  bolt:{name:"بولت",description:"ربات · نقاب برقی"},
+  ember:{name:"اِمبر",description:"دوندهٔ آتش · شعلهٔ جهنده"},
+  frost:{name:"فراست",description:"یخ‌نورد · شنل متحرک"},
+  sprout:{name:"اسپراوت",description:"جنگلی · شاخک برگ‌دار"},
+  pixel:{name:"پیکسل",description:"ربات بازی · آنتن متحرک"}
+ }
 } as const;
+const CHARACTER_PORTRAIT_DETAIL:Record<CharacterId,string>={
+ shadow:'<path d="M35 25 L40 12 L57 12 L62 25 M36 34 L15 29 L5 35 M37 38 L15 45"/>',
+ bolt:'<path d="M34 20 H62 V40 H34 Z M48 20 V9 M42 9 H54 M36 30 H60 M34 46 L26 48 M62 46 L70 48"/>',
+ ember:'<path d="M34 21 L42 13 L47 19 L53 7 L59 20 L64 24 M37 34 H59 M26 48 L14 40 M25 53 L14 57"/>',
+ frost:'<path d="M33 22 L40 12 H56 L64 22 L67 34 M34 35 L26 49 L18 58 M38 35 H59 M56 13 L51 7"/>',
+ sprout:'<path d="M48 17 V6 Q32 0 30 12 Q41 17 48 8 Q57 -1 69 8 Q63 19 49 14 M36 36 Q22 36 18 49"/>',
+ pixel:'<path d="M34 21 H63 V40 H34 Z M48 21 V9 H58 M31 25 H25 V33 H31 M65 25 H71 V33 H65 M38 34 H58"/>'
+};
 const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";
 
 export class GameUI{
@@ -510,9 +532,8 @@ export class GameUI{
    const portrait=document.createElement("span");
    portrait.className="game-ui__character-portrait game-ui__character-portrait--"+id;
    portrait.setAttribute("aria-hidden","true");
-   portrait.innerHTML=id==="shadow"?
-    '<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M36 21 L40 11 H57 L61 21"/><circle cx="48" cy="28" r="12"/><path d="M37 29 H59 M38 34 H57 M36 34 L18 28 L6 33 M36 38 L18 42 M48 40 V65 M48 48 L31 59 M48 48 L65 59 M48 65 L37 85 M48 65 L59 85"/><path d="M42 27 H46 M53 27 H56" stroke="#0c1726"/></svg>':
-    '<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M35 19 H61 V40 H35 Z M48 19 V8 M43 8 H53 M35 29 H61 M39 34 H57 M48 40 V65 M48 48 L28 56 L25 68 M48 48 L68 56 L71 68 M48 65 L38 86 M48 65 L58 86 M36 45 L29 44 M60 45 L67 44"/><path d="M41 29 H55" stroke="#70def0"/></svg>';
+   // Tiny vector portraits match the procedural in-game stick fighters.
+   portrait.innerHTML='<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="48" cy="28" r="13"/><path d="M48 41 V65 M48 48 L30 57 L25 70 M48 48 L66 57 L71 70 M48 65 L35 86 M48 65 L61 86 M42 28 H44 M53 28 H55"/>'+CHARACTER_PORTRAIT_DETAIL[id]+'</svg>';
    const copy=document.createElement("span");copy.className="game-ui__character-copy";
    const name=document.createElement("strong");name.className="game-ui__character-name";
    const desc=document.createElement("span");desc.className="game-ui__character-description";

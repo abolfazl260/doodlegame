@@ -2,7 +2,7 @@ import "./styles.css";
 import "./platform/web/TelegramLeaderboard.css";
 import {Game} from "./core/Game";
 import {GameState} from "./core/GameState";
-import {GameSession} from "./gameplay/GameSession";
+import {GameSession,CHARACTER_IDS} from "./gameplay/GameSession";
 import {restoreDownloadedArenas,loadArenaCatalog,installDownloadedArena,removeDownloadedArena} from "./gameplay/DownloadableArenas.js";
 import {Progression} from "./progression/Progression";
 import {PlayerNames} from "./profile/PlayerNames";
@@ -76,7 +76,7 @@ try{
 
  restoreDownloadedArenas(storage);
  const session=new GameSession(input);
- try{const saved=storage.get<unknown>("doodlegame.selectedCharacter");if(saved==="shadow"||saved==="bolt")session.setCharacterId(saved);}catch{ /* Storage can be unavailable in private browsing. */ }
+ try{const saved=storage.get<unknown>("doodlegame.selectedCharacter");if(CHARACTER_IDS.includes(saved as CharacterId))session.setCharacterId(saved as CharacterId);}catch{ /* Storage can be unavailable in private browsing. */ }
  let appliedGameData:(ReturnType<typeof parseLiveGameData>)=null;
  try{appliedGameData=parseLiveGameData(storage.get<unknown>(GAME_DATA_STORAGE_KEY));}
  catch(error){console.warn("Invalid cached game data; using bundled defaults.",error);}
