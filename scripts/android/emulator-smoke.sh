@@ -117,19 +117,17 @@ touch_fraction(){
   adb shell input tap "$((SCREEN_WIDTH*x_percent/100))" "$((SCREEN_HEIGHT*y_percent/100))"
 }
 
-# Finish the optional opening sequence with its visible Skip control. If the
-# intro already ended, this is just a tap on the empty top-left background.
+# The first-launch cinematic temporarily covers the menu. Skip it, then
+# allow the WebView to finish its transition before tapping the landing page.
+# Screenshots from failed run 38794705954 showed the old 92% wizard taps
+# never started a match: the new home screen uses a central Quick Start button.
 touch_fraction 12 10
-sleep 2
+sleep 6
 adb exec-out screencap -p > android-smoke-ready-menu.png
 
-# The wizard's sticky bottom button is visible at both steps on landscape
-# phones. Step 1: choose arena. Step 2: start a solo match.
-touch_fraction 50 92
-sleep 2
-adb exec-out screencap -p > android-smoke-arena-step.png
-touch_fraction 58 92
-sleep 3
+echo "Launching Quick Play from the current landing page (center, 30% height)"
+touch_fraction 50 30
+sleep 4
 wait_for_resumed
 adb exec-out screencap -p > android-smoke-offline-match.png
 
