@@ -18,6 +18,17 @@ function walk(root,files=[]){
  return files;
 }
 export function scanSourceForNetworkApi(text){return NETWORK_API.test(text);}
+// The Telegram leaderboard is optional on the WEB platform and explicitly
+// gated in main.ts. Its fetch calls must not fail native/offline Play review.
+// Every other source file remains subject to the network API audit.
+export function hasWebOnlyTelegramGate(mainSource){
+ return /if\\s*\\(\\s*Capacitor\\.getPlatform\\(\\)\\s*===\\s*["']web["']\\s*\\)\\s*\\{[\\s\\S]*?\\btelegram\\s*=\\s*installTelegramMiniApp\\(/.test(mainSource);
+}
+export function violatesOfflineNetworkPolicy(file,source,telegramWebOnly){
+ if(!scanSourceForNetworkApi(source))return false;
+ const normalized=file.replaceAll("\\\\","/");
+ return !(telegramWebOnly&&normalized==="src/platform/web/TelegramLeaderboard.ts");
+}
 export function hasRemoteRuntimeResource(text,extension){
  return extension===".html"?(REMOTE_RESOURCE.test(text)||REMOTE_LINK.test(text)):extension===".css"?REMOTE_CSS.test(text):false;
 }
@@ -53,11 +64,12 @@ export function main(){
   if(hasRemoteRuntimeResource(text,ext))remoteFindings.push(relative(distRoot,file));
  }
 
+ const telegramWebOnly=hasWebOnlyTelegramGate(readFileSync(mainPath,"utf8"));
  const networkFindings=[];
  for(const file of walk("src")){
   if(![".ts",".js"].includes(extname(file)))continue;
   const text=readFileSync(file,"utf8");
-  if(scanSourceForNetworkApi(text))networkFindings.push(file);
+  if(violatesOfflineNetworkPolicy(file,text,telegramWebOnly))networkFindings.push(file);
  }
 
  const pkg=JSON.parse(readFileSync("package.json","utf8"));
@@ -67,7 +79,8 @@ export function main(){
  const checks=[
   check("All built game assets are packaged in AAB",missingFromAab.length===0,missingFromAab.length?missingFromAab.join(", "):`${dist.length} dist files mirrored under base/assets/public`),
   check("No CDN/runtime remote resources",remoteFindings.length===0,remoteFindings.length?remoteFindings.join(", "):"HTML/CSS resources are local."),
-  check("Core source has no network API dependency",networkFindings.length===0,networkFindings.length?networkFindings.join(", "):"No fetch/XHR/WebSocket/EventSource/sendBeacon usage."),
+  check("Telegram leaderboard is web-only in native builds",telegramWebOnly,telegramWebOnly?"SDK and optional leaderboard are gated to web.":"Telegram integration must be gated behind Capacitor.getPlatform()===web."),
+  check("Core source has no network API dependency",networkFindings.length===0,networkFindings.length?networkFindings.join(", "):"No mandatory native network APIs; optional web-only Telegram leaderboard excluded."),
   check("No auth/paywall/ads dependency",blocked.length===0,blocked.length?blocked.join(", "):"No blocked runtime dependency."),
   check("Reviewer access declaration",reviewer.includes("All functionality is available without special access"),"Play Console App Access wording is documented."),
   check("Offline behavior documented",/offline/i.test(reviewer)&&/(no account|does not require an account|without an account)/i.test(reviewer),"Reviewer guide documents offline/no-account operation."),
