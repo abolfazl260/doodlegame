@@ -22,11 +22,11 @@ export function scanSourceForNetworkApi(text){return NETWORK_API.test(text);}
 // gated in main.ts. Its fetch calls must not fail native/offline Play review.
 // Every other source file remains subject to the network API audit.
 export function hasWebOnlyTelegramGate(mainSource){
- return /if\\s*\\(\\s*Capacitor\\.getPlatform\\(\\)\\s*===\\s*["']web["']\\s*\\)\\s*\\{[\\s\\S]*?\\btelegram\\s*=\\s*installTelegramMiniApp\\(/.test(mainSource);
+ return /if\s*\(\s*Capacitor\.getPlatform\(\)\s*===\s*["']web["']\s*\)\s*\{[\s\S]*?\btelegram\s*=\s*installTelegramMiniApp\(/.test(mainSource);
 }
 export function violatesOfflineNetworkPolicy(file,source,telegramWebOnly){
  if(!scanSourceForNetworkApi(source))return false;
- const normalized=file.replaceAll("\\\\","/");
+ const normalized=file.replaceAll("\\","/");
  return !(telegramWebOnly&&normalized==="src/platform/web/TelegramLeaderboard.ts");
 }
 export function hasRemoteRuntimeResource(text,extension){
