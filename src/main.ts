@@ -194,21 +194,25 @@ try{
  game.initialize();
  // A visible entry point is essential when Telegram strips launch parameters.
  // Normal browser users can inspect the requirement without an API request.
- if(Capacitor.getPlatform()==="web")rankings.showEntryPoint();
- telegram=installTelegramMiniApp(window,document,{
-  getState:()=>game.getState(),
-  onBack:()=>{
-   const current=game.getState();
-   if(current===GameState.PLAYING)pauseGame();
-   else if(current===GameState.PAUSED||current===GameState.GAME_OVER)stopToMenu();
-  },
-  onResize:()=>game.resize(),
-  onReady:app=>rankings.connect(app),
-  onFailure:()=>rankings.reportSdkFailure()
- });
+ // Telegram is an optional WEB integration. Never initialize its SDK or
+ // leaderboard network calls in the offline Android/Capacitor build.
+ if(Capacitor.getPlatform()==="web"){
+  rankings.showEntryPoint();
+  telegram=installTelegramMiniApp(window,document,{
+   getState:()=>game.getState(),
+   onBack:()=>{
+    const current=game.getState();
+    if(current===GameState.PLAYING)pauseGame();
+    else if(current===GameState.PAUSED||current===GameState.GAME_OVER)stopToMenu();
+   },
+   onResize:()=>game.resize(),
+   onReady:app=>rankings.connect(app),
+   onFailure:()=>rankings.reportSdkFailure()
+  });
+ }
  const unsubscribeTelegram=game.subscribe(()=>telegram?.onGameState?.());
  const unsubscribeRankings=game.subscribe(state=>rankings.onGameState(state,game.getHudState()));
- telegram.onGameState?.();
+ telegram?.onGameState?.();
  const intro=new OpeningIntro(root,i18n.locale);
  // Hide the living background during gameplay; restore it without replaying
  // the long introduction if the player returns to the main menu.
