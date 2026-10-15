@@ -48,6 +48,41 @@ export function characterMarkings(s:DuelistRenderState,head:Point):Segment[]{
   [[x+.18,y-.06],[x+.22,y+.085]],
   [[x-.09,y-.13],[x+.09,y-.13]]
  ];
+ // Character accents are tiny, readable silhouettes: no sprite textures needed.
+ const sway=Math.sin(s.animationTime*(6+Math.min(5,Math.abs(s.velocityX))))*.065;
+ if(s.characterId==="ember")return [
+  [[x-.21,y+.11],[x+.21,y+.11]],
+  [[x-.15,y+.31],[x-.04,y+.48+sway]],
+  [[x-.04,y+.48+sway],[x+.04,y+.3]],
+  [[x+.04,y+.3],[x+.16,y+.56+sway*.7]],
+  [[x+.16,y+.56+sway*.7],[x+.24,y+.15]],
+  [[x-.19,y-.13],[x+.16,y-.13]]
+ ];
+ if(s.characterId==="frost")return [
+  [[x-.29,y+.08],[x-.22,y+.29]],
+  [[x-.22,y+.29],[x+.22,y+.29]],
+  [[x+.22,y+.29],[x+.29,y+.08]],
+  [[x-.22,y-.13],[x-.39,y-.28+sway]],
+  [[x+.22,y-.13],[x+.39,y-.28-sway]],
+  [[x-.12,y+.015],[x+.15,y+.015]]
+ ];
+ if(s.characterId==="sprout")return [
+  [[x,y+.26],[x+sway*.55,y+.52]],
+  [[x+sway*.55,y+.52],[x-.25+sway,y+.63]],
+  [[x-.25+sway,y+.63],[x-.1+sway,y+.43]],
+  [[x+sway*.55,y+.52],[x+.3+sway,y+.65]],
+  [[x+.3+sway,y+.65],[x+.15+sway,y+.42]],
+  [[x-.17,y-.15],[x+.17,y-.15]]
+ ];
+ if(s.characterId==="pixel")return [
+  [[x-.26,y+.2],[x+.26,y+.2]],
+  [[x-.26,y+.2],[x-.26,y-.08]],
+  [[x+.26,y+.2],[x+.26,y-.08]],
+  [[x-.24,y-.08],[x+.24,y-.08]],
+  [[x,y+.29],[x+sway*.35,y+.55]],
+  [[x+sway*.35-.075,y+.55],[x+sway*.35+.075,y+.55]],
+  [[x-.13,y+.055],[x+.13,y+.055]]
+ ];
  const flap=Math.sin(s.animationTime*8)*.06;
  return [
   [[x-.23,y+.055],[x+.23,y+.055]],
@@ -95,16 +130,21 @@ export function fighterVisual(s:DuelistRenderState) {
  // Stationary breathing is subtle, tied to rendered time, never to world position.
  const inhale=Math.sin(s.animationTime*2.7);
  const breathe=inhale*.025*idle;
- const hip:Point=[-.012*breathe,-.05-land*.15+breathe*.12];
- const shoulder:Point=[-.04+breathe*.5,.4+breathe-land*.15];
- const head:Point=[-.02+breathe*.32,.82+breathe*1.25-land*.15];
+ // Layered animation: gait lift, landing recoil and head inertia all remain
+ // visual-only, so collisions, aiming, and network state are unchanged.
+ const gaitLift=!air?Math.abs(Math.sin(phase))*speed*.038:0;
+ const headLag=-Math.sign(s.velocityX)*speed*.035;
+ const recoil=hit*.055;
+ const hip:Point=[-.012*breathe,-.05-land*.15+breathe*.12+gaitLift*.35];
+ const shoulder:Point=[-.04+breathe*.5-recoil*.32,.4+breathe-land*.15+gaitLift*.7];
+ const head:Point=[-.02+breathe*.32+headLag-recoil,.82+breathe*1.25-land*.15+gaitLift];
  const joints:Segment[]=[[hip,shoulder]];
  const add=(a:Point,b:Point,c:Point)=>joints.push([a,b],[b,c]);
  for(const side of [-1,1]) {
   const step=stride*side;
   let foot:Point=air?[side*.32,-.52+(s.velocityY>0?.14:0)]:
-   [side*.25+step*(.42+fastRun*.23),-.9+Math.max(0,step)*(.2+fastRun*.20)];
-  let knee:Point=[side*.18+step*(.16+fastRun*.12),-.43+(air?.14:land*.12)+(!air?Math.max(0,step)*fastRun*.12:0)];
+   [side*.25+step*(.42+fastRun*.23),-.9+Math.max(0,step)*(.2+fastRun*.20)+Math.max(0,-step)*fastRun*.05];
+  let knee:Point=[side*.18+step*(.16+fastRun*.12),-.43+(air?.14:land*.12)+(!air?Math.max(0,step)*fastRun*.12+gaitLift*.22:0)];
   if(pivot>0){
    // Keep the planted foot close to the body for a readable, brief pivot.
    const plant=pivot*.35;
@@ -224,6 +264,11 @@ export function fighterVisual(s:DuelistRenderState) {
   // Keep the weapon below the torso during holster and then raise it.
   back=[interpolate(back[0],-.33,ease*.25),interpolate(back[1],-.12,ease*.25)];
  }
+ // Weapon kickback is eased to zero within the attack window, independent
+ // of any actual projectile trajectory or fire rate.
+ const gunRecoil=(weapon==="blaster"||weapon==="uzi"||weapon==="missile")&&s.attackTime>0?
+  Math.sin(progress*Math.PI)*.08:0;
+ hand=[hand[0]-gunRecoil,hand[1]+gunRecoil*.35];
  add([-.18,shoulder[1]],[-.3,.19],back);
  add([.18,shoulder[1]],[.32,.2],hand);
  // Body and costume marks use different ink widths: arms and legs stay bold,
@@ -239,6 +284,44 @@ export function fighterVisual(s:DuelistRenderState) {
    [[head[0]-.08,head[1]+.49],[head[0]+.08,head[1]+.49]],
    [[-.18,shoulder[1]-.04],[-.37,shoulder[1]-.12]],
    [[.18,shoulder[1]-.04],[.37,shoulder[1]-.12]]
+  );
+ }else if(s.characterId==="ember"){
+  const flutter=Math.sin(s.animationTime*11-s.gaitPhase)*.11;
+  joints.push(
+   [[head[0]-.26,head[1]+.05],[head[0]-.13,head[1]+.37+flutter]],
+   [[head[0]-.13,head[1]+.37+flutter],[head[0]+.02,head[1]+.26]],
+   [[head[0]+.02,head[1]+.26],[head[0]+.13,head[1]+.48+flutter]],
+   [[head[0]+.13,head[1]+.48+flutter],[head[0]+.27,head[1]+.09]],
+   [[-.2,.2],[-.47,.12+flutter*.3]]
+  );
+ }else if(s.characterId==="frost"){
+  const cape=Math.sin(s.animationTime*7-s.gaitPhase)*.13-Math.min(1,Math.abs(s.velocityX)/8)*.1;
+  joints.push(
+   [[head[0]-.3,head[1]],[head[0]-.22,head[1]+.29]],
+   [[head[0]-.22,head[1]+.29],[head[0]+.22,head[1]+.29]],
+   [[head[0]+.22,head[1]+.29],[head[0]+.3,head[1]]],
+   [[-.2,.3],[-.61,.07+cape]],
+   [[-.61,.07+cape],[-.85,-.08+cape*.9]],
+   [[-.17,.08],[-.48,-.13+cape]]
+  );
+ }else if(s.characterId==="sprout"){
+  const bob=Math.sin(s.animationTime*5-s.gaitPhase)*.12;
+  joints.push(
+   [[head[0],head[1]+.24],[head[0]+bob*.4,head[1]+.54]],
+   [[head[0]+bob*.4,head[1]+.54],[head[0]-.25+bob,head[1]+.65]],
+   [[head[0]+bob*.4,head[1]+.54],[head[0]+.26+bob,head[1]+.63]],
+   [[-.17,.24],[-.45,.35+bob]],
+   [[.17,.24],[.44,.35-bob]]
+  );
+ }else if(s.characterId==="pixel"){
+  const antenna=Math.sin(s.animationTime*13)*.055;
+  joints.push(
+   [[head[0]-.28,head[1]+.25],[head[0]+.28,head[1]+.25]],
+   [[head[0]-.28,head[1]+.25],[head[0]-.28,head[1]-.12]],
+   [[head[0]+.28,head[1]+.25],[head[0]+.28,head[1]-.12]],
+   [[head[0],head[1]+.3],[head[0]+antenna,head[1]+.54]],
+   [[head[0]+antenna-.08,head[1]+.54],[head[0]+antenna+.08,head[1]+.54]],
+   [[-.2,.18],[-.43,.13]],[[.2,.18],[.43,.13]]
   );
  }else{
   const sway=Math.sin(s.animationTime*7)*.08;
@@ -267,7 +350,8 @@ export function fighterVisual(s:DuelistRenderState) {
  const visualFacing=Math.abs(facing)<.06?(facing<0?-.06:.06):facing;
  const slamSquash=s.slamPhase==="impact"?.14:s.slamPhase==="recovery"?
   .14*(1-Math.min(1,s.slamElapsed/SLAM.recovery)):0;
- return {joints,body:joints.slice(0,bodyCount),costume:joints.slice(bodyCount),head,hand,toolAngle,swing,scale,scaleX:1+squash+slamSquash,scaleY:1-squash-slamSquash,lean,hit,land,
+ const blink=s.health<=0?.12:s.hitTime>0?.6:(s.animationTime%4.6>4.48?.12:1);
+ return {joints,body:joints.slice(0,bodyCount),costume:joints.slice(bodyCount),head,hand,toolAngle,swing,scale,scaleX:1+squash+slamSquash,scaleY:1-squash-slamSquash,lean,hit,land,blink,
   visualFacing,pivot,fastRun,idle};
 }
 /** Motion arcs use the same segment coordinates in both Canvas and WebGL. */
@@ -373,11 +457,34 @@ export function fighterOutfit(s:DuelistRenderState,pose:ReturnType<typeof fighte
   [[-.17,-.015],[.15,-.015]], [[-.055,.13],[.055,.13]]
  ];
  // Bolt has an armored crest; Shadow has swept hair.
- const hair:Segment[]=s.characterId==="bolt"?[
+ let hair:Segment[];
+ if(s.characterId==="bolt")hair=[
   [[hx-.24,hy+.22],[hx-.12,hy+.37]],
   [[hx-.12,hy+.37],[hx+.14,hy+.37]],
   [[hx+.14,hy+.37],[hx+.25,hy+.21]]
- ]:[
+ ];
+ else if(s.characterId==="ember")hair=[
+  [[hx-.27,hy+.19],[hx-.17,hy+.34+sway]],
+  [[hx-.17,hy+.34+sway],[hx-.045,hy+.29]],
+  [[hx-.045,hy+.29],[hx+.1,hy+.45+sway]],
+  [[hx+.1,hy+.45+sway],[hx+.24,hy+.19]]
+ ];
+ else if(s.characterId==="frost")hair=[
+  [[hx-.3,hy+.02],[hx-.24,hy+.32]],
+  [[hx-.24,hy+.32],[hx+.22,hy+.32]],
+  [[hx+.22,hy+.32],[hx+.3,hy+.02]]
+ ];
+ else if(s.characterId==="sprout")hair=[
+  [[hx-.27,hy+.22],[hx-.13,hy+.29]],
+  [[hx-.13,hy+.29],[hx+.12,hy+.29]],
+  [[hx+.12,hy+.29],[hx+.27,hy+.22]]
+ ];
+ else if(s.characterId==="pixel")hair=[
+  [[hx-.26,hy+.25],[hx+.26,hy+.25]],
+  [[hx-.26,hy+.25],[hx-.26,hy-.08]],
+  [[hx+.26,hy+.25],[hx+.26,hy-.08]]
+ ];
+ else hair=[
   [[hx-.28,hy+.21],[hx-.17,hy+.43+sway]],
   [[hx-.17,hy+.43+sway],[hx-.045,hy+.33]],
   [[hx-.045,hy+.33],[hx+.08,hy+.49+sway]],
@@ -443,10 +550,21 @@ export const FIGHTER_INK_WIDTH={
  head:{halo:.355,outline:.318,core:.274},
  eye:.062
 } as const;
-export function fighterInkPalette(enemy:boolean){
- return enemy
+export function fighterInkPalette(enemy:boolean,characterId:DuelistRenderState["characterId"]="shadow"){
+ const base=enemy
   ?{core:"#ffc48b",outline:"#181725",halo:"#fff2d7",accent:"#ff628b",eye:"#171522",suit:"#80364f",armor:"#d75160",trim:"#ffcf8c",hair:"#352638",metal:"#e5eaf3"}
   :{core:"#f9fbff",outline:"#091628",halo:"#8be0ff",accent:"#35bafb",eye:"#091628",suit:"#17618d",armor:"#248fc7",trim:"#aff2ff",hair:"#20344f",metal:"#e5efff"};
+ // Silhouettes share ink widths and hitbox size; colored accents distinguish
+ // the six playable designs without adding textures or rendering passes.
+ const colors={
+  shadow:null,
+  bolt:{accent:"#70def0",suit:"#244d7a",armor:"#4996ce",trim:"#c0faff",hair:"#4996ce"},
+  ember:{accent:"#ff924a",suit:"#8b4434",armor:"#c56c47",trim:"#ffd18b",hair:"#ff9b54"},
+  frost:{accent:"#90e4ff",suit:"#46668e",armor:"#76aaca",trim:"#e5f9ff",hair:"#c8e9f9"},
+  sprout:{accent:"#8de77c",suit:"#376852",armor:"#64a47a",trim:"#d8ffa1",hair:"#71be76"},
+  pixel:{accent:"#ce96ff",suit:"#5b488a",armor:"#8d70be",trim:"#e0c2ff",hair:"#a592d6"}
+ }[characterId];
+ return colors?{...base,...colors}:base;
 }
 
 /**
