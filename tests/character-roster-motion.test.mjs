@@ -1,13 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {GameSession,CHARACTER_IDS} from "../.test-build/gameplay/GameSession.js";
-import {fighterVisual,fighterOutfit,characterMarkings,fighterInkPalette,toolSegments,weaponAccentSegments,weaponAccentColor,weaponStyleLayers} from "../.test-build/rendering/FighterVisual.js";
+import {fighterVisual,fighterOutfit,characterMarkings,fighterInkPalette,vikingSkinLayers,toolSegments,weaponAccentSegments,weaponAccentColor,weaponStyleLayers} from "../.test-build/rendering/FighterVisual.js";
 
 const session=()=>new GameSession({getState(){return {}},endFrame(){}});
 const finite=(segments)=>segments.every(([a,b])=>[...a,...b].every(Number.isFinite));
 
-test("both selectable characters survive reset without modifying match rules",()=>{
- assert.deepEqual(CHARACTER_IDS,["soldier","ninja"]);
+test("all three selectable skins survive reset without modifying match rules",()=>{
+ assert.deepEqual(CHARACTER_IDS,["soldier","ninja","viking"]);
  const game=session();
  for(const id of CHARACTER_IDS){
   game.setCharacterId(id);
@@ -27,8 +27,9 @@ test("each simplified 2D fighter has a distinctive, finite costume and facial de
   const pose=fighterVisual(s),outfit=fighterOutfit(s,pose),marks=characterMarkings(s,pose.head);
   assert.equal(pose.body.length,9,"joints keep the existing collision-independent rig");
   assert.ok(pose.costume.length>=2,characterId+" needs a readable silhouette");
-  assert.equal(outfit.hair.length,0,"approved designs have clean round heads");
-  assert.ok(marks.length>=5);
+  assert.equal(outfit.hair.length,0,"all skins have clean non-hairy base rigs");
+  assert.equal(marks.length,characterId==="viking"?0:5,"Viking helmet replaces colored headbands");
+  assert.equal(vikingSkinLayers(s,pose).length,characterId==="viking"?8:0);
   assert.ok(finite([...pose.joints,...outfit.hair,...outfit.gear,...marks]));
   assert.ok([pose.scaleX,pose.scaleY,pose.lean,pose.blink].every(Number.isFinite));
   signatures.add(JSON.stringify([...pose.costume,...marks]));
@@ -37,7 +38,7 @@ test("each simplified 2D fighter has a distinctive, finite costume and facial de
  const original=fighterInkPalette(false);
  assert.equal(original.face,"#f9fcff");
  assert.equal(fighterInkPalette(false,"ninja").face,"#12141b");
- assert.equal(new Set(CHARACTER_IDS.map(id=>fighterInkPalette(false,id).accent)).size,2);
+ assert.equal(new Set(CHARACTER_IDS.map(id=>fighterInkPalette(false,id).accent)).size,3);
 });
 
 test("gait, landing, recoil, blink and accessories animate without editing gameplay state",()=>{
@@ -66,17 +67,47 @@ test("skin selection never changes sword size, weapon geometry, accent or damage
  const game=session(),base=game.getRenderState().player;
  for(const weapon of ["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"]){
   const soldier={...base,characterId:"soldier",weapon,weaponHolsterFrom:null,weaponDrawTime:0,grabPhase:null};
-  const ninja={...soldier,characterId:"ninja"};
-  assert.deepEqual(toolSegments(ninja),toolSegments(soldier),weapon+" silhouette depends on equipment only");
-  assert.deepEqual(weaponAccentSegments(ninja),weaponAccentSegments(soldier),weapon+" accent shape is not a skin perk");
-  assert.equal(weaponAccentColor(ninja),weaponAccentColor(soldier),weapon+" accent color is not a skin perk");
-  assert.deepEqual(weaponStyleLayers(ninja),weaponStyleLayers(soldier),weapon+" painted inlays stay identical");
+  for(const characterId of ["ninja","viking"]){
+   const skin={...soldier,characterId};
+   assert.deepEqual(toolSegments(skin),toolSegments(soldier),weapon+" silhouette depends on equipment only");
+   assert.deepEqual(weaponAccentSegments(skin),weaponAccentSegments(soldier),weapon+" accent shape is not a skin perk");
+   assert.equal(weaponAccentColor(skin),weaponAccentColor(soldier),weapon+" accent color is not a skin perk");
+   assert.deepEqual(weaponStyleLayers(skin),weaponStyleLayers(soldier),weapon+" painted inlays stay identical");
+  }
  }
  // Selecting a skin must not change the weapon equipped or its cooldown/stats.
  game.setStartingWeapon("blade");
  const before=game.getHudState().weapon;
  game.setCharacterId("ninja");
  assert.equal(game.getHudState().weapon,before);
+ game.setCharacterId("viking");
+ assert.equal(game.getHudState().weapon,before);
+ game.reset(false);
+ assert.equal(game.getRenderState().player.characterId,"viking");
+ assert.notEqual(game.getRenderState().opponent.characterId,"viking");
  game.setCharacterId("soldier");
  assert.equal(game.getHudState().weapon,before);
+});
+
+test("Viking horns, metal helmet, fur mantle and boots follow animation without affecting hitboxes",()=>{
+ const game=session(),base=game.getRenderState().player;
+ for(const velocityX of [0,3,8,-6]){
+  const state={...base,characterId:"viking",velocityX,gaitPhase:1.15,animationTime:1.7,grounded:true};
+  const pose=fighterVisual(state),layers=vikingSkinLayers(state,pose);
+  assert.equal(layers.length,8);
+  assert.deepEqual(layers.map(l=>l.color),
+   ["#07090d","#3a434d","#f4e6c8","#dbad4c","#8c603b","#a67545","#edd8b5","#8c5e27"]);
+  assert.ok(layers.every(l=>l.width>0&&l.width<=.155&&l.segments.length>0));
+  assert.ok(finite(layers.flatMap(l=>l.segments)));
+  assert.ok(layers[2].segments.some(([a,b])=>Math.max(a[1],b[1])>pose.head[1]+.5),"curved horns rise above head");
+  assert.ok(layers[5].segments.some(([a,b])=>Math.min(a[1],b[1])<-.5),"boots follow the lower leg");
+  assert.equal(characterMarkings(state,pose.head).length,0,"helmet replaces headband");
+  assert.equal(pose.body.length,9,"Viking uses identical animated hitbox-independent rig");
+ }
+ for(const id of ["soldier","ninja"]){
+  const state={...base,characterId:id},pose=fighterVisual(state);
+  assert.deepEqual(vikingSkinLayers(state,pose),[],"other cosmetics never inherit helmet geometry");
+ }
+ assert.deepEqual(fighterInkPalette(false,"viking").face,"#10131a");
+ assert.equal(game.getRenderState().player.maxHealth,100);
 });

@@ -31,6 +31,37 @@ test('WebGL fighter draw places both fighters and produces valid geometries for 
  }
  view.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose()});
 });
+test('Viking helmet, gold bands, horns, fur and boots render on both engines',async()=>{
+ const {ThreeRenderer}=await rendererModule('ThreeRenderer');
+ const {CanvasRenderer}=await rendererModule('CanvasRenderer');
+ const webgl=Object.create(ThreeRenderer.prototype),fighter=webgl.fighter(0xffffff,false),base=state().player;
+ const source={...base,characterId:"viking",weapon:"blade",weaponHolsterFrom:null,animationTime:1.2};
+ webgl.draw(fighter,source);
+ assert.equal(fighter.vikingMeshes.length,8);
+ assert.ok(fighter.vikingMeshes.every(mesh=>mesh.visible&&mesh.geometry.getAttribute("position").array.every(Number.isFinite)));
+ assert.equal(fighter.vikingMeshes[2].material.color.getHex(),0xf4e6c8,"ivory curved horns appear");
+ assert.equal(fighter.vikingMeshes[3].material.color.getHex(),0xdbad4c,"gold helmet accents appear");
+ webgl.draw(fighter,{...source,characterId:"soldier"});
+ assert.ok(fighter.vikingMeshes.every(mesh=>!mesh.visible),"changing skin removes every Viking detail");
+ webgl.draw(fighter,{...source,characterId:"viking",weapon:"spear"});
+ assert.ok(fighter.vikingMeshes.every(mesh=>mesh.visible),"equipment changes do not remove the helmet");
+
+ const colors=[],ctx=new Proxy({save(){},restore(){},translate(){},rotate(){},scale(){},
+  beginPath(){},moveTo(){},lineTo(){},stroke(){colors.push(this.strokeStyle);},
+  set strokeStyle(c){this._color=c},get strokeStyle(){return this._color}
+ },{get(obj,k){return k in obj?obj[k]:()=>{}},set(obj,k,v){obj[k]=v;return true}});
+ const previousWindow=globalThis.window;globalThis.window={devicePixelRatio:1};
+ try{
+  const canvas=new CanvasRenderer({clientWidth:800,clientHeight:500,getContext(){return ctx}});
+  canvas.draw(ctx,source,x=>x,y=>y,60,false);
+  for(const color of ["#f4e6c8","#dbad4c","#8c603b"]){
+   assert.ok(colors.includes(color),"Canvas must draw Viking details "+color);
+  }
+  canvas.dispose();
+ }finally{if(previousWindow===undefined)delete globalThis.window;else globalThis.window=previousWindow;}
+ fighter.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
+});
+
 test('Canvas render balances transformations and opacity for missiles and every held tool',async()=>{
  const {CanvasRenderer}=await rendererModule('CanvasRenderer');
  let depth=0;const context=new Proxy({save(){depth++},restore(){assert.ok(depth>0);depth--}}, {get(target,key){return key in target?target[key]:()=>{}},set(target,key,value){target[key]=value;return true}});
