@@ -1613,9 +1613,9 @@ export class GameUI{
   this.languageButton.textContent=this.i18n.locale==="fa"?"فا":"EN";
   this.languageButton.setAttribute("aria-label",messages.language.label+": "+currentLanguage);
   this.title.textContent=messages.title;
-  this.pauseTitle.textContent=messages.pause.title;
-  this.pauseSubtitle.textContent=messages.pause.subtitle;
-  this.pauseSettingsButton.textContent=messages.pause.settings;
+  this.pauseTitle.textContent=messages.pause?.title??(this.i18n.locale==="fa"?"بازی متوقف شد":"GAME PAUSED");
+  this.pauseSubtitle.textContent=messages.pause?.subtitle??(this.i18n.locale==="fa"?"آمادهٔ ادامهٔ نبرد هستی؟":"Ready to return to the fight?");
+  this.pauseSettingsButton.textContent=messages.pause?.settings??(this.i18n.locale==="fa"?"تنظیمات و راهنما":"Settings & Help");
   this.pauseLanguageButton.textContent=this.i18n.locale==="fa"?"فا":"EN";
   this.pauseLanguageButton.setAttribute("aria-label",messages.language.label);
   this.menuLead.textContent=messages.menu?.kickoff??"CHOOSE YOUR FIGHT";
