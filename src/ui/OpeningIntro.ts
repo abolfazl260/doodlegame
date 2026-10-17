@@ -276,10 +276,15 @@ export class OpeningIntro{
   }
   for(const [nx,ny,side] of [[.15,.27,-1],[.86,.41,1],[.93,.84,1]] as const){
    const x=nx*w,y=ny*h,size=Math.max(18,Math.min(70,w*.047));
-   const streak=ctx.createLinearGradient(x-side*size,y+size*.46,x,y);
-   streak.addColorStop(0,"#2d8dfa00");streak.addColorStop(.8,"#5abaff8e");streak.addColorStop(1,"#e6fcff");
+   const streak=ctx.createLinearGradient?.(x-side*size,y+size*.46,x,y);
+   if(streak){
+    streak.addColorStop(0,"#2d8dfa00");
+    streak.addColorStop(.8,"#5abaff8e");
+    streak.addColorStop(1,"#e6fcff");
+   }
    ctx.globalAlpha=.75;
-   ctx.strokeStyle=streak;ctx.lineWidth=Math.max(1,Math.min(2,w*.0012));
+   ctx.strokeStyle=streak??"#71baff";
+   ctx.lineWidth=Math.max(1,Math.min(2,w*.0012));
    ctx.beginPath();ctx.moveTo(x-side*size,y+size*.46);ctx.lineTo(x,y);ctx.stroke();
   }
   // Tiny faceted asteroids add spatial depth while staying outside the panel.
