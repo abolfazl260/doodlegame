@@ -174,17 +174,10 @@ export class CanvasRenderer implements Renderer{
   };
   head(width.head.halo,ink.halo);
   head(width.head.outline,ink.outline);
-  head(width.head.core,ink.core);
+  head(width.head.core,ink.face);
   lines(outfit.hair,ink.outline,width.hair.outline);
-  lines(outfit.hair,s.characterId==="bolt"?ink.armor:ink.hair,width.hair.core);
-  c.fillStyle=ink.eye;c.beginPath();
-  c.ellipse((pose.head[0]-.105)*scale,-(pose.head[1]+.03)*scale,width.eye*scale*.78,width.eye*scale*.78*pose.blink,0,0,Math.PI*2);c.fill();
-  c.fillStyle="#fff";c.beginPath();
-  if(pose.blink>.5){c.arc((pose.head[0]-.095)*scale,-(pose.head[1]+.05)*scale,width.eye*scale*.20,0,Math.PI*2);c.fill();}
-  c.fillStyle=ink.eye;c.beginPath();
-  c.ellipse((pose.head[0]+.105)*scale,-(pose.head[1]+.04)*scale,width.eye*scale,width.eye*scale*pose.blink,0,0,Math.PI*2);c.fill();
-  c.fillStyle="#fff";c.beginPath();
-  if(pose.blink>.5){c.arc((pose.head[0]+.12)*scale,-(pose.head[1]+.057)*scale,width.eye*scale*.26,0,Math.PI*2);c.fill();}
+  lines(outfit.hair,ink.hair,width.hair.core);
+  // Featureless white face (Soldier) and black mask (Ninja).
   const accent=ink.accent;
   const marks=characterMarkings(s,pose.head);
   lines(marks,ink.outline,width.marking.outline);
