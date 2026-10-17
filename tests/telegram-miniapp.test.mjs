@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {GameState} from "../.test-build/core/GameState.js";
-import {hasTelegramLaunchParams,installTelegramMiniApp} from "../.test-build/platform/web/TelegramMiniApp.js";
+import {hasTelegramLaunchParams,isTelegramMiniAppLaunch,installTelegramMiniApp} from "../.test-build/platform/web/TelegramMiniApp.js";
 
 function harness(search="",hash="",version="9.0"){
  const events=new Map(),styles=new Map(),classes=new Set(),calls=[];
@@ -49,6 +49,14 @@ test("Telegram launch detection accepts partial SDK parameters after webview rel
  assert.equal(hasTelegramLaunchParams("","#tgWebAppData=opaque"),true);
  assert.equal(hasTelegramLaunchParams("","#tgWebAppPlatform=ios&tgWebAppVersion=8.0&tgWebAppData=test"),true);
  assert.equal(hasTelegramLaunchParams("?ref=telegram",""),false);
+ const regular=harness(),byUrl=harness("?tgWebAppPlatform=android");
+ const byUa=harness();byUa.win.navigator={userAgent:"Telegram-Android/11.0"};
+ const signed=harness();signed.app.initData="auth_date=123&hash=signed";
+ signed.win.Telegram={WebApp:signed.app};
+ assert.equal(isTelegramMiniAppLaunch(regular.win),false);
+ assert.equal(isTelegramMiniAppLaunch(byUrl.win),true);
+ assert.equal(isTelegramMiniAppLaunch(byUa.win),true);
+ assert.equal(isTelegramMiniAppLaunch(signed.win),true);
 });
 
 test("ordinary web and Android launches do not load external SDK or alter page",()=>{
@@ -61,7 +69,7 @@ test("ordinary web and Android launches do not load external SDK or alter page",
  assert.equal(h.calls.length,0);
 });
 
-test("a user-triggered retry loads the SDK without any Telegram URL fields",()=>{
+test("retry without a Telegram session never reveals Mini App UI or invokes leaderboard callbacks",()=>{
  const h=harness();
  let connected=0;
  const integration=installTelegramMiniApp(h.win,h.doc,{...h.callbacks,onReady:()=>connected++});
@@ -70,7 +78,8 @@ test("a user-triggered retry loads the SDK without any Telegram URL fields",()=>
  integration.retryInitialization();
  assert.equal(integration.active,true);
  assert.equal(h.appended,1);
- assert.equal(connected,1);
+ assert.equal(connected,0,"an SDK object without launch identity is not a Telegram Mini App");
+ assert.equal(h.classes.has("telegram-mini-app"),false);
  integration.retryInitialization();
  assert.equal(h.appended,1,"retry must not duplicate Telegram SDK script");
  integration.dispose();
@@ -144,13 +153,30 @@ test("older Telegram versions fall back to expand rather than unsupported fullsc
  integration.dispose();
 });
 
-test("pre-injected SDK is recognized even without URL markers while login still requires signed data",()=>{
+test("pre-injected SDK without Telegram identity never opens Mini App UI",()=>{
  const h=harness();
  h.win.Telegram={WebApp:h.app};
  let ready=false;
  const integration=installTelegramMiniApp(h.win,h.doc,{...h.callbacks,onReady:()=>{ready=true;}});
- assert.equal(integration.active,true);
- assert.equal(ready,true);
+ assert.equal(integration.active,false);
+ assert.equal(ready,false);
+ assert.equal(h.classes.has("telegram-mini-app"),false);
+ assert.equal(h.appended,0);
+ assert.equal(h.calls.length,0,"no SDK chrome/back-button operations in ordinary browsers");
+ integration.onGameState();
+ assert.equal(h.calls.length,0,"ordinary browser game states cannot alter Telegram BackButton");
+ integration.dispose();
+});
+
+test("pre-injected SDK with signed initData is recognized even after losing URL markers",()=>{
+ const h=harness();
+ h.app.initData="auth_date=123&hash=signed";
+ h.win.Telegram={WebApp:h.app};
+ let ready=0;
+ const integration=installTelegramMiniApp(h.win,h.doc,{...h.callbacks,onReady:()=>ready++});
+ assert.equal(isTelegramMiniAppLaunch(h.win),true);
+ assert.equal(ready,1);
+ assert.equal(h.classes.has("telegram-mini-app"),true);
  assert.equal(h.appended,0);
  integration.dispose();
 });

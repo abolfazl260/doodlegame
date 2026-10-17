@@ -132,7 +132,10 @@ export class TelegramLeaderboard{
   if(!this.modal)return;
   this.modal.hidden=false;
   if(!this.connected&&!this.initData){
-   this.setConnectionStatus("در حال بررسی محیط تلگرام…","connecting");
+   // Keep an actionable SDK/login error visible when the player opens details.
+   // A retry may run, but must not erase the last known failure message.
+   if(this.button?.dataset.state!=="error")
+    this.setConnectionStatus("در حال بررسی محیط تلگرام…","connecting");
    this.retryTelegram?.();
   }
   if(this.connected)void this.refresh();
