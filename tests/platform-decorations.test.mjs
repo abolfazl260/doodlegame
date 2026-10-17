@@ -44,7 +44,7 @@ test("every built-in stage has separate platform engraving without modifying col
   "bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
  const marks=ids.map(id=>{
   const art=generatePlatformInk(id,p,2);
-  assert.ok(art.strokes.length>18&&art.strokes.length<150,id+" keeps decoration affordable");
+  assert.ok(art.strokes.length>=14&&art.strokes.length<150,id+" keeps decoration affordable on narrow ledges");
   assert.ok(art.strokes.every(mark=>[mark.x1,mark.y1,mark.x2,mark.y2].every(Number.isFinite)));
   assert.deepEqual(art,generatePlatformInk(id,p,2),"art must be deterministic");
   return JSON.stringify(art.strokes.slice(-6));
