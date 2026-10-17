@@ -2231,21 +2231,25 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui[data-menu-view="landing"] .game-ui__menu{gap:.5rem}
 @media(max-height:360px){.game-ui__landing-routes{gap:.3rem}.game-ui .game-ui__landing button{min-height:44px;padding:.4rem .55rem}.game-ui .game-ui__landing button[data-route="quick"]{min-height:50px}.game-ui__landing{gap:.3rem}}
 
-/* Six weapon-free reference-matched character portraits. */
+/* Eight weapon-free reference-matched character portraits. */
 .game-ui__character-portrait--soldier{background:linear-gradient(155deg,#5fbbfb,#173a60)}
 .game-ui__character-portrait--ninja{background:linear-gradient(155deg,#4c345f,#151628)}
 .game-ui__character-portrait--viking{background:linear-gradient(155deg,#765238,#251d19)}
 .game-ui__character-portrait--ranger{background:linear-gradient(155deg,#15514b,#0d343a)}
 .game-ui__character-portrait--pharaoh{background:linear-gradient(155deg,#704c25,#302014)}
 .game-ui__character-portrait--knight{background:linear-gradient(155deg,#682336,#24101f)}
+.game-ui__character-portrait--mummy{background:linear-gradient(155deg,#4b3274,#1c143c)}
+.game-ui__character-portrait--archer{background:linear-gradient(155deg,#226c5c,#082c2c)}
 .game-ui .game-ui__character-card[data-character="soldier"][aria-pressed="true"]{border-color:#46c8ff;box-shadow:0 0 0 2px #46c8ff88,0 0 16px #46c8ff33}
 .game-ui .game-ui__character-card[data-character="ninja"][aria-pressed="true"]{border-color:#ff5670;box-shadow:0 0 0 2px #ff567088,0 0 16px #ff567033}
 .game-ui .game-ui__character-card[data-character="viking"][aria-pressed="true"]{border-color:#e4b85f;box-shadow:0 0 0 2px #e4b85f88,0 0 16px #e4b85f33}
 .game-ui .game-ui__character-card[data-character="ranger"][aria-pressed="true"]{border-color:#82be65;box-shadow:0 0 0 2px #82be6588,0 0 16px #82be6533}
 .game-ui .game-ui__character-card[data-character="pharaoh"][aria-pressed="true"]{border-color:#e4bb57;box-shadow:0 0 0 2px #e4bb5788,0 0 16px #e4bb5733}
 .game-ui .game-ui__character-card[data-character="knight"][aria-pressed="true"]{border-color:#e54b59;box-shadow:0 0 0 2px #e54b5988,0 0 16px #e54b5933}
+.game-ui .game-ui__character-card[data-character="mummy"][aria-pressed="true"]{border-color:#e8dcc8;box-shadow:0 0 0 2px #e8dcc888,0 0 16px #e8dcc833}
+.game-ui .game-ui__character-card[data-character="archer"][aria-pressed="true"]{border-color:#a9d46b;box-shadow:0 0 0 2px #a9d46b88,0 0 16px #a9d46b33}
 @media(min-width:760px){.game-ui__character-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:380px) and (max-width:759px){.game-ui__character-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
-/* Six options form two rows on desktop and three rows on phones; retain 44px+ taps. */
+/* Eight options form three desktop rows or four mobile rows; retain touch targets. */
 @media(max-width:759px) and (min-width:361px){.game-ui .game-ui__character-card{gap:.28rem;padding:.32rem .4rem;min-height:68px}.game-ui__character-portrait{flex-basis:56px;width:56px;height:66px}.game-ui__character-name{font-size:clamp(.68rem,2.4vw,.82rem);letter-spacing:0}}
 @media(max-width:360px){.game-ui .game-ui__character-card{min-height:70px}}
