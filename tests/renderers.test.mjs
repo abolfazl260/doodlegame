@@ -66,6 +66,18 @@ test('WebGL fighters use real, outlined thick meshes that remain readable on mob
  assert.notEqual(player.bodyCore.material.color.getHex(),enemy.bodyCore.material.color.getHex(),
   "player and enemy must have distinct high-visibility colors");
  assert.notEqual(player.bodyHalo.material.color.getHex(),player.bodyOutline.material.color.getHex());
+
+ // No new materials or meshes should be allocated when switching the four styles.
+ for(const weapon of ['blade','hammer','blaster','bow']){
+  renderer.draw(player,{...s,characterId:'soldier',weapon,weaponHolsterFrom:null});
+  assert.equal(player.styleMeshes.length,4);
+  for(const mesh of player.styleMeshes){
+   assert.ok(mesh.visible,weapon+' must render all color detail layers');
+   assert.ok(mesh.geometry.getAttribute('position').array.every(Number.isFinite));
+  }
+ }
+ renderer.draw(player,{...s,weapon:'uzi'});
+ assert.ok(player.styleMeshes.every(mesh=>!mesh.visible),'unmodified weapons hide reference-only layers');
  for(const view of [player,enemy])view.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
 });
 
