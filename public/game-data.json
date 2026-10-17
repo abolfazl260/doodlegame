@@ -33,6 +33,10 @@
     "missile": {
       "damage": 22,
       "cooldown": 1.05
+    },
+    "spear": {
+      "damage": 13,
+      "cooldown": 0.85
     }
   },
   "arenas": {
