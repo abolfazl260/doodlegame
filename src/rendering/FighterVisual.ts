@@ -304,18 +304,12 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
  const rect=(x:number,y:number,w:number,h:number)=>path([[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x,y]]);
  switch(weapon) {
   case 'blade':
-   if(s.characterId==="ninja"){
-    // Short, bright dagger with a red guard as shown in Ninja's reference card.
-    rect(-.12,-.04,.24,.08);line([.12,-.12],[.12,.12]);
-    path([[.15,-.067],[.46,-.056],[.64,0],[.46,.056],[.15,.067]]);
-    line([.2,0],[.52,0]);
-   }else{
-    // Soldier's reference sword: long tapered silver blade, blue grip and gold crossguard.
-    rect(-.24,-.065,.35,.13);rect(-.285,-.085,.075,.17);
-    path([[.10,-.18],[.18,-.18],[.18,.18],[.10,.18],[.10,-.18]]);
-    path([[.19,-.105],[.84,-.105],[1.06,0],[.84,.105],[.19,.105],[.19,-.105]]);
-    line([.26,0],[.96,0]);
-   }
+   // Skin is cosmetic: Soldier and Ninja wield the same blade geometry.
+   // Weapon selection, not character appearance, determines weapon size.
+   rect(-.24,-.065,.35,.13);rect(-.285,-.085,.075,.17);
+   path([[.10,-.18],[.18,-.18],[.18,.18],[.10,.18],[.10,-.18]]);
+   path([[.19,-.105],[.84,-.105],[1.06,0],[.84,.105],[.19,.105],[.19,-.105]]);
+   line([.26,0],[.96,0]);
    break;
   case 'hammer':
    // Rectangular faceted steel head, dark wood handle, gold pommel and collar.
@@ -408,7 +402,7 @@ export function fighterOutfit(_s:DuelistRenderState,pose:ReturnType<typeof fight
 /** Distinct colored inlays for every equipped weapon. */
 export function weaponAccentColor(s:DuelistRenderState):string {
  switch(weaponDrawPose(s).weapon){
-  case "blade":return s.characterId==="ninja"?"#ef344d":"#f5bf35";
+  case "blade":return "#f5bf35";
   case "hammer":return "#f1ba38";
   case "blaster":return "#f04454";
   case "uzi":return "#59d84f";
@@ -422,9 +416,9 @@ export function weaponAccentColor(s:DuelistRenderState):string {
 export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
  if(s.grabPhase!==null&&s.grabPhase!==undefined)return [];
  switch(weaponDrawPose(s).weapon){
-  case "blade":return s.characterId==="ninja"?
-   [[[.21,-.02],[.5,0]],[[.12,-.1],[.12,.1]]]:
-   [[[.14,-.18],[.14,.18]],[[-.24,-.08],[-.24,.08]]];
+  case "blade":return [
+   [[.14,-.18],[.14,.18]],[[-.24,-.08],[-.24,.08]]
+  ];
   case "hammer":return [
    [[.53,-.12],[.53,.12]],[[-.30,-.115],[-.30,.115]],[[.68,.25],[.87,.25]]
   ];
@@ -461,8 +455,7 @@ export interface WeaponStyleLayer { readonly color:string; readonly width:number
 export function weaponStyleLayers(s:DuelistRenderState):readonly WeaponStyleLayer[]{
  if(s.grabPhase!==null&&s.grabPhase!==undefined)return [];
  switch(weaponDrawPose(s).weapon){
-  case "blade":
-   return s.characterId==="ninja"?[]:[
+  case "blade":return [
     {color:"#c0d8eb",width:.105,segments:[[[.26,0],[.85,0]]]},
     {color:"#1766c3",width:.064,segments:[[[-.21,0],[.09,0]]]},
     {color:"#f2c34b",width:.081,segments:[[[.14,-.17],[.14,.17]]]},
