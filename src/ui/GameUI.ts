@@ -44,19 +44,13 @@ const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomeran
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
 const CHARACTER_IDS:readonly CharacterId[]=["soldier","ninja"];
 const CHARACTER_TEXT={
- en:{
-  soldier:{name:"SOLDIER",description:"Blue headband · sword fighter"},
-  ninja:{name:"NINJA",description:"Red headband · dagger fighter"}
- },
- fa:{
-  soldier:{name:"سرباز",description:"سربند آبی · مبارز شمشیرزن"},
-  ninja:{name:"نینجا",description:"سربند قرمز · مبارز خنجرزن"}
- }
+ en:{soldier:{name:"SOLDIER"},ninja:{name:"NINJA"}},
+ fa:{soldier:{name:"سرباز"},ninja:{name:"نینجا"}}
 } as const;
-// Portraits reproduce the approved stick-fighter designs.
+// Skin previews deliberately contain no weapons: equipment is selected independently.
 const CHARACTER_PORTRAITS:Record<CharacterId,string>={
- soldier:"<svg viewBox=\"0 0 96 96\" xmlns=\"http://www.w3.org/2000/svg\" aria-hidden=\"true\"><path d=\"M15 82H82\" stroke=\"#718497\" stroke-width=\"3\"/><path d=\"M47 49L45 68 30 83M45 68L62 83M46 52L29 62 22 73M47 53L62 61\" fill=\"none\" stroke=\"#0b1422\" stroke-width=\"9\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"48\" cy=\"27\" r=\"17\" fill=\"#f9fcff\" stroke=\"#080f19\" stroke-width=\"4\"/><path d=\"M34 25H65\" stroke=\"#1679d9\" stroke-width=\"7\"/><path d=\"M33 25 22 19 11 22 23 28 10 37\" fill=\"none\" stroke=\"#0c1119\" stroke-width=\"8\" stroke-linejoin=\"round\"/><path d=\"M33 25 22 19 11 22 23 28 10 37\" fill=\"none\" stroke=\"#1788ee\" stroke-width=\"5\" stroke-linejoin=\"round\"/><path d=\"M58 62L76 31 86 26 83 37 64 69\" fill=\"#c3eaff\" stroke=\"#080f19\" stroke-width=\"3\" stroke-linejoin=\"round\"/><path d=\"M56 62L68 68\" stroke=\"#dba71c\" stroke-width=\"6\" stroke-linecap=\"round\"/></svg>",
- ninja:"<svg viewBox=\"0 0 96 96\" xmlns=\"http://www.w3.org/2000/svg\" aria-hidden=\"true\"><path d=\"M15 82H82\" stroke=\"#6b5671\" stroke-width=\"3\"/><path d=\"M48 49L46 69 26 82M46 69L63 83M45 52L28 61 22 73M47 53L66 59\" fill=\"none\" stroke=\"#05070c\" stroke-width=\"10\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"48\" cy=\"27\" r=\"17\" fill=\"#13151d\" stroke=\"#03060b\" stroke-width=\"4\"/><path d=\"M34 25H64\" stroke=\"#e4223b\" stroke-width=\"7\"/><path d=\"M33 24 20 16 9 20 23 29 8 37\" fill=\"none\" stroke=\"#07080d\" stroke-width=\"9\" stroke-linejoin=\"round\"/><path d=\"M33 24 20 16 9 20 23 29 8 37\" fill=\"none\" stroke=\"#e4223b\" stroke-width=\"5\" stroke-linejoin=\"round\"/><path d=\"M62 59 75 45 87 43 81 54 67 65\" fill=\"#e7edf4\" stroke=\"#06080c\" stroke-width=\"3\" stroke-linejoin=\"round\"/><path d=\"M59 65 66 70\" stroke=\"#e4223b\" stroke-width=\"5\" stroke-linecap=\"round\"/></svg>"
+ soldier:'<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M15 84H82" stroke="#718497" stroke-width="3"/><path d="M48 48L48 66 31 83M48 66L65 83M47 51L30 63 24 73M49 51L66 63 72 73" fill="none" stroke="#0b1422" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="48" cy="27" r="17" fill="#f9fcff" stroke="#080f19" stroke-width="4"/><path d="M34 25H65" stroke="#1679d9" stroke-width="7"/><path d="M33 25 22 19 11 22 23 28 10 37" fill="none" stroke="#0c1119" stroke-width="8" stroke-linejoin="round"/><path d="M33 25 22 19 11 22 23 28 10 37" fill="none" stroke="#1788ee" stroke-width="5" stroke-linejoin="round"/></svg>',
+ ninja:'<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M15 84H82" stroke="#6b5671" stroke-width="3"/><path d="M48 48L48 66 31 83M48 66L65 83M47 51L30 63 24 73M49 51L66 63 72 73" fill="none" stroke="#05070c" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="48" cy="27" r="17" fill="#13151d" stroke="#03060b" stroke-width="4"/><path d="M34 25H64" stroke="#e4223b" stroke-width="7"/><path d="M33 24 20 16 9 20 23 29 8 37" fill="none" stroke="#07080d" stroke-width="9" stroke-linejoin="round"/><path d="M33 24 20 16 9 20 23 29 8 37" fill="none" stroke="#e4223b" stroke-width="5" stroke-linejoin="round"/></svg>'
 };
 const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";
 
@@ -158,9 +152,8 @@ export class GameUI{
  private characterNames=document.createElement("div");
  private characterPicker=document.createElement("section");
  private characterPickerTitle=document.createElement("h3");
- private characterPickerHint=document.createElement("p");
  private characterCards=document.createElement("div");
- private characterLabels=new Map<CharacterId,{name:HTMLElement;description:HTMLElement}>();
+ private characterLabels=new Map<CharacterId,HTMLElement>();
  private playerNameLabel=document.createElement("label");
  private secondNameLabel=document.createElement("label");
  private playerNameCaption=document.createElement("span");
@@ -513,7 +506,6 @@ export class GameUI{
   this.characterPickerTitle.className="game-ui__character-picker-title";
   this.characterCards.className="game-ui__character-cards";
   this.characterCards.setAttribute("role","group");
-  this.characterPickerHint.className="game-ui__character-picker-hint";
   for(const id of CHARACTER_IDS){
    const card=document.createElement("button");
    card.type="button";card.className="game-ui__character-card";
@@ -521,17 +513,16 @@ export class GameUI{
    const portrait=document.createElement("span");
    portrait.className="game-ui__character-portrait game-ui__character-portrait--"+id;
    portrait.setAttribute("aria-hidden","true");
-   // Tiny vector portraits match the procedural in-game stick fighters.
+   // Weapon-free skin thumbnails: blue Soldier or red Ninja headband.
    portrait.innerHTML=CHARACTER_PORTRAITS[id];
    const copy=document.createElement("span");copy.className="game-ui__character-copy";
    const name=document.createElement("strong");name.className="game-ui__character-name";
-   const desc=document.createElement("span");desc.className="game-ui__character-description";
-   copy.append(name,desc);card.append(portrait,copy);
-   this.characterLabels.set(id,{name,description:desc});
+   copy.append(name);card.append(portrait,copy);
+   this.characterLabels.set(id,name);
    card.onclick=()=>actions.characterSelect?.(id);
    this.characterCards.append(card);
   }
-  this.characterPicker.append(this.characterPickerTitle,this.characterCards,this.characterPickerHint);
+  this.characterPicker.append(this.characterPickerTitle,this.characterCards);
   this.weaponCards.className="game-ui__weapon-grid";
   this.weaponDetails.className="game-ui__weapon-details";
   this.weaponDetailsTitle.className="game-ui__weapon-details-title";
@@ -1594,16 +1585,12 @@ export class GameUI{
   this.startingWeaponTitle.textContent=messages.sections.weapon;
   this.playerNameCaption.textContent=messages.characterNames.playerOne;
   this.secondNameCaption.textContent=messages.characterNames.playerTwo;
-  this.characterPickerTitle.textContent=this.i18n.locale==="fa"?"شخصیت خودت را انتخاب کن":"CHOOSE YOUR CHARACTER";
-  this.characterPickerHint.textContent=this.i18n.locale==="fa"?
-   "توانایی‌ها برابرند؛ حریف شخصیت دیگر را دارد.":
-   "Equal abilities. Your opponent uses the other character.";
+  this.characterPickerTitle.textContent=this.i18n.locale==="fa"?"اسکین شخصیت را انتخاب کن":"CHOOSE YOUR SKIN";
   this.characterCards.setAttribute("aria-label",this.characterPickerTitle.textContent);
   for(const item of this.characterCards.children){
    const card=item as HTMLButtonElement,id=card.dataset.character as CharacterId;
-   const copy=this.characterLabels.get(id);
-   if(copy){copy.name.textContent=CHARACTER_TEXT[this.i18n.locale][id].name;
-    copy.description.textContent=CHARACTER_TEXT[this.i18n.locale][id].description;}
+   const name=this.characterLabels.get(id);
+   if(name)name.textContent=CHARACTER_TEXT[this.i18n.locale][id].name;
    card.setAttribute("aria-label",CHARACTER_TEXT[this.i18n.locale][id].name);
   }
   this.playerNameInput.placeholder=messages.characterNames.optional;
