@@ -43,7 +43,7 @@ test('Soldier and Ninja share slim stick limbs without shrinking faces or headba
  assert.ok(body.halo>body.outline&&body.outline>body.core);
  assert.ok(vest.outline>vest.core&&gear.outline>gear.core);
  assert.deepEqual(head,{halo:.355,outline:.318,core:.274},"keep the head at original size");
- assert.deepEqual(marking,{outline:.115,core:.064},"headbands remain legible with lighter outlines");
+ assert.deepEqual(marking,{outline:.102,core:.057},"headbands remain legible with extra-slim outlines");
 });
 
 test('four redesigned weapons retain distinctive color layers and finite artwork',()=>{
@@ -81,8 +81,8 @@ test('four redesigned weapons retain distinctive color layers and finite artwork
 
 test('thinner weapon ink and color layers preserve animated finite render geometry',()=>{
  const {weapon,body,vest,head}=FIGHTER_INK_WIDTH;
- assert.deepEqual(weapon,{outline:.098,core:.058,accent:.034});
- assert.ok(body.halo<=.18&&vest.outline<=.28);
+ assert.deepEqual(weapon,{outline:.082,core:.048,accent:.028});
+ assert.ok(body.halo<=.16&&vest.outline<=.24);
  assert.deepEqual(head,{halo:.355,outline:.318,core:.274},'head must not shrink');
  for(const id of ['uzi','boomerang','bomb','missile']){
   const s={...base,weapon:id,weaponHolsterFrom:null,weaponDrawTime:0};
@@ -91,7 +91,7 @@ test('thinner weapon ink and color layers preserve animated finite render geomet
   assert.ok(outlines.length>5);
   assert.equal(styled.length,4);
   for(const layer of styled){
-   assert.ok(layer.width<=.26,'color overlays must not conceal the stick rig');
+   assert.ok(layer.width<=.22,'color overlays must not conceal the stick rig');
    assert.ok(layer.segments.length>0);
    assert.ok(layer.segments.every(([a,b])=>[...a,...b].every(Number.isFinite)));
   }
@@ -100,4 +100,27 @@ test('thinner weapon ink and color layers preserve animated finite render geomet
   const bomb={...base,weapon:'bomb',animationTime:t};
   assert.ok(toolSegments(bomb).every(([a,b])=>[...a,...b].every(Number.isFinite)));
  }
+});
+
+test('all eight weapon paint layers have the approved extra-slim widths',()=>{
+ const widths={
+  blade:[.105,.064,.081,.028],
+  hammer:[.22,.072,.055,.028],
+  blaster:[.126,.086,.053,.025],
+  bow:[.06,.10,.028,.047],
+  uzi:[.119,.094,.053,.024],
+  boomerang:[.081,.064,.034,.026],
+  bomb:[.22,.037,.034,.021],
+  missile:[.132,.068,.055,.045]
+ };
+ for(const [weapon,expected] of Object.entries(widths)){
+  const state={...base,characterId:'soldier',weapon,weaponHolsterFrom:null,weaponDrawTime:0};
+  assert.deepEqual(weaponStyleLayers(state).map(x=>x.width),expected,weapon+' preserves slimmer accent widths');
+ }
+ const {body,vest,gear,marking,head}=FIGHTER_INK_WIDTH;
+ assert.deepEqual(body,{halo:.16,outline:.118,core:.08});
+ assert.deepEqual(vest,{outline:.24,core:.18});
+ assert.deepEqual(gear,{outline:.135,core:.092});
+ assert.deepEqual(marking,{outline:.102,core:.057});
+ assert.deepEqual(head,{halo:.355,outline:.318,core:.274});
 });
