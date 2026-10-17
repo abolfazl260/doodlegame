@@ -5,6 +5,11 @@ on:
     tags:
       - "v*.*.*"
   workflow_dispatch:
+    inputs:
+      version_code:
+        description: "Optional Play versionCode override (must exceed every previously uploaded code)"
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -41,6 +46,18 @@ jobs:
             echo "Tag $GITHUB_REF_NAME must match package.json version v$VERSION"
             exit 1
           }
+
+      # GitHub run number increases for each new Android Release workflow run.
+      # Run attempt keeps reruns distinct; GITHUB_ENV shares the same code with
+      # both the signed bundle build and the Google Play verification step.
+      - name: Allocate Google Play version code
+        shell: bash
+        env:
+          REQUESTED_VERSION_CODE: ${{ inputs.version_code }}
+        run: |
+          VERSION_CODE="$(node scripts/android/release-version-code.mjs)"
+          echo "ANDROID_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+          echo "Android Google Play versionCode: $VERSION_CODE"
 
       - name: Validate release signing secrets
         shell: bash
