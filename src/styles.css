@@ -2239,3 +2239,4 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui .game-ui__character-card[data-character="ninja"][aria-pressed="true"]{border-color:#ff5670;box-shadow:0 0 0 2px #ff567088,0 0 16px #ff567033}
 .game-ui .game-ui__character-card[data-character="viking"][aria-pressed="true"]{border-color:#e4b85f;box-shadow:0 0 0 2px #e4b85f88,0 0 16px #e4b85f33}
 @media(min-width:760px){.game-ui__character-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:380px) and (max-width:759px){.game-ui__character-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
