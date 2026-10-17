@@ -19,6 +19,52 @@ for(const [width,height] of [[568,280],[568,320],[640,320],[844,390]])for(const 
  expect(await page.locator('.game-ui__menu').evaluate(n=>n.scrollWidth<=n.clientWidth+1)).toBe(true);await context.close();
 });
 
+
+test('cosmic arcade home uses the reference visual hierarchy without duplicating controls',async({browser})=>{
+ for(const [width,height] of [[1440,900],[844,390],[568,320]]){
+  const context=await browser.newContext({viewport:{width,height},hasTouch:true,isMobile:true});
+  const page=await context.newPage();
+  await page.goto('tests/browser/run-progression.html?landing=1');
+  const panel=page.locator('.game-ui.menu[data-menu-view="landing"]');
+  const quick=page.locator('[data-route="quick"]');
+  await expect(panel).toBeVisible();await expect(quick).toBeVisible();
+  await expect(quick.locator('.game-ui__landing-quick-label')).toBeVisible();
+  await expect(quick.locator('.game-ui__landing-defaults')).toBeVisible();
+  await expect(page.locator('.game-ui__landing-routes button')).toHaveCount(5);
+  await expect(page.locator('.game-ui__landing-icon svg')).toHaveCount(5);
+  await expect(page.locator('.game-ui__landing-routes button[data-route="settings"]')).toBeVisible();
+  expect(await page.locator('.game-ui__landing').evaluate(el=>el.scrollWidth<=el.clientWidth+2)).toBe(true);
+  const visual=await page.evaluate(()=>{
+   const root=document.querySelector('.game-ui.menu[data-menu-view="landing"]');
+   const gold=document.querySelector('[data-route="quick"]');
+   const settings=document.querySelector('[data-route="settings"]');
+   const route=document.querySelector('[data-route="custom"]');
+   const first=document.querySelector('[data-route="quick"] .game-ui__landing-defaults');
+   const panelRect=root.getBoundingClientRect(),quickRect=gold.getBoundingClientRect(),settingsRect=settings.getBoundingClientRect();
+   const routeRect=route.getBoundingClientRect(),style=getComputedStyle(root),goldStyle=getComputedStyle(gold);
+   return {panel:{left:panelRect.left,right:panelRect.right,width:panelRect.width},
+    quick:{height:quickRect.height,width:quickRect.width},settings:settingsRect.width,route:routeRect.width,
+    border:style.borderColor,glow:style.boxShadow,bg:goldStyle.backgroundImage,
+    subtitle:first.textContent.trim(),isSubtitleNested:gold.contains(first)};
+  });
+  expect(visual.panel.left).toBeGreaterThanOrEqual(-1);
+  expect(visual.panel.right).toBeLessThanOrEqual(width+1);
+  expect(visual.quick.height).toBeGreaterThanOrEqual(height<=390?48:65);
+  expect(visual.quick.width).toBeGreaterThanOrEqual(visual.route.width*1.85);
+  expect(visual.settings).toBeGreaterThanOrEqual(visual.route.width*1.85);
+  expect(visual.glow).toContain('rgb(');
+  expect(visual.bg).toContain('gradient');
+  expect(visual.isSubtitleNested).toBe(true);
+  expect(visual.subtitle.length).toBeGreaterThan(6);
+  await page.locator('[data-route="custom"]').click();
+  await expect(page.locator('.game-ui[data-menu-view="setup"]')).toBeVisible();
+  await expect(page.locator('.game-ui__landing')).toBeHidden();
+  await page.locator('[data-menu-home]').click();
+  await expect(quick).toBeVisible();
+  await page.close();await context.close();
+ }
+});
+
 test('Quick Play preserves custom choices/names and a pending Run can continue safely',async({page})=>{
  await page.goto('tests/browser/run-progression.html?landing=1');
  await page.locator('[data-route="local"]').click();
