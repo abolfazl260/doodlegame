@@ -158,10 +158,13 @@ test("pre-injected SDK without Telegram identity never opens Mini App UI",()=>{
  h.win.Telegram={WebApp:h.app};
  let ready=false;
  const integration=installTelegramMiniApp(h.win,h.doc,{...h.callbacks,onReady:()=>{ready=true;}});
- assert.equal(integration.active,true);
+ assert.equal(integration.active,false);
  assert.equal(ready,false);
  assert.equal(h.classes.has("telegram-mini-app"),false);
  assert.equal(h.appended,0);
+ assert.equal(h.calls.length,0,"no SDK chrome/back-button operations in ordinary browsers");
+ integration.onGameState();
+ assert.equal(h.calls.length,0,"ordinary browser game states cannot alter Telegram BackButton");
  integration.dispose();
 });
 
