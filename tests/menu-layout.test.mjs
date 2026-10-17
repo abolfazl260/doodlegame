@@ -104,18 +104,20 @@ function setup(hudOverride={}){
  return {ui,calls,hud,container};
 }
 
-test("skin picker lists six weapon-free character appearances with name-only cards",()=>{
+test("skin picker lists eight weapon-free character appearances with name-only cards",()=>{
  const {ui,hud}=setup({characterId:"soldier"});
- const [soldier,ninja,viking,ranger,pharaoh,knight]=ui.characterCards.children;
+ const [soldier,ninja,viking,ranger,pharaoh,knight,mummy,archer]=ui.characterCards.children;
  assert.equal(ui.characterPicker.children.length,2,"no abilities/opponent hint is appended");
- assert.equal(ui.characterCards.children.length,6);
+ assert.equal(ui.characterCards.children.length,8);
  assert.equal(soldier.dataset.character,"soldier");
  assert.equal(ninja.dataset.character,"ninja");
  assert.equal(viking.dataset.character,"viking");
  assert.equal(ranger.dataset.character,"ranger");
  assert.equal(pharaoh.dataset.character,"pharaoh");
  assert.equal(knight.dataset.character,"knight");
- for(const card of [soldier,ninja,viking,ranger,pharaoh,knight]){
+ assert.equal(mummy.dataset.character,"mummy");
+ assert.equal(archer.dataset.character,"archer");
+ for(const card of [soldier,ninja,viking,ranger,pharaoh,knight,mummy,archer]){
   assert.equal(card.children.length,2,"portrait and text only");
   assert.equal(card.children[1].children.length,1,"only name, no description");
   const svg=card.children[0].innerHTML;
@@ -135,6 +137,10 @@ test("skin picker lists six weapon-free character appearances with name-only car
  assert.equal(ui.characterLabels.get("ranger").textContent,"RANGER");
  assert.equal(ui.characterLabels.get("pharaoh").textContent,"PHARAOH");
  assert.equal(ui.characterLabels.get("knight").textContent,"KNIGHT");
+ assert.equal(ui.characterLabels.get("mummy").textContent,"MUMMY");
+ assert.equal(ui.characterLabels.get("archer").textContent,"ARCHER");
+ assert.ok(mummy.children[0].innerHTML.includes("#2beeff"),"mummy should show cyan eye");
+ assert.ok(archer.children[0].innerHTML.includes("#92c83e"),"archer should show green quiver arrows");
  ui.render(states.MENU,hud);
  assert.equal(soldier.getAttribute("aria-pressed"),"true");
  assert.equal(ninja.getAttribute("aria-pressed"),"false");
@@ -142,6 +148,8 @@ test("skin picker lists six weapon-free character appearances with name-only car
  assert.equal(ranger.getAttribute("aria-pressed"),"false");
  assert.equal(pharaoh.getAttribute("aria-pressed"),"false");
  assert.equal(knight.getAttribute("aria-pressed"),"false");
+ assert.equal(mummy.getAttribute("aria-pressed"),"false");
+ assert.equal(archer.getAttribute("aria-pressed"),"false");
  assert.ok(!JSON.stringify(ui.characterPicker).includes("Equal abilities"));
  i18nCleanup(ui);
 });
