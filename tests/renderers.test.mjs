@@ -63,7 +63,7 @@ test('Viking helmet, gold bands, horns, fur and boots render on both engines',as
  fighter.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
 });
 
-test("Ranger Pharaoh Knight armor details appear in Canvas and WebGL and never change weapons",async()=>{
+test("five richly illustrated costumes appear in Canvas/WebGL without changing weapons",async()=>{
  const {ThreeRenderer}=await rendererModule("ThreeRenderer");
  const {CanvasRenderer}=await rendererModule("CanvasRenderer");
  const webgl=Object.create(ThreeRenderer.prototype),view=webgl.fighter(0xffffff,false),base=state().player;
@@ -79,7 +79,9 @@ test("Ranger Pharaoh Knight armor details appear in Canvas and WebGL and never c
   for(const [id,required] of Object.entries({
    ranger:["#d2b24b","#f7fcf6","#478e4b","#5f3b22"],
    pharaoh:["#d6a13b","#0754a1","#32e8ff","#fff3da"],
-   knight:["#b91f30","#aeb8c5","#d5a946","#d52937"]
+   knight:["#b91f30","#aeb8c5","#d5a946","#d52937"],
+   mummy:["#e8dfc8","#f9f2e2","#2ce8f4","#f0ba49"],
+   archer:["#263c23","#d6ad50","#f9ffed","#b5e657"]
   })){
    const player={...base,characterId:id,weapon:"blade",weaponHolsterFrom:null};
    webgl.draw(view,player);
@@ -107,7 +109,7 @@ test("complex skins hide old stray shoulder/vest/gear meshes on WebGL",async()=>
  const renderer=Object.create(ThreeRenderer.prototype),view=renderer.fighter(0xffffff,false),base=state().player;
  const legacy=[view.vestOutline,view.vestCore,view.gearOutline,view.gearCore,
   view.trim,view.costumeOutline,view.costumeCore];
- for(const characterId of ["ranger","pharaoh","knight"]){
+ for(const characterId of ["ranger","pharaoh","knight","mummy","archer"]){
   renderer.draw(view,{...base,characterId,weapon:"blade",weaponHolsterFrom:null});
   assert.ok(legacy.every(mesh=>!mesh.visible),characterId+" has no duplicate black costume strokes");
   assert.equal(view.bodyCore.visible,true,"the animated skeleton must remain visible");

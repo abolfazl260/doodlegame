@@ -390,7 +390,7 @@ export function fighterOutfit(_s:DuelistRenderState,pose:ReturnType<typeof fight
  // Heavy special costumes paint their own breastplate, sleeves, cape and belt.
  // Do not draw the old vest/gear/neck trim underneath: the duplicate geometry
  // emerges as dark loose strokes at both sides of the animated fighters.
- if(_s.characterId==="ranger"||_s.characterId==="pharaoh"||_s.characterId==="knight")
+ if(["ranger","pharaoh","knight","mummy","archer"].includes(_s.characterId))
   return {vest:[] as Segment[],gear:[] as Segment[],trim:[] as Segment[],hair:[] as Segment[]};
  const body=pose.body;
  const partial=(segment:Segment,start:number):Segment=>{
@@ -477,6 +477,97 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
   [a[0]+(b[0]-a[0])*.6,a[1]+(b[1]-a[1])*.6],b
  ] as Segment);
  const layer=(color:string,width:number,segments:readonly Segment[])=>({color,width,segments});
+ // Wrap strips and cuffs sit on animated limbs, not on unrelated fixed world
+ // coordinates. Each cosmetic segment travels with the underlying 9-part rig.
+ const strip=(part:Segment,t:number,spread=.075):Segment=>{
+  const [a,b]=part,x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t;
+  const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy)||1;
+  return [[x-dy/len*spread,y+dx/len*spread],[x+dy/len*spread,y-dx/len*spread]];
+ };
+ if(s.characterId==="mummy"){
+  // Reference: wrapped ivory head, one cyan eye, asymmetrical trailing bandage,
+  // crossing linen torso, golden cuffs and turquoise-gold central belt gem.
+  const wrapContour=head([[-.29,-.13],[-.32,.13],[-.20,.30],[.03,.35],[.25,.22],[.31,.05],[.28,-.20]]);
+  const forehead=head([[-.27,.23],[-.09,.32],[.16,.28],[.29,.18]]);
+  const wraps=head([[-.31,.085],[-.09,.23],[.24,.12]]).concat(
+   head([[-.28,-.08],[-.04,.04],[.27,-.045]]),
+   head([[-.26,-.24],[.045,-.09],[.27,-.15]]),
+   head([[-.18,.31],[.09,.17],[.29,.07]]));
+  const eye=head([[.03,-.075],[.10,-.04],[.185,-.005]]);
+  const loose=head([[-.29,.16],[-.40,.085],[-.38,-.045],[-.50,-.12]]);
+  const looseEdge=head([[-.40,.085],[-.51,.055],[-.47,-.04]]);
+  const chest=path([[-.21,.22],[-.14,-.19],[.16,-.19],[.24,.22]]);
+  const crossover=path([[-.23,.16],[.16,-.14]]).concat(path([[.25,.15],[-.14,-.14]]));
+  const shirtFolds=path([[-.16,.13],[.16,.055]]).concat(path([[-.17,-.05],[.15,-.12]]));
+  const belt=line([-.20,-.20],[.21,-.20]);
+  const buckle=path([[-.065,-.255],[.065,-.255],[.065,-.155],[-.065,-.155],[-.065,-.255]]);
+  const loin=path([[-.105,-.27],[-.13,-.54],[0,-.72],[.13,-.54],[.105,-.27]]);
+  const shinWraps=leg.flatMap(part=>[strip(part,.34,.08),strip(part,.47,.08),strip(part,.62,.075)]);
+  const wristWraps=arm.flatMap(part=>[strip(part,.64,.065),strip(part,.78,.06)]);
+  const limbOutline=[...feet,...cuffs];
+  const legBand=leg.map(part=>strip(part,.79,.085));
+  const gem=line([-.017,-.205],[.017,-.205]);
+  return [
+   layer("#070d13",.18,[...wrapContour,...loose,...chest,...loin]),
+   layer("#e8dfc8",.155,[...wrapContour,...forehead,...loose]),
+   layer("#f9f2e2",.083,[...wraps,...crossover,...shirtFolds]),
+   layer("#b4a99a",.048,head([[-.23,.14],[.14,.065],[.27,.11]])),
+   layer("#020b13",.142,head([[-.045,-.07],[.22,-.07]])),
+   layer("#2ce8f4",.072,eye),
+   layer("#e6d8bc",.144,[...chest,...loin]),
+   layer("#f8f1df",.105,shinWraps),
+   layer("#f5e9d2",.092,wristWraps),
+   layer("#cfc2aa",.062,[...looseEdge,...shirtFolds,...legBand]),
+   layer("#b78731",.092,[...belt,...limbOutline]),
+   layer("#f0ba49",.06,buckle),
+   layer("#23d7f1",.06,gem),
+   layer("#fff8e9",.049,[...legBand,...head([[-.16,.28],[.04,.34]])])
+  ];
+ }
+ if(s.characterId==="archer"){
+  // Reference: olive hood with gold piping, white narrow eye, deep-green
+  // cape/scarf, back-mounted quiver of bright green arrows, leather gear.
+  // Quiver/arrows are ornamentation ONLY, independent of equipped weapons.
+  const hood=head([[-.30,-.16],[-.37,.075],[-.21,.32],[.04,.46],[.24,.34],[.36,.11],[.31,-.17]]);
+  const hoodRim=head([[-.31,-.075],[-.23,.17],[.04,.36],[.27,.17],[.33,-.05]]);
+  const hoodInset=head([[-.27,-.12],[-.20,.105],[.04,.26],[.24,.11],[.27,-.13]]);
+  const eye=head([[-.16,-.11],[.015,-.085],[.17,-.055]]);
+  const cape=path([[-.24,.23],[-.40,.06],[-.42,-.27],[-.37,-.49],[-.18,-.40]]);
+  const capeHem=path([[-.37,-.49],[-.28,-.42],[-.18,-.46],[-.09,-.36]]);
+  const scarf=path([[-.30,.21],[-.13,.10],[.1,.11],[.28,.24]]);
+  const shoulders=path([[-.19,.22],[-.30,.205],[-.38,.07]]).concat(
+   path([[.18,.22],[.30,.19],[.36,.09]]));
+  const quiver=path([[-.28,.23],[-.42,.36],[-.55,.24],[-.43,-.035]]);
+  const quiverRim=line([-.43,.35],[-.55,.24]);
+  const arrows=path([[-.46,.27],[-.58,.47]]).concat(path([[-.43,.27],[-.49,.50]]),
+   path([[-.39,.23],[-.40,.49]]));
+  const arrowTips=[...path([[-.63,.42],[-.58,.50],[-.51,.46]]),...path([[-.54,.45],[-.50,.53],[-.46,.47]]),
+   ...path([[-.45,.44],[-.40,.53],[-.36,.45]])];
+  const chest=path([[-.22,.14],[-.17,-.24],[.19,-.24],[.24,.14]]);
+  const strap=path([[-.29,.17],[-.02,-.07],[.20,-.23]]);
+  const belt=line([-.235,-.22],[.23,-.22]);
+  const buckle=path([[-.055,-.275],[.055,-.275],[.055,-.165],[-.055,-.165],[-.055,-.275]]);
+  const cloakPanels=path([[-.21,-.23],[-.27,-.47],[-.16,-.62]]).concat(
+   path([[.18,-.23],[.28,-.47],[.16,-.62]]));
+  const knees=leg.map(part=>strip(part,.47,.105));
+  const forearms=arm.map(part=>strip(part,.76,.085));
+  return [
+   layer("#07130d",.183,[...hood,...cape,...quiver,...chest]),
+   layer("#315737",.147,[...cape,...capeHem,...cloakPanels]),
+   layer("#263c23",.177,hood),
+   layer("#65884b",.112,hoodInset),
+   layer("#d6ad50",.064,hoodRim),
+   layer("#030b0d",.142,head([[-.18,-.11],[.21,-.11]])),
+   layer("#f9ffed",.064,eye),
+   layer("#5a8e39",.095,[...scarf,...shoulders,...knees]),
+   layer("#754726",.10,[...quiver,...strap,...belt,...feet,...cuffs]),
+   layer("#a57539",.061,[...quiverRim,...forearms]),
+   layer("#c69341",.051,buckle),
+   layer("#6ca844",.068,arrows),
+   layer("#b5e657",.062,arrowTips),
+   layer("#a9c96c",.033,head([[.12,.25],[.22,.17]]))
+  ];
+ }
  if(s.characterId==="ranger"){
   // Close the hood at the cheek rather than drawing a loose diagonal tail.
   const hood=head([[-.38,-.04],[-.42,.13],[-.24,.39],[-.02,.48],[.21,.32],[.37,.08],[.30,-.10]]);
@@ -738,7 +829,9 @@ export function fighterInkPalette(enemy:boolean,characterId:DuelistRenderState["
   viking:{core:enemy?"#17191e":"#0c1017",halo:"#b18b59",face:"#10131a",accent:"#d8ac4b",suit:"#11151c",armor:"#29262a",trim:"#ba8b48"},
   ranger:{core:enemy?"#172720":"#0b1b15",halo:"#75b77e",face:"#07120f",accent:"#93ce65",suit:"#142b1f",armor:"#24432b",trim:"#c5a14b"},
   pharaoh:{core:enemy?"#1c2231":"#0d1628",halo:"#dcb964",face:"#060b12",accent:"#34ddf7",suit:"#121d30",armor:"#12417a",trim:"#e3b74e"},
-  knight:{core:enemy?"#282a33":"#141925",halo:"#d9a7a7",face:"#252c38",accent:"#e3b957",suit:"#303441",armor:"#788593",trim:"#bd3345"}
+  knight:{core:enemy?"#282a33":"#141925",halo:"#d9a7a7",face:"#252c38",accent:"#e3b957",suit:"#303441",armor:"#788593",trim:"#bd3345"},
+  mummy:{core:enemy?"#242326":"#141718",halo:"#e8dfc6",face:"#111317",accent:"#23d7f1",suit:"#39332f",armor:"#e5dbc8",trim:"#bc8a3b"},
+  archer:{core:enemy?"#263129":"#151f18",halo:"#9dc277",face:"#0b1510",accent:"#b5e657",suit:"#14251a",armor:"#325a32",trim:"#d6ad50"}
  } as const;
  const style=palettes[characterId];
  return {...style,outline:"#050a12",eye:"#0b0d15",hair:style.face,metal:"#dfe8f0"};
