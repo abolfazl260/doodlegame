@@ -81,6 +81,18 @@ test('WebGL fighters use real, outlined thick meshes that remain readable on mob
  for(const view of [player,enemy])view.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
 });
 
+test('WebGL projectile artwork uses reference V boomerang and red-white rocket without affecting physics',async()=>{
+ const {ThreeRenderer}=await rendererModule('ThreeRenderer');
+ const r=Object.create(ThreeRenderer.prototype);
+ for(const [kind,count] of [['boomerang',3],['missile',5]]){
+  const g=r.buildProjectileIcon(kind);
+  assert.equal(g.children.length,count);
+  assert.ok(g.children.every(mesh=>mesh.isMesh&&mesh.geometry.getAttribute('position').array.every(Number.isFinite)));
+  assert.ok(g.children.some(mesh=>mesh.material.color.getHex()===0x249fff||mesh.material.color.getHex()===0xef4040));
+  g.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
+ }
+});
+
 test('Canvas fallback draws the same multi-layer body, head and weapon silhouette',async()=>{
  const {CanvasRenderer}=await rendererModule('CanvasRenderer');
  const widths=[],colors=[],circles=[];
