@@ -106,12 +106,13 @@ function setup(hudOverride={}){
 
 test("skin picker shows only Soldier/Ninja names and weapon-free previews",()=>{
  const {ui,hud}=setup({characterId:"soldier"});
- const [soldier,ninja]=ui.characterCards.children;
+ const [soldier,ninja,viking]=ui.characterCards.children;
  assert.equal(ui.characterPicker.children.length,2,"no abilities/opponent hint is appended");
- assert.equal(ui.characterCards.children.length,2);
+ assert.equal(ui.characterCards.children.length,3);
  assert.equal(soldier.dataset.character,"soldier");
  assert.equal(ninja.dataset.character,"ninja");
- for(const card of [soldier,ninja]){
+ assert.equal(viking.dataset.character,"viking");
+ for(const card of [soldier,ninja,viking]){
   assert.equal(card.children.length,2,"portrait and text only");
   assert.equal(card.children[1].children.length,1,"only name, no description");
   const svg=card.children[0].innerHTML;
@@ -122,9 +123,11 @@ test("skin picker shows only Soldier/Ninja names and weapon-free previews",()=>{
  }
  assert.equal(ui.characterLabels.get("soldier").textContent,"SOLDIER");
  assert.equal(ui.characterLabels.get("ninja").textContent,"NINJA");
+ assert.equal(ui.characterLabels.get("viking").textContent,"VIKING");
  ui.render(states.MENU,hud);
  assert.equal(soldier.getAttribute("aria-pressed"),"true");
  assert.equal(ninja.getAttribute("aria-pressed"),"false");
+ assert.equal(viking.getAttribute("aria-pressed"),"false");
  assert.ok(!JSON.stringify(ui.characterPicker).includes("Equal abilities"));
  i18nCleanup(ui);
 });
