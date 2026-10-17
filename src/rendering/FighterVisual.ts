@@ -240,7 +240,11 @@ export function fighterVisual(s:DuelistRenderState) {
  // while hoods, scarves and armor keep their identifying contours.
  const bodyCount=joints.length;
  // One compact stick rig for both characters; headbands are rendered over the round heads.
-  joints.push([[-.2,.24],[-.33,.18]],[[.2,.24],[.34,.16]]);
+  // Generic shoulder ticks belong only to the original simple stick skins.
+  // Drawing them under the Ranger/Pharaoh/Knight layered costumes leaves
+  // disconnected black strokes sticking out beside the shoulders.
+  if(s.characterId==="soldier"||s.characterId==="ninja"||s.characterId==="viking")
+   joints.push([[-.2,.24],[-.33,.18]],[[.2,.24],[.34,.16]]);
   const scale=s.enemyType==='boss'?1.18:s.enemyType==='tank'?1.08:1;
  const squash=land*.16;
  const aerialTilt=flight.phase==="double"?.36*Math.sin(Math.PI*flight.progress):
@@ -383,6 +387,11 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
 
 /** Minimal black stick outfits, matching the two approved fighter silhouettes. */
 export function fighterOutfit(_s:DuelistRenderState,pose:ReturnType<typeof fighterVisual>){
+ // Heavy special costumes paint their own breastplate, sleeves, cape and belt.
+ // Do not draw the old vest/gear/neck trim underneath: the duplicate geometry
+ // emerges as dark loose strokes at both sides of the animated fighters.
+ if(_s.characterId==="ranger"||_s.characterId==="pharaoh"||_s.characterId==="knight")
+  return {vest:[] as Segment[],gear:[] as Segment[],trim:[] as Segment[],hair:[] as Segment[]};
  const body=pose.body;
  const partial=(segment:Segment,start:number):Segment=>{
   const [a,b]=segment;
@@ -469,23 +478,25 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
  ] as Segment);
  const layer=(color:string,width:number,segments:readonly Segment[])=>({color,width,segments});
  if(s.characterId==="ranger"){
-  const hood=head([[-.38,-.04],[-.42,.13],[-.24,.39],[-.02,.48],[.21,.32],[.4,.05],[.3,-.22]]);
+  // Close the hood at the cheek rather than drawing a loose diagonal tail.
+  const hood=head([[-.38,-.04],[-.42,.13],[-.24,.39],[-.02,.48],[.21,.32],[.37,.08],[.30,-.10]]);
   const hoodInset=head([[-.32,-.045],[-.28,.17],[-.075,.34],[.17,.25],[.30,.025]]);
   const goldRim=head([[-.36,-.045],[-.27,.19],[-.06,.365],[.22,.255],[.34,.04]]);
-  const eye=head([[-.145,-.105],[.04,-.085],[.24,-.05]]);
+  // The eye slit must stop inside the green mask, never project past its edge.
+  const eye=head([[-.145,-.105],[.025,-.09],[.17,-.075]]);
   const cape=path([[-.22,.30],[-.45,.09],[-.53,-.39],[-.34,-.65],[-.06,-.42]]);
   const capeTail=path([[.1,.30],[.40,.08],[.37,-.38],[.22,-.54]]);
   const breast=path([[-.22,.23],[-.17,-.20],[.16,-.28],[.26,.22]]);
   const strap=path([[-.28,.2],[.03,-.10],[.23,-.24]]);
   const belt=line([-.23,-.16],[.28,-.16]);
   const buckle=path([[-.043,-.205],[.04,-.205],[.04,-.105],[-.043,-.105],[-.043,-.205]]);
-  const shoulders=path([[-.2,.30],[-.38,.26],[-.49,.09]]).concat(path([[.17,.30],[.36,.26],[.47,.07]]));
+  const shoulders=path([[-.2,.30],[-.34,.25],[-.39,.15]]).concat(path([[.17,.30],[.33,.25],[.39,.15]]));
   const guards=leg.map(([a,b])=>[
    [a[0]+(b[0]-a[0])*.27,a[1]+(b[1]-a[1])*.27],
    [a[0]+(b[0]-a[0])*.48,a[1]+(b[1]-a[1])*.48]
   ] as Segment);
   return [
-   layer("#030e0c",.25,[...cape,...capeTail,...hood,...shoulders]),
+   layer("#030e0c",.172,[...cape,...capeTail,...hood,...shoulders]),
    layer("#123a2c",.18,[...cape,...capeTail]),
    layer("#286d3c",.14,breast),
    layer("#09251d",.20,hood),
@@ -513,7 +524,10 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
   const broadCollar=path([[-.27,.27],[0,.07],[.27,.27]]);
   const skirt=path([[-.2,-.23],[-.16,-.55],[0,-.78],[.15,-.55],[.19,-.23]]);
   const loin=path([[0,-.25],[0,-.73]]);
-  const whitePanels=path([[-.20,-.23],[-.34,-.55],[-.16,-.64]]).concat(path([[.20,-.23],[.34,-.55],[.16,-.64]]));
+  // Narrow cloth folds stay within the kilt. The original wide V shapes
+  // projected outside the legs as large detached white zigzags.
+  const whitePanels=path([[-.16,-.29],[-.19,-.55],[-.11,-.60]]).concat(
+   path([[.16,-.29],[.19,-.55],[.11,-.60]]));
   const belt=line([-.24,-.20],[.24,-.20]);
   const jewels=head([[0,.27],[0,.3]]);
   const wrists=cuffs;
@@ -530,7 +544,7 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
    layer("#c9902b",.095,[...belt,...wrists]),
    layer("#f0c46b",.15,skirt),
    layer("#0b4c96",.092,loin),
-   layer("#fff3da",.084,whitePanels),
+   layer("#fff3da",.054,whitePanels),
    layer("#e7ba56",.094,boots),
    layer("#63e9fc",.049,[...head([[-.02,.28],[.02,.28]]),...line([-.02,-.2],[.02,-.2])])
   ];
@@ -554,7 +568,7 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
   [a[0]+(b[0]-a[0])*.54,a[1]+(b[1]-a[1])*.54]
  ] as Segment);
  return [
-  layer("#170c15",.23,[...cape,...plume]),
+  layer("#170c15",.17,[...cape,...plume]),
   layer("#b91f30",.173,cape),
   layer("#1b202a",.20,[...helmet,...chest,...pauldrons]),
   layer("#aeb8c5",.158,[...helmetPlate,...chest]),

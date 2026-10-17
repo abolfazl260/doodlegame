@@ -26,7 +26,14 @@ test("each simplified 2D fighter has a distinctive, finite costume and facial de
   const s={...base,characterId,animationTime:.35,gaitPhase:1.2};
   const pose=fighterVisual(s),outfit=fighterOutfit(s,pose),marks=characterMarkings(s,pose.head);
   assert.equal(pose.body.length,9,"joints keep the existing collision-independent rig");
-  assert.ok(pose.costume.length>=2,characterId+" needs a readable silhouette");
+  assert.equal(pose.costume.length,["ranger","pharaoh","knight"].includes(characterId)?0:2,
+   "armored skin detail must not inherit floating stick-figure shoulder strokes");
+  if(["ranger","pharaoh","knight"].includes(characterId)){
+   assert.deepEqual(outfit.vest,[]);
+   assert.deepEqual(outfit.gear,[]);
+   assert.deepEqual(outfit.trim,[]);
+  }else assert.ok(outfit.vest.length>0,"simple skins retain original outfit");
+  assert.equal(pose.body.length,9,"core animated rig stays intact");
   assert.equal(outfit.hair.length,0,"all skins have clean non-hairy base rigs");
   assert.equal(marks.length,["soldier","ninja"].includes(characterId)?5:0,"all helmets/hoods replace colored headbands");
   const art=characterSkinLayers(s,pose);
@@ -139,4 +146,41 @@ test("three reference-matched cosmetic outfits include distinctive helmet, hood,
    "the skin never changes even the rocket launcher");
  }
  assert.equal(signatures.size,3);
+});
+
+test("layered armor has no dangling legacy ticks or oversized exposed cloth strokes",()=>{
+ const base=session().getRenderState().player;
+ const near=(a,b)=>Math.abs(a-b)<1e-6;
+ for(const characterId of ["ranger","pharaoh","knight"]){
+  for(const action of [
+   {velocityX:0,gaitPhase:0,grounded:true},
+   {velocityX:8,gaitPhase:1.4,grounded:true},
+   {velocityX:-6,gaitPhase:2.6,grounded:true},
+   {velocityX:1,velocityY:6,grounded:false},
+   {velocityX:0,grounded:true,attackTime:.12}
+  ]){
+   const state={...base,...action,characterId,animationTime:1.7};
+   const pose=fighterVisual(state),outfit=fighterOutfit(state,pose);
+   assert.equal(pose.costume.length,0,characterId+" may not show separate generic shoulder strokes");
+   assert.ok([outfit.vest,outfit.gear,outfit.trim,outfit.hair].every(x=>x.length===0),
+    "obsolete undergarments may not protrude from "+characterId);
+   const layers=characterSkinLayers(state,pose);
+   assert.ok(layers.length>0&&finite(layers.flatMap(x=>x.segments)));
+   assert.equal(pose.body.length,9);
+  }
+ }
+ const ranger={...base,characterId:"ranger"};
+ const rangerPose=fighterVisual(ranger),rangerLayers=characterSkinLayers(ranger,rangerPose);
+ const whiteEye=rangerLayers.find(layer=>layer.color==="#f7fcf6");
+ assert.ok(whiteEye);
+ assert.ok(whiteEye.segments.every(([a,b])=>a[0]-rangerPose.head[0]<=.2&&b[0]-rangerPose.head[0]<=.2),
+  "the white visor line is contained inside the hood");
+ const pharaoh={...base,characterId:"pharaoh"};
+ const pharaohLayers=characterSkinLayers(pharaoh,fighterVisual(pharaoh));
+ const folds=pharaohLayers.find(layer=>layer.color==="#fff3da");
+ assert.ok(folds&&near(folds.width,.054));
+ assert.ok(folds.segments.every(([a,b])=>Math.abs(a[0])<=.2&&Math.abs(b[0])<=.2),
+  "white skirt drapery must not jut beside the legs");
+ const simple=fighterVisual({...base,characterId:"soldier"});
+ assert.equal(simple.costume.length,2,"classic stick figure shoulder marks preserved");
 });
