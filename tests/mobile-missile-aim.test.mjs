@@ -5,6 +5,7 @@ import {getArenaTheme} from "../.test-build/themes/ArenaThemes.js";
 import {getDownloadedArena,installedArenas,arenaImageDataUrl} from "../.test-build/gameplay/DownloadableArenas.js";
 import {WebInput} from "../.test-build/platform/web/WebInput.js";
 import {GameSession} from "../.test-build/gameplay/GameSession.js";
+import {fighterVisual} from "../.test-build/rendering/FighterVisual.js";
 
 import {ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl} from "../.test-build/ui/ArenaPreviews.js";
 import {MobileOnboarding} from "../.test-build/ui/MobileOnboarding.js";
@@ -96,7 +97,7 @@ function setup(weapon="missile"){
  return {ui,hud,calls};
 }
 
-test("missile drag never aims; one release sends one standard attack",()=>{
+test("dragging the attack button fires once; the separate aim pad controls direction",()=>{
  const {ui,calls}=setup();ui.mobileAttackButton.emit("pointerdown",{pointerId:7});
  ui.mobileAttackButton.emit("pointermove",{pointerId:7,clientX:420,clientY:180});
  assert.equal(calls.some(([name])=>name==="angle"||name==="power"),false);
@@ -178,23 +179,81 @@ test("input and session cancel a charged bow without launching it",()=>{
  session.dispose();
 });
 
-test("no missile controls, trajectory guide or extra HUD details exist",()=>{
+test("missile shows the shared aim pad without restoring legacy sliders or trajectory clutter",()=>{
  const css=readFileSync("src/styles.css","utf8"),source=readFileSync("src/ui/GameUI.ts","utf8");
  assert.doesNotMatch(source,/missileAim|setMissileAngle|setMissilePower|this\.details/);
  assert.doesNotMatch(css,/game-ui__missile-aim|game-ui__details/);
- const {ui}=setup();assert.equal(ui.topHud.children.length,3);assert.equal(ui.aimPads[0].hidden,true);ui.dispose();
+ const {ui,hud,calls}=setup();assert.equal(ui.topHud.children.length,3);
+ assert.equal(ui.aimPads[0].hidden,false,"first player can aim missile");
+ assert.equal(ui.aimPads[1].hidden,true,"second player pad hidden for solo duel");
+ ui.aimPads[0].emit("pointerdown",{pointerId:17,clientX:98,clientY:8});
+ ui.aimPads[0].emit("pointermove",{pointerId:17,clientX:90,clientY:80});
+ ui.aimPads[0].emit("pointerup",{pointerId:17});
+ assert.ok(ui.aimPads[0].getAttribute("aria-label").includes("Weapon direction"));
+ assert.equal(calls.filter(([key])=>key==="fire").length,0,"aiming does not fire automatically");
+ ui.dispose();
 });
 
-test("fixed missile arc is mirrored by facing for both humans and ignores shared aim",()=>{
- const input=new WebInput({}),session=new GameSession(input);session.setLocalPvP(true);session.setMode("missile-duel");
- for(const who of [1,2])for(const facing of [-1,1]){
-  session.reset(false);const f=who===1?session.player:session.opponent;f.facing=facing;f.aimAngle=Math.PI/2;
-  session.setWeaponAim(who,-facing,0);assert.equal(f.facing,facing);
-  if(who===1)input.touchAttack();else input.player2TouchAttackStart();session.update(1/60);
-  const projectile=session.getRenderState().projectiles.find(p=>p.owner===(who===1?"player":"opponent"));
-  assert.ok(projectile);assert.equal(Math.sign(projectile.vx),facing);assert.ok(Math.abs(Math.abs(projectile.vx)-projectile.vy)<.15);
+test("missile retains familiar 45-degree default until player selects a direction",()=>{
+ const input=new WebInput({}),session=new GameSession(input);
+ session.setMode("missile-duel");
+ for(const facing of [-1,1]){
+  session.reset(false);session.player.facing=facing;
+  const hud=session.getHudState();
+  const defaultAngle=facing<0?Math.PI*3/4:Math.PI/4;
+  assert.ok(Math.abs(hud.weaponAimAngle-defaultAngle)<1e-6);
+  session.fireWeapon();
+  const missile=session.getRenderState().projectiles.find(p=>p.owner==="player");
+  assert.ok(missile);
+  assert.ok(Math.abs(missile.vx-Math.cos(defaultAngle)*13)<.001);
+  assert.ok(Math.abs(missile.vy-Math.sin(defaultAngle)*13)<.001);
+ }
+ session.dispose();
+});
+
+test("both humans aim missiles in all directions with the normal mobile aim interface",()=>{
+ const input=new WebInput({}),session=new GameSession(input);
+ session.setLocalPvP(true);session.setMode("missile-duel");
+ const cases=[[1,.6,.8],[1,-.6,.8],[1,0,-1],[2,-.8,-.6],[2,.8,-.6],[2,0,1]];
+ for(const [who,x,y] of cases){
+  session.reset(false);
+  const f=who===1?session.player:session.opponent;
+  const other=who===1?session.opponent:session.player;
+  const before=other.aimAngle;
+  session.setWeaponAim(who,x,y);
+  const angle=Math.atan2(y,x);
+  assert.ok(Math.abs(f.aimAngle-angle)<1e-8);
+  assert.equal(f.facing,Math.sign(x)||f.facing);
+  assert.equal(other.aimAngle,before);
+  const hud=session.getHudState();
+  assert.ok(Math.abs((who===1?hud.weaponAimAngle:hud.secondAimAngle)-angle)<1e-8);
+  const pose=fighterVisual(who===1?session.getRenderState().player:session.getRenderState().opponent);
+  assert.ok(Math.abs(pose.toolAngle-Math.atan2(Math.sin(angle),Math.abs(Math.cos(angle))))<.02,
+   "launcher follows aim direction in the shared Canvas/WebGL rig");
+  if(who===1)input.touchAttack();else input.player2TouchAttackStart();
+  session.update(1/60);
+  const shot=session.getRenderState().projectiles.find(p=>p.owner===(who===1?"player":"opponent"));
+  assert.ok(shot,"aimed missile must launch for player "+who);
+  assert.ok(Math.abs(shot.vx-Math.cos(angle)*13)<.03);
+  assert.ok(Math.abs(shot.vy-Math.sin(angle)*13)<.25);
+  assert.ok(Math.abs(shot.rotation-angle)<.05,"missile sprite follows projectile heading");
   input.resetTransientState();
  }
+ session.dispose();
+});
+
+test("keyboard missile aim rotates and non-owner player 2 cannot aim in solo mode",()=>{
+ const input=new WebInput({}),session=new GameSession(input);
+ session.setMode("missile-duel");
+ session.setWeaponAim(2,0,1);
+ assert.equal(session.opponent.aimAngle,null);
+ input.getState().aimUpHeld=true;
+ session.update(1/60);
+ assert.ok(session.player.aimAngle>Math.PI/4);
+ input.getState().aimUpHeld=false;
+ input.getState().aimDownHeld=true;
+ session.update(1/60);
+ assert.ok(Math.abs(session.player.aimAngle-Math.PI/4)<.001);
  session.dispose();
 });
 

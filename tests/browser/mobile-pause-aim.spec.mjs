@@ -47,13 +47,29 @@ test("pause remains hittable with a two-second hold on a small landscape screen"
  expect(await page.evaluate(()=>window.__weaponFixture.state())).toBe("PAUSED");
 });
 
-test("missile attack fires once through standard input and has no aim UI",async({page})=>{
+test("missile shares the touch aim pad; launcher fires in selected direction only once",async({page})=>{
  await page.evaluate(()=>window.__weaponFixture.setMode("missile-duel"));
  await expect(page.locator(".game-ui__missile-aim-guide,.game-ui__details")).toHaveCount(0);
- await expect(page.locator('.game-ui__aim-pad[data-player="1"]')).toBeHidden();
+ const pad=page.locator('.game-ui__aim-pad[data-player="1"]');
+ await expect(pad).toBeVisible();
+ await expect(page.locator('.game-ui__aim-pad[data-player="2"]')).toBeHidden();
+ const rect=await pad.boundingBox();
+ expect(rect).toBeTruthy();
+ // Touch the down/right side of the same aiming pad used by all ranged weapons.
+ await page.touchscreen.tap(rect.x+rect.width*.84,rect.y+rect.height*.8);
+ const angle=await page.evaluate(()=>window.__weaponFixture.missileAim());
+ expect(angle).toBeLessThan(0);
+ expect(angle).toBeGreaterThan(-Math.PI/2);
+ expect(await page.evaluate(()=>window.__weaponFixture.projectiles())).toBe(0,"aiming must not fire");
  await page.locator(".game-ui__mobile-button--attack").tap();
- await page.evaluate(()=>window.__weaponFixture.tick());expect(await page.evaluate(()=>window.__weaponFixture.projectiles())).toBe(1);
- await page.evaluate(()=>window.__weaponFixture.tick(10));expect(await page.evaluate(()=>window.__weaponFixture.projectiles())).toBe(1);
+ await page.evaluate(()=>window.__weaponFixture.tick());
+ expect(await page.evaluate(()=>window.__weaponFixture.projectiles())).toBe(1);
+ const shot=await page.evaluate(()=>window.__weaponFixture.missileShot());
+ expect(shot).toBeTruthy();
+ expect(shot.vx).toBeGreaterThan(0);
+ expect(shot.vy).toBeLessThan(0);
+ await page.evaluate(()=>window.__weaponFixture.tick(10));
+ expect(await page.evaluate(()=>window.__weaponFixture.projectiles())).toBeLessThanOrEqual(1);
 });
 
 test("touch Pause exposes localized Main Menu and returns to the menu without hardware Back",async({page})=>{

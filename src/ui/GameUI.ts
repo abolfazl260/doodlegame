@@ -1341,8 +1341,9 @@ export class GameUI{
     if(!playing||modeChanged||weaponChanged||secondWeaponChanged)this.closeWeaponPicker();
     this.setHidden(this.weaponList,!playing||!this.weaponPickerOpen);
     this.setHidden(this.p2WeaponControls,!playing||!(s.localPvP??s.mode==="local-pvp")||missileRules||s.mode==="random-weapons");
-    this.setHidden(this.aimPads[0],!playing||s.weapon==="missile");
-    this.setHidden(this.aimPads[1],!playing||s.secondWeapon==="missile"||!(s.localPvP??s.mode==="local-pvp"));
+    // Missile uses the same directional pad as the other ranged weapons.
+    this.setHidden(this.aimPads[0],!playing);
+    this.setHidden(this.aimPads[1],!playing||!(s.localPvP??s.mode==="local-pvp"));
     this.setHidden(this.mobileWeaponSwitcher,!playing||missileRules||s.mode==="random-weapons");
     this.setHidden(this.bowPanel,!playing||s.weapon!=="bow");
     this.setHidden(this.mobileControls,!playing);
