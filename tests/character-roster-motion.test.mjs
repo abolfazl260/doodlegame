@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {GameSession,CHARACTER_IDS} from "../.test-build/gameplay/GameSession.js";
-import {fighterVisual,fighterOutfit,characterMarkings,fighterInkPalette} from "../.test-build/rendering/FighterVisual.js";
+import {fighterVisual,fighterOutfit,characterMarkings,fighterInkPalette,toolSegments,weaponAccentSegments,weaponAccentColor,weaponStyleLayers} from "../.test-build/rendering/FighterVisual.js";
 
 const session=()=>new GameSession({getState(){return {}},endFrame(){}});
 const finite=(segments)=>segments.every(([a,b])=>[...a,...b].every(Number.isFinite));
@@ -60,4 +60,23 @@ test("gait, landing, recoil, blink and accessories animate without editing gamep
   assert.equal(JSON.stringify({...base,characterId,animationTime:.4}),before);
  }
  assert.deepEqual(game.getRenderState().player,original,"render-only motion cannot mutate the session");
+});
+
+test("skin selection never changes sword size, weapon geometry, accent or damage",()=>{
+ const game=session(),base=game.getRenderState().player;
+ for(const weapon of ["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"]){
+  const soldier={...base,characterId:"soldier",weapon,weaponHolsterFrom:null,weaponDrawTime:0,grabPhase:null};
+  const ninja={...soldier,characterId:"ninja"};
+  assert.deepEqual(toolSegments(ninja),toolSegments(soldier),weapon+" silhouette depends on equipment only");
+  assert.deepEqual(weaponAccentSegments(ninja),weaponAccentSegments(soldier),weapon+" accent shape is not a skin perk");
+  assert.equal(weaponAccentColor(ninja),weaponAccentColor(soldier),weapon+" accent color is not a skin perk");
+  assert.deepEqual(weaponStyleLayers(ninja),weaponStyleLayers(soldier),weapon+" painted inlays stay identical");
+ }
+ // Selecting a skin must not change the weapon equipped or its cooldown/stats.
+ game.setStartingWeapon("blade");
+ const before=game.getHudState().weapon;
+ game.setCharacterId("ninja");
+ assert.equal(game.getHudState().weapon,before);
+ game.setCharacterId("soldier");
+ assert.equal(game.getHudState().weapon,before);
 });
