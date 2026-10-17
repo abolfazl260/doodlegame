@@ -1,4 +1,4 @@
-import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,characterMarkings,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
+import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,characterMarkings,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
 import type {Renderer} from "./Renderer";
 import {PlatformInkCache,platformInkReaction} from "./PlatformDecorations.js";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
@@ -199,8 +199,8 @@ export class CanvasRenderer implements Renderer{
   c.save();c.translate(toX(s.x),toY(s.y));
   c.scale(pose.visualFacing*pose.scale*pose.scaleX,pose.scale*pose.scaleY);c.rotate(pose.lean);
   c.lineCap="round";c.lineJoin="round";
-  const lines=(segments:readonly Segment[],color:string,weight:number)=>{
-   c.strokeStyle=color;c.lineWidth=Math.max(1.6,scale*weight);c.beginPath();
+  const lines=(segments:readonly Segment[],color:string,weight:number,minPx=1.6)=>{
+   c.strokeStyle=color;c.lineWidth=Math.max(minPx,scale*weight);c.beginPath();
    for(const [a,b] of segments){c.moveTo(a[0]*scale,-a[1]*scale);c.lineTo(b[0]*scale,-b[1]*scale);}
    c.stroke();
   };
@@ -232,8 +232,10 @@ export class CanvasRenderer implements Renderer{
   if(s.attackTelegraph>0){c.globalAlpha=.95;lines(telegraphSegments(s),ink.halo,.047);c.globalAlpha=1;}
   c.save();c.translate(pose.hand[0]*scale,-pose.hand[1]*scale);c.rotate(-pose.toolAngle);
   const weapon=toolSegments(s);
-  lines(weapon,ink.outline,width.weapon.outline);
-  lines(weapon,ink.metal,width.weapon.core);
+  const baseInk=weaponBaseInk(s);
+  // Narrow, muted outlines prevent a bright white rim around the hammer.
+  lines(weapon,ink.outline,baseInk.outline,.85);
+  lines(weapon,baseInk.metal,baseInk.core,.85);
   // Shared four-color vector styling matches the approved weapon reference sheet.
   for(const layer of weaponStyleLayers(s))lines(layer.segments,layer.color,layer.width);
   lines(weaponAccentSegments(s),weaponAccentColor(s),width.weapon.accent);
