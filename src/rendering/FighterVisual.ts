@@ -531,7 +531,7 @@ export function weaponStyleLayers(s:DuelistRenderState):readonly WeaponStyleLaye
 export const FIGHTER_INK_WIDTH={
  body:{halo:.16,outline:.118,core:.08},
  costume:{outline:.082,core:.037},
- weapon:{outline:.082,core:.048,accent:.028},
+ weapon:{outline:.060,core:.028,accent:.028},
  vest:{outline:.24,core:.18},
  gear:{outline:.135,core:.092},
  hair:{outline:.145,core:.095},
@@ -540,6 +540,18 @@ export const FIGHTER_INK_WIDTH={
  head:{halo:.355,outline:.318,core:.274},
  eye:.062
 } as const;
+/**
+ * Base metal outlines are painted over every polygon edge, so a bright and
+ * thick core creates the white rim visible around the hammer. Keep the
+ * interior artwork and contours, but use a thinner, muted metal line.
+ * The hammer gets the narrowest/least bright stroke.
+ */
+export function weaponBaseInk(s:DuelistRenderState){
+ if(weaponDrawPose(s).weapon==="hammer"){
+  return {outline:.050,core:.015,metal:"#7c8b9a"} as const;
+ }
+ return {outline:FIGHTER_INK_WIDTH.weapon.outline,core:FIGHTER_INK_WIDTH.weapon.core,metal:"#b0bdc9"} as const;
+}
 export function fighterInkPalette(enemy:boolean,characterId:DuelistRenderState["characterId"]="soldier"){
  const ninja=characterId==="ninja";
  return {
