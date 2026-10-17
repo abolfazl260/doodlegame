@@ -76,8 +76,9 @@ test('WebGL fighters use real, outlined thick meshes that remain readable on mob
    assert.ok(mesh.geometry.getAttribute('position').array.every(Number.isFinite));
   }
  }
- renderer.draw(player,{...s,characterId:'ninja',weapon:'blade'});
- assert.ok(player.styleMeshes.every(mesh=>!mesh.visible),'Ninja dagger keeps its own silhouette without Soldier overlays');
+ // The chosen skin must never shorten the equipped sword or hide its inlays.
+ renderer.draw(player,{...s,characterId:'ninja',weapon:'blade',weaponHolsterFrom:null});
+ assert.ok(player.styleMeshes.every(mesh=>mesh.visible),'Ninja skin shares the same sword detail layers as Soldier');
  for(const view of [player,enemy])view.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
 });
 

@@ -104,6 +104,32 @@ function setup(hudOverride={}){
  return {ui,calls,hud,container};
 }
 
+test("skin picker shows only Soldier/Ninja names and weapon-free previews",()=>{
+ const {ui,hud}=setup({characterId:"soldier"});
+ const [soldier,ninja]=ui.characterCards.children;
+ assert.equal(ui.characterPicker.children.length,2,"no abilities/opponent hint is appended");
+ assert.equal(ui.characterCards.children.length,2);
+ assert.equal(soldier.dataset.character,"soldier");
+ assert.equal(ninja.dataset.character,"ninja");
+ for(const card of [soldier,ninja]){
+  assert.equal(card.children.length,2,"portrait and text only");
+  assert.equal(card.children[1].children.length,1,"only name, no description");
+  const svg=card.children[0].innerHTML;
+  assert.ok(svg.includes("<svg"));
+  assert.equal((svg.match(/<circle /g)||[]).length,1,"a simple head, not a separate weapon icon");
+  assert.ok(!svg.includes("L76 31")&&!svg.includes("L75 45"),"former blade/dagger glyphs are absent");
+  assert.ok(!/sword|dagger|شمشیر|خنجر/.test(card.children[1].textContent));
+ }
+ assert.equal(ui.characterLabels.get("soldier").textContent,"SOLDIER");
+ assert.equal(ui.characterLabels.get("ninja").textContent,"NINJA");
+ ui.render(states.MENU,hud);
+ assert.equal(soldier.getAttribute("aria-pressed"),"true");
+ assert.equal(ninja.getAttribute("aria-pressed"),"false");
+ assert.ok(!JSON.stringify(ui.characterPicker).includes("Equal abilities"));
+ i18nCleanup(ui);
+});
+function i18nCleanup(_ui){} // No extra description/tooltip nodes to clean up.
+
 test("wizard selects player count and mode cards before arena and optional weapon cards",()=>{
  const {ui,calls,hud}=setup();
  assert.equal(ui.menuSettings.children.length,8);
