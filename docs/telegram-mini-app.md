@@ -12,10 +12,12 @@ verified leaderboard uses its own Cloudflare Worker + D1 database and secret.
 ## What the integration provides
 
 - Telegram launch hints (even if one launch field is lost on a webview reload),
-  a recognized Telegram user agent, or the player's explicit tap on the
-  **Rankings** button can request the official
-  `https://telegram.org/js/telegram-web-app.js?64` script.
-  Merely opening the page in a regular browser does not fetch the SDK.
+  a recognized Telegram user agent, or pre-injected signed Mini App initData
+  can request the official `https://telegram.org/js/telegram-web-app.js?64` script.
+  The rankings button appears **only** for detected Telegram Mini App sessions.
+  Ordinary website visitors, mobile browsers, and Android APK users see no
+  Telegram banner, ranking dialog, or login prompt; merely opening the public
+  website never fetches the Telegram SDK.
   Only *server-verified* `initData` can create or update a player account.
 - `Telegram.WebApp.ready()` and `expand()`; a fullscreen request is made
   on the game's user-initiated **Start** action where supported.
@@ -127,10 +129,9 @@ Data collection is disclosed in `public/privacy.html`.
 2. In the Telegram launch, the game menu has an immediately visible connection
    banner **below the title**, with a **connected** or **error** state.
    Tap it to read the specific error. The ranking control is no longer buried
-   inside collapsed settings. A visible **Rankings → Check login** button
-   also appears in the ordinary web menu, where it can trigger a one-time,
-   user-initiated Telegram SDK retry. It cannot grant Telegram identity to an
-   ordinary browser. The standalone Android APK is unchanged.
+   inside collapsed settings. Outside the Telegram Mini App the ranking
+   entry point is intentionally hidden. To troubleshoot login errors, launch
+   the game from the bot's actual Main Mini App instead of a regular web link.
 3. If the banner says **login rejected (HTTP 401)**, check that the secret
    `TELEGRAM_BOT_TOKEN` in **Cloudflare Worker → Settings → Variables and
    Secrets** belongs to the **same Telegram bot** as the Main Mini App. Do not
