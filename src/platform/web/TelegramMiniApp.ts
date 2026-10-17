@@ -3,9 +3,9 @@ import {GameState} from "../../core/GameState.js";
 /**
  * Telegram Mini App bridge. Never trust initDataUnsafe: raw initData is sent
  * only to the separate Worker API for server-side verification.
- * Load the official SDK only on Telegram launch signals, or when the user
- * explicitly opens the ranking panel to retry detection. Ordinary visitors
- * never fetch it merely by loading the game.
+ * Load the official SDK only when Telegram launch hints are detected (or
+ * when the bridge is explicitly retried). Ordinary browsers and native APKs
+ * must not display Telegram-only UI or fetch the Telegram SDK.
  */
 export interface TelegramWebApp{
  initData?:string;
@@ -35,6 +35,16 @@ export function hasTelegramLaunchParams(search:string,hash:string){
  };
  return matches(search)||matches(hash);
 }
+/** UI detection only; never treat a URL hint or user agent as verified identity.
+ * The ranking Worker separately validates signed Telegram initData.
+ */
+export function isTelegramMiniAppLaunch(win:Window):boolean{
+ const host=win as TelegramWindow;
+ const userAgent=win.navigator?.userAgent??"";
+ return hasTelegramLaunchParams(win.location.search,win.location.hash)||
+  /\bTelegram(?:-Android|-iOS)?(?:\/|\b)/i.test(userAgent)||
+  Boolean(host.Telegram?.WebApp?.initData);
+}
 const safePixel=(value:unknown)=>typeof value==="number"&&Number.isFinite(value)?
  Math.max(0,Math.min(300,Math.round(value))):0;
 
@@ -45,13 +55,8 @@ export function installTelegramMiniApp(
 ){
  const host=win as TelegramWindow;
  const root=doc.documentElement;
- // UA is a *hint* for attempting initialization, never an identity signal.
- // Android and desktop Telegram builds may use these UA tokens while omitting
- // the usual launch fields after an in-app navigation or reload.
- const userAgent=win.navigator?.userAgent??"";
- const hasLaunchHint=hasTelegramLaunchParams(win.location.search,win.location.hash)||
-  /\bTelegram(?:-Android|-iOS)?(?:\/|\b)/i.test(userAgent)||
-  Boolean(host.Telegram?.WebApp?.initData);
+ // A Telegram launch hint only controls optional UI/SDK setup; it is not authentication.
+ const hasLaunchHint=isTelegramMiniAppLaunch(win);
  let active=false;
  let attempted=false;
  let disposed=false;
@@ -87,9 +92,8 @@ export function installTelegramMiniApp(
   if(!current)return;
   app=current;
   if(!hasLaunchHint&&!current.initData){
-   // The official SDK also initializes in ordinary browsers. A manual ranking
-   // retry should explain the missing identity, not activate Telegram chrome.
-   callbacks.onReady?.(current);
+   // The SDK object can exist on ordinary websites with no Telegram session.
+   // Never reveal rankings or enable Telegram chrome without a launch signal.
    return;
   }
   root.classList.add("telegram-mini-app");
@@ -129,8 +133,8 @@ export function installTelegramMiniApp(
  if(hasLaunchHint||Boolean(host.Telegram?.WebApp))beginInitialization();
  return {
   get active(){return active;},
-  // Opening Rankings is an explicit user gesture, so clients without recognizable
-  // launch params may still obtain initData after loading Telegram's SDK.
+  // Kept for compatibility with Telegram clients that temporarily lose launch
+  // markers. The regular web UI no longer exposes a manual retry button.
   retryInitialization:()=>{if(!attempted)beginInitialization();else if(!app&&host.Telegram?.WebApp)initialize();},
   requestFullscreen,
   onGameState,
