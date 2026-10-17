@@ -210,3 +210,38 @@ Telegram chrome, request-to-expand/fullscreen, disabled vertical swipe-dismiss,
 and an in-header Back button that pauses the match and then returns to the menu.
 It does not automatically create a bot, perform Telegram login, store Telegram
 user data, or add online multiplayer. Existing local multiplayer remains local.
+
+## Google Play Android release versioning
+
+The user-visible Android version is read from `package.json` (currently `0.1.1`).
+For signed GitHub Android releases (`.github/workflows/android-release.yml`),
+the build automatically sets a distinct Google Play `versionCode` using:
+
+```text
+1000000 + (GITHUB_RUN_NUMBER * 100) + GITHUB_RUN_ATTEMPT
+```
+
+Each new **Android Release** workflow run advances the code, and reruns get
+a distinct attempt code (attempts 1–99). The exact same code is used for
+Android configuration and the Play compliance verification. The generated
+code must also exceed **every versionCode previously uploaded to Google Play**.
+We cannot determine that Play Console value from GitHub alone.
+
+If Play Console already contains a larger versionCode, start the GitHub
+**Android Release** workflow manually via **Run workflow** and supply a larger
+`version_code` input. Keep supplying an appropriate override for future
+releases until the automatic sequence surpasses the largest code on Play.
+Do not re-upload an earlier AAB: a new release build is required.
+
+Local release builds (`npm run android:bundle:release`) are **not** part of
+this GitHub sequence. They derive their code from `package.json` unless
+you explicitly set `ANDROID_VERSION_CODE`. For a local upload, obtain the
+largest versionCode from Play Console and choose a higher one:
+
+```sh
+ANDROID_VERSION_CODE=1002000 npm run android:bundle:release
+```
+
+The example value must be replaced with a code greater than the largest one
+previously uploaded. Signed bundles are produced by the configured release
+workflow when the Android signing secrets are present.
