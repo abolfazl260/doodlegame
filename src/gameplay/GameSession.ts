@@ -149,9 +149,10 @@ const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:numb
  boomerang:{damage:9,range:0,cooldown:.7,knockback:4,projectileSpeed:10},
  bow:{damage:12,range:0,cooldown:.9,knockback:3,projectileSpeed:18},
  bomb:{damage:18,range:0,cooldown:1.15,knockback:9,projectileSpeed:8,radius:1.8},
- missile:{damage:22,range:0,cooldown:1.05,knockback:10,projectileSpeed:1,radius:1.15}
+ missile:{damage:22,range:0,cooldown:1.05,knockback:10,projectileSpeed:1,radius:1.15},
+ spear:{damage:13,range:0,cooldown:.85,knockback:5,projectileSpeed:19}
 };
-const ORDER:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
+const ORDER:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"];
 const IDLE_P2_INPUT:Readonly<InputState>={moveX:0,moveY:0,pointerX:0,pointerY:0,pointerDown:false,pointerPressed:false,pointerReleased:false,attackHeld:false,attackCancelled:false,jumpPressed:false,dashPressed:false,attackPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};
 /** Read-only baseline geometry shared with static menu previews. */
 export const getBuiltInArenaPreviewDefinition=()=>Object.fromEntries(Object.entries(ARENAS).map(([id,arena])=>[id,{arena,environment:ENVIRONMENT_TEMPLATES[id as BuiltInArenaId]}])) as Readonly<Record<BuiltInArenaId,{arena:ArenaDefinition;environment:readonly EnvironmentTemplate[]}>>;
@@ -1009,6 +1010,25 @@ export class GameSession{
     this.strikeEnvironment(a,damage*.9,a.facing*knockback);
     return;
   }
+  if(a.weapon==="spear"){
+    // Throw a single slim, long-range spear; upgrade launches a pair at slight angles.
+    // A new spear is ready after cooldown, preserving the reusable weapon loadout.
+    const speed=w.projectileSpeed??19,aim=this.aimFor(a,0),direction=a.facing;
+    const owner=a===this.player?"player":"opponent";
+    for(const spread of upgraded?[-.075,.075]:[0]){
+      const angle=aim+spread;
+      this.projectiles.push({
+        x:a.x+direction*.76,y:a.y+.38,
+        vx:Math.cos(angle)*speed+a.velocityX*.12,
+        vy:Math.sin(angle)*speed+(a.aimAngle===null?1.6:0),
+        life:2.3,weapon:"spear",owner,originX:a.x,returning:false,
+        spin:angle,age:0,bounce:0,ricochets:0,damageScale:upgraded?.72:1
+      });
+    }
+    a.attackTime=.22;
+    this.emitCue("throw","spear",a.x+direction*.78,a.y+.38,direction,.95);
+    return;
+  }
   a.velocityX-=a.facing*(a.weapon==="blaster"?1.3:a.weapon==="uzi"?.4:.6);
   const owner=a===this.player?"player":"opponent";
   const launchAngle=this.aimFor(a,0);
@@ -1247,7 +1267,7 @@ export class GameSession{
     p.age+=dt;p.deflectCooldown=Math.max(0,(p.deflectCooldown??0)-dt);
     const field=this.arenaForceAt(p.x,p.y);
     p.vx+=field.x*.5*dt;p.vy+=field.y*.5*dt;
-    if(p.weapon==="bow"){p.vy+=-12.5*this.gravityScale*dt;p.spin=Math.atan2(p.vy,p.vx);}
+    if(p.weapon==="bow"||p.weapon==="spear"){p.vy+=(p.weapon==="spear"?-7:-12.5)*this.gravityScale*dt;p.spin=Math.atan2(p.vy,p.vx);}
     else if(p.weapon==="missile"){p.vy+=-7.8*this.gravityScale*dt;p.spin=Math.atan2(p.vy,p.vx);}
     else p.spin+=dt*(p.weapon==="boomerang"?12:p.weapon==="bomb"?7:0);
 
@@ -1299,11 +1319,11 @@ export class GameSession{
     }
 
     if(this.deflectProjectile(p,target,prevX,prevY))continue;
-    if(p.weapon==="bow"){
+    if(p.weapon==="bow"||p.weapon==="spear"){
       const sx=p.x-prevX,sy=p.y-prevY,segLenSq=sx*sx+sy*sy,targetY=target.y+.35;
       const along=segLenSq>1e-8?Math.max(0,Math.min(1,((target.x-prevX)*sx+(targetY-prevY)*sy)/segLenSq)):0;
       const cx=prevX+sx*along,cy=prevY+sy*along;
-      if(Math.hypot(target.x-cx,targetY-cy)<.38){this.damage(target,this.weaponStats.bow.damage*(p.damageScale??1),Math.sign(p.vx)*this.weaponStats.bow.knockback,"bow");this.projectiles.splice(i,1);continue;}
+      if(Math.hypot(target.x-cx,targetY-cy)<(p.weapon==="spear"?.42:.38)){const hit=this.weaponStats[p.weapon];this.damage(target,hit.damage*(p.damageScale??1),Math.sign(p.vx)*hit.knockback,p.weapon);this.projectiles.splice(i,1);continue;}
     }
     if(p.weapon==="missile"&&Math.abs(p.x-target.x)<.72&&Math.abs(p.y-(target.y+.25))<.9){this.explodeMissile(p);this.projectiles.splice(i,1);continue;}
     if(p.weapon==="bomb"&&p.life<=.55&&Math.abs(p.x-target.x)<1.05&&Math.abs(p.y-(target.y+.35))<1){this.explode(p);this.projectiles.splice(i,1);continue;}
