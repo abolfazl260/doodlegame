@@ -6,8 +6,8 @@ import {fighterVisual,fighterOutfit,characterMarkings,fighterInkPalette} from ".
 const session=()=>new GameSession({getState(){return {}},endFrame(){}});
 const finite=(segments)=>segments.every(([a,b])=>[...a,...b].every(Number.isFinite));
 
-test("all six selectable characters survive reset without modifying match rules",()=>{
- assert.deepEqual(CHARACTER_IDS,["shadow","bolt","ember","frost","sprout","pixel"]);
+test("both selectable characters survive reset without modifying match rules",()=>{
+ assert.deepEqual(CHARACTER_IDS,["soldier","ninja"]);
  const game=session();
  for(const id of CHARACTER_IDS){
   game.setCharacterId(id);
@@ -26,8 +26,8 @@ test("each simplified 2D fighter has a distinctive, finite costume and facial de
   const s={...base,characterId,animationTime:.35,gaitPhase:1.2};
   const pose=fighterVisual(s),outfit=fighterOutfit(s,pose),marks=characterMarkings(s,pose.head);
   assert.equal(pose.body.length,9,"joints keep the existing collision-independent rig");
-  assert.ok(pose.costume.length>=5,characterId+" needs a readable silhouette");
-  assert.ok(outfit.hair.length>=3);
+  assert.ok(pose.costume.length>=2,characterId+" needs a readable silhouette");
+  assert.equal(outfit.hair.length,0,"approved designs have clean round heads");
   assert.ok(marks.length>=5);
   assert.ok(finite([...pose.joints,...outfit.hair,...outfit.gear,...marks]));
   assert.ok([pose.scaleX,pose.scaleY,pose.lean,pose.blink].every(Number.isFinite));
@@ -35,9 +35,9 @@ test("each simplified 2D fighter has a distinctive, finite costume and facial de
  }
  assert.equal(signatures.size,CHARACTER_IDS.length,"each character is visibly distinct");
  const original=fighterInkPalette(false);
- assert.equal(original.core,"#f9fbff");
- assert.equal(fighterInkPalette(true).core,"#ffc48b");
- assert.equal(new Set(CHARACTER_IDS.map(id=>fighterInkPalette(false,id).accent)).size,6);
+ assert.equal(original.face,"#f9fcff");
+ assert.equal(fighterInkPalette(false,"ninja").face,"#12141b");
+ assert.equal(new Set(CHARACTER_IDS.map(id=>fighterInkPalette(false,id).accent)).size,2);
 });
 
 test("gait, landing, recoil, blink and accessories animate without editing gameplay state",()=>{
