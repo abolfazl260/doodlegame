@@ -314,7 +314,7 @@ export class OpeningIntro{
   nx:number,ny:number,rotation:number,paddle:number,scaleMultiplier=1,enemy=false){
   // Use the same articulated torso and head design as the in-game fighter.
   const state:DuelistRenderState={
-   characterId:enemy?"bolt":"shadow",
+   characterId:enemy?"ninja":"soldier",
    slamPhase:null,slamElapsed:0,
    jumpStage:0,doubleJumpPoseTime:0,wallJumpPoseTime:0,
    visualFacing:enemy?-1:1,turnPoseTime:0,
@@ -333,10 +333,10 @@ export class OpeningIntro{
   ctx.lineCap="round";
   ctx.lineJoin="round";
   ctx.lineWidth=.051;
-  ctx.strokeStyle="#fff";
-  ctx.fillStyle="#fff";
-  ctx.shadowColor="#fff";
-  ctx.shadowBlur=.07;
+  ctx.strokeStyle=enemy?"#171820":"#111926";
+  ctx.fillStyle=enemy?"#171820":"#f9fcff";
+  ctx.shadowColor=enemy?"#ef4b59":"#67bfff";
+  ctx.shadowBlur=.095;
   const stroke=(points:readonly (readonly [number,number])[])=>{
    ctx.beginPath();
    for(let i=0;i<points.length;i++){
@@ -355,29 +355,23 @@ export class OpeningIntro{
   stroke([hip,[.16,-.4-.10*paddle],[.44,-.62-.16*paddle]]);
   stroke([[-.18,shoulder[1]],[-.45,.33+.16*paddle],[-.68,.18+.22*paddle]]);
   stroke([[.18,shoulder[1]],[.42,.34-.18*paddle],[.67,.65-.19*paddle]]);
+  // The intro uses the same eyeless circular faces and colored ribbon headbands.
   ctx.beginPath();
-  ctx.arc(figure.head[0],figure.head[1],.24,0,Math.PI*2);
+  ctx.arc(figure.head[0],figure.head[1],.28,0,Math.PI*2);
   ctx.fill();
   ctx.shadowBlur=0;
-  ctx.fillStyle="#090a0b";
-  ctx.beginPath();
-  ctx.arc(figure.head[0]+(enemy?-.08:.08),figure.head[1]+.04,.04,0,Math.PI*2);
-  ctx.fill();
-  if(enemy){
-   // A recognizably red headband on the same shared doodle head pose as gameplay.
-   ctx.strokeStyle="#f04250";
-   ctx.fillStyle="#f04250";
-   ctx.lineWidth=.105;
-   stroke([[figure.head[0]-.24,figure.head[1]+.07],
-    [figure.head[0]-.03,figure.head[1]+.12],
-    [figure.head[0]+.24,figure.head[1]+.055]]);
-   ctx.lineWidth=.057;
-   stroke([[figure.head[0]+.21,figure.head[1]+.075],
-    [figure.head[0]+.43,figure.head[1]+.005],
-    [figure.head[0]+.51,figure.head[1]+.105]]);
-   stroke([[figure.head[0]+.2,figure.head[1]+.06],
-    [figure.head[0]+.45,figure.head[1]-.17]]);
-  }
+  ctx.strokeStyle="#060b13";ctx.lineWidth=.065;ctx.stroke();
+  ctx.strokeStyle=enemy?"#e72640":"#198fe8";
+  ctx.lineWidth=.13;
+  stroke([[figure.head[0]-.25,figure.head[1]+.04],
+    [figure.head[0]+.25,figure.head[1]+.04]]);
+  ctx.lineWidth=.075;
+  stroke([[figure.head[0]-.24,figure.head[1]+.04],
+    [figure.head[0]-.46,figure.head[1]+.14],
+    [figure.head[0]-.68,figure.head[1]+.09]]);
+  stroke([[figure.head[0]-.25,figure.head[1]+.015],
+    [figure.head[0]-.47,figure.head[1]-.09],
+    [figure.head[0]-.63,figure.head[1]-.18]]);
   // Short disjointed impulse lines suggest effort rather than powered flight.
   ctx.globalAlpha=.32+.13*Math.sin(t*5.3);
   ctx.strokeStyle="#fff";
