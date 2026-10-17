@@ -209,7 +209,7 @@ function introSimulator(reduced=false,width=960,height=540){
   createRadialGradient(){return {addColorStop(){}}},
   fillRect(){draws++},
   translate(x,y){translations.push([x,y])},
-  stroke(){if(this.strokeStyle==="#f04250")redHeadbandStrokes++},
+  stroke(){if(this.strokeStyle==="#e72640")redHeadbandStrokes++},
  };
  const context=new Proxy(ctxTarget,{get(obj,key){return key in obj?obj[key]:()=>{}},set(obj,key,val){obj[key]=val;return true}});
  const node=tag=>{

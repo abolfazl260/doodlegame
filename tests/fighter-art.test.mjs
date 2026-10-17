@@ -7,12 +7,12 @@ const session=new GameSession({getState(){return {}},endFrame(){}});
 const base=session.getRenderState().player;
 
 test('clothing follows the animated fighter, not its world position',()=>{
- for(const characterId of ['bolt','shadow'])for(const velocityX of [0,3,8]){
+ for(const characterId of ['soldier','ninja'])for(const velocityX of [0,3,8]){
   const s={...base,characterId,velocityX,gaitPhase:1.7};
   const pose=fighterVisual(s),outfit=fighterOutfit(s,pose);
   assert.equal(outfit.vest.length,1);
   assert.equal(outfit.gear.length,6);
-  assert.equal(outfit.hair.length,characterId==='bolt'?3:4);
+  assert.equal(outfit.hair.length,0);
   assert.deepEqual(outfit.vest[0],pose.body[0]);
   for(const segment of [...outfit.vest,...outfit.gear,...outfit.trim,...outfit.hair])
    assert.ok(segment.flat().every(Number.isFinite));

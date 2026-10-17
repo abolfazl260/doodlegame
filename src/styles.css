@@ -2236,10 +2236,9 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui[data-menu-view="landing"] .game-ui__menu{gap:.5rem}
 @media(max-height:360px){.game-ui__landing-routes{gap:.3rem}.game-ui .game-ui__landing button{min-height:44px;padding:.4rem .55rem}.game-ui .game-ui__landing button[data-route="quick"]{min-height:50px}.game-ui__landing{gap:.3rem}}
 
-/* Six lightweight, high-contrast vector characters; 3 columns on wide screens,
-   2 on phones so portrait labels and touch targets remain readable. */
-.game-ui__character-portrait--ember{color:#ff924a;background:radial-gradient(circle at 50% 35%,#5b342d,#170f1c)}
-.game-ui__character-portrait--frost{color:#90e4ff;background:radial-gradient(circle at 50% 35%,#2b5775,#101b31)}
-.game-ui__character-portrait--sprout{color:#8de77c;background:radial-gradient(circle at 50% 35%,#2a5646,#111f1b)}
-.game-ui__character-portrait--pixel{color:#ce96ff;background:radial-gradient(circle at 50% 35%,#4a3769,#18142c)}
-@media(min-width:760px){.game-ui__character-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* Two reference-matched stick-fighter character portraits. */
+.game-ui__character-portrait--soldier{background:linear-gradient(155deg,#5fbbfb,#173a60)}
+.game-ui__character-portrait--ninja{background:linear-gradient(155deg,#4c345f,#151628)}
+.game-ui .game-ui__character-card[data-character="soldier"][aria-pressed="true"]{border-color:#46c8ff;box-shadow:0 0 0 2px #46c8ff88,0 0 16px #46c8ff33}
+.game-ui .game-ui__character-card[data-character="ninja"][aria-pressed="true"]{border-color:#ff5670;box-shadow:0 0 0 2px #ff567088,0 0 16px #ff567033}
+@media(min-width:760px){.game-ui__character-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}

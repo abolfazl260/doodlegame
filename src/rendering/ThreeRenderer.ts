@@ -31,7 +31,7 @@ export class ThreeRenderer implements Renderer{
   };
   const headHalo=headCircle(width.head.halo,ink.halo,.028);
   const headOutline=headCircle(width.head.outline,ink.outline,.032);
-  const head=headCircle(width.head.core,ink.core,.036);
+  const head=headCircle(width.head.core,ink.face,.036);
   const hairOutline=stroke(ink.outline,.038),hairCore=stroke(ink.hair,.04);
   const markingOutline=stroke(ink.outline,.042),markingCore=stroke(ink.accent,.046);
   const otherEye=headCircle(width.eye*.78,ink.eye,.052);
@@ -246,6 +246,11 @@ export class ThreeRenderer implements Renderer{
   const pose=fighterVisual(s),width=FIGHTER_INK_WIDTH,ink=fighterInkPalette(view.enemy,s.characterId);
   view.group.position.set(s.x,s.y,.1);
   // Recolor existing meshes; do not rebuild materials or GPU geometry per frame.
+  (view.bodyHalo.material as THREE.MeshBasicMaterial).color.set(ink.halo);
+  (view.bodyCore.material as THREE.MeshBasicMaterial).color.set(ink.core);
+  (view.headHalo.material as THREE.MeshBasicMaterial).color.set(ink.halo);
+  (view.headOutline.material as THREE.MeshBasicMaterial).color.set(ink.outline);
+  (view.head.material as THREE.MeshBasicMaterial).color.set(ink.face);
   (view.vestCore.material as THREE.MeshBasicMaterial).color.set(ink.suit);
   (view.gearCore.material as THREE.MeshBasicMaterial).color.set(ink.armor);
   (view.trim.material as THREE.MeshBasicMaterial).color.set(ink.trim);
@@ -268,13 +273,15 @@ export class ThreeRenderer implements Renderer{
   }
   this.setCapsules(view.hairOutline,outfit.hair,width.hair.outline);
   this.setCapsules(view.hairCore,outfit.hair,width.hair.core);
-  (view.hairCore.material as THREE.MeshBasicMaterial).color.set(s.characterId==="bolt"?ink.armor:ink.hair);
+  (view.hairCore.material as THREE.MeshBasicMaterial).color.set(ink.hair);
   view.otherEye.position.x=pose.head[0]-.105;view.otherEye.position.y=pose.head[1]+.03;
   view.otherEyeGlint.position.x=pose.head[0]-.095;view.otherEyeGlint.position.y=pose.head[1]+.05;
   view.eye.position.x=pose.head[0]+.105;view.eye.position.y=pose.head[1]+.04;
   view.eyeGlint.position.x=pose.head[0]+.12;view.eyeGlint.position.y=pose.head[1]+.057;
   view.eye.scale.y=pose.blink;view.otherEye.scale.y=pose.blink;
-  view.eyeGlint.visible=pose.blink>.5;view.otherEyeGlint.visible=pose.blink>.5;
+  // Smooth featureless faces match the reference artworks.
+  view.eye.visible=false;view.otherEye.visible=false;
+  view.eyeGlint.visible=false;view.otherEyeGlint.visible=false;
   const marks=characterMarkings(s,pose.head);
   this.setCapsules(view.markingOutline,marks,width.marking.outline);
   this.setCapsules(view.markingCore,marks,width.marking.core);

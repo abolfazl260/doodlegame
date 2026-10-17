@@ -42,32 +42,21 @@ const MENU_STEPS:readonly MenuStep[]=["mode","arena"];
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
-const CHARACTER_IDS:readonly CharacterId[]=["shadow","bolt","ember","frost","sprout","pixel"];
+const CHARACTER_IDS:readonly CharacterId[]=["soldier","ninja"];
 const CHARACTER_TEXT={
  en:{
-  shadow:{name:"SHADOW",description:"Ninja · flowing scarf"},
-  bolt:{name:"BOLT",description:"Robot · electric visor"},
-  ember:{name:"EMBER",description:"Fire runner · bouncing flame"},
-  frost:{name:"FROST",description:"Ice scout · trailing cape"},
-  sprout:{name:"SPROUT",description:"Forest sprite · leafy antenna"},
-  pixel:{name:"PIXEL",description:"Arcade bot · twitching antenna"}
+  soldier:{name:"SOLDIER",description:"Blue headband · sword fighter"},
+  ninja:{name:"NINJA",description:"Red headband · dagger fighter"}
  },
  fa:{
-  shadow:{name:"شدو",description:"نینجا · شال متحرک"},
-  bolt:{name:"بولت",description:"ربات · نقاب برقی"},
-  ember:{name:"اِمبر",description:"دوندهٔ آتش · شعلهٔ جهنده"},
-  frost:{name:"فراست",description:"یخ‌نورد · شنل متحرک"},
-  sprout:{name:"اسپراوت",description:"جنگلی · شاخک برگ‌دار"},
-  pixel:{name:"پیکسل",description:"ربات بازی · آنتن متحرک"}
+  soldier:{name:"سرباز",description:"سربند آبی · مبارز شمشیرزن"},
+  ninja:{name:"نینجا",description:"سربند قرمز · مبارز خنجرزن"}
  }
 } as const;
-const CHARACTER_PORTRAIT_DETAIL:Record<CharacterId,string>={
- shadow:'<path d="M35 25 L40 12 L57 12 L62 25 M36 34 L15 29 L5 35 M37 38 L15 45"/>',
- bolt:'<path d="M34 20 H62 V40 H34 Z M48 20 V9 M42 9 H54 M36 30 H60 M34 46 L26 48 M62 46 L70 48"/>',
- ember:'<path d="M34 21 L42 13 L47 19 L53 7 L59 20 L64 24 M37 34 H59 M26 48 L14 40 M25 53 L14 57"/>',
- frost:'<path d="M33 22 L40 12 H56 L64 22 L67 34 M34 35 L26 49 L18 58 M38 35 H59 M56 13 L51 7"/>',
- sprout:'<path d="M48 17 V6 Q32 0 30 12 Q41 17 48 8 Q57 -1 69 8 Q63 19 49 14 M36 36 Q22 36 18 49"/>',
- pixel:'<path d="M34 21 H63 V40 H34 Z M48 21 V9 H58 M31 25 H25 V33 H31 M65 25 H71 V33 H65 M38 34 H58"/>'
+// Portraits reproduce the approved stick-fighter designs.
+const CHARACTER_PORTRAITS:Record<CharacterId,string>={
+ soldier:"<svg viewBox=\"0 0 96 96\" xmlns=\"http://www.w3.org/2000/svg\" aria-hidden=\"true\"><path d=\"M15 82H82\" stroke=\"#718497\" stroke-width=\"3\"/><path d=\"M47 49L45 68 30 83M45 68L62 83M46 52L29 62 22 73M47 53L62 61\" fill=\"none\" stroke=\"#0b1422\" stroke-width=\"9\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"48\" cy=\"27\" r=\"17\" fill=\"#f9fcff\" stroke=\"#080f19\" stroke-width=\"4\"/><path d=\"M34 25H65\" stroke=\"#1679d9\" stroke-width=\"7\"/><path d=\"M33 25 22 19 11 22 23 28 10 37\" fill=\"none\" stroke=\"#0c1119\" stroke-width=\"8\" stroke-linejoin=\"round\"/><path d=\"M33 25 22 19 11 22 23 28 10 37\" fill=\"none\" stroke=\"#1788ee\" stroke-width=\"5\" stroke-linejoin=\"round\"/><path d=\"M58 62L76 31 86 26 83 37 64 69\" fill=\"#c3eaff\" stroke=\"#080f19\" stroke-width=\"3\" stroke-linejoin=\"round\"/><path d=\"M56 62L68 68\" stroke=\"#dba71c\" stroke-width=\"6\" stroke-linecap=\"round\"/></svg>",
+ ninja:"<svg viewBox=\"0 0 96 96\" xmlns=\"http://www.w3.org/2000/svg\" aria-hidden=\"true\"><path d=\"M15 82H82\" stroke=\"#6b5671\" stroke-width=\"3\"/><path d=\"M48 49L46 69 26 82M46 69L63 83M45 52L28 61 22 73M47 53L66 59\" fill=\"none\" stroke=\"#05070c\" stroke-width=\"10\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"48\" cy=\"27\" r=\"17\" fill=\"#13151d\" stroke=\"#03060b\" stroke-width=\"4\"/><path d=\"M34 25H64\" stroke=\"#e4223b\" stroke-width=\"7\"/><path d=\"M33 24 20 16 9 20 23 29 8 37\" fill=\"none\" stroke=\"#07080d\" stroke-width=\"9\" stroke-linejoin=\"round\"/><path d=\"M33 24 20 16 9 20 23 29 8 37\" fill=\"none\" stroke=\"#e4223b\" stroke-width=\"5\" stroke-linejoin=\"round\"/><path d=\"M62 59 75 45 87 43 81 54 67 65\" fill=\"#e7edf4\" stroke=\"#06080c\" stroke-width=\"3\" stroke-linejoin=\"round\"/><path d=\"M59 65 66 70\" stroke=\"#e4223b\" stroke-width=\"5\" stroke-linecap=\"round\"/></svg>"
 };
 const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";
 
@@ -533,7 +522,7 @@ export class GameUI{
    portrait.className="game-ui__character-portrait game-ui__character-portrait--"+id;
    portrait.setAttribute("aria-hidden","true");
    // Tiny vector portraits match the procedural in-game stick fighters.
-   portrait.innerHTML='<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="48" cy="28" r="13"/><path d="M48 41 V65 M48 48 L30 57 L25 70 M48 48 L66 57 L71 70 M48 65 L35 86 M48 65 L61 86 M42 28 H44 M53 28 H55"/>'+CHARACTER_PORTRAIT_DETAIL[id]+'</svg>';
+   portrait.innerHTML=CHARACTER_PORTRAITS[id];
    const copy=document.createElement("span");copy.className="game-ui__character-copy";
    const name=document.createElement("strong");name.className="game-ui__character-name";
    const desc=document.createElement("span");desc.className="game-ui__character-description";
@@ -1214,17 +1203,17 @@ export class GameUI{
      messages.characterNames.rightPlayer:messages.characterNames.playerTwo);
    }
    if(nameChanged||localeChanged||modeChanged||stateChanged||characterChanged){
-    this.setText(this.playerHealthName,s.playerName||CHARACTER_TEXT[locale][s.characterId??"shadow"].name);
+    this.setText(this.playerHealthName,s.playerName||CHARACTER_TEXT[locale][s.characterId??"soldier"].name);
     this.setText(this.opponentHealthName,(s.localPvP??s.mode==="local-pvp")?
      (s.secondPlayerName||messages.characterNames.playerTwo):
-     CHARACTER_TEXT[locale][s.opponentCharacterId??"shadow"].name);
+     CHARACTER_TEXT[locale][s.opponentCharacterId??"soldier"].name);
     this.playerHealthName.title=this.playerHealthName.textContent??"";
     this.opponentHealthName.title=this.opponentHealthName.textContent??"";
    }
    if(characterChanged||localeChanged||stateChanged){
     for(const item of this.characterCards.children){
      const card=item as HTMLButtonElement;
-     card.setAttribute("aria-pressed",String(card.dataset.character===(s.characterId??"shadow")));
+     card.setAttribute("aria-pressed",String(card.dataset.character===(s.characterId??"soldier")));
     }
    }
    if(modeChanged||localeChanged||stateChanged){
@@ -1246,7 +1235,7 @@ export class GameUI{
    }
    if(modeChanged||arenaChanged||weaponChanged||localeChanged||stateChanged||nameChanged||characterChanged){
      this.setText(this.matchSummary,(messages.menu?.ready??"READY")+": "+
-     (s.playerName?s.playerName+" · ":"")+CHARACTER_TEXT[locale][s.characterId??"shadow"].name+" · "+
+     (s.playerName?s.playerName+" · ":"")+CHARACTER_TEXT[locale][s.characterId??"soldier"].name+" · "+
       messages.modes[s.mode]+" · "+arenaName(s.arena)+" · "+
      messages.weapons[s.weapon]);
    }
@@ -1607,8 +1596,8 @@ export class GameUI{
   this.secondNameCaption.textContent=messages.characterNames.playerTwo;
   this.characterPickerTitle.textContent=this.i18n.locale==="fa"?"شخصیت خودت را انتخاب کن":"CHOOSE YOUR CHARACTER";
   this.characterPickerHint.textContent=this.i18n.locale==="fa"?
-   "توانایی‌ها برابرند؛ شخصیت حریف تصادفی است.":
-   "Equal abilities. Your opponent’s character is random.";
+   "توانایی‌ها برابرند؛ حریف شخصیت دیگر را دارد.":
+   "Equal abilities. Your opponent uses the other character.";
   this.characterCards.setAttribute("aria-label",this.characterPickerTitle.textContent);
   for(const item of this.characterCards.children){
    const card=item as HTMLButtonElement,id=card.dataset.character as CharacterId;
