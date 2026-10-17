@@ -117,7 +117,7 @@ test("skin picker shows only Soldier/Ninja names and weapon-free previews",()=>{
   assert.equal(card.children[1].children.length,1,"only name, no description");
   const svg=card.children[0].innerHTML;
   assert.ok(svg.includes("<svg"));
-  assert.equal((svg.match(/<circle /g)||[]).length,1,"a simple head, not a separate weapon icon");
+  assert.equal((svg.match(/<circle[^>]*r="(?:17|18)"/g)||[]).length,1,"a single full-size head; small decorative helmet rivets are allowed");
   assert.ok(!svg.includes("L76 31")&&!svg.includes("L75 45"),"former blade/dagger glyphs are absent");
   assert.ok(!/sword|dagger|شمشیر|خنجر/.test(card.children[1].textContent));
  }
