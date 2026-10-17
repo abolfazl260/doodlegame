@@ -40,6 +40,8 @@ export function weaponDrawPose(s:DuelistRenderState){
 const interpolate=(a:number,b:number,t:number)=>a+(b-a)*t;
 /** Blue or red headband with animated twin ribbons, matching the reference. */
 export function characterMarkings(s:DuelistRenderState,head:Point):Segment[]{
+ // The Viking has a horned metal helmet, not a blue/red headband.
+ if(s.characterId==="viking")return [];
  const [x,y]=head;
  const flutter=Math.sin(s.animationTime*8-s.gaitPhase)*.055-Math.min(1,Math.abs(s.velocityX)/9)*.055;
  const tailAngle=s.characterId==="ninja"?.085:0;
@@ -399,6 +401,49 @@ export function fighterOutfit(_s:DuelistRenderState,pose:ReturnType<typeof fight
  return {vest,gear,trim,hair};
 }
 
+/** Layered Viking helmet, curved ivory horns, gold ironwork and light fur armor.
+ * These are purely visual local pose coordinates; no hitbox or weapon state changes.
+ * Shared by the Canvas and WebGL renderers, with reusable GPU meshes.
+ */
+export function vikingSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof fighterVisual>):readonly {
+ color:string; width:number; segments:readonly Segment[];
+}[]{
+ if(s.characterId!=="viking")return [];
+ const [hx,hy]=pose.head;
+ const point=(dx:number,dy:number):Point=>[hx+dx,hy+dy];
+ const p=(coords:readonly [number,number][]):Segment[]=>coords.slice(1).map((b,i)=>[point(...coords[i]),point(...b)]);
+ const helmet=p([[-.275,.11],[-.24,.24],[-.12,.3],[0,.325],[.12,.3],[.24,.24],[.275,.11]]);
+ const leftHorn=p([[-.25,.15],[-.40,.21],[-.48,.33],[-.48,.45],[-.42,.54]]);
+ const rightHorn=p([[.25,.15],[.40,.21],[.48,.33],[.48,.45],[.42,.54]]);
+ const band=p([[-.275,.09],[.275,.09]]);
+ const ridge=p([[0,-.12],[0,.29]]);
+ const rivets:Segment[]=[...[-.19,-.09,.09,.19].map(x=>[point(x,.09),point(x,.103)] as Segment)];
+ const [sx,sy]=pose.body[0][1];
+ const fur:Segment[]=[
+  [[sx-.11,sy+.01],[sx-.33,sy+.015]],[[sx-.33,sy+.015],[sx-.46,sy-.12]],
+  [[sx+.11,sy+.01],[sx+.33,sy+.015]],[[sx+.33,sy+.015],[sx+.46,sy-.12]]
+ ];
+ const furTips:Segment[]=[
+  [[sx-.23,sy+.035],[sx-.39,sy-.095]],
+  [[sx+.23,sy+.035],[sx+.39,sy-.095]]
+ ];
+ const boots:Segment[]= [pose.body[2],pose.body[4]].map(([a,b])=>[
+  [a[0]+(b[0]-a[0])*.76,a[1]+(b[1]-a[1])*.76],b
+ ]);
+ const belt:Segment[]=[[[-.19,.04],[.18,.04]]];
+ const goldBuckle:Segment[]=[[[-.035,-.02],[.035,-.02]],[[.035,-.02],[.035,.08]],[[.035,.08],[-.035,.08]],[[-.035,.08],[-.035,-.02]]];
+ return [
+  {color:"#07090d",width:.145,segments:[...helmet,...leftHorn,...rightHorn,...fur,...boots,...belt]},
+  {color:"#3a434d",width:.085,segments:helmet},
+  {color:"#f4e6c8",width:.081,segments:[...leftHorn,...rightHorn]},
+  {color:"#dbad4c",width:.067,segments:[...band,...ridge,...goldBuckle]},
+  {color:"#8c603b",width:.155,segments:fur},
+  {color:"#a67545",width:.092,segments:boots},
+  {color:"#edd8b5",width:.054,segments:furTips},
+  {color:"#8c5e27",width:.028,segments:rivets}
+ ];
+}
+
 /** Distinct colored inlays for every equipped weapon. */
 export function weaponAccentColor(s:DuelistRenderState):string {
  switch(weaponDrawPose(s).weapon){
@@ -546,18 +591,18 @@ export function weaponBaseInk(s:DuelistRenderState){
  return {outline:FIGHTER_INK_WIDTH.weapon.outline,core:FIGHTER_INK_WIDTH.weapon.core,metal:"#b0bdc9"} as const;
 }
 export function fighterInkPalette(enemy:boolean,characterId:DuelistRenderState["characterId"]="soldier"){
- const ninja=characterId==="ninja";
+ const ninja=characterId==="ninja",viking=characterId==="viking";
  return {
-  core:ninja?(enemy?"#171921":"#0b0e15"):(enemy?"#182333":"#0c1827"),
+  core:viking?(enemy?"#17191e":"#0c1017"):ninja?(enemy?"#171921":"#0b0e15"):(enemy?"#182333":"#0c1827"),
   outline:"#050a12",
-  halo:ninja?"#f18088":"#9bdafc",
-  face:ninja?"#12141b":"#f9fcff",
-  accent:ninja?"#e72640":"#198fe8",
+  halo:viking?"#b18b59":ninja?"#f18088":"#9bdafc",
+  face:viking?"#10131a":ninja?"#12141b":"#f9fcff",
+  accent:viking?"#d8ac4b":ninja?"#e72640":"#198fe8",
   eye:"#0b0d15",
-  suit:ninja?"#12141c":"#111a29",
-  armor:ninja?"#14161f":"#162131",
-  trim:ninja?"#9b1c2c":"#1768af",
-  hair:ninja?"#12141b":"#f9fcff",
+  suit:viking?"#11151c":ninja?"#12141c":"#111a29",
+  armor:viking?"#29262a":ninja?"#14161f":"#162131",
+  trim:viking?"#ba8b48":ninja?"#9b1c2c":"#1768af",
+  hair:viking?"#11151c":ninja?"#12141b":"#f9fcff",
   metal:"#dfe8f0"
  };
 }
