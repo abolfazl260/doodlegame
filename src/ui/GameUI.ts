@@ -60,6 +60,21 @@ const CHARACTER_PORTRAITS:Record<CharacterId,string>={
 };
 const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";
 
+const LANDING_ROUTE_ICONS={
+ custom:'<path d="M5 5l14 14m-3-14L5 16m1-11 3 3m6-3 4 4M5 19l4-4m6 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>',
+ local:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3.5 19v-2c0-3 2.2-5 5.5-5s5.5 2 5.5 5v2zm12 0v-2.4c0-1.7-.5-3-1.5-4 3.7-.2 6.5 2 6.5 5V19z" stroke-linejoin="round"/>',
+ arenas:'<path d="M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2V5zm6-2v16m6-14v16" stroke-linecap="round" stroke-linejoin="round"/>',
+ progression:'<rect x="4" y="13" width="4" height="8" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1"/><rect x="16" y="3" width="4" height="18" rx="1"/>',
+ settings:'<path d="M10 2h4l.7 2.5 2 .8 2.3-1.2 2.9 2.9-1.2 2.3.8 2L24 12v4l-2.5.7-.8 2 1.2 2.3-2.9 2.9-2.3-1.2-2 .8L14 26h-4l-.7-2.5-2-.8L5 23.9l-2.9-2.9 1.2-2.3-.8-2L0 16v-4l2.5-.7.8-2-1.2-2.3L5 4.1l2.3 1.2 2-.8L10 2z" transform="translate(2 0) scale(.83)"/><circle cx="12" cy="12" r="3.5"/>'
+} as const;
+function landingRouteIcon(route:keyof typeof LANDING_ROUTE_ICONS):HTMLElement{
+ const icon=document.createElement("span");
+ icon.className="game-ui__landing-icon";
+ icon.setAttribute("aria-hidden","true");
+ icon.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" xmlns="http://www.w3.org/2000/svg">'+LANDING_ROUTE_ICONS[route]+'</svg>';
+ return icon;
+}
+
 export class GameUI{
  private onboarding:MobileOnboarding;
  private coach=document.createElement("aside");
@@ -140,6 +155,10 @@ export class GameUI{
  private landing=document.createElement("section");
  private landingDefaults=document.createElement("p");
  private landingQuick=document.createElement("button");
+ private landingQuickLabel=document.createElement("strong");
+ private landingQuickCopy=document.createElement("span");
+ private landingRouteLabels=new Map<string,HTMLElement>();
+ private landingLocalHint=document.createElement("small");
  private landingContinue=document.createElement("button");
  private landingRoutes=document.createElement("div");
  private menuHome=document.createElement("button");
@@ -271,11 +290,22 @@ export class GameUI{
   if(actions.quickPlay)this.menuView="landing";
   this.landing.className="game-ui__landing";this.landing.hidden=true;
   this.landingQuick.type="button";this.landingQuick.dataset.route="quick";this.landingQuick.onclick=()=>actions.quickPlay?.();
+  this.landingQuickLabel.className="game-ui__landing-quick-label";
+  this.landingQuickCopy.className="game-ui__landing-quick-copy";
   this.landingDefaults.className="game-ui__landing-defaults";
+  this.landingQuickCopy.append(this.landingQuickLabel,this.landingDefaults);
+  this.landingQuick.append(this.landingQuickCopy);
   this.landingContinue.type="button";this.landingContinue.dataset.route="continue";this.landingContinue.onclick=()=>{this.openMenuRoute("progression");actions.continueRun?.();};
   this.landingRoutes.className="game-ui__landing-routes";
-  for(const route of ["custom","local","arenas","progression","settings"] as const){const button=document.createElement("button");button.type="button";button.dataset.route=route;button.onclick=()=>this.openMenuRoute(route);this.landingRoutes.append(button);}
-  this.landing.append(this.landingQuick,this.landingDefaults,this.landingContinue,this.landingRoutes);
+  for(const route of ["custom","local","arenas","progression","settings"] as const){
+   const button=document.createElement("button"),label=document.createElement("span");
+   button.type="button";button.dataset.route=route;button.onclick=()=>this.openMenuRoute(route);
+   label.className="game-ui__landing-route-label";this.landingRouteLabels.set(route,label);
+   if(route==="local"){this.landingLocalHint.className="game-ui__landing-local-hint";label.append(this.landingLocalHint);}
+   button.append(landingRouteIcon(route),label);
+   this.landingRoutes.append(button);
+  }
+  this.landing.append(this.landingQuick,this.landingContinue,this.landingRoutes);
   this.menuHome.type="button";this.menuHome.dataset.menuHome="true";this.menuHome.hidden=true;this.menuHome.onclick=()=>this.openMenuRoute("home");
   this.root.className="game-ui";
   // The scrim is a separate sibling of the dialog so backdrop blur/dimming
@@ -1603,8 +1633,19 @@ export class GameUI{
 
  private applyLocale(){
   const messages=this.i18n.messages;
-  if(messages.landing){this.landingQuick.textContent=messages.landing.quick;this.landingDefaults.textContent=messages.landing.defaults;this.menuHome.textContent=messages.landing.home;
-   for(const item of this.landingRoutes.children){const button=item as HTMLButtonElement,route=button.dataset.route as "custom"|"local"|"arenas"|"progression"|"settings";button.textContent=messages.landing[route];if(route==="local"){const hint=document.createElement("small");hint.textContent=messages.landing.localHint;button.append(hint);}}
+  if(messages.landing){
+   this.landingQuickLabel.textContent=messages.landing.quick;
+   this.landingDefaults.textContent=messages.landing.defaults;
+   this.menuHome.textContent=messages.landing.home;
+   this.landingLocalHint.textContent=messages.landing.localHint;
+   for(const item of this.landingRoutes.children){
+    const route=(item as HTMLButtonElement).dataset.route as "custom"|"local"|"arenas"|"progression"|"settings";
+    const label=this.landingRouteLabels.get(route);
+    if(label){
+     label.textContent=messages.landing[route];
+     if(route==="local")label.append(this.landingLocalHint);
+    }
+   }
   }
   this.coachSkip.textContent=messages.tutorial?.skip??"Skip tutorial";this.tutorialReplay.textContent=messages.tutorial?.replay??"Replay touch tutorial";
   this.refreshCombatLabels();
