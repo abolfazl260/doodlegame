@@ -39,6 +39,21 @@ test("decoration families reflect materials and preserve special surface cues",(
  assert.deepEqual(p,{x:-4,y:1.2,width:4.2,height:.35,surface:"normal"},"render generation must not mutate physics data");
 });
 
+test("every built-in stage has separate platform engraving without modifying collision boxes",()=>{
+ const ids=["classic","towers","pit","steps","zigzag","sky","moving","fortress",
+  "bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
+ const marks=ids.map(id=>{
+  const art=generatePlatformInk(id,p,2);
+  assert.ok(art.strokes.length>18&&art.strokes.length<150,id+" keeps decoration affordable");
+  assert.ok(art.strokes.every(mark=>[mark.x1,mark.y1,mark.x2,mark.y2].every(Number.isFinite)));
+  assert.deepEqual(art,generatePlatformInk(id,p,2),"art must be deterministic");
+  return JSON.stringify(art.strokes.slice(-6));
+ });
+ assert.equal(new Set(marks).size,16,"no two arenas share the same final accent engraving");
+ assert.equal(p.width,4.2);
+ assert.equal(p.height,.35);
+});
+
 test("cache reuses shapes for moving platforms and resets explicitly",()=>{
  const cache=new PlatformInkCache();
  const before=cache.get("moving",p,1);
