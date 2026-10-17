@@ -57,7 +57,7 @@ globalThis.document={
 
 const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const modes=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
-const weapons=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
+const weapons=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"];
 const messages={
  title:"DoodleGame",rotateHint:"Rotate",language:{label:"Language",english:"English",persian:"Farsi"},
  buttons:{start:"Start",pause:"Pause",resume:"Resume",restart:"Restart",help:"Help",attack:"Attack",previousWeapon:"Prev",nextWeapon:"Next",fireMissile:"Fire"},
