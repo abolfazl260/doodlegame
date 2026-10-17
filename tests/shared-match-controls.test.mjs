@@ -31,7 +31,7 @@ test('missile is a persistent starting weapon in standard matches on every arena
  session.setMode('melee-only');session.selectPlayer2WeaponById('missile');assert.equal(session.getHudState().secondWeapon,'blade');
  session.setMode('missile-duel');session.selectPlayer2WeaponById('blaster');assert.equal(session.getHudState().secondWeapon,'missile');
 });
-test('both humans fire ranged weapons in their own selected directions, while missiles ignore shared aiming',()=>{
+test('both humans fire every ranged weapon, including missiles, in their own selected directions',()=>{
  const {session}=setup();
  for(const weapon of ['blaster','uzi','bow','bomb','boomerang','missile']){
   session.setStartingWeapon(weapon);session.reset(false);
@@ -41,7 +41,7 @@ test('both humans fire ranged weapons in their own selected directions, while mi
   else{session.attack(session.player,session.opponent,true);session.attack(session.opponent,session.player,true);}
   const player=session.projectiles.find(p=>p.owner==='player'),opponent=session.projectiles.find(p=>p.owner==='opponent');
   assert.ok(player.vx>0&&player.vy>0,weapon+' P1 direction');
-  assert.ok(opponent.vx<0&&(weapon==='missile'?opponent.vy>0:opponent.vy<0),weapon+' P2 direction');
+  assert.ok(opponent.vx<0&&opponent.vy<0,weapon+' P2 direction');
  }
 });
 test('two-player sudden death and hill victory apply rules without career rewards',()=>{
