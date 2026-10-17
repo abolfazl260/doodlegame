@@ -42,10 +42,11 @@ const interpolate=(a:number,b:number,t:number)=>a+(b-a)*t;
 export function characterMarkings(s:DuelistRenderState,head:Point):Segment[]{
  const [x,y]=head;
  const flutter=Math.sin(s.animationTime*8-s.gaitPhase)*.055-Math.min(1,Math.abs(s.velocityX)/9)*.055;
+ const tailAngle=s.characterId==="ninja"?.085:0;
  return [
   [[x-.27,y+.045],[x+.27,y+.045]],
   [[x-.26,y+.04],[x-.44,y+.145+flutter]],
-  [[x-.44,y+.145+flutter],[x-.69,y+.105+flutter*1.5]],
+  [[x-.44,y+.145+flutter],[x-.69,y+.105+flutter*1.5+tailAngle]],
   [[x-.26,y+.015],[x-.47,y-.085+flutter*.5]],
   [[x-.47,y-.085+flutter*.5],[x-.64,y-.17+flutter]]
  ];
@@ -335,7 +336,7 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
 }
 
 /** Minimal black stick outfits, matching the two approved fighter silhouettes. */
-export function fighterOutfit(s:DuelistRenderState,pose:ReturnType<typeof fighterVisual>){
+export function fighterOutfit(_s:DuelistRenderState,pose:ReturnType<typeof fighterVisual>){
  const body=pose.body;
  const partial=(segment:Segment,start:number):Segment=>{
   const [a,b]=segment;
