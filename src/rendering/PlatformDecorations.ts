@@ -99,6 +99,70 @@ export function generatePlatformInk(arena:ArenaId,p:Platform,index:number):Platf
    if(variant>.55)add(x-size*.35,top-.15,x+size*.48,top-.11);
   }
  }
+ // Stage-exclusive details replace the feeling that every arena uses the
+ // same generic ledge. They follow each platform locally, including moving
+ // platforms, and never introduce physics/collision geometry.
+ const clusters=Math.min(6,Math.max(1,Math.floor(p.width/3)));
+ for(let i=0;i<clusters;i++){
+  const x=(i+.5)*p.width/clusters;
+  const y=top+.016;
+  switch(arena){
+   case "classic": // clean ornamental seam
+    add(x-.16,y-.09,x-.04,y-.09);add(x+.04,y-.09,x+.16,y-.09);break;
+   case "towers": // masonry columns
+    add(x-.13,y-.16,x-.13,y-.03);
+    add(x+.13,y-.16,x+.13,y-.03);add(x-.13,y-.13,x+.13,y-.13);break;
+   case "pit": // razor-cut rock
+    add(x-.16,y-.11,x-.04,y-.19);add(x-.04,y-.19,x+.06,y-.1);
+    add(x+.06,y-.1,x+.15,y-.22,"accent");break;
+   case "steps": // terrace edging
+    add(x-.17,y-.13,x-.08,y-.07);add(x-.08,y-.07,x+.09,y-.07);
+    add(x+.09,y-.07,x+.17,y-.13);break;
+   case "zigzag": // voltage ticks
+    add(x-.15,y-.08,x-.05,y-.08,"accent");add(x-.05,y-.08,x+.025,y-.16,"accent");
+    add(x+.025,y-.16,x+.13,y-.04,"accent");break;
+   case "sky": // airy cross braces
+    add(x-.15,y-.1,x,y-.19,"accent");add(x,y-.19,x+.15,y-.1,"accent");break;
+   case "moving": // rail guides
+    add(x-.17,y-.12,x+.13,y-.12);add(x+.02,y-.2,x+.13,y-.12,"accent");
+    add(x+.02,y-.04,x+.13,y-.12,"accent");break;
+   case "fortress": // stone block joins
+    add(x-.17,y-.2,x+.17,y-.2);add(x,y-.2,x,y-.03);
+    add(x-.17,y-.07,x-.17,y-.17);break;
+   case "bridge": // girder braces
+    add(x-.16,y-.17,x,y-.05);add(x,y-.05,x+.16,y-.17);
+    add(x-.16,y-.17,x+.16,y-.17);break;
+   case "crater": // glowing magma cracks
+    add(x-.13,y-.16,x-.02,y-.08,"accent");
+    add(x-.02,y-.08,x+.04,y-.19,"accent");
+    add(x+.04,y-.19,x+.14,y-.14,"accent");break;
+   case "vertical": // stacked upward chevrons
+    add(x-.13,y-.13,x,y-.04,"accent");
+    add(x,y-.04,x+.13,y-.13,"accent");
+    add(x-.13,y-.20,x,y-.11);add(x,y-.11,x+.13,y-.20);break;
+   case "ruins": // fractured keystones
+    add(x-.13,y-.1,x-.04,y-.22);
+    add(x-.04,y-.22,x+.07,y-.15);add(x+.07,y-.15,x+.16,y-.21);break;
+   case "conveyor": // chevron treads
+    add(x-.14,y-.18,x-.015,y-.105,"accent");
+    add(x-.015,y-.105,x-.14,y-.03,"accent");
+    add(x+.03,y-.18,x+.155,y-.105,"accent");
+    add(x+.155,y-.105,x+.03,y-.03,"accent");break;
+   case "collapse": // unstable cracked braces
+    add(x-.16,y-.04,x-.035,y-.14,"accent");
+    add(x-.035,y-.14,x+.045,y-.065,"accent");
+    add(x+.045,y-.065,x+.17,y-.22,"accent");break;
+   case "storm": // wind cutouts
+    add(x-.16,y-.04,x+.09,y-.04,"accent");
+    add(x-.07,y-.13,x+.17,y-.13);
+    add(x+.09,y-.04,x+.15,y-.09);break;
+   case "reactor": // reactor circuitry
+    add(x-.13,y-.16,x-.03,y-.16,"accent");
+    add(x-.03,y-.16,x-.03,y-.075,"accent");
+    add(x-.03,y-.075,x+.13,y-.075,"accent");
+    add(x+.13,y-.075,x+.13,y-.19);break;
+  }
+ }
  return {key,material,strokes};
 }
 
