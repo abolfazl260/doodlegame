@@ -42,15 +42,16 @@ const MENU_STEPS:readonly MenuStep[]=["mode","arena"];
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"];
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
-const CHARACTER_IDS:readonly CharacterId[]=["soldier","ninja"];
+const CHARACTER_IDS:readonly CharacterId[]=["soldier","ninja","viking"];
 const CHARACTER_TEXT={
- en:{soldier:{name:"SOLDIER"},ninja:{name:"NINJA"}},
- fa:{soldier:{name:"سرباز"},ninja:{name:"نینجا"}}
+ en:{soldier:{name:"SOLDIER"},ninja:{name:"NINJA"},viking:{name:"VIKING"}},
+ fa:{soldier:{name:"سرباز"},ninja:{name:"نینجا"},viking:{name:"وایکینگ"}}
 } as const;
 // Skin previews deliberately contain no weapons: equipment is selected independently.
 const CHARACTER_PORTRAITS:Record<CharacterId,string>={
  soldier:'<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M15 84H82" stroke="#718497" stroke-width="3"/><path d="M48 48L48 66 31 83M48 66L65 83M47 51L30 63 24 73M49 51L66 63 72 73" fill="none" stroke="#0b1422" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="48" cy="27" r="17" fill="#f9fcff" stroke="#080f19" stroke-width="4"/><path d="M34 25H65" stroke="#1679d9" stroke-width="7"/><path d="M33 25 22 19 11 22 23 28 10 37" fill="none" stroke="#0c1119" stroke-width="8" stroke-linejoin="round"/><path d="M33 25 22 19 11 22 23 28 10 37" fill="none" stroke="#1788ee" stroke-width="5" stroke-linejoin="round"/></svg>',
- ninja:'<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M15 84H82" stroke="#6b5671" stroke-width="3"/><path d="M48 48L48 66 31 83M48 66L65 83M47 51L30 63 24 73M49 51L66 63 72 73" fill="none" stroke="#05070c" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="48" cy="27" r="17" fill="#13151d" stroke="#03060b" stroke-width="4"/><path d="M34 25H64" stroke="#e4223b" stroke-width="7"/><path d="M33 24 20 16 9 20 23 29 8 37" fill="none" stroke="#07080d" stroke-width="9" stroke-linejoin="round"/><path d="M33 24 20 16 9 20 23 29 8 37" fill="none" stroke="#e4223b" stroke-width="5" stroke-linejoin="round"/></svg>'
+ ninja:'<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M15 84H82" stroke="#6b5671" stroke-width="3"/><path d="M48 48L48 66 31 83M48 66L65 83M47 51L30 63 24 73M49 51L66 63 72 73" fill="none" stroke="#05070c" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="48" cy="27" r="17" fill="#13151d" stroke="#03060b" stroke-width="4"/><path d="M34 25H64" stroke="#e4223b" stroke-width="7"/><path d="M33 24 20 16 9 20 23 29 8 37" fill="none" stroke="#07080d" stroke-width="9" stroke-linejoin="round"/><path d="M33 24 20 16 9 20 23 29 8 37" fill="none" stroke="#e4223b" stroke-width="5" stroke-linejoin="round"/></svg>',
+ viking:'<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M15 87H83" stroke="#645242" stroke-width="3"/><path d="M48 48L48 65 31 83M48 65L65 83M44 52L28 64 22 73M53 52L68 64 75 73" stroke="#070b13" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M31 79L28 84M62 79L68 84" stroke="#9a6236" stroke-width="7"/><path d="M35 46L25 51M61 46L71 51" stroke="#95643e" stroke-width="8" stroke-linecap="round"/><path d="M38 65H59" stroke="#d5a345" stroke-width="5"/><circle cx="49" cy="27" r="18" fill="#10141b" stroke="#06080d" stroke-width="4"/><path d="M31 20L21 17 17 5Q11 22 23 31L32 32M66 20L77 17 81 5Q87 22 74 31L66 32" fill="#f1e4c8" stroke="#0b0d10" stroke-width="3" stroke-linejoin="round"/><path d="M32 19Q48 8 66 19L66 28H32Z" fill="#3b4653" stroke="#05080d" stroke-width="3"/><path d="M49 12V43M32 26H66" stroke="#d5a345" stroke-width="7"/><circle cx="49" cy="18" r="2" fill="#8a5e23"/><circle cx="49" cy="34" r="2" fill="#8a5e23"/></svg>'
 };
 const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";
 
@@ -513,7 +514,7 @@ export class GameUI{
    const portrait=document.createElement("span");
    portrait.className="game-ui__character-portrait game-ui__character-portrait--"+id;
    portrait.setAttribute("aria-hidden","true");
-   // Weapon-free skin thumbnails: blue Soldier or red Ninja headband.
+   // Weapon-free cosmetic portraits, including Viking's horned helmet.
    portrait.innerHTML=CHARACTER_PORTRAITS[id];
    const copy=document.createElement("span");copy.className="game-ui__character-copy";
    const name=document.createElement("strong");name.className="game-ui__character-name";
