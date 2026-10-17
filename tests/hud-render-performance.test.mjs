@@ -123,7 +123,7 @@ test("health/aim/bow changes update only dynamic HUD, never menu option lists",(
  hud.weapon="missile";hud.missileAngle=64;hud.missilePower=16;
  ui.render(states.PLAYING,hud);
  assert.equal(ui.details,undefined);
- assert.equal(ui.aimPads[0].hidden,true);
+ assert.equal(ui.aimPads[0].hidden,false,"missile must use the shared aiming control");
  assert.equal(counters.optionReads,0);
  hud.bowCharge=.5;
  ui.render(states.PLAYING,hud);
