@@ -76,7 +76,7 @@ try{
 
  restoreDownloadedArenas(storage);
  const session=new GameSession(input);
- try{const saved=storage.get<unknown>("doodlegame.selectedCharacter");if(CHARACTER_IDS.includes(saved as CharacterId))session.setCharacterId(saved as CharacterId);}catch{ /* Storage can be unavailable in private browsing. */ }
+ try{const saved=storage.get<unknown>("doodlegame.selectedCharacter");if(CHARACTER_IDS.includes(saved as CharacterId))session.setCharacterId(saved as CharacterId);else if(saved==="shadow")session.setCharacterId("ninja");}catch{ /* Storage can be unavailable in private browsing. */ }
  let appliedGameData:(ReturnType<typeof parseLiveGameData>)=null;
  try{appliedGameData=parseLiveGameData(storage.get<unknown>(GAME_DATA_STORAGE_KEY));}
  catch(error){console.warn("Invalid cached game data; using bundled defaults.",error);}
