@@ -107,6 +107,14 @@ export class GameUI{
  private privacyCloseButton=document.createElement("button");
  private menu=document.createElement("div");
  private menuHeader=document.createElement("div");
+ private pauseScrim=document.createElement("div");
+ private pauseHeader=document.createElement("header");
+ private pauseHeading=document.createElement("div");
+ private pauseTitle=document.createElement("h2");
+ private pauseSubtitle=document.createElement("p");
+ private pauseLanguageButton=document.createElement("button");
+ private pauseFooter=document.createElement("div");
+ private pauseSettingsButton=document.createElement("button");
  private menuSetupSection=document.createElement("section");
  private menuLead=document.createElement("div");
  private menuSetupTitle=document.createElement("h2");
@@ -270,6 +278,28 @@ export class GameUI{
   this.landing.append(this.landingQuick,this.landingDefaults,this.landingContinue,this.landingRoutes);
   this.menuHome.type="button";this.menuHome.dataset.menuHome="true";this.menuHome.hidden=true;this.menuHome.onclick=()=>this.openMenuRoute("home");
   this.root.className="game-ui";
+  // The scrim is a separate sibling of the dialog so backdrop blur/dimming
+  // never affects text, focus rings or touch targets inside the pause menu.
+  this.pauseScrim.className="game-ui__pause-scrim";
+  this.pauseScrim.hidden=true;
+  this.pauseScrim.setAttribute("aria-hidden","true");
+  this.pauseHeader.className="game-ui__pause-header";
+  this.pauseHeader.hidden=true;
+  this.pauseHeading.className="game-ui__pause-heading";
+  this.pauseTitle.className="game-ui__pause-title";
+  this.pauseTitle.id="game-pause-title";
+  this.pauseSubtitle.className="game-ui__pause-subtitle";
+  this.pauseLanguageButton.type="button";
+  this.pauseLanguageButton.className="game-ui__pause-language";
+  this.pauseLanguageButton.onclick=()=>this.i18n.setLocale(this.i18n.locale==="fa"?"en":"fa");
+  this.pauseHeading.append(this.pauseTitle,this.pauseSubtitle);
+  this.pauseHeader.append(this.pauseHeading,this.pauseLanguageButton);
+  this.pauseFooter.className="game-ui__pause-footer";
+  this.pauseFooter.hidden=true;
+  this.pauseSettingsButton.type="button";
+  this.pauseSettingsButton.className="game-ui__pause-settings";
+  this.pauseSettingsButton.onclick=()=>this.helpButton.click();
+  this.pauseFooter.append(this.pauseSettingsButton);
 
   this.languageControl.className="game-ui__language";
   this.languageButton.type="button";
@@ -657,7 +687,7 @@ export class GameUI{
    this.help.hidden=false;
    this.helpCloseButton.focus();
   };
-  this.helpCloseButton.onclick=()=>{this.help.hidden=true;this.helpButton.focus();};
+  this.helpCloseButton.onclick=()=>{this.help.hidden=true;(this.currentState===GameState.PAUSED?this.pauseSettingsButton:this.helpButton).focus();};
 
   this.privacyButton.type="button";
   this.privacyButton.dataset.privacy="true";
@@ -931,7 +961,7 @@ export class GameUI{
   this.menuProgressDetails.append(this.upgradePanel,this.runPanel);
   this.menuSetupSection.append(this.menuProgress,this.menuLead,this.menuModePanel,this.menuArenaPanel);
   this.menuHeader.append(this.menuHome);
-  this.menu.append(this.menuHeader,this.landing,this.menuResult,this.menuSetupSection,this.menuProgressDetails,this.menuExtras,this.buttons);
+  this.menu.append(this.menuHeader,this.pauseHeader,this.landing,this.menuResult,this.menuSetupSection,this.menuProgressDetails,this.menuExtras,this.buttons,this.pauseFooter);
   this.topHud.append(this.playerHealth,this.status,this.opponentHealth);
   for(const [index,pad] of this.aimPads.entries()){
    const player=index===0?1:2;
@@ -964,7 +994,7 @@ export class GameUI{
   this.root.append(this.mobileWeaponSwitcher,this.p2WeaponControls,...this.aimPads);
   this.root.append(this.menu,this.help,this.privacy,this.topHud,this.mobilePauseButton,this.weaponList,this.bowPanel,this.mobileControls,this.rotateHint);
   this.root.append(this.coach);
-  container.append(this.root);
+  container.append(this.pauseScrim,this.root);
   this.root.addEventListener("keydown",event=>{
    if(event.key!=="Escape")return;
    if(this.weaponPickerOpen){event.preventDefault();event.stopPropagation();this.closeWeaponPicker();return;}
@@ -1152,6 +1182,18 @@ export class GameUI{
     if(state===GameState.GAME_OVER)this.menu.scrollTop=0;
     this.root.classList.toggle("playing",state===GameState.PLAYING);
     this.root.classList.toggle("paused",state===GameState.PAUSED);
+    this.setHidden(this.pauseScrim,state!==GameState.PAUSED);
+    this.setHidden(this.pauseHeader,state!==GameState.PAUSED);
+    this.setHidden(this.pauseFooter,state!==GameState.PAUSED);
+    if(state===GameState.PAUSED){
+     this.root.setAttribute("role","dialog");
+     this.root.setAttribute("aria-modal","true");
+     this.root.setAttribute("aria-labelledby","game-pause-title");
+    }else{
+     this.root.removeAttribute("role");
+     this.root.removeAttribute("aria-modal");
+     this.root.removeAttribute("aria-labelledby");
+    }
     this.root.classList.toggle("game-over",state===GameState.GAME_OVER);
     this.root.classList.toggle("menu",state===GameState.MENU);
     if(state===GameState.PLAYING){this.setHidden(this.privacy,true);this.setHidden(this.help,true);}
@@ -1519,6 +1561,7 @@ export class GameUI{
   this.unsubscribeLocale?.();
   this.stopHudLoop();
   this.root.remove();
+  this.pauseScrim.remove();
  }
 
  private renderTutorial(state:GameState,s:HudState){
@@ -1570,6 +1613,11 @@ export class GameUI{
   this.languageButton.textContent=this.i18n.locale==="fa"?"فا":"EN";
   this.languageButton.setAttribute("aria-label",messages.language.label+": "+currentLanguage);
   this.title.textContent=messages.title;
+  this.pauseTitle.textContent=messages.pause.title;
+  this.pauseSubtitle.textContent=messages.pause.subtitle;
+  this.pauseSettingsButton.textContent=messages.pause.settings;
+  this.pauseLanguageButton.textContent=this.i18n.locale==="fa"?"فا":"EN";
+  this.pauseLanguageButton.setAttribute("aria-label",messages.language.label);
   this.menuLead.textContent=messages.menu?.kickoff??"CHOOSE YOUR FIGHT";
   this.stepNextButton.textContent=messages.menu?.nextArena??"NEXT: CHOOSE ARENA";
   this.stepBackButton.textContent=messages.menu?.back??"BACK";
