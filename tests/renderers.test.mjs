@@ -193,3 +193,27 @@ test('Canvas backdrop reuses its pixels until arena or viewport changes',async()
   if(oldWindow===undefined)delete globalThis.window;else globalThis.window=oldWindow;
  }
 });
+
+test('Canvas and WebGL both render the hammer with a subtle steel rim, not a white outline',async()=>{
+ const {CanvasRenderer}=await rendererModule('CanvasRenderer');
+ const {ThreeRenderer}=await rendererModule('ThreeRenderer');
+ const r=Object.create(ThreeRenderer.prototype),s={...state().player,weapon:'hammer',characterId:'ninja',weaponHolsterFrom:null,weaponDrawTime:0};
+ const fighter=r.fighter(0xffffff,false);r.draw(fighter,s);
+ assert.equal(fighter.toolCore.material.color.getHex(),0x7c8b9a);
+ const colors=[],widths=[];let color='',width=0;
+ const ctx=new Proxy({save(){},restore(){},translate(){},rotate(){},scale(){},beginPath(){},moveTo(){},lineTo(){},
+  set strokeStyle(v){color=v},get strokeStyle(){return color},
+  set lineWidth(v){width=v},get lineWidth(){return width},
+  stroke(){colors.push(color);widths.push(width)},
+  arc(){},fill(){},set fillStyle(_v){}
+ },{get(o,k){return k in o?o[k]:()=>{}},set(o,k,v){o[k]=v;return true}});
+ const win=globalThis.window;globalThis.window={devicePixelRatio:1};
+ try{
+  const canvas=new CanvasRenderer({clientWidth:800,clientHeight:500,getContext(){return ctx}});
+  canvas.draw(ctx,s,x=>x,y=>y,100,false);
+  assert.ok(colors.includes('#7c8b9a'),'hammer has muted steel base');
+  assert.ok(widths.some(v=>Math.abs(v-1.5)<.00001),'hammer metal line is 0.015 game units');
+  canvas.dispose();
+ }finally{if(win===undefined)delete globalThis.window;else globalThis.window=win;}
+ fighter.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
+});

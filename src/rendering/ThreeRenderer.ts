@@ -1,4 +1,4 @@
-import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,capsulePositions,characterMarkings,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
+import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,capsulePositions,characterMarkings,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
 import * as THREE from "three";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
 import {getDownloadedImage} from "../gameplay/DownloadableArenas.js";
@@ -338,8 +338,10 @@ export class ThreeRenderer implements Renderer{
   this.setCapsules(view.markingCore,marks,width.marking.core);
   (view.markingCore.material as THREE.MeshBasicMaterial).color.set(ink.accent);
   const weapon=toolSegments(s);
-  this.setCapsules(view.toolOutline,weapon,width.weapon.outline);
-  this.setCapsules(view.toolCore,weapon,width.weapon.core);
+  const baseInk=weaponBaseInk(s);
+  this.setCapsules(view.toolOutline,weapon,baseInk.outline);
+  this.setCapsules(view.toolCore,weapon,baseInk.core);
+  (view.toolCore.material as THREE.MeshBasicMaterial).color.set(baseInk.metal);
   const styleLayers=weaponStyleLayers(s);
   for(let i=0;i<view.styleMeshes.length;i++){
    const layer=styleLayers[i],mesh=view.styleMeshes[i];
