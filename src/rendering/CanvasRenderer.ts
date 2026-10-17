@@ -1,4 +1,4 @@
-import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,characterMarkings,fighterOutfit,weaponAccentColor,weaponAccentSegments,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
+import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,characterMarkings,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
 import type {Renderer} from "./Renderer";
 import {PlatformInkCache,platformInkReaction} from "./PlatformDecorations.js";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
@@ -187,6 +187,8 @@ export class CanvasRenderer implements Renderer{
   const weapon=toolSegments(s);
   lines(weapon,ink.outline,width.weapon.outline);
   lines(weapon,ink.metal,width.weapon.core);
+  // Shared four-color vector styling matches the approved weapon reference sheet.
+  for(const layer of weaponStyleLayers(s))lines(layer.segments,layer.color,layer.width);
   lines(weaponAccentSegments(s),weaponAccentColor(s),width.weapon.accent);
   if(s.attackTime>0&&(s.weapon==="blaster"||s.weapon==="uzi")){
    const x=s.weapon==="uzi"?.54:.66;
