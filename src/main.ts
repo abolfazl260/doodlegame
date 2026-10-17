@@ -17,7 +17,7 @@ import {WebStorage} from "./platform/web/WebStorage";
 import {installNativeAppLifecycle} from "./platform/mobile/NativeAppLifecycle";
 import {installWebVisibilityLifecycle} from "./platform/web/WebVisibilityLifecycle";
 import {installLandscapeOrientation} from "./platform/web/LandscapeOrientation";
-import {installTelegramMiniApp} from "./platform/web/TelegramMiniApp";
+import {installTelegramMiniApp,isTelegramMiniAppLaunch} from "./platform/web/TelegramMiniApp";
 import {TelegramLeaderboard} from "./platform/web/TelegramLeaderboard";
 import {CanvasRenderer} from "./rendering/CanvasRenderer";
 import {ThreeRenderer} from "./rendering/ThreeRenderer";
@@ -192,12 +192,10 @@ try{
  ui.bind(listener=>game.subscribe(listener),readHud);
  input.start();
  game.initialize();
- // A visible entry point is essential when Telegram strips launch parameters.
- // Normal browser users can inspect the requirement without an API request.
- // Telegram is an optional WEB integration. Never initialize its SDK or
- // leaderboard network calls in the offline Android/Capacitor build.
+ // Rankings are exclusive to the Telegram Mini App, not the ordinary website
+ // or the offline Android APK. Signed initData is still verified by the Worker.
  if(Capacitor.getPlatform()==="web"){
-  rankings.showEntryPoint();
+  if(isTelegramMiniAppLaunch(window))rankings.showEntryPoint();
   telegram=installTelegramMiniApp(window,document,{
    getState:()=>game.getState(),
    onBack:()=>{
@@ -206,8 +204,8 @@ try{
     else if(current===GameState.PAUSED||current===GameState.GAME_OVER)stopToMenu();
    },
    onResize:()=>game.resize(),
-   onReady:app=>rankings.connect(app),
-   onFailure:()=>rankings.reportSdkFailure()
+   onReady:app=>{if(isTelegramMiniAppLaunch(window))rankings.connect(app);},
+   onFailure:()=>{if(isTelegramMiniAppLaunch(window))rankings.reportSdkFailure();}
   });
  }
  const unsubscribeTelegram=game.subscribe(()=>telegram?.onGameState?.());
