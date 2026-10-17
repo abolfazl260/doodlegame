@@ -102,6 +102,23 @@ test("Ranger Pharaoh Knight armor details appear in Canvas and WebGL and never c
  view.group.traverse(obj=>{obj.geometry?.dispose();obj.material?.dispose?.()});
 });
 
+test("complex skins hide old stray shoulder/vest/gear meshes on WebGL",async()=>{
+ const {ThreeRenderer}=await rendererModule("ThreeRenderer");
+ const renderer=Object.create(ThreeRenderer.prototype),view=renderer.fighter(0xffffff,false),base=state().player;
+ const legacy=[view.vestOutline,view.vestCore,view.gearOutline,view.gearCore,
+  view.trim,view.costumeOutline,view.costumeCore];
+ for(const characterId of ["ranger","pharaoh","knight"]){
+  renderer.draw(view,{...base,characterId,weapon:"blade",weaponHolsterFrom:null});
+  assert.ok(legacy.every(mesh=>!mesh.visible),characterId+" has no duplicate black costume strokes");
+  assert.equal(view.bodyCore.visible,true,"the animated skeleton must remain visible");
+  assert.ok(view.skinMeshes.some(mesh=>mesh.visible),"custom armor should still appear");
+ }
+ renderer.draw(view,{...base,characterId:"soldier",weapon:"blade",weaponHolsterFrom:null});
+ assert.ok(legacy.every(mesh=>mesh.visible),"regular soldier retains classic shoulder outlines");
+ assert.ok(view.skinMeshes.every(mesh=>!mesh.visible),"cosmetic armor gets cleared on skin switch");
+ view.group.traverse(obj=>{obj.geometry?.dispose();obj.material?.dispose?.()});
+});
+
 test('Canvas render balances transformations and opacity for missiles and every held tool',async()=>{
  const {CanvasRenderer}=await rendererModule('CanvasRenderer');
  let depth=0;const context=new Proxy({save(){depth++},restore(){assert.ok(depth>0);depth--}}, {get(target,key){return key in target?target[key]:()=>{}},set(target,key,value){target[key]=value;return true}});
