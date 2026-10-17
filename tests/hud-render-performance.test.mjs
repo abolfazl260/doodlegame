@@ -54,7 +54,7 @@ globalThis.window={addEventListener(){},removeEventListener(){},requestAnimation
 
 const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const modes=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
-const weapons=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
+const weapons=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"];
 function getMessages(fa=false){
  return {
   title:fa?"بازی":"GAME",rotateHint:"ROTATE",
