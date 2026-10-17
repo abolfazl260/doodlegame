@@ -52,6 +52,8 @@ const fixture={
  moveX:()=>input.getState().moveX,
  attackCancelled:()=>input.getState().attackCancelled,
  projectiles:()=>session.getRenderState().projectiles.filter(p=>p.owner==="player").length,
+ missileAim:()=>session.getHudState().weaponAimAngle,
+ missileShot:()=>session.getRenderState().projectiles.find(p=>p.weapon==="missile"&&p.owner==="player")??null,
  attackPressed:()=>input.getState().attackPressed,
  attackHeld:()=>input.getState().attackHeld,
  pointerDown:()=>input.getState().pointerDown,
