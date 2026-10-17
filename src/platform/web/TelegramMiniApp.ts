@@ -90,12 +90,12 @@ export function installTelegramMiniApp(
   if(disposed||app)return;
   const current=host.Telegram?.WebApp;
   if(!current)return;
-  app=current;
   if(!hasLaunchHint&&!current.initData){
-   // The SDK object can exist on ordinary websites with no Telegram session.
-   // Never reveal rankings or enable Telegram chrome without a launch signal.
+   // A stray SDK object alone is not a Telegram session: no callbacks,
+   // back-button wiring or Telegram-specific viewport/chrome modifications.
    return;
   }
+  app=current;
   root.classList.add("telegram-mini-app");
   try{current.setHeaderColor?.("#000000");}catch{/* older clients */}
   try{current.setBackgroundColor?.("#000000");}catch{/* older clients */}
@@ -130,7 +130,7 @@ export function installTelegramMiniApp(
    doc.head.appendChild(script);
   }
  };
- if(hasLaunchHint||Boolean(host.Telegram?.WebApp))beginInitialization();
+ if(hasLaunchHint)beginInitialization();
  return {
   get active(){return active;},
   // Kept for compatibility with Telegram clients that temporarily lose launch
