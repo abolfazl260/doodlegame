@@ -299,9 +299,17 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
  const rect=(x:number,y:number,w:number,h:number)=>path([[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x,y]]);
  switch(weapon) {
   case 'blade':
-   rect(-.12,-.045,.25,.09);line([.12,-.16],[.12,.16]);
-   path([[.15,-.08],[.78,-.07],[1.02,0],[.78,.07],[.15,.08]]);line([.2,0],[.88,0]);
-   for(let x=-.08;x<.1;x+=.06)line([x,-.04],[x+.03,.04]);break;
+   if(s.characterId==="ninja"){
+    // Short, bright dagger with a red guard as shown in Ninja's reference card.
+    rect(-.12,-.04,.24,.08);line([.12,-.12],[.12,.12]);
+    path([[.15,-.067],[.46,-.056],[.64,0],[.46,.056],[.15,.067]]);
+    line([.2,0],[.52,0]);
+   }else{
+    rect(-.12,-.045,.25,.09);line([.12,-.16],[.12,.16]);
+    path([[.15,-.08],[.78,-.07],[1.02,0],[.78,.07],[.15,.08]]);line([.2,0],[.88,0]);
+    for(let x=-.08;x<.1;x+=.06)line([x,-.04],[x+.03,.04]);
+   }
+   break;
   case 'hammer':
    rect(-.12,-.035,.7,.07);rect(.52,-.23,.38,.46);rect(.57,-.16,.28,.32);
    for(let x=0;x<.3;x+=.07)line([x,-.06],[x+.03,.06]);
@@ -358,7 +366,7 @@ export function fighterOutfit(_s:DuelistRenderState,pose:ReturnType<typeof fight
 /** Distinct colored inlays for every equipped weapon. */
 export function weaponAccentColor(s:DuelistRenderState):string {
  switch(weaponDrawPose(s).weapon){
-  case "blade":return "#65e6ff";
+  case "blade":return s.characterId==="ninja"?"#ef344d":"#65e6ff";
   case "hammer":return "#ffbd66";
   case "blaster":return "#fbe27e";
   case "uzi":return "#ffba68";
@@ -371,9 +379,9 @@ export function weaponAccentColor(s:DuelistRenderState):string {
 export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
  if(s.grabPhase!==null&&s.grabPhase!==undefined)return [];
  switch(weaponDrawPose(s).weapon){
-  case "blade":return [
-   [[.26,-.045],[.78,-.027]],[[.78,-.027],[.94,0]],[[.16,-.14],[.16,.14]]
-  ];
+  case "blade":return s.characterId==="ninja"?
+   [[[.21,-.02],[.5,0]],[[.12,-.1],[.12,.1]]]:
+   [[[.26,-.045],[.78,-.027]],[[.78,-.027],[.94,0]],[[.16,-.14],[.16,.14]]];
   case "hammer":return [
    [[.57,.17],[.84,.17]],[[.79,-.16],[.79,.15]],[[.59,-.17],[.59,.17]]
   ];
