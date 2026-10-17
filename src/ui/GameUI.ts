@@ -40,7 +40,7 @@ type MenuStep="mode"|"arena";
 const MENU_STEPS:readonly MenuStep[]=["mode","arena"];
 
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
-const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
+const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"];
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
 const CHARACTER_IDS:readonly CharacterId[]=["soldier","ninja"];
 const CHARACTER_TEXT={

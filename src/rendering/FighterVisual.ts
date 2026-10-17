@@ -5,7 +5,7 @@ export type Point = readonly [number, number];
 export type Segment = readonly [Point, Point];
 const clamp=(v:number)=>Math.max(0,Math.min(1,v));
 export function attackDuration(weapon:DuelistRenderState['weapon']) {
- return weapon==='hammer'?.24:weapon==='blade'||weapon==='bow'||weapon==='missile'?.22:.14;
+ return weapon==='hammer'?.24:weapon==='blade'||weapon==='bow'||weapon==='missile'||weapon==='spear'?.22:.14;
 }
 /** Shared, legible overhead tell for committed attacks and boss phase changes. */
 export function telegraphSegments(s:DuelistRenderState):Segment[]{
@@ -155,6 +155,11 @@ export function fighterVisual(s:DuelistRenderState) {
   if(weapon==='blade'&&s.attackVariant===3)toolAngle=.08;
   hand=[.34+swing*.18,.09+swing*.08];
  } else if(weapon==='bow') {hand=[.45,.22];back=[.1-s.bowCharge*.3,.22];toolAngle=0;}
+ else if(weapon==='spear'){
+  // Spear is thrown forward with a brief extended throwing arm.
+  hand=[.45+swing*.24,.22+swing*.08];
+  back=[.1-swing*.1,.18];toolAngle=.08+swing*.04;
+ }
  else if(weapon==='blaster'||weapon==='uzi'||weapon==='missile') {
   hand=[.43-swing*.09,.18+swing*.03];back=[.23-swing*.09,.12];
   toolAngle=weapon==='missile'?s.missileAngle*Math.PI/180:swing*.09;
@@ -360,6 +365,15 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
    for(let i=0;i<6;i++){const a=i*Math.PI/3+s.animationTime*8,r=.032+.015*Math.abs(Math.sin(s.animationTime*18));
     line([.045,.38],[.045+Math.cos(a)*r,.38+Math.sin(a)*r]);}
    break;
+  case 'spear':
+   // Concept art: blue wrapped grip, dark slim shaft, golden fittings,
+   // and a silver diamond-shaped pointed spearhead.
+   rect(-.29,-.05,.30,.10);
+   rect(-.31,-.078,.067,.156);rect(-.04,-.085,.055,.17);
+   rect(.015,-.046,.77,.092);
+   rect(.75,-.095,.09,.19);
+   path([[.83,-.087],[.90,-.087],[1.04,-.16],[1.35,0],[1.04,.16],[.90,.087],[.83,.087],[.83,-.087]]);
+   line([.93,0],[1.27,0]);break;
   case 'missile':
    // White rocket, red nose/fins and a small gold exhaust cone.
    rect(-.22,-.10,.64,.20);path([[.42,-.10],[.66,0],[.42,.10]]);
@@ -402,6 +416,7 @@ export function weaponAccentColor(s:DuelistRenderState):string {
   case "boomerang":return "#3ea7ff";
   case "bomb":return "#ff9a3d";
   case "missile":return "#ef4040";
+  case "spear":return "#f6bf35";
  }
 }
 export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
@@ -431,6 +446,10 @@ export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
   case "missile":return [
    [[.47,-.07],[.62,0]],[[.62,0],[.47,.07]],
    [[-.23,0],[-.34,0]]
+  ];
+  case "spear":return [
+   [[-.27,-.055],[-.27,.055]],[[-.025,-.065],[-.025,.065]],
+   [[.79,-.075],[.79,.075]],[[1.04,-.135],[1.29,0]]
   ]; }
  return [];
 }
@@ -492,6 +511,12 @@ export function weaponStyleLayers(s:DuelistRenderState):readonly WeaponStyleLaye
    {color:"#ef4040",width:.068,segments:[[[.47,-.055],[.60,0]],[[.47,.055],[.60,0]]]},
    {color:"#dc3442",width:.055,segments:[[[-.12,-.11],[-.20,-.20]],[[-.12,.11],[-.20,.20]]]},
    {color:"#ffc430",width:.045,segments:[[[-.22,0],[-.34,0]]]}
+  ];
+  case "spear":return [
+   {color:"#1858bf",width:.087,segments:[[[-.235,0],[-.035,0]]]},
+   {color:"#553a31",width:.070,segments:[[[.04,0],[.73,0]]]},
+   {color:"#d1dae3",width:.112,segments:[[[.91,0],[1.22,0]]]},
+   {color:"#f6bf35",width:.065,segments:[[[.79,-.075],[.79,.075]],[[-.03,-.07],[-.03,.07]]]}
   ];
   default:return [];
  }

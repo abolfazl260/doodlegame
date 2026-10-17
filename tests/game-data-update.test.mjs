@@ -7,11 +7,11 @@ import {GameSession} from "../.test-build/gameplay/GameSession.js";
 const bundled=JSON.parse(readFileSync("public/game-data.json","utf8"));
 const idle={moveX:0,moveY:0,pointerX:0,pointerY:0,pointerDown:false,pointerPressed:false,pointerReleased:false,attackHeld:false,jumpPressed:false,dashPressed:false,attackPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};
 function make(){return new GameSession({getState:()=>idle,endFrame(){}});}
-test("GitHub update file is valid, versioned, and covers all eight weapons and sixteen arenas",()=>{
+test("GitHub update file is valid, versioned, and covers all nine weapons and sixteen arenas",()=>{
  const value=parseLiveGameData(bundled);
  assert.ok(value);
  assert.equal(value.dataVersion,1);
- assert.equal(Object.keys(value.weapons).length,8);
+ assert.equal(Object.keys(value.weapons).length,9);
  assert.equal(Object.keys(value.arenas).length,16);
  assert.equal(GITHUB_GAME_DATA_URL,"https://raw.githubusercontent.com/abolfazl260/doodlegame/main/public/game-data.json");
  assert.equal(GAME_DATA_STORAGE_KEY,"doodlegame.gameData.v1");
@@ -37,7 +37,7 @@ test("network request is click-triggered, no-store, and parses data without exec
  };
  const result=await downloadLatestGameData(fetcher);
  assert.equal(result.dataVersion,1);
- assert.deepEqual(Object.keys(result.weapons).length,8);
+ assert.deepEqual(Object.keys(result.weapons).length,9);
  assert.equal(seen.length,1);
  assert.equal(seen[0].url,GITHUB_GAME_DATA_URL);
  assert.equal(seen[0].init.cache,"no-store");
@@ -82,4 +82,16 @@ test("Android-only update button has no explanatory copy and language control st
  assert.match(main,/storage\.set\(GAME_DATA_STORAGE_KEY,latest\)/);
  assert.match(css,/\.game-ui__update-button\[hidden\]/);
  assert.match(css,/min-height:28px;height:28px/);
+});
+
+test("downloaded spear tuning is validated and applied without modifying other weapons",()=>{
+ const game=new GameSession({getState(){return{}},endFrame(){}});
+ const value=parseLiveGameData({schemaVersion:1,dataVersion:7,weapons:{spear:{damage:16,cooldown:.7}},arenas:{}});
+ assert.ok(value);
+ game.setLiveGameData(value);
+ assert.equal(game.weaponStats.spear.damage,16);
+ assert.equal(game.weaponStats.spear.cooldown,.7);
+ assert.equal(game.weaponStats.blade.damage,8);
+ assert.equal(parseLiveGameData({schemaVersion:1,dataVersion:7,weapons:{spear:{damage:-1}},arenas:{}}),null);
+ game.dispose();
 });

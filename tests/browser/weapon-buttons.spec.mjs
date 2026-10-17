@@ -12,7 +12,7 @@ test.beforeEach(async({page})=>{
 test("one weapon button opens a palette and closes after choosing",async({page})=>{
  await expect(page.locator(toggle)).toBeVisible();
  await expect(page.locator(".game-ui__weapon-list")).toBeHidden();
- for(const id of ["hammer","blaster","uzi","boomerang","bow","bomb","missile","blade"]){
+ for(const id of ["hammer","blaster","uzi","boomerang","bow","bomb","missile","spear","blade"]){
   await page.locator(toggle).click();await expect(page.locator(button(id))).toBeEnabled();
   await page.evaluate(()=>window.__weaponFixture.clearAttack());
   await page.locator(button(id)).click();expect(await selected(page)).toBe(id);
@@ -29,7 +29,7 @@ test("palette closes with its button or Escape without firing",async({page})=>{
 });
 test("melee-only excludes ranged weapons",async({page})=>{
  await changeMode(page,"melee-only");await page.locator(toggle).click();
- for(const id of ["blaster","uzi","boomerang","bow","bomb","missile"]){await expect(page.locator(button(id))).toBeHidden();await expect(page.locator(button(id))).toBeDisabled();}
+ for(const id of ["blaster","uzi","boomerang","bow","bomb","missile","spear"]){await expect(page.locator(button(id))).toBeHidden();await expect(page.locator(button(id))).toBeDisabled();}
  await page.locator(button("hammer")).click();expect(await selected(page)).toBe("hammer");
 });
 test("Missile Duel locks the weapon; Fortress allows all standard weapons",async({page})=>{

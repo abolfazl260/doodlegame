@@ -19,9 +19,9 @@ test('clothing follows the animated fighter, not its world position',()=>{
  }
 });
 
-test('all eight weapons retain silhouettes and get distinct accent geometry',()=>{
+test('all nine weapons retain silhouettes and get distinct accent geometry',()=>{
  const colors=new Set();
- for(const weapon of ['blade','hammer','blaster','uzi','bow','boomerang','bomb','missile']){
+ for(const weapon of ['blade','hammer','blaster','uzi','bow','boomerang','bomb','missile','spear']){
   const s={...base,weapon,weaponHolsterFrom:null,weaponDrawTime:0,grabPhase:null};
   const lines=weaponAccentSegments(s);
   assert.ok(lines.length>0,weapon+' should have identifiable inlays');
@@ -29,7 +29,7 @@ test('all eight weapons retain silhouettes and get distinct accent geometry',()=
   assert.ok(lines.every(segment=>segment.flat().every(Number.isFinite)));
   colors.add(weaponAccentColor(s));
  }
- assert.equal(colors.size,8);
+ assert.equal(colors.size,9);
  const hidden={...base,weapon:'blade',grabPhase:'hold'};
  assert.equal(weaponAccentSegments(hidden).length,0);
 });
@@ -55,7 +55,8 @@ test('four redesigned weapons retain distinctive color layers and finite artwork
   uzi:['#252e39','#35434e','#59d84f','#9aa9b5'],
   boomerang:['#253244','#249fff','#153752','#79d4ff'],
   bomb:['#222934','#454d58','#ff9a3d','#d9e0e6'],
-  missile:['#f2f5f7','#ef4040','#dc3442','#ffc430']
+  missile:['#f2f5f7','#ef4040','#dc3442','#ffc430'],
+  spear:['#1858bf','#553a31','#d1dae3','#f6bf35']
  };
  const snapshot=JSON.stringify(base);
  for(const [weapon,colors] of Object.entries(expected)){
@@ -111,7 +112,8 @@ test('all eight weapon paint layers have the approved extra-slim widths',()=>{
   uzi:[.119,.094,.053,.024],
   boomerang:[.081,.064,.034,.026],
   bomb:[.22,.037,.034,.021],
-  missile:[.132,.068,.055,.045]
+  missile:[.132,.068,.055,.045],
+  spear:[.087,.070,.112,.065]
  };
  for(const [weapon,expected] of Object.entries(widths)){
   const state={...base,characterId:'soldier',weapon,weaponHolsterFrom:null,weaponDrawTime:0};
@@ -123,4 +125,18 @@ test('all eight weapon paint layers have the approved extra-slim widths',()=>{
  assert.deepEqual(gear,{outline:.135,core:.092});
  assert.deepEqual(marking,{outline:.102,core:.057});
  assert.deepEqual(head,{halo:.355,outline:.318,core:.274});
+});
+
+test('Spear remains a readable thin silver-tip weapon for both fighters',()=>{
+ for(const characterId of ['soldier','ninja']){
+  const state={...base,weapon:'spear',characterId,weaponHolsterFrom:null};
+  const geometry=toolSegments(state);
+  const colors=weaponStyleLayers(state);
+  assert.ok(geometry.length>=15);
+  assert.deepEqual(colors.map(l=>l.color),['#1858bf','#553a31','#d1dae3','#f6bf35']);
+  assert.ok(colors.every(l=>l.width<=.112));
+  assert.ok(geometry.every(seg=>seg.flat().every(Number.isFinite)));
+  assert.ok(geometry.some(seg=>seg.some(p=>p[0]>=1.3)),'silver tip reaches forward');
+ }
+ assert.equal(weaponStyleLayers({...base,weapon:'spear',grabPhase:'hold'}).length,0);
 });

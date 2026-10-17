@@ -7,7 +7,7 @@ import type {WeaponId} from "../input/Input.js";
  */
 export const GITHUB_GAME_DATA_URL="https://raw.githubusercontent.com/abolfazl260/doodlegame/main/public/game-data.json";
 export const GAME_DATA_STORAGE_KEY="doodlegame.gameData.v1";
-const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
+const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"];
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const MAX_BYTES=32768;
 export interface WeaponTuning {readonly damage?:number;readonly cooldown?:number;}
