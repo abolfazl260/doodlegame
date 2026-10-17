@@ -1,6 +1,7 @@
 import type {ArenaId,BuiltInArenaId,PlatformSurface} from "../gameplay/GameSession";
 import {getDownloadedArena,getDownloadedImage} from "../gameplay/DownloadableArenas.js";
 import {paintProfessionalBackdrop} from "./BackgroundArt.js";
+import {paintArenaLandmarks} from "./ArenaStageArt.js";
 
 export type ArenaUiSkin = "doodle" | "neon" | "fantasy";
 export type ArenaBackdrop = "sketch" | "city" | "clouds" | "mountains" | "cavern" | "industrial";
@@ -58,6 +59,12 @@ export function getArenaTheme(arena:ArenaId):ArenaTheme{
 /** One cached backdrop implementation for both Canvas2D and WebGL. */
 export function paintArenaBackdrop(ctx:CanvasRenderingContext2D,width:number,height:number,t:ArenaTheme,arena?:ArenaId):void{
  paintProfessionalBackdrop(ctx,width,height,t);
+ // Stage-specific landmarks sit behind collision platforms and are cached by
+ // both renderers. Downloadable arenas retain their own supplied backdrops.
+ const id=arena&&!arena.startsWith("extra-")?arena as BuiltInArenaId:
+  !arena?(Object.keys(ARENA_THEMES) as BuiltInArenaId[]).find(key=>ARENA_THEMES[key]===t):undefined;
+ if(id&&Object.prototype.hasOwnProperty.call(ARENA_THEMES,id))
+  paintArenaLandmarks(ctx,width,height,id,t);
  if(!arena)return;
  const image=getDownloadedImage(arena);
  if(image?.complete&&image.naturalWidth>0)ctx.drawImage(image,0,0,width,height);

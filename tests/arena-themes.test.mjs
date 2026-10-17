@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {ARENA_THEMES,getArenaTheme,platformColors,paintArenaBackdrop} from "../.test-build/themes/ArenaThemes.js";
+import {stageLandmarks,paintArenaLandmarks} from "../.test-build/themes/ArenaStageArt.js";
 
 const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 
@@ -74,4 +75,27 @@ test("premium environment art is deterministic, balanced and bounded for every a
  }
  assert.equal(new Set(arenas.map(id=>capture(id,640,360))).size,arenas.length,
   "all sixteen arenas should have distinguishable procedural geometry");
+});
+
+test("distinct stage landmarks paint deterministically on Canvas and stay within finite normalized geometry",()=>{
+ const eventCounts=[];
+ for(const id of arenas){
+  const shapes=stageLandmarks(id);
+  assert.ok(shapes.length>=8,"no generic empty landmark set: "+id);
+  const saved=[];
+  const c={save(){saved.push(1)},restore(){saved.pop()},beginPath(){},moveTo(){},lineTo(){},closePath(){},
+   fillRect(...v){events.push(["rect",...v])},ellipse(...v){events.push(["oval",...v])},fill(){events.push(["fill"])},stroke(){events.push(["stroke"])}};
+  const events=[];
+  paintArenaLandmarks(c,640,360,id,ARENA_THEMES[id]);
+  assert.equal(saved.length,0,"stage paint balances context state: "+id);
+  assert.ok(events.length>3);
+  eventCounts.push(JSON.stringify(events));
+  for(const shape of shapes){
+   const numbers=shape.kind==="rect"?[shape.x,shape.y,shape.w,shape.h]:
+    shape.kind==="ellipse"?[shape.x,shape.y,shape.rx,shape.ry]:
+    shape.points.flat();
+   assert.ok(numbers.every(Number.isFinite),"finite stage landmark geometry: "+id);
+  }
+ }
+ assert.equal(new Set(eventCounts).size,16,"each arena renders a different composition");
 });
