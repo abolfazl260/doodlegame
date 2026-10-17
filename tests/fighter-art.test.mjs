@@ -51,7 +51,11 @@ test('four redesigned weapons retain distinctive color layers and finite artwork
   blade:['#c0d8eb','#1766c3','#f2c34b','#f5fcff'],
   hammer:['#a0aeba','#795032','#eab637','#dce7f0'],
   blaster:['#303a49','#1c2531','#f14655','#91a2b5'],
-  bow:['#ad7138','#25ba79','#d9e1de','#72c944']
+  bow:['#ad7138','#25ba79','#d9e1de','#72c944'],
+  uzi:['#252e39','#35434e','#59d84f','#9aa9b5'],
+  boomerang:['#253244','#249fff','#153752','#79d4ff'],
+  bomb:['#222934','#454d58','#ff9a3d','#d9e0e6'],
+  missile:['#f2f5f7','#ef4040','#dc3442','#ffc430']
  };
  const snapshot=JSON.stringify(base);
  for(const [weapon,colors] of Object.entries(expected)){
@@ -68,9 +72,32 @@ test('four redesigned weapons retain distinctive color layers and finite artwork
  assert.equal(weaponStyleLayers({...base,characterId:'ninja',weapon:'blade'}).length,0,
   'existing Ninja dagger remains distinct from Soldier sword');
  for(const weapon of ['uzi','boomerang','bomb','missile']){
-  assert.equal(weaponStyleLayers({...base,weapon}).length,0,weapon+' has unchanged artwork');
+  assert.equal(weaponStyleLayers({...base,weapon}).length,4,weapon+' has four illustrated layers');
  }
  assert.equal(weaponStyleLayers({...base,weapon:'bow',grabPhase:'hold'}).length,0,
   'hidden grabbed weapon should not leave floating details');
  assert.deepEqual(JSON.stringify(base),snapshot,'procedural artwork must not mutate combat state');
+});
+
+test('thinner weapon ink and color layers preserve animated finite render geometry',()=>{
+ const {weapon,body,vest,head}=FIGHTER_INK_WIDTH;
+ assert.deepEqual(weapon,{outline:.098,core:.058,accent:.034});
+ assert.ok(body.halo<=.18&&vest.outline<=.28);
+ assert.deepEqual(head,{halo:.355,outline:.318,core:.274},'head must not shrink');
+ for(const id of ['uzi','boomerang','bomb','missile']){
+  const s={...base,weapon:id,weaponHolsterFrom:null,weaponDrawTime:0};
+  const outlines=toolSegments(s);
+  const styled=weaponStyleLayers(s);
+  assert.ok(outlines.length>5);
+  assert.equal(styled.length,4);
+  for(const layer of styled){
+   assert.ok(layer.width<=.26,'color overlays must not conceal the stick rig');
+   assert.ok(layer.segments.length>0);
+   assert.ok(layer.segments.every(([a,b])=>[...a,...b].every(Number.isFinite)));
+  }
+ }
+ for(const t of [0,.15,.35,.8]){
+  const bomb={...base,weapon:'bomb',animationTime:t};
+  assert.ok(toolSegments(bomb).every(([a,b])=>[...a,...b].every(Number.isFinite)));
+ }
 });
