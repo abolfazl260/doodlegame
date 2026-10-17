@@ -19,14 +19,14 @@ export class CanvasRenderer implements Renderer{
         c.lineTo(0,-scale*.19);c.lineTo(scale*.10,-scale*.12);
         c.lineTo(scale*.40,scale*.22);c.lineTo(scale*.34,scale*.29);
         c.lineTo(0,scale*.05);c.lineTo(-scale*.30,scale*.29);c.closePath();c.fill();c.stroke();
-        c.strokeStyle="#31aaff";c.lineWidth=Math.max(1.5,scale*.056);
+        c.strokeStyle="#31aaff";c.lineWidth=Math.max(1.2,scale*.045);
         c.beginPath();c.moveTo(-scale*.30,scale*.22);c.lineTo(-scale*.04,-scale*.10);
         c.moveTo(scale*.08,-scale*.08);c.lineTo(scale*.36,scale*.20);c.stroke();c.restore();
       }else if(p.weapon==="bow"){const len=scale*.58;c.save();c.translate(px,py);c.rotate(-p.rotation);c.lineWidth=Math.max(2,scale*.045);c.strokeStyle="#d9d5bb";c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();c.strokeStyle="#f6c235";c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.16,-scale*.11);c.moveTo(len,0);c.lineTo(len-scale*.16,scale*.11);c.stroke();c.strokeStyle="#70c94a";c.beginPath();c.moveTo(-len,0);c.lineTo(-len+scale*.11,-scale*.09);c.moveTo(-len,0);c.lineTo(-len+scale*.11,scale*.09);c.stroke();c.globalAlpha=.22;c.lineWidth=Math.max(1,scale*.03);c.beginPath();c.moveTo(-len*.85,0);c.lineTo(-len*1.65,0);c.stroke();c.restore();}else if(p.weapon==="missile"){
         // White/red rocket and warm exhaust; coordinates remain the projectile physics state.
         const speed=Math.hypot(p.vx,p.vy),trail=Math.max(scale*.55,Math.min(scale*1.9,scale*(.55+speed*.045)));
         const nx=speed>.01?p.vx/speed:1,ny=speed>.01?p.vy/speed:0;
-        c.save();c.strokeStyle="#ffc431";c.globalAlpha=.4;c.lineWidth=Math.max(2,scale*.068);
+        c.save();c.strokeStyle="#ffc431";c.globalAlpha=.4;c.lineWidth=Math.max(1.4,scale*.052);
         c.beginPath();c.moveTo(px-nx*.22*scale,py+ny*.22*scale);c.lineTo(px-nx*trail,py+ny*trail);c.stroke();
         c.globalAlpha=1;c.translate(px,py);c.rotate(-p.rotation);
         c.fillStyle="#f1f5f8";c.strokeStyle="#101722";c.lineWidth=Math.max(1.3,scale*.028);
@@ -43,7 +43,7 @@ export class CanvasRenderer implements Renderer{
       }else if(p.weapon==="bomb"){
         c.save();c.translate(px,py);c.rotate(-p.rotation);
         const warning=p.life<.55?1+Math.sin(p.age*45)*.1:1;c.scale(warning,warning);
-        c.fillStyle='#252a33';c.strokeStyle='#101722';c.lineWidth=Math.max(1.4,scale*.025);
+        c.fillStyle='#252a33';c.strokeStyle='#101722';c.lineWidth=Math.max(1.1,scale*.02);
         c.beginPath();c.arc(0,0,scale*.18,0,Math.PI*2);c.fill();c.stroke();
         c.beginPath();c.moveTo(-.08*scale,-.07*scale);c.lineTo(-.03*scale,-.12*scale);
         c.moveTo(0,-.17*scale);c.lineTo(0,-.25*scale);c.lineTo(.08*scale,-.3*scale);c.lineTo(.06*scale,-.36*scale);c.stroke();
