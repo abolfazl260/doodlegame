@@ -299,11 +299,11 @@ test("menu provides a safe-area-aware scroll region and sticky primary action",(
  assert.ok(menu.includes("min-height:44px"));
 });
 
-test("missile fights retain controls and health but have no extra weapon details",()=>{
+test("missile fights use the normal aim pad without extra weapon details",()=>{
  const {ui,hud}=setup({mode:"missile-duel",weapon:"missile"});ui.render(states.PLAYING,hud);
  assert.equal(ui.details,undefined);assert.equal(ui.missileAimGuide,undefined);
  assert.equal(ui.topHud.children.length,3);assert.ok(ui.root.children.includes(ui.mobileControls));
- assert.equal(ui.aimPads[0].hidden,true);assert.equal(readFileSync("src/styles.css","utf8").includes("game-ui__details"),false);
+ assert.equal(ui.aimPads[0].hidden,false);assert.equal(readFileSync("src/styles.css","utf8").includes("game-ui__details"),false);
 });
 
 test("optional starting weapon cards honor missile, melee and random restrictions",()=>{
