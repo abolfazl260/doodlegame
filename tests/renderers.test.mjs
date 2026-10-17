@@ -67,8 +67,8 @@ test('WebGL fighters use real, outlined thick meshes that remain readable on mob
   "player and enemy must have distinct high-visibility colors");
  assert.notEqual(player.bodyHalo.material.color.getHex(),player.bodyOutline.material.color.getHex());
 
- // No new materials or meshes should be allocated when switching the four styles.
- for(const weapon of ['blade','hammer','blaster','bow']){
+ // No new materials or meshes should be allocated when switching all eight styles.
+ for(const weapon of ['blade','hammer','blaster','bow','uzi','boomerang','bomb','missile']){
   renderer.draw(player,{...s,characterId:'soldier',weapon,weaponHolsterFrom:null});
   assert.equal(player.styleMeshes.length,4);
   for(const mesh of player.styleMeshes){
@@ -76,8 +76,8 @@ test('WebGL fighters use real, outlined thick meshes that remain readable on mob
    assert.ok(mesh.geometry.getAttribute('position').array.every(Number.isFinite));
   }
  }
- renderer.draw(player,{...s,weapon:'uzi'});
- assert.ok(player.styleMeshes.every(mesh=>!mesh.visible),'unmodified weapons hide reference-only layers');
+ renderer.draw(player,{...s,characterId:'ninja',weapon:'blade'});
+ assert.ok(player.styleMeshes.every(mesh=>!mesh.visible),'Ninja dagger keeps its own silhouette without Soldier overlays');
  for(const view of [player,enemy])view.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
 });
 
