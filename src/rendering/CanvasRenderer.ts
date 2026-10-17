@@ -22,6 +22,26 @@ export class CanvasRenderer implements Renderer{
         c.strokeStyle="#31aaff";c.lineWidth=Math.max(1.2,scale*.045);
         c.beginPath();c.moveTo(-scale*.30,scale*.22);c.lineTo(-scale*.04,-scale*.10);
         c.moveTo(scale*.08,-scale*.08);c.lineTo(scale*.36,scale*.20);c.stroke();c.restore();
+      }else if(p.weapon==="spear"){
+        // Thrown spear matches its held design: thin dark shaft, blue grip,
+        // gold fittings and a faceted silver spearhead.
+        c.save();c.translate(px,py);c.rotate(-p.rotation);
+        const unit=scale;c.lineJoin="round";c.lineCap="round";
+        c.strokeStyle="#18202a";c.lineWidth=Math.max(1.25,scale*.012);
+        c.fillStyle="#553a31";c.beginPath();
+        c.rect(-unit*.54,-unit*.040,unit*.96,unit*.080);c.fill();c.stroke();
+        c.fillStyle="#1858bf";c.fillRect(-unit*.54,-unit*.045,unit*.26,unit*.09);
+        c.fillStyle="#f6bf35";
+        c.fillRect(-unit*.57,-unit*.067,unit*.06,unit*.134);
+        c.fillRect(-unit*.30,-unit*.065,unit*.06,unit*.13);
+        c.fillRect(unit*.39,-unit*.080,unit*.07,unit*.16);
+        c.fillStyle="#d1dae3";c.beginPath();
+        c.moveTo(unit*.46,-unit*.11);c.lineTo(unit*.67,-unit*.18);
+        c.lineTo(unit*1.05,0);c.lineTo(unit*.67,unit*.18);
+        c.lineTo(unit*.46,unit*.11);c.closePath();c.fill();c.stroke();
+        c.strokeStyle="#f7fbff";c.lineWidth=Math.max(1,scale*.018);
+        c.beginPath();c.moveTo(unit*.55,-unit*.040);c.lineTo(unit*.97,0);c.stroke();
+        c.restore();
       }else if(p.weapon==="bow"){const len=scale*.58;c.save();c.translate(px,py);c.rotate(-p.rotation);c.lineWidth=Math.max(2,scale*.045);c.strokeStyle="#d9d5bb";c.beginPath();c.moveTo(-len,0);c.lineTo(len,0);c.stroke();c.strokeStyle="#f6c235";c.beginPath();c.moveTo(len,0);c.lineTo(len-scale*.16,-scale*.11);c.moveTo(len,0);c.lineTo(len-scale*.16,scale*.11);c.stroke();c.strokeStyle="#70c94a";c.beginPath();c.moveTo(-len,0);c.lineTo(-len+scale*.11,-scale*.09);c.moveTo(-len,0);c.lineTo(-len+scale*.11,scale*.09);c.stroke();c.globalAlpha=.22;c.lineWidth=Math.max(1,scale*.03);c.beginPath();c.moveTo(-len*.85,0);c.lineTo(-len*1.65,0);c.stroke();c.restore();}else if(p.weapon==="missile"){
         // White/red rocket and warm exhaust; coordinates remain the projectile physics state.
         const speed=Math.hypot(p.vx,p.vy),trail=Math.max(scale*.55,Math.min(scale*1.9,scale*(.55+speed*.045)));
