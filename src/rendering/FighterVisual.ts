@@ -408,14 +408,17 @@ export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
 }
 
 /** High-contrast 3-layer ink stays legible on both light and dark arenas. */
+// Slim stick-fighter silhouette: thinner arms, legs, torso, accessories and weapons.
+// The head and headband stay unchanged; all hitboxes and animation joints are unaffected.
+// Canvas and WebGL both consume this shared set of stroke widths.
 export const FIGHTER_INK_WIDTH={
- body:{halo:.25,outline:.19,core:.13},
- costume:{outline:.14,core:.067},
- weapon:{outline:.15,core:.086,accent:.05},
- vest:{outline:.48,core:.39},
- gear:{outline:.24,core:.17},
+ body:{halo:.19,outline:.14,core:.095},
+ costume:{outline:.105,core:.048},
+ weapon:{outline:.125,core:.073,accent:.043},
+ vest:{outline:.31,core:.235},
+ gear:{outline:.17,core:.115},
  hair:{outline:.145,core:.095},
- trim:.052,
+ trim:.04,
  marking:{outline:.125,core:.069},
  head:{halo:.355,outline:.318,core:.274},
  eye:.062
