@@ -19,7 +19,7 @@ test('clothing follows the animated fighter, not its world position',()=>{
  }
 });
 
-test('all eight weapons retain silhouettes and get distinct accent geometry',()=>{
+test('all nine weapons retain silhouettes and get distinct accent geometry',()=>{
  const colors=new Set();
  for(const weapon of ['blade','hammer','blaster','uzi','bow','boomerang','bomb','missile','spear']){
   const s={...base,weapon,weaponHolsterFrom:null,weaponDrawTime:0,grabPhase:null};
@@ -29,7 +29,7 @@ test('all eight weapons retain silhouettes and get distinct accent geometry',()=
   assert.ok(lines.every(segment=>segment.flat().every(Number.isFinite)));
   colors.add(weaponAccentColor(s));
  }
- assert.equal(colors.size,8);
+ assert.equal(colors.size,9);
  const hidden={...base,weapon:'blade',grabPhase:'hold'};
  assert.equal(weaponAccentSegments(hidden).length,0);
 });
