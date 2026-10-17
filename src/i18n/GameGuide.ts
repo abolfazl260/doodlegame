@@ -30,7 +30,8 @@ export const GUIDE_EN:GuideCopy={
   boomerang:"Throw a blade that turns back toward its owner. Use mid-range space to let its outward/return path threaten the opponent.",
   bow:"Hold ATTACK to draw, release to launch an arrow. Charge changes speed and trajectory; aim before releasing and use distance to buy charging time.",
   bomb:"Throw a bouncing timed explosive. Aim toward a platform or route the opponent may cross; keep clear of the eventual blast. Sticky Bomb attaches on the first platform landing.",
-  missile:"Tap ATTACK for one explosive Missile, respecting cooldown. Its arc is fixed and mirrored by facing; no angle/power controls or direction-pad aiming. Reposition to line up the landing point. Cluster Missile releases mini missiles after the main blast."
+  missile:"Tap ATTACK for one explosive Missile, respecting cooldown. Its arc is fixed and mirrored by facing; no angle/power controls or direction-pad aiming. Reposition to line up the landing point. Cluster Missile releases mini missiles after the main blast.",
+  spear:"Tap ATTACK to throw a long, narrow spear in the aiming direction. It flies forward and gradually drops; the Twin Spear upgrade throws two spears at slightly different angles."
  },
  modes:{
   duel:"Solo versus AI or two selected humans. Deplete the opponent’s HP to win. All weapons are available; use the arena’s cover.",
@@ -80,7 +81,8 @@ export const GUIDE_FA:GuideCopy={
   boomerang:"تیغه‌ای پرتاب می‌شود و به سوی صاحبش برمی‌گردد. در فاصلهٔ متوسط از مسیر رفت و برگشت برای تهدید حریف استفاده کن.",
   bow:"حمله را برای کشیدن کمان نگه دار و برای شلیک تیر رها کن. شارژ سرعت و مسیر تیر را تغییر می‌دهد؛ قبل از رهاکردن نشانه بگیر و از فاصله برای شارژ استفاده کن.",
   bomb:"مواد منفجرهٔ زمان‌دار و جهنده پرتاب می‌کند. سکوی مقصد یا مسیر حرکت حریف را هدف بگیر و از انفجار فاصله داشته باش. بمب چسبنده در اولین فرود روی سکو می‌چسبد.",
-  missile:"برای یک شلیک انفجاری، حمله را بزن و منتظر بازیابی بمان. مسیر ثابت و وابسته به جهت شخصیت است؛ زاویه و قدرت یا گوی نشانه‌گیری ندارد. با جای‌گیری، محل فرود را تنظیم کن. ارتقای خوشه‌ای پس از انفجار اصلی موشک‌های کوچک آزاد می‌کند."
+  missile:"برای یک شلیک انفجاری، حمله را بزن و منتظر بازیابی بمان. مسیر ثابت و وابسته به جهت شخصیت است؛ زاویه و قدرت یا گوی نشانه‌گیری ندارد. با جای‌گیری، محل فرود را تنظیم کن. ارتقای خوشه‌ای پس از انفجار اصلی موشک‌های کوچک آزاد می‌کند.",
+  spear:"برای پرتاب نیزهٔ بلند و باریک، حمله را بزن. نیزه در جهت نشانه‌گیری حرکت می‌کند و به‌تدریج پایین می‌آید. ارتقای نیزهٔ دوتایی دو نیزه با زاویه‌های کمی متفاوت پرتاب می‌کند."
  },
  modes:{
   duel:"تک‌نفره مقابل هوش مصنوعی یا دو انسان انتخاب‌شده. با تمام‌کردن سلامت حریف ببر. همهٔ سلاح‌ها در دسترس‌اند؛ از پوشش میدان استفاده کن.",
