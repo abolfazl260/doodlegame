@@ -67,8 +67,8 @@ test('WebGL fighters use real, outlined thick meshes that remain readable on mob
   "player and enemy must have distinct high-visibility colors");
  assert.notEqual(player.bodyHalo.material.color.getHex(),player.bodyOutline.material.color.getHex());
 
- // No new materials or meshes should be allocated when switching the four styles.
- for(const weapon of ['blade','hammer','blaster','bow']){
+ // No new materials or meshes should be allocated when switching all eight styles.
+ for(const weapon of ['blade','hammer','blaster','bow','uzi','boomerang','bomb','missile']){
   renderer.draw(player,{...s,characterId:'soldier',weapon,weaponHolsterFrom:null});
   assert.equal(player.styleMeshes.length,4);
   for(const mesh of player.styleMeshes){
@@ -76,9 +76,21 @@ test('WebGL fighters use real, outlined thick meshes that remain readable on mob
    assert.ok(mesh.geometry.getAttribute('position').array.every(Number.isFinite));
   }
  }
- renderer.draw(player,{...s,weapon:'uzi'});
- assert.ok(player.styleMeshes.every(mesh=>!mesh.visible),'unmodified weapons hide reference-only layers');
+ renderer.draw(player,{...s,characterId:'ninja',weapon:'blade'});
+ assert.ok(player.styleMeshes.every(mesh=>!mesh.visible),'Ninja dagger keeps its own silhouette without Soldier overlays');
  for(const view of [player,enemy])view.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
+});
+
+test('WebGL projectile artwork uses reference V boomerang and red-white rocket without affecting physics',async()=>{
+ const {ThreeRenderer}=await rendererModule('ThreeRenderer');
+ const r=Object.create(ThreeRenderer.prototype);
+ for(const [kind,count] of [['boomerang',3],['missile',5]]){
+  const g=r.buildProjectileIcon(kind);
+  assert.equal(g.children.length,count);
+  assert.ok(g.children.every(mesh=>mesh.isMesh&&mesh.geometry.getAttribute('position').array.every(Number.isFinite)));
+  assert.ok(g.children.some(mesh=>mesh.material.color.getHex()===0x249fff||mesh.material.color.getHex()===0xef4040));
+  g.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
+ }
 });
 
 test('Canvas fallback draws the same multi-layer body, head and weapon silhouette',async()=>{
@@ -98,9 +110,9 @@ test('Canvas fallback draws the same multi-layer body, head and weapon silhouett
   const renderer=new CanvasRenderer({clientWidth:800,clientHeight:500,getContext(){return context}});
   const s=state().player;
   renderer.draw(context,{...s,grounded:false,characterId:"ninja"},x=>x,y=>y,40,false);
-  assert.ok(widths.some(w=>Math.abs(w-40*.19)<.00001),"slim body halo is rendered");
-  assert.ok(widths.some(w=>Math.abs(w-40*.095)<.00001),"slim inner limb stroke is rendered");
-  assert.ok(widths.some(w=>Math.abs(w-40*.31)<.00001),"torso is thinner but remains visible");
+  assert.ok(widths.some(w=>Math.abs(w-40*.18)<.00001),"slim body halo is rendered");
+  assert.ok(widths.some(w=>Math.abs(w-40*.09)<.00001),"slim inner limb stroke is rendered");
+  assert.ok(widths.some(w=>Math.abs(w-40*.28)<.00001),"torso is thinner but remains visible");
   assert.ok(circles.some(r=>r>=40*.35),"head silhouette must be enlarged");
   assert.ok(colors.includes("#f18088"),"Ninja red outer halo must be present");
   widths.length=0;colors.length=0;

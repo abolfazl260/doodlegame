@@ -330,12 +330,12 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
    break;
   }
   case 'uzi': {
-   const length=.42;
-   rect(-.16,-.08,length,.21);rect(.04,-.3,.12,.22);rect(length-.16,-.03,.27,.08);
-   rect(-.06,.13,.17,.055);rect(.18,-.14,.12,.065);
-   for(let x=-.1;x<.13;x+=.055)line([x,.02],[x,.09]);
-   path([[-.16,.08],[-.31,.07],[-.31,-.04],[-.16,-.04]]);
-   for(let y=-.27;y<-.1;y+=.06)line([.06,y],[.14,y]);break;
+   // Compact graphite submachine gun with a green status panel.
+   path([[-.26,-.055],[.37,-.055],[.41,0],[.57,0],[.57,.14],[.39,.14],[.33,.19],[-.20,.19],[-.26,.13],[-.26,-.055]]);
+   path([[-.045,-.055],[.02,-.31],[.18,-.31],[.20,-.055]]);
+   rect(.40,.035,.20,.075);rect(.04,.075,.20,.055);
+   line([-.19,.14],[-.09,.14]);line([.18,-.11],[.31,-.11]);
+   break;
   }
   case 'bow': {
    // Warm wooden recurve bow with green grip and a gold-tipped arrow.
@@ -348,17 +348,26 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
    break;
   }
   case 'boomerang':
-   path([[-.12,0],[.12,-.3],[.4,-.35],[.54,-.2],[.25,-.18],[.02,.04],[-.12,0]]);
-   line([.12,-.24],[.4,-.28]);break;
+   // Tapered V silhouette: black body with vibrant blue front edges.
+   path([[-.37,-.25],[-.15,.13],[-.06,.23],[.04,.23],[.17,.16],[.59,-.22],[.51,-.33],[.12,-.05],[.025,.005],[-.075,-.015],[-.30,-.33],[-.37,-.25]]);
+   line([-.21,-.10],[-.035,.11]);line([.15,.07],[.47,-.22]);
+   break;
   case 'bomb':
-   for(let i=0;i<16;i++){const a=i*Math.PI/8,b=(i+1)*Math.PI/8;line([Math.cos(a)*.2,Math.sin(a)*.2],[Math.cos(b)*.2,Math.sin(b)*.2]);}
-   rect(-.05,.18,.1,.07);path([[0,.25],[.09,.31],[.06,.4]]);
-   for(let i=0;i<4;i++){const a=i*Math.PI/2+s.animationTime*8,r=.035+.025*Math.abs(Math.sin(s.animationTime*19));line([.06,.4],[.06+Math.cos(a)*r,.4+Math.sin(a)*r]);}break;
+   // Round charcoal bomb with short bright fuse, lightweight outlines.
+   for(let i=0;i<20;i++){const a=i*Math.PI/10,b=(i+1)*Math.PI/10;
+    line([Math.cos(a)*.195,Math.sin(a)*.195],[Math.cos(b)*.195,Math.sin(b)*.195]);}
+   rect(-.047,.18,.094,.065);path([[0,.245],[.075,.315],[.045,.38]]);
+   for(let i=0;i<6;i++){const a=i*Math.PI/3+s.animationTime*8,r=.032+.015*Math.abs(Math.sin(s.animationTime*18));
+    line([.045,.38],[.045+Math.cos(a)*r,.38+Math.sin(a)*r]);}
+   break;
   case 'missile':
-   rect(-.2,-.11,.68,.22);path([[.48,-.11],[.68,0],[.48,.11]]);
-   path([[-.15,-.11],[-.3,-.23],[.03,-.11]]);path([[-.15,.11],[-.3,.23],[.03,.11]]);
-   line([.35,-.11],[.35,.11]);rect(-.24,-.25,.18,.13);break;
- }
+   // White rocket, red nose/fins and a small gold exhaust cone.
+   rect(-.22,-.10,.64,.20);path([[.42,-.10],[.66,0],[.42,.10]]);
+   path([[-.13,-.10],[-.25,-.23],[.025,-.10]]);
+   path([[-.13,.10],[-.25,.23],[.025,.10]]);
+   line([.30,-.10],[.30,.10]);
+   path([[-.22,-.07],[-.36,0],[-.22,.07]]);
+   break;}
  return lines;
 }
 
@@ -388,11 +397,11 @@ export function weaponAccentColor(s:DuelistRenderState):string {
   case "blade":return s.characterId==="ninja"?"#ef344d":"#f5bf35";
   case "hammer":return "#f1ba38";
   case "blaster":return "#f04454";
-  case "uzi":return "#ffba68";
+  case "uzi":return "#59d84f";
   case "bow":return "#f6c235";
-  case "boomerang":return "#5db7ff";
-  case "bomb":return "#ff8c56";
-  case "missile":return "#ff776c";
+  case "boomerang":return "#3ea7ff";
+  case "bomb":return "#ff9a3d";
+  case "missile":return "#ef4040";
  }
 }
 export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
@@ -408,27 +417,26 @@ export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
    [[.205,.11],[.375,.11]],[[.59,.09],[.73,.09]]
   ];
   case "uzi":return [
-   [[-.07,.1],[.18,.1]],[[.27,.01],[.51,.01]],[[.08,-.19],[.12,-.19]]
+   [[.07,.10],[.23,.10]],[[.43,.075],[.57,.075]]
   ];
   case "bow":return [
    [[.78,-.085],[.94,0]],[[.94,0],[.78,.085]]
   ];
   case "boomerang":return [
-   [[-.04,-.015],[.14,-.24]],[[.14,-.24],[.43,-.25]]
+   [[-.28,-.22],[-.055,.14]],[[.11,.11],[.49,-.25]]
   ];
   case "bomb":return [
-   [[-.13,.08],[-.07,.15]],[[.07,-.13],[.14,-.045]],[[.09,.31],[.06,.39]]
+   [[-.13,.07],[-.07,.14]],[[.045,.38],[.08,.42]]
   ];
   case "missile":return [
-   [[-.12,.065],[.29,.065]],[[.38,-.09],[.38,.09]],[[.51,-.065],[.61,0]]
-  ];
- }
+   [[.47,-.07],[.62,0]],[[.62,0],[.47,.07]],
+   [[-.23,0],[-.34,0]]
+  ]; }
  return [];
 }
 
-/** Four small, distinct color passes recreate the approved weapon concept sheet.
- * Geometry remains procedural and follows the existing articulated weapon transform.
- * Other weapons, damage values and hitboxes are deliberately unchanged.
+/** Four lightweight color passes for all eight approved weapon designs.
+ * Procedural geometry follows animated equipment and never changes hitboxes.
  */
 export interface WeaponStyleLayer { readonly color:string; readonly width:number; readonly segments:readonly Segment[]; }
 export function weaponStyleLayers(s:DuelistRenderState):readonly WeaponStyleLayer[]{
@@ -436,30 +444,54 @@ export function weaponStyleLayers(s:DuelistRenderState):readonly WeaponStyleLaye
  switch(weaponDrawPose(s).weapon){
   case "blade":
    return s.characterId==="ninja"?[]:[
-    {color:"#c0d8eb",width:.16,segments:[[[.26,0],[.85,0]]]},
-    {color:"#1766c3",width:.10,segments:[[[-.21,0],[.09,0]]]},
-    {color:"#f2c34b",width:.12,segments:[[[.14,-.17],[.14,.17]]]},
-    {color:"#f5fcff",width:.043,segments:[[[.31,.058],[.84,.058]]]}
+    {color:"#c0d8eb",width:.125,segments:[[[.26,0],[.85,0]]]},
+    {color:"#1766c3",width:.078,segments:[[[-.21,0],[.09,0]]]},
+    {color:"#f2c34b",width:.094,segments:[[[.14,-.17],[.14,.17]]]},
+    {color:"#f5fcff",width:.034,segments:[[[.31,.058],[.84,.058]]]}
    ];
   case "hammer":return [
-   {color:"#a0aeba",width:.35,segments:[[[.77,-.22],[.77,.22]]]},
-   {color:"#795032",width:.115,segments:[[[-.25,0],[.51,0]]]},
-   {color:"#eab637",width:.085,segments:[[[.51,-.10],[.51,.10]],[[-.30,-.11],[-.30,.11]]]},
-   {color:"#dce7f0",width:.04,segments:[[[.65,.24],[.87,.24]]]}
+   {color:"#a0aeba",width:.273,segments:[[[.77,-.22],[.77,.22]]]},
+   {color:"#795032",width:.09,segments:[[[-.25,0],[.51,0]]]},
+   {color:"#eab637",width:.066,segments:[[[.51,-.10],[.51,.10]],[[-.30,-.11],[-.30,.11]]]},
+   {color:"#dce7f0",width:.031,segments:[[[.65,.24],[.87,.24]]]}
   ];
   case "blaster":return [
-   {color:"#303a49",width:.19,segments:[[[-.15,.085],[.53,.085]]]},
-   {color:"#1c2531",width:.13,segments:[[[.055,-.08],[.055,-.29]]]},
-   {color:"#f14655",width:.08,segments:[[[.22,.11],[.38,.11]]]},
-   {color:"#91a2b5",width:.037,segments:[[[-.12,.18],[.43,.18]]]}
+   {color:"#303a49",width:.148,segments:[[[-.15,.085],[.53,.085]]]},
+   {color:"#1c2531",width:.101,segments:[[[.055,-.08],[.055,-.29]]]},
+   {color:"#f14655",width:.062,segments:[[[.22,.11],[.38,.11]]]},
+   {color:"#91a2b5",width:.029,segments:[[[-.12,.18],[.43,.18]]]}
   ];
   case "bow":return [
-   {color:"#ad7138",width:.09,segments:[[[.075,-.55],[.19,-.46]],[[.19,-.46],[.30,-.26]],[[.30,-.26],[.36,0]],
+   {color:"#ad7138",width:.07,segments:[[[.075,-.55],[.19,-.46]],[[.19,-.46],[.30,-.26]],[[.30,-.26],[.36,0]],
      [[.36,0],[.30,.26]],[[.30,.26],[.19,.46]],[[.19,.46],[.075,.55]]]},
-   {color:"#25ba79",width:.15,segments:[[[.36,-.105],[.36,.105]]]},
-   {color:"#d9e1de",width:.042,segments:[[[-s.bowCharge*.30,0],[.77,0]]]},
-   {color:"#72c944",width:.07,segments:[[[-.16-s.bowCharge*.30,-.09],[-.06-s.bowCharge*.30,0]],
+   {color:"#25ba79",width:.117,segments:[[[.36,-.105],[.36,.105]]]},
+   {color:"#d9e1de",width:.033,segments:[[[-s.bowCharge*.30,0],[.77,0]]]},
+   {color:"#72c944",width:.055,segments:[[[-.16-s.bowCharge*.30,-.09],[-.06-s.bowCharge*.30,0]],
       [[-.16-s.bowCharge*.30,.09],[-.06-s.bowCharge*.30,0]]]}
+  ];
+  case "uzi":return [
+   {color:"#252e39",width:.14,segments:[[[-.18,.075],[.42,.075]]]},
+   {color:"#35434e",width:.11,segments:[[[.085,-.06],[.085,-.28]]]},
+   {color:"#59d84f",width:.062,segments:[[[.075,.10],[.24,.10]]]},
+   {color:"#9aa9b5",width:.028,segments:[[[-.14,.155],[.30,.155]]]}
+  ];
+  case "boomerang":return [
+   {color:"#253244",width:.095,segments:[[[-.29,-.23],[-.045,.125]],[[.12,.09],[.49,-.24]]]},
+   {color:"#249fff",width:.075,segments:[[[-.28,-.22],[-.055,.14]],[[.11,.11],[.49,-.25]]]},
+   {color:"#153752",width:.04,segments:[[[-.20,-.09],[-.04,.08]]]},
+   {color:"#79d4ff",width:.03,segments:[[[.17,.10],[.40,-.14]]]}
+  ];
+  case "bomb":return [
+   {color:"#222934",width:.26,segments:[[[-.08,-.075],[.08,.075]]]},
+   {color:"#454d58",width:.043,segments:[[[-.105,.065],[-.045,.115]]]},
+   {color:"#ff9a3d",width:.04,segments:[[[.045,.38],[.08,.415]],[[.045,.38],[.09,.37]]]},
+   {color:"#d9e0e6",width:.025,segments:[[[-.09,.09],[-.025,.14]]]}
+  ];
+  case "missile":return [
+   {color:"#f2f5f7",width:.155,segments:[[[-.17,0],[.43,0]]]},
+   {color:"#ef4040",width:.08,segments:[[[.47,-.055],[.60,0]],[[.47,.055],[.60,0]]]},
+   {color:"#dc3442",width:.065,segments:[[[-.12,-.11],[-.20,-.20]],[[-.12,.11],[-.20,.20]]]},
+   {color:"#ffc430",width:.053,segments:[[[-.22,0],[-.34,0]]]}
   ];
   default:return [];
  }
@@ -470,14 +502,14 @@ export function weaponStyleLayers(s:DuelistRenderState):readonly WeaponStyleLaye
 // The head and headband stay unchanged; all hitboxes and animation joints are unaffected.
 // Canvas and WebGL both consume this shared set of stroke widths.
 export const FIGHTER_INK_WIDTH={
- body:{halo:.19,outline:.14,core:.095},
- costume:{outline:.105,core:.048},
- weapon:{outline:.125,core:.073,accent:.043},
- vest:{outline:.31,core:.235},
- gear:{outline:.17,core:.115},
+ body:{halo:.18,outline:.132,core:.09},
+ costume:{outline:.095,core:.043},
+ weapon:{outline:.098,core:.058,accent:.034},
+ vest:{outline:.28,core:.21},
+ gear:{outline:.155,core:.105},
  hair:{outline:.145,core:.095},
- trim:.04,
- marking:{outline:.125,core:.069},
+ trim:.035,
+ marking:{outline:.115,core:.064},
  head:{halo:.355,outline:.318,core:.274},
  eye:.062
 } as const;
