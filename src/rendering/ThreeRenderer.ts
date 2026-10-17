@@ -1,4 +1,4 @@
-import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,capsulePositions,characterMarkings,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
+import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,capsulePositions,characterMarkings,vikingSkinLayers,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
 import * as THREE from "three";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
 import {getDownloadedImage} from "../gameplay/DownloadableArenas.js";
@@ -34,6 +34,7 @@ export class ThreeRenderer implements Renderer{
   const head=headCircle(width.head.core,ink.face,.036);
   const hairOutline=stroke(ink.outline,.038),hairCore=stroke(ink.hair,.04);
   const markingOutline=stroke(ink.outline,.042),markingCore=stroke(ink.accent,.046);
+  const vikingMeshes=Array.from({length:8},(_,i)=>stroke("#ffffff",.049+i*.002));
   const otherEye=headCircle(width.eye*.78,ink.eye,.052);
   const otherEyeGlint=headCircle(width.eye*.20,"#ffffff",.056);
   const eye=headCircle(width.eye,ink.eye,.052);
@@ -45,11 +46,11 @@ export class ThreeRenderer implements Renderer{
   effect.position.z=.082;
   group.add(bodyHalo,bodyOutline,bodyCore,vestOutline,vestCore,gearOutline,gearCore,
    costumeOutline,costumeCore,trim,headHalo,headOutline,head,hairOutline,hairCore,
-   markingOutline,markingCore,otherEye,otherEyeGlint,eye,eyeGlint,
+   markingOutline,markingCore,...vikingMeshes,otherEye,otherEyeGlint,eye,eyeGlint,
    toolOutline,toolCore,...styleMeshes,weaponAccent,effect);
   return {group,head,headHalo,headOutline,eye,eyeGlint,otherEye,otherEyeGlint,effect,
    bodyHalo,bodyOutline,bodyCore,vestOutline,vestCore,gearOutline,gearCore,trim,
-   costumeOutline,costumeCore,hairOutline,hairCore,markingOutline,markingCore,toolOutline,toolCore,styleMeshes,weaponAccent,enemy};
+   costumeOutline,costumeCore,hairOutline,hairCore,markingOutline,markingCore,vikingMeshes,toolOutline,toolCore,styleMeshes,weaponAccent,enemy};
  }
  private setCapsules(mesh:THREE.Mesh,segments:readonly Segment[],width:number){
   const old=mesh.geometry.getAttribute("position") as THREE.BufferAttribute|undefined;
@@ -337,6 +338,12 @@ export class ThreeRenderer implements Renderer{
   this.setCapsules(view.markingOutline,marks,width.marking.outline);
   this.setCapsules(view.markingCore,marks,width.marking.core);
   (view.markingCore.material as THREE.MeshBasicMaterial).color.set(ink.accent);
+  const vikingLayers=vikingSkinLayers(s,pose);
+  for(let i=0;i<view.vikingMeshes.length;i++){
+   const layer=vikingLayers[i],mesh=view.vikingMeshes[i];
+   this.setCapsules(mesh,layer?.segments??[],layer?.width??.01);
+   if(layer)(mesh.material as THREE.MeshBasicMaterial).color.set(layer.color);
+  }
   const weapon=toolSegments(s);
   const baseInk=weaponBaseInk(s);
   this.setCapsules(view.toolOutline,weapon,baseInk.outline);
