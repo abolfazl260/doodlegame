@@ -1,13 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {GameSession,CHARACTER_IDS} from "../.test-build/gameplay/GameSession.js";
-import {fighterVisual,fighterOutfit,characterMarkings,fighterInkPalette,vikingSkinLayers,toolSegments,weaponAccentSegments,weaponAccentColor,weaponStyleLayers} from "../.test-build/rendering/FighterVisual.js";
+import {fighterVisual,fighterOutfit,characterMarkings,fighterInkPalette,vikingSkinLayers,characterSkinLayers,toolSegments,weaponAccentSegments,weaponAccentColor,weaponStyleLayers} from "../.test-build/rendering/FighterVisual.js";
 
 const session=()=>new GameSession({getState(){return {}},endFrame(){}});
 const finite=(segments)=>segments.every(([a,b])=>[...a,...b].every(Number.isFinite));
 
-test("all three selectable skins survive reset without modifying match rules",()=>{
- assert.deepEqual(CHARACTER_IDS,["soldier","ninja","viking"]);
+test("all six selectable skins survive reset without modifying match rules",()=>{
+ assert.deepEqual(CHARACTER_IDS,["soldier","ninja","viking","ranger","pharaoh","knight"]);
  const game=session();
  for(const id of CHARACTER_IDS){
   game.setCharacterId(id);
@@ -28,17 +28,19 @@ test("each simplified 2D fighter has a distinctive, finite costume and facial de
   assert.equal(pose.body.length,9,"joints keep the existing collision-independent rig");
   assert.ok(pose.costume.length>=2,characterId+" needs a readable silhouette");
   assert.equal(outfit.hair.length,0,"all skins have clean non-hairy base rigs");
-  assert.equal(marks.length,characterId==="viking"?0:5,"Viking helmet replaces colored headbands");
-  assert.equal(vikingSkinLayers(s,pose).length,characterId==="viking"?8:0);
+  assert.equal(marks.length,["soldier","ninja"].includes(characterId)?5:0,"all helmets/hoods replace colored headbands");
+  const art=characterSkinLayers(s,pose);
+  assert.equal(art.length,characterId==="viking"?8:["ranger","pharaoh","knight"].includes(characterId)?14:0);
+  assert.ok(art.every(l=>l.segments.length&&l.width>0&&l.width<=.25&&finite(l.segments)));
   assert.ok(finite([...pose.joints,...outfit.hair,...outfit.gear,...marks]));
   assert.ok([pose.scaleX,pose.scaleY,pose.lean,pose.blink].every(Number.isFinite));
-  signatures.add(JSON.stringify([...pose.costume,...marks]));
+  signatures.add(JSON.stringify([...pose.costume,...marks,...art.flatMap(l=>l.segments)]));
  }
  assert.equal(signatures.size,CHARACTER_IDS.length,"each character is visibly distinct");
  const original=fighterInkPalette(false);
  assert.equal(original.face,"#f9fcff");
  assert.equal(fighterInkPalette(false,"ninja").face,"#12141b");
- assert.equal(new Set(CHARACTER_IDS.map(id=>fighterInkPalette(false,id).accent)).size,3);
+ assert.equal(new Set(CHARACTER_IDS.map(id=>fighterInkPalette(false,id).accent)).size,6);
 });
 
 test("gait, landing, recoil, blink and accessories animate without editing gameplay state",()=>{
@@ -67,7 +69,7 @@ test("skin selection never changes sword size, weapon geometry, accent or damage
  const game=session(),base=game.getRenderState().player;
  for(const weapon of ["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"]){
   const soldier={...base,characterId:"soldier",weapon,weaponHolsterFrom:null,weaponDrawTime:0,grabPhase:null};
-  for(const characterId of ["ninja","viking"]){
+  for(const characterId of CHARACTER_IDS.filter(id=>id!=="soldier")){
    const skin={...soldier,characterId};
    assert.deepEqual(toolSegments(skin),toolSegments(soldier),weapon+" silhouette depends on equipment only");
    assert.deepEqual(weaponAccentSegments(skin),weaponAccentSegments(soldier),weapon+" accent shape is not a skin perk");
@@ -80,11 +82,13 @@ test("skin selection never changes sword size, weapon geometry, accent or damage
  const before=game.getHudState().weapon;
  game.setCharacterId("ninja");
  assert.equal(game.getHudState().weapon,before);
- game.setCharacterId("viking");
- assert.equal(game.getHudState().weapon,before);
+ for(const id of ["viking","ranger","pharaoh","knight"]){
+  game.setCharacterId(id);
+  assert.equal(game.getHudState().weapon,before);
+ }
  game.reset(false);
- assert.equal(game.getRenderState().player.characterId,"viking");
- assert.notEqual(game.getRenderState().opponent.characterId,"viking");
+ assert.equal(game.getRenderState().player.characterId,"knight");
+ assert.notEqual(game.getRenderState().opponent.characterId,"knight");
  game.setCharacterId("soldier");
  assert.equal(game.getHudState().weapon,before);
 });
@@ -104,10 +108,35 @@ test("Viking horns, metal helmet, fur mantle and boots follow animation without 
   assert.equal(characterMarkings(state,pose.head).length,0,"helmet replaces headband");
   assert.equal(pose.body.length,9,"Viking uses identical animated hitbox-independent rig");
  }
- for(const id of ["soldier","ninja"]){
+ for(const id of CHARACTER_IDS.filter(id=>id!=="viking")){
   const state={...base,characterId:id},pose=fighterVisual(state);
   assert.deepEqual(vikingSkinLayers(state,pose),[],"other cosmetics never inherit helmet geometry");
  }
  assert.deepEqual(fighterInkPalette(false,"viking").face,"#10131a");
  assert.equal(game.getRenderState().player.maxHealth,100);
+});
+
+test("three reference-matched cosmetic outfits include distinctive helmet, hood, and regal details",()=>{
+ const base=session().getRenderState().player,signatures=new Set();
+ const expected={
+  ranger:["#d2b24b","#f7fcf6","#478e4b","#5f3b22","#426b26"],
+  pharaoh:["#d6a13b","#0754a1","#32e8ff","#fff3da","#f0c46b"],
+  knight:["#b91f30","#aeb8c5","#d5a946","#d52937","#8a929e"]
+ };
+ for(const characterId of ["ranger","pharaoh","knight"]){
+  const state={...base,characterId,weapon:"missile",animationTime:2.4,gaitPhase:1.4,velocityX:4.2},
+   pose=fighterVisual(state),layers=characterSkinLayers(state,pose);
+  assert.equal(layers.length,14);
+  assert.equal(characterMarkings(state,pose.head).length,0,"helmets and hood cover headbands");
+  for(const shade of expected[characterId])
+   assert.ok(layers.some(l=>l.color===shade),characterId+" requires "+shade);
+  assert.ok(layers.every(l=>l.segments.length>0&&l.segments.every(([a,b])=>[...a,...b].every(Number.isFinite))));
+  signatures.add(JSON.stringify(layers));
+  const running={...state,gaitPhase:2.7,velocityX:7.8};
+  const runLayers=characterSkinLayers(running,fighterVisual(running));
+  assert.notDeepEqual(runLayers,layers,"wearable cuffs and boots track animated limbs");
+  assert.deepEqual(toolSegments(state),toolSegments({...state,characterId:"soldier"}),
+   "the skin never changes even the rocket launcher");
+ }
+ assert.equal(signatures.size,3);
 });
