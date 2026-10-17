@@ -19,7 +19,7 @@ const {GameUI}=new Function("states","getArenaTheme","getDownloadedArena","insta
 
 const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const modes=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill","local-pvp"];
-const weapons=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile"];
+const weapons=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"];
 
 class FakeNode{
  constructor(tag="div"){
@@ -108,7 +108,7 @@ test("wizard selects player count and mode cards before arena and optional weapo
  const {ui,calls,hud}=setup();
  assert.equal(ui.menuSettings.children.length,8);
  assert.equal(ui.arenaCards.children.length,16);
- assert.equal(ui.weaponCards.children.length,8);
+ assert.equal(ui.weaponCards.children.length,9);
  assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"true");
  assert.equal(ui.menuModePanel.hidden,false);
  assert.equal(ui.menuArenaPanel.hidden,true);
@@ -209,7 +209,7 @@ test("clicking the language button immediately switches both directions without 
 test("compact upgrade selector preserves purchase and availability rules",()=>{
  const {ui,calls,hud}=setup({upgradePoints:1,upgradedWeapons:["blade"]});
  assert.equal(ui.upgradePanel.hidden,false);
- assert.equal(ui.upgradeCardGrid.children.length,8);
+ assert.equal(ui.upgradeCardGrid.children.length,9);
  assert.equal(ui.upgradeCardGrid.children[0].disabled,true);
  assert.equal(ui.upgradeCardGrid.children.find(b=>b.dataset.upgradeWeapon==="hammer").getAttribute("aria-pressed"),"true");
  assert.equal(ui.upgradeButton.disabled,false);
