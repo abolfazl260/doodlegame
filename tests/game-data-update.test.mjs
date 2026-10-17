@@ -83,3 +83,15 @@ test("Android-only update button has no explanatory copy and language control st
  assert.match(css,/\.game-ui__update-button\[hidden\]/);
  assert.match(css,/min-height:28px;height:28px/);
 });
+
+test("downloaded spear tuning is validated and applied without modifying other weapons",()=>{
+ const game=new GameSession({getState(){return{}},endFrame(){}});
+ const value=parseLiveGameData({schemaVersion:1,dataVersion:7,weapons:{spear:{damage:16,cooldown:.7}},arenas:{}});
+ assert.ok(value);
+ game.setLiveGameData(value);
+ assert.equal(game.weaponStats.spear.damage,16);
+ assert.equal(game.weaponStats.spear.cooldown,.7);
+ assert.equal(game.weaponStats.blade.damage,8);
+ assert.equal(parseLiveGameData({schemaVersion:1,dataVersion:7,weapons:{spear:{damage:-1}},arenas:{}}),null);
+ game.dispose();
+});
