@@ -444,54 +444,54 @@ export function weaponStyleLayers(s:DuelistRenderState):readonly WeaponStyleLaye
  switch(weaponDrawPose(s).weapon){
   case "blade":
    return s.characterId==="ninja"?[]:[
-    {color:"#c0d8eb",width:.125,segments:[[[.26,0],[.85,0]]]},
-    {color:"#1766c3",width:.078,segments:[[[-.21,0],[.09,0]]]},
-    {color:"#f2c34b",width:.094,segments:[[[.14,-.17],[.14,.17]]]},
-    {color:"#f5fcff",width:.034,segments:[[[.31,.058],[.84,.058]]]}
+    {color:"#c0d8eb",width:.105,segments:[[[.26,0],[.85,0]]]},
+    {color:"#1766c3",width:.064,segments:[[[-.21,0],[.09,0]]]},
+    {color:"#f2c34b",width:.081,segments:[[[.14,-.17],[.14,.17]]]},
+    {color:"#f5fcff",width:.028,segments:[[[.31,.058],[.84,.058]]]}
    ];
   case "hammer":return [
-   {color:"#a0aeba",width:.273,segments:[[[.77,-.22],[.77,.22]]]},
-   {color:"#795032",width:.09,segments:[[[-.25,0],[.51,0]]]},
-   {color:"#eab637",width:.066,segments:[[[.51,-.10],[.51,.10]],[[-.30,-.11],[-.30,.11]]]},
-   {color:"#dce7f0",width:.031,segments:[[[.65,.24],[.87,.24]]]}
+   {color:"#a0aeba",width:.22,segments:[[[.77,-.22],[.77,.22]]]},
+   {color:"#795032",width:.072,segments:[[[-.25,0],[.51,0]]]},
+   {color:"#eab637",width:.055,segments:[[[.51,-.10],[.51,.10]],[[-.30,-.11],[-.30,.11]]]},
+   {color:"#dce7f0",width:.028,segments:[[[.65,.24],[.87,.24]]]}
   ];
   case "blaster":return [
-   {color:"#303a49",width:.148,segments:[[[-.15,.085],[.53,.085]]]},
-   {color:"#1c2531",width:.101,segments:[[[.055,-.08],[.055,-.29]]]},
-   {color:"#f14655",width:.062,segments:[[[.22,.11],[.38,.11]]]},
-   {color:"#91a2b5",width:.029,segments:[[[-.12,.18],[.43,.18]]]}
+   {color:"#303a49",width:.126,segments:[[[-.15,.085],[.53,.085]]]},
+   {color:"#1c2531",width:.086,segments:[[[.055,-.08],[.055,-.29]]]},
+   {color:"#f14655",width:.053,segments:[[[.22,.11],[.38,.11]]]},
+   {color:"#91a2b5",width:.025,segments:[[[-.12,.18],[.43,.18]]]}
   ];
   case "bow":return [
-   {color:"#ad7138",width:.07,segments:[[[.075,-.55],[.19,-.46]],[[.19,-.46],[.30,-.26]],[[.30,-.26],[.36,0]],
+   {color:"#ad7138",width:.06,segments:[[[.075,-.55],[.19,-.46]],[[.19,-.46],[.30,-.26]],[[.30,-.26],[.36,0]],
      [[.36,0],[.30,.26]],[[.30,.26],[.19,.46]],[[.19,.46],[.075,.55]]]},
-   {color:"#25ba79",width:.117,segments:[[[.36,-.105],[.36,.105]]]},
-   {color:"#d9e1de",width:.033,segments:[[[-s.bowCharge*.30,0],[.77,0]]]},
-   {color:"#72c944",width:.055,segments:[[[-.16-s.bowCharge*.30,-.09],[-.06-s.bowCharge*.30,0]],
+   {color:"#25ba79",width:.10,segments:[[[.36,-.105],[.36,.105]]]},
+   {color:"#d9e1de",width:.028,segments:[[[-s.bowCharge*.30,0],[.77,0]]]},
+   {color:"#72c944",width:.047,segments:[[[-.16-s.bowCharge*.30,-.09],[-.06-s.bowCharge*.30,0]],
       [[-.16-s.bowCharge*.30,.09],[-.06-s.bowCharge*.30,0]]]}
   ];
   case "uzi":return [
-   {color:"#252e39",width:.14,segments:[[[-.18,.075],[.42,.075]]]},
-   {color:"#35434e",width:.11,segments:[[[.085,-.06],[.085,-.28]]]},
-   {color:"#59d84f",width:.062,segments:[[[.075,.10],[.24,.10]]]},
-   {color:"#9aa9b5",width:.028,segments:[[[-.14,.155],[.30,.155]]]}
+   {color:"#252e39",width:.119,segments:[[[-.18,.075],[.42,.075]]]},
+   {color:"#35434e",width:.094,segments:[[[.085,-.06],[.085,-.28]]]},
+   {color:"#59d84f",width:.053,segments:[[[.075,.10],[.24,.10]]]},
+   {color:"#9aa9b5",width:.024,segments:[[[-.14,.155],[.30,.155]]]}
   ];
   case "boomerang":return [
-   {color:"#253244",width:.095,segments:[[[-.29,-.23],[-.045,.125]],[[.12,.09],[.49,-.24]]]},
-   {color:"#249fff",width:.075,segments:[[[-.28,-.22],[-.055,.14]],[[.11,.11],[.49,-.25]]]},
-   {color:"#153752",width:.04,segments:[[[-.20,-.09],[-.04,.08]]]},
-   {color:"#79d4ff",width:.03,segments:[[[.17,.10],[.40,-.14]]]}
+   {color:"#253244",width:.081,segments:[[[-.29,-.23],[-.045,.125]],[[.12,.09],[.49,-.24]]]},
+   {color:"#249fff",width:.064,segments:[[[-.28,-.22],[-.055,.14]],[[.11,.11],[.49,-.25]]]},
+   {color:"#153752",width:.034,segments:[[[-.20,-.09],[-.04,.08]]]},
+   {color:"#79d4ff",width:.026,segments:[[[.17,.10],[.40,-.14]]]}
   ];
   case "bomb":return [
-   {color:"#222934",width:.26,segments:[[[-.08,-.075],[.08,.075]]]},
-   {color:"#454d58",width:.043,segments:[[[-.105,.065],[-.045,.115]]]},
-   {color:"#ff9a3d",width:.04,segments:[[[.045,.38],[.08,.415]],[[.045,.38],[.09,.37]]]},
-   {color:"#d9e0e6",width:.025,segments:[[[-.09,.09],[-.025,.14]]]}
+   {color:"#222934",width:.22,segments:[[[-.08,-.075],[.08,.075]]]},
+   {color:"#454d58",width:.037,segments:[[[-.105,.065],[-.045,.115]]]},
+   {color:"#ff9a3d",width:.034,segments:[[[.045,.38],[.08,.415]],[[.045,.38],[.09,.37]]]},
+   {color:"#d9e0e6",width:.021,segments:[[[-.09,.09],[-.025,.14]]]}
   ];
   case "missile":return [
-   {color:"#f2f5f7",width:.155,segments:[[[-.17,0],[.43,0]]]},
-   {color:"#ef4040",width:.08,segments:[[[.47,-.055],[.60,0]],[[.47,.055],[.60,0]]]},
-   {color:"#dc3442",width:.065,segments:[[[-.12,-.11],[-.20,-.20]],[[-.12,.11],[-.20,.20]]]},
-   {color:"#ffc430",width:.053,segments:[[[-.22,0],[-.34,0]]]}
+   {color:"#f2f5f7",width:.132,segments:[[[-.17,0],[.43,0]]]},
+   {color:"#ef4040",width:.068,segments:[[[.47,-.055],[.60,0]],[[.47,.055],[.60,0]]]},
+   {color:"#dc3442",width:.055,segments:[[[-.12,-.11],[-.20,-.20]],[[-.12,.11],[-.20,.20]]]},
+   {color:"#ffc430",width:.045,segments:[[[-.22,0],[-.34,0]]]}
   ];
   default:return [];
  }
@@ -501,15 +501,17 @@ export function weaponStyleLayers(s:DuelistRenderState):readonly WeaponStyleLaye
 // Slim stick-fighter silhouette: thinner arms, legs, torso, accessories and weapons.
 // The head and headband stay unchanged; all hitboxes and animation joints are unaffected.
 // Canvas and WebGL both consume this shared set of stroke widths.
+// Extra-slim stick-figure ink shared by Canvas and WebGL.
+// Leave heads and collision/animation geometry untouched.
 export const FIGHTER_INK_WIDTH={
- body:{halo:.18,outline:.132,core:.09},
- costume:{outline:.095,core:.043},
- weapon:{outline:.098,core:.058,accent:.034},
- vest:{outline:.28,core:.21},
- gear:{outline:.155,core:.105},
+ body:{halo:.16,outline:.118,core:.08},
+ costume:{outline:.082,core:.037},
+ weapon:{outline:.082,core:.048,accent:.028},
+ vest:{outline:.24,core:.18},
+ gear:{outline:.135,core:.092},
  hair:{outline:.145,core:.095},
- trim:.035,
- marking:{outline:.115,core:.064},
+ trim:.03,
+ marking:{outline:.102,core:.057},
  head:{halo:.355,outline:.318,core:.274},
  eye:.062
 } as const;
