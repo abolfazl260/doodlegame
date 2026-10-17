@@ -37,14 +37,15 @@ test('Viking helmet, gold bands, horns, fur and boots render on both engines',as
  const webgl=Object.create(ThreeRenderer.prototype),fighter=webgl.fighter(0xffffff,false),base=state().player;
  const source={...base,characterId:"viking",weapon:"blade",weaponHolsterFrom:null,animationTime:1.2};
  webgl.draw(fighter,source);
- assert.equal(fighter.vikingMeshes.length,8);
- assert.ok(fighter.vikingMeshes.every(mesh=>mesh.visible&&mesh.geometry.getAttribute("position").array.every(Number.isFinite)));
- assert.equal(fighter.vikingMeshes[2].material.color.getHex(),0xf4e6c8,"ivory curved horns appear");
- assert.equal(fighter.vikingMeshes[3].material.color.getHex(),0xdbad4c,"gold helmet accents appear");
+ assert.equal(fighter.skinMeshes.length,14);
+ assert.ok(fighter.skinMeshes.slice(0,8).every(mesh=>mesh.visible&&mesh.geometry.getAttribute("position").array.every(Number.isFinite)));
+ assert.ok(fighter.skinMeshes.slice(8).every(mesh=>!mesh.visible));
+ assert.equal(fighter.skinMeshes[2].material.color.getHex(),0xf4e6c8,"ivory curved horns appear");
+ assert.equal(fighter.skinMeshes[3].material.color.getHex(),0xdbad4c,"gold helmet accents appear");
  webgl.draw(fighter,{...source,characterId:"soldier"});
- assert.ok(fighter.vikingMeshes.every(mesh=>!mesh.visible),"changing skin removes every Viking detail");
+ assert.ok(fighter.skinMeshes.every(mesh=>!mesh.visible),"changing skin removes every Viking detail");
  webgl.draw(fighter,{...source,characterId:"viking",weapon:"spear"});
- assert.ok(fighter.vikingMeshes.every(mesh=>mesh.visible),"equipment changes do not remove the helmet");
+ assert.ok(fighter.skinMeshes.slice(0,8).every(mesh=>mesh.visible),"equipment changes do not remove the helmet");
 
  const colors=[],ctx=new Proxy({save(){},restore(){},translate(){},rotate(){},scale(){},
   beginPath(){},moveTo(){},lineTo(){},stroke(){colors.push(this.strokeStyle);},
@@ -60,6 +61,45 @@ test('Viking helmet, gold bands, horns, fur and boots render on both engines',as
   canvas.dispose();
  }finally{if(previousWindow===undefined)delete globalThis.window;else globalThis.window=previousWindow;}
  fighter.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
+});
+
+test("Ranger Pharaoh Knight armor details appear in Canvas and WebGL and never change weapons",async()=>{
+ const {ThreeRenderer}=await rendererModule("ThreeRenderer");
+ const {CanvasRenderer}=await rendererModule("CanvasRenderer");
+ const webgl=Object.create(ThreeRenderer.prototype),view=webgl.fighter(0xffffff,false),base=state().player;
+ const originalTool=()=>[...view.toolOutline.geometry.getAttribute("position").array];
+ const colors=[],context=new Proxy({save(){},restore(){},translate(){},rotate(){},scale(){},beginPath(){},
+  moveTo(){},lineTo(){},stroke(){colors.push(this.strokeStyle);},fill(){},arc(){},ellipse(){},
+  set strokeStyle(v){this._stroke=v},get strokeStyle(){return this._stroke}
+ },{get(obj,key){return key in obj?obj[key]:()=>{}},set(obj,key,value){obj[key]=value;return true}});
+ const oldWindow=globalThis.window;
+ globalThis.window={devicePixelRatio:1};
+ try{
+  const canvas=new CanvasRenderer({clientWidth:800,clientHeight:440,getContext(){return context}});
+  for(const [id,required] of Object.entries({
+   ranger:["#d2b24b","#f7fcf6","#478e4b","#5f3b22"],
+   pharaoh:["#d6a13b","#0754a1","#32e8ff","#fff3da"],
+   knight:["#b91f30","#aeb8c5","#d5a946","#d52937"]
+  })){
+   const player={...base,characterId:id,weapon:"blade",weaponHolsterFrom:null};
+   webgl.draw(view,player);
+   assert.equal(view.skinMeshes.length,14);
+   assert.ok(view.skinMeshes.every(mesh=>mesh.visible&&mesh.geometry.getAttribute("position").array.every(Number.isFinite)));
+   const tool=originalTool();
+   assert.ok(tool.length>0);
+   colors.length=0;
+   canvas.draw(context,player,x=>x,y=>y,60,false);
+   for(const c of required){
+    assert.ok(colors.includes(c),id+" canvas missing "+c);
+    assert.ok(view.skinMeshes.some(mesh=>mesh.material.color.getHexString()===c.slice(1)),id+" WebGL missing "+c);
+   }
+   webgl.draw(view,{...player,characterId:"soldier"});
+   assert.deepEqual(originalTool(),tool,id+" never alters equipped blade geometry");
+   assert.ok(view.skinMeshes.every(mesh=>!mesh.visible),"switching skin clears all previous costume meshes");
+  }
+  canvas.dispose();
+ }finally{if(oldWindow===undefined)delete globalThis.window;else globalThis.window=oldWindow;}
+ view.group.traverse(obj=>{obj.geometry?.dispose();obj.material?.dispose?.()});
 });
 
 test('Canvas render balances transformations and opacity for missiles and every held tool',async()=>{
