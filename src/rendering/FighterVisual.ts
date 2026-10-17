@@ -467,7 +467,6 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
  const cuffs=arm.map(([a,b])=>[
   [a[0]+(b[0]-a[0])*.6,a[1]+(b[1]-a[1])*.6],b
  ] as Segment);
- const [tx,ty]=pose.body[0][1];
  const layer=(color:string,width:number,segments:readonly Segment[])=>({color,width,segments});
  if(s.characterId==="ranger"){
   const hood=head([[-.38,-.04],[-.42,.13],[-.24,.39],[-.02,.48],[.21,.32],[.4,.05],[.3,-.22]]);
