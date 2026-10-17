@@ -43,7 +43,7 @@ test('Soldier and Ninja share slim stick limbs without shrinking faces or headba
  assert.ok(body.halo>body.outline&&body.outline>body.core);
  assert.ok(vest.outline>vest.core&&gear.outline>gear.core);
  assert.deepEqual(head,{halo:.355,outline:.318,core:.274},"keep the head at original size");
- assert.deepEqual(marking,{outline:.125,core:.069},"preserve the visible headbands");
+ assert.deepEqual(marking,{outline:.115,core:.064},"headbands remain legible with lighter outlines");
 });
 
 test('four redesigned weapons retain distinctive color layers and finite artwork',()=>{
