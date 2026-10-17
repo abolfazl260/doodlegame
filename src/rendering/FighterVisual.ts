@@ -305,17 +305,32 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
     path([[.15,-.067],[.46,-.056],[.64,0],[.46,.056],[.15,.067]]);
     line([.2,0],[.52,0]);
    }else{
-    rect(-.12,-.045,.25,.09);line([.12,-.16],[.12,.16]);
-    path([[.15,-.08],[.78,-.07],[1.02,0],[.78,.07],[.15,.08]]);line([.2,0],[.88,0]);
-    for(let x=-.08;x<.1;x+=.06)line([x,-.04],[x+.03,.04]);
+    // Soldier's reference sword: long tapered silver blade, blue grip and gold crossguard.
+    rect(-.24,-.065,.35,.13);rect(-.285,-.085,.075,.17);
+    path([[.10,-.18],[.18,-.18],[.18,.18],[.10,.18],[.10,-.18]]);
+    path([[.19,-.105],[.84,-.105],[1.06,0],[.84,.105],[.19,.105],[.19,-.105]]);
+    line([.26,0],[.96,0]);
    }
    break;
   case 'hammer':
-   rect(-.12,-.035,.7,.07);rect(.52,-.23,.38,.46);rect(.57,-.16,.28,.32);
-   for(let x=0;x<.3;x+=.07)line([x,-.06],[x+.03,.06]);
-   line([.63,-.12],[.77,.12]);line([.77,-.12],[.63,.12]);break;
-  case 'blaster':case 'uzi': {
-   const length=weapon==='uzi'?.42:.54;
+   // Rectangular faceted steel head, dark wood handle, gold pommel and collar.
+   rect(-.34,-.065,.99,.13);
+   rect(-.35,-.115,.10,.23);
+   rect(.48,-.12,.10,.24);
+   path([[.53,-.30],[.62,-.38],[.89,-.38],[.99,-.28],[.99,.28],[.89,.38],[.62,.38],[.53,.30],[.53,-.30]]);
+   path([[.62,-.38],[.68,-.29],[.88,-.29],[.99,-.28]]);
+   line([.66,-.23],[.66,.23]);line([.66,.23],[.84,.27]);break;
+  case 'blaster': {
+   // Compact dark graphite sidearm with a glowing red status window.
+   path([[-.21,-.065],[.51,-.065],[.57,.00],[.68,.00],[.68,.18],[.52,.18],[.48,.23],[-.17,.23],[-.21,.16],[-.21,-.065]]);
+   path([[-.09,-.065],[-.025,-.33],[.18,-.33],[.20,-.065]]);
+   rect(.56,.035,.21,.10);
+   rect(.18,.075,.22,.065);
+   line([-.13,.15],[.05,.15]);line([.11,-.12],[.24,-.12]);
+   break;
+  }
+  case 'uzi': {
+   const length=.42;
    rect(-.16,-.08,length,.21);rect(.04,-.3,.12,.22);rect(length-.16,-.03,.27,.08);
    rect(-.06,.13,.17,.055);rect(.18,-.14,.12,.065);
    for(let x=-.1;x<.13;x+=.055)line([x,.02],[x,.09]);
@@ -323,10 +338,14 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
    for(let y=-.27;y<-.1;y+=.06)line([.06,y],[.14,y]);break;
   }
   case 'bow': {
-   path([[.05,-.48],[.18,-.36],[.26,-.18],[.28,0],[.26,.18],[.18,.36],[.05,.48]]);
-   path([[.05,-.48],[-s.bowCharge*.3,0],[.05,.48]]);rect(-.04,-.1,.1,.2);
-   line([-s.bowCharge*.3,0],[.85,0]);path([[.7,-.07],[.85,0],[.7,.07]]);
-   for(const side of [-1,1])line([-.2-s.bowCharge*.3,0],[-.1-s.bowCharge*.3,side*.08]);break;
+   // Warm wooden recurve bow with green grip and a gold-tipped arrow.
+   path([[.07,-.55],[.18,-.49],[.29,-.30],[.36,-.11],[.36,.11],[.29,.30],[.18,.49],[.07,.55]]);
+   path([[.07,-.55],[-s.bowCharge*.30,0],[.07,.55]]);
+   rect(.30,-.12,.12,.24);
+   line([-s.bowCharge*.30,0],[.93,0]);
+   path([[.78,-.09],[.94,0],[.78,.09]]);
+   for(const side of [-1,1])path([[-.17-s.bowCharge*.30,side*.10],[-.07-s.bowCharge*.30,0],[.015-s.bowCharge*.30,side*.09]]);
+   break;
   }
   case 'boomerang':
    path([[-.12,0],[.12,-.3],[.4,-.35],[.54,-.2],[.25,-.18],[.02,.04],[-.12,0]]);
@@ -366,11 +385,11 @@ export function fighterOutfit(_s:DuelistRenderState,pose:ReturnType<typeof fight
 /** Distinct colored inlays for every equipped weapon. */
 export function weaponAccentColor(s:DuelistRenderState):string {
  switch(weaponDrawPose(s).weapon){
-  case "blade":return s.characterId==="ninja"?"#ef344d":"#65e6ff";
-  case "hammer":return "#ffbd66";
-  case "blaster":return "#fbe27e";
+  case "blade":return s.characterId==="ninja"?"#ef344d":"#f5bf35";
+  case "hammer":return "#f1ba38";
+  case "blaster":return "#f04454";
   case "uzi":return "#ffba68";
-  case "bow":return "#68d9ff";
+  case "bow":return "#f6c235";
   case "boomerang":return "#5db7ff";
   case "bomb":return "#ff8c56";
   case "missile":return "#ff776c";
@@ -381,18 +400,18 @@ export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
  switch(weaponDrawPose(s).weapon){
   case "blade":return s.characterId==="ninja"?
    [[[.21,-.02],[.5,0]],[[.12,-.1],[.12,.1]]]:
-   [[[.26,-.045],[.78,-.027]],[[.78,-.027],[.94,0]],[[.16,-.14],[.16,.14]]];
+   [[[.14,-.18],[.14,.18]],[[-.24,-.08],[-.24,.08]]];
   case "hammer":return [
-   [[.57,.17],[.84,.17]],[[.79,-.16],[.79,.15]],[[.59,-.17],[.59,.17]]
+   [[.53,-.12],[.53,.12]],[[-.30,-.115],[-.30,.115]],[[.68,.25],[.87,.25]]
   ];
   case "blaster":return [
-   [[-.07,.1],[.3,.1]],[[.39,.01],[.65,.01]],[[.08,-.19],[.12,-.19]]
+   [[.205,.11],[.375,.11]],[[.59,.09],[.73,.09]]
   ];
   case "uzi":return [
    [[-.07,.1],[.18,.1]],[[.27,.01],[.51,.01]],[[.08,-.19],[.12,-.19]]
   ];
   case "bow":return [
-   [[.1,-.43],[.2,-.24]],[[.2,.24],[.1,.43]],[[.69,0],[.82,0]]
+   [[.78,-.085],[.94,0]],[[.94,0],[.78,.085]]
   ];
   case "boomerang":return [
    [[-.04,-.015],[.14,-.24]],[[.14,-.24],[.43,-.25]]
@@ -405,6 +424,45 @@ export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
   ];
  }
  return [];
+}
+
+/** Four small, distinct color passes recreate the approved weapon concept sheet.
+ * Geometry remains procedural and follows the existing articulated weapon transform.
+ * Other weapons, damage values and hitboxes are deliberately unchanged.
+ */
+export interface WeaponStyleLayer { readonly color:string; readonly width:number; readonly segments:readonly Segment[]; }
+export function weaponStyleLayers(s:DuelistRenderState):readonly WeaponStyleLayer[]{
+ if(s.grabPhase!==null&&s.grabPhase!==undefined)return [];
+ switch(weaponDrawPose(s).weapon){
+  case "blade":
+   return s.characterId==="ninja"?[]:[
+    {color:"#c0d8eb",width:.16,segments:[[[.26,0],[.85,0]]]},
+    {color:"#1766c3",width:.10,segments:[[[-.21,0],[.09,0]]]},
+    {color:"#f2c34b",width:.12,segments:[[[.14,-.17],[.14,.17]]]},
+    {color:"#f5fcff",width:.043,segments:[[[.31,.058],[.84,.058]]]}
+   ];
+  case "hammer":return [
+   {color:"#a0aeba",width:.35,segments:[[[.77,-.22],[.77,.22]]]},
+   {color:"#795032",width:.115,segments:[[[-.25,0],[.51,0]]]},
+   {color:"#eab637",width:.085,segments:[[[.51,-.10],[.51,.10]],[[-.30,-.11],[-.30,.11]]]},
+   {color:"#dce7f0",width:.04,segments:[[[.65,.24],[.87,.24]]]}
+  ];
+  case "blaster":return [
+   {color:"#303a49",width:.19,segments:[[[-.15,.085],[.53,.085]]]},
+   {color:"#1c2531",width:.13,segments:[[[.055,-.08],[.055,-.29]]]},
+   {color:"#f14655",width:.08,segments:[[[.22,.11],[.38,.11]]]},
+   {color:"#91a2b5",width:.037,segments:[[[-.12,.18],[.43,.18]]]}
+  ];
+  case "bow":return [
+   {color:"#ad7138",width:.09,segments:[[[.075,-.55],[.19,-.46]],[[.19,-.46],[.30,-.26]],[[.30,-.26],[.36,0]],
+     [[.36,0],[.30,.26]],[[.30,.26],[.19,.46]],[[.19,.46],[.075,.55]]]},
+   {color:"#25ba79",width:.15,segments:[[[.36,-.105],[.36,.105]]]},
+   {color:"#d9e1de",width:.042,segments:[[[-s.bowCharge*.30,0],[.77,0]]]},
+   {color:"#72c944",width:.07,segments:[[[-.16-s.bowCharge*.30,-.09],[-.06-s.bowCharge*.30,0]],
+      [[-.16-s.bowCharge*.30,.09],[-.06-s.bowCharge*.30,0]]]}
+  ];
+  default:return [];
+ }
 }
 
 /** High-contrast 3-layer ink stays legible on both light and dark arenas. */
