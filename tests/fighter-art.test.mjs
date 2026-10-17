@@ -70,8 +70,11 @@ test('four redesigned weapons retain distinctive color layers and finite artwork
    assert.ok(weaponAccentSegments(s).length>0,weapon+' has a visible highlight');
   }
  }
- assert.equal(weaponStyleLayers({...base,characterId:'ninja',weapon:'blade'}).length,0,
-  'existing Ninja dagger remains distinct from Soldier sword');
+ assert.deepEqual(
+  weaponStyleLayers({...base,characterId:'ninja',weapon:'blade'}),
+  weaponStyleLayers({...base,characterId:'soldier',weapon:'blade'}),
+  'blade shape and inlays must be identical across cosmetic skins'
+ );
  for(const weapon of ['uzi','boomerang','bomb','missile']){
   assert.equal(weaponStyleLayers({...base,weapon}).length,4,weapon+' has four illustrated layers');
  }
