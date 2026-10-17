@@ -9,6 +9,7 @@ type UpgradeCopy={name:string;description:string};
 export type Messages={
  language:{label:string;english:string;persian:string};
  title:string;
+ pause:{title:string;subtitle:string;settings:string};
  rotateHint:string;
  buttons:{start:string;pause:string;resume:string;restart:string;menu:string;help:string;jump:string;attack:string;fireMissile:string;previousWeapon:string;nextWeapon:string;update:string};
  privacy:{button:string;title:string;web:string;close:string;html:string};
@@ -40,6 +41,7 @@ const EN:Messages={
  tutorial:{move:"Move: drag the stick left or right.",jump:"Jump: push the stick up.",attack:"Attack: tap ATTACK. Hold and release for Bow.",missile:"Missile: tap ATTACK to fire a fixed arc.",double:"Double jump: center the stick, then push up again in the air.",grab:"Grab: swipe up on ATTACK near your opponent.",kick:"Kick combo: hold the stick down, tap ATTACK, release and tap again.",ready:"You’re ready!",skip:"Skip tutorial",replay:"Replay touch tutorial"},
  language:{label:"Language",english:"English",persian:"فارسی"},
  title:"DOODLEGAME DUEL",
+ pause:{title:"GAME PAUSED",subtitle:"Ready to return to the fight?",settings:"Settings & Help"},
  rotateHint:"Rotate your device to landscape to play.",
  buttons:{start:"Start",pause:"Pause",resume:"Resume",restart:"Restart",menu:"MAIN MENU",help:"HOW TO PLAY",jump:"JUMP",attack:"ATTACK",fireMissile:"FIRE MISSILE",previousWeapon:"Previous weapon",nextWeapon:"Next weapon",update:"UPDATE"},
  privacy:{"button":"PRIVACY","title":"YOUR PRIVACY","web":"READ THE WEB POLICY","close":"CLOSE","html":"<p><b>The regular web game and Android app do not need a login.</b> No ads or tracking are used.</p><p><b>What is saved?</b> Language, sound, names and progress are stored locally. If the optional Telegram leaderboard is activated, the Worker verifies your signed Telegram login and stores your Telegram numeric ID, first name with last initial and single-player results to show win rankings.</p><p><b>How to delete it:</b> Clear app/browser data for local storage. To delete online Telegram records, open the leaderboard and tap Delete my records.</p>"},
@@ -88,6 +90,7 @@ const FA:Messages={
  tutorial:{move:"حرکت: گوی را به چپ یا راست بکش.",jump:"پرش: گوی را به بالا ببر.",attack:"حمله: حمله را بزن. برای کمان نگه دار و رها کن.",missile:"موشک: برای شلیک با مسیر ثابت، حمله را بزن.",double:"پرش دوم: در هوا گوی را به مرکز و دوباره بالا ببر.",grab:"گرفتن: نزدیک حریف، روی حمله به بالا بکش.",kick:"ترکیب لگد: گوی پایین؛ حمله بزن، رها کن و دوباره بزن.",ready:"آماده‌ای!",skip:"رد کردن آموزش",replay:"تکرار آموزش لمسی"},
  language:{label:"زبان",english:"English",persian:"فارسی"},
  title:"دوئل دودل‌گیم",
+ pause:{title:"بازی متوقف شد",subtitle:"آمادهٔ ادامهٔ نبرد هستی؟",settings:"تنظیمات و راهنما"},
  rotateHint:"برای اجرای بازی دستگاه را افقی بچرخانید.",
  buttons:{start:"شروع",pause:"توقف",resume:"ادامه",restart:"شروع دوباره",menu:"منوی اصلی",help:"راهنمای بازی",jump:"پرش",attack:"حمله",fireMissile:"شلیک موشک",previousWeapon:"سلاح قبلی",nextWeapon:"سلاح بعدی",update:"بروزرسانی"},
  privacy:{"button":"حریم خصوصی","title":"حریم خصوصی شما","web":"مشاهده سیاست در وب","close":"بستن","html":"<p><b>نسخه عادی وب و اندروید به ورود با حساب نیاز ندارد.</b> تبلیغات و ردیابی وجود ندارد.</p><p><b>چه چیزی ذخیره می‌شود؟</b> نام کاراکتر، زبان، صدا و پیشرفت بازی روی دستگاه ذخیره می‌شوند. در صورت فعال بودن جدول رکورد اختیاری تلگرام، سرور داده امضاشده ورود را اعتبارسنجی و شناسه عددی تلگرام، نام کوچک با حرف اول نام خانوادگی و نتایج تک‌نفره را برای جدول بردها ذخیره می‌کند.</p><p><b>چطور پاکش کنیم؟</b> برای داده‌های محلی حافظه برنامه را پاک کنید. برای حذف رکورد آنلاین از جدول تلگرام گزینه حذف رکورد من را بزنید.</p>"},
