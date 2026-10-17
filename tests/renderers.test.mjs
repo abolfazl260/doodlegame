@@ -19,7 +19,7 @@ test('WebGL fighter draw places both fighters and produces valid geometries for 
  const {ThreeRenderer}=await rendererModule('ThreeRenderer');
  const renderer=Object.create(ThreeRenderer.prototype);
  const view=renderer.fighter(0xffffff,false),base=state().player;
- for(const weapon of ['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile'])for(const facing of [-1,1]){
+ for(const weapon of ['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile','spear'])for(const facing of [-1,1]){
   const s={...base,x:3,y:4,weapon,facing,attackTime:.1,bowCharge:1};renderer.draw(view,s);
   assert.equal(view.group.position.x,3);assert.equal(view.group.position.y,4);
   const effects=view.effect.geometry.getAttribute('position').array;
@@ -36,7 +36,7 @@ test('Canvas render balances transformations and opacity for missiles and every 
  let depth=0;const context=new Proxy({save(){depth++},restore(){assert.ok(depth>0);depth--}}, {get(target,key){return key in target?target[key]:()=>{}},set(target,key,value){target[key]=value;return true}});
  globalThis.window={devicePixelRatio:1};
  const renderer=new CanvasRenderer({clientWidth:1000,clientHeight:700,getContext(){return context}});
- for(const weapon of ['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile']) {
+ for(const weapon of ['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile','spear']) {
   const s=state();s.player={...s.player,weapon,attackTime:.1};s.projectiles=[{x:0,y:3,vx:8,vy:4,age:.1,life:1,rotation:.3,weapon:'missile'}];
   renderer.render(s);assert.equal(depth,0);
  }
@@ -68,7 +68,7 @@ test('WebGL fighters use real, outlined thick meshes that remain readable on mob
  assert.notEqual(player.bodyHalo.material.color.getHex(),player.bodyOutline.material.color.getHex());
 
  // No new materials or meshes should be allocated when switching all eight styles.
- for(const weapon of ['blade','hammer','blaster','bow','uzi','boomerang','bomb','missile']){
+ for(const weapon of ['blade','hammer','blaster','bow','uzi','boomerang','bomb','missile','spear']){
   renderer.draw(player,{...s,characterId:'soldier',weapon,weaponHolsterFrom:null});
   assert.equal(player.styleMeshes.length,4);
   for(const mesh of player.styleMeshes){
@@ -84,11 +84,11 @@ test('WebGL fighters use real, outlined thick meshes that remain readable on mob
 test('WebGL projectile artwork uses reference V boomerang and red-white rocket without affecting physics',async()=>{
  const {ThreeRenderer}=await rendererModule('ThreeRenderer');
  const r=Object.create(ThreeRenderer.prototype);
- for(const [kind,count] of [['boomerang',3],['missile',5]]){
+ for(const [kind,count] of [['boomerang',3],['missile',5],['spear',7]]){
   const g=r.buildProjectileIcon(kind);
   assert.equal(g.children.length,count);
   assert.ok(g.children.every(mesh=>mesh.isMesh&&mesh.geometry.getAttribute('position').array.every(Number.isFinite)));
-  assert.ok(g.children.some(mesh=>mesh.material.color.getHex()===0x249fff||mesh.material.color.getHex()===0xef4040));
+  assert.ok(g.children.some(mesh=>mesh.material.color.getHex()===0x249fff||mesh.material.color.getHex()===0xef4040||mesh.material.color.getHex()===0x1858bf));
   g.traverse(o=>{o.geometry?.dispose();o.material?.dispose?.()});
  }
 });
