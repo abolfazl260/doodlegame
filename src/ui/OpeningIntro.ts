@@ -227,9 +227,12 @@ export class OpeningIntro{
   }
   ctx.fillStyle=sky??"#030714";ctx.fillRect(0,0,w,h);
   for(const glow of [
-   {x:.09,y:.35,size:.4,color:"40,100,183",alpha:.20},
-   {x:.92,y:.16,size:.39,color:"44,102,195",alpha:.17},
-   {x:.55,y:.82,size:.52,color:"70,136,222",alpha:.10}
+   // Brighter cobalt + violet nebulae frame the menu without washing out text.
+   {x:.045,y:.36,size:.35,color:"19,94,216",alpha:.37},
+   {x:.955,y:.28,size:.34,color:"94,59,209",alpha:.29},
+   {x:.12,y:.77,size:.27,color:"26,116,227",alpha:.18},
+   {x:.88,y:.73,size:.30,color:"28,95,202",alpha:.25},
+   {x:.52,y:.91,size:.45,color:"86,164,254",alpha:.14}
   ]){
    const x=glow.x*w,y=glow.y*h,r=Math.max(w,h)*glow.size;
    const light=ctx.createRadialGradient(x,y,0,x,y,r);
@@ -262,33 +265,61 @@ export class OpeningIntro{
    ctx.lineTo(x-size*.5,y+size*.8);
    ctx.closePath();ctx.fill();
   }
+  // Sparse highlight stars and diagonal comet streaks at the two side gutters.
+  // Their positions are deterministic and they never obscure the central menu.
+  for(const [nx,ny] of [[.12,.22],[.18,.78],[.83,.16],[.93,.58],[.72,.06]]){
+   const x=nx*w,y=ny*h,size=Math.max(2,Math.min(w,h)*.004);
+   ctx.globalAlpha=.38+.12*Math.cos(t*.65+nx*18);
+   ctx.strokeStyle="#c2efff";ctx.lineWidth=Math.max(.75,w*.0008);
+   ctx.beginPath();ctx.moveTo(x-size*2,y);ctx.lineTo(x+size*2,y);
+   ctx.moveTo(x,y-size*2);ctx.lineTo(x,y+size*2);ctx.stroke();
+  }
+  for(const [nx,ny,side] of [[.15,.27,-1],[.86,.41,1],[.93,.84,1]] as const){
+   const x=nx*w,y=ny*h,size=Math.max(18,Math.min(70,w*.047));
+   const streak=ctx.createLinearGradient(x-side*size,y+size*.46,x,y);
+   streak.addColorStop(0,"#2d8dfa00");streak.addColorStop(.8,"#5abaff8e");streak.addColorStop(1,"#e6fcff");
+   ctx.globalAlpha=.75;
+   ctx.strokeStyle=streak;ctx.lineWidth=Math.max(1,Math.min(2,w*.0012));
+   ctx.beginPath();ctx.moveTo(x-side*size,y+size*.46);ctx.lineTo(x,y);ctx.stroke();
+  }
+  // Tiny faceted asteroids add spatial depth while staying outside the panel.
+  for(const [nx,ny,size] of [[.035,.18,.024],[.955,.58,.017],[.11,.87,.014],[.91,.22,.01]]){
+   const x=nx*w,y=ny*h,r=Math.max(2,Math.min(w,h)*size);
+   ctx.globalAlpha=.32;ctx.fillStyle="#284577";
+   ctx.beginPath();ctx.moveTo(x-r,y-r*.1);ctx.lineTo(x-r*.55,y-r*.9);
+   ctx.lineTo(x+r*.5,y-r*.72);ctx.lineTo(x+r,y+r*.1);
+   ctx.lineTo(x+r*.45,y+r);ctx.lineTo(x-r*.65,y+r*.6);ctx.closePath();ctx.fill();
+   ctx.globalAlpha=.32;ctx.fillStyle="#5281b5";
+   ctx.beginPath();ctx.moveTo(x-r,y-r*.1);ctx.lineTo(x-r*.55,y-r*.9);
+   ctx.lineTo(x+r*.5,y-r*.72);ctx.lineTo(x-r*.13,y+r*.06);ctx.closePath();ctx.fill();
+  }
   ctx.restore();
  }
 
  private drawPlanet(ctx:CanvasRenderingContext2D,w:number,h:number,t:number){
   const radius=Math.min(w*.37,h*.79);
   const x=w*.5;
-  const y=h*.64+radius;
+  const y=h*.78+radius;
   ctx.save();
   // The hemisphere fades into shadow, with a bright narrow horizon.
   const surface=ctx.createRadialGradient(
    x-radius*.12,y-radius*.96,radius*.045,
    x,y-radius*.2,radius*1.34
   );
-  surface.addColorStop(0,"#d5e5fa");
-  surface.addColorStop(.16,"#8ba9d2");
-  surface.addColorStop(.39,"#354c72");
-  surface.addColorStop(.68,"#111c36");
-  surface.addColorStop(1,"#030713");
+  surface.addColorStop(0,"#d9f0ff");
+  surface.addColorStop(.16,"#6eb2f3");
+  surface.addColorStop(.39,"#2861aa");
+  surface.addColorStop(.68,"#0b244f");
+  surface.addColorStop(1,"#020817");
   ctx.fillStyle=surface;
   ctx.beginPath();
   ctx.arc(x,y,radius,0,Math.PI*2);
   ctx.fill();
 
-  ctx.strokeStyle="#9ed5ff";
+  ctx.strokeStyle="#8edcff";
   ctx.lineWidth=Math.max(1.4,radius*.004);
-  ctx.shadowColor="#539ade";
-  ctx.shadowBlur=Math.min(32,radius*.045);
+  ctx.shadowColor="#2a9bff";
+  ctx.shadowBlur=Math.min(40,radius*.065);
   ctx.beginPath();
   ctx.arc(x,y,radius,Math.PI*1.02,Math.PI*1.98);
   ctx.stroke();
