@@ -961,7 +961,7 @@ export class GameUI{
   this.menuProgressDetails.append(this.upgradePanel,this.runPanel);
   this.menuSetupSection.append(this.menuProgress,this.menuLead,this.menuModePanel,this.menuArenaPanel);
   this.menuHeader.append(this.menuHome);
-  this.menu.append(this.menuHeader,this.pauseHeader,this.landing,this.menuResult,this.menuSetupSection,this.menuProgressDetails,this.menuExtras,this.buttons,this.pauseFooter);
+  this.menu.append(this.menuHeader,this.pauseHeader,this.landing,this.menuResult,this.menuSetupSection,this.menuProgressDetails,this.menuExtras,this.pauseFooter,this.buttons);
   this.topHud.append(this.playerHealth,this.status,this.opponentHealth);
   for(const [index,pad] of this.aimPads.entries()){
    const player=index===0?1:2;
@@ -1190,9 +1190,9 @@ export class GameUI{
      this.root.setAttribute("aria-modal","true");
      this.root.setAttribute("aria-labelledby","game-pause-title");
     }else{
-     this.root.removeAttribute("role");
-     this.root.removeAttribute("aria-modal");
-     this.root.removeAttribute("aria-labelledby");
+     this.root.removeAttribute?.("role");
+     this.root.removeAttribute?.("aria-modal");
+     this.root.removeAttribute?.("aria-labelledby");
     }
     this.root.classList.toggle("game-over",state===GameState.GAME_OVER);
     this.root.classList.toggle("menu",state===GameState.MENU);
