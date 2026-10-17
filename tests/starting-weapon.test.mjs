@@ -40,3 +40,17 @@ test("random mode prevents manual weapon selection and switches modes normally",
  assert.equal(session.getHudState().weapon,"blaster");
  session.dispose();
 });
+
+test("spear can be selected as a starting weapon but is blocked by melee-only rules",()=>{
+ const session=new GameSession(input);
+ assert.equal(session.setStartingWeapon("spear"),true);
+ assert.equal(session.getHudState().weapon,"spear");
+ session.reset(false);
+ assert.equal(session.getRenderState().player.weapon,"spear");
+ session.setMode("melee-only");
+ assert.equal(session.setStartingWeapon("spear"),false);
+ assert.notEqual(session.getHudState().weapon,"spear");
+ session.setMode("duel");
+ assert.equal(session.setStartingWeapon("spear"),true);
+ session.dispose();
+});
