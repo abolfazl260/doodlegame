@@ -38,61 +38,18 @@ export function weaponDrawPose(s:DuelistRenderState){
  return {weapon:s.weapon,phase:"draw" as const,progress:(progress-.31)/.69};
 }
 const interpolate=(a:number,b:number,t:number)=>a+(b-a)*t;
-/** Distinct face markings rendered consistently by WebGL and Canvas. */
+/** Blue or red headband with animated twin ribbons, matching the reference. */
 export function characterMarkings(s:DuelistRenderState,head:Point):Segment[]{
  const [x,y]=head;
- if(s.characterId==="bolt")return [
-  [[x-.22,y+.085],[x+.22,y+.085]],
-  [[x-.22,y+.085],[x-.18,y-.06]],
-  [[x-.18,y-.06],[x+.18,y-.06]],
-  [[x+.18,y-.06],[x+.22,y+.085]],
-  [[x-.09,y-.13],[x+.09,y-.13]]
- ];
- // Character accents are tiny, readable silhouettes: no sprite textures needed.
- const sway=Math.sin(s.animationTime*(6+Math.min(5,Math.abs(s.velocityX))))*.065;
- if(s.characterId==="ember")return [
-  [[x-.21,y+.11],[x+.21,y+.11]],
-  [[x-.15,y+.31],[x-.04,y+.48+sway]],
-  [[x-.04,y+.48+sway],[x+.04,y+.3]],
-  [[x+.04,y+.3],[x+.16,y+.56+sway*.7]],
-  [[x+.16,y+.56+sway*.7],[x+.24,y+.15]],
-  [[x-.19,y-.13],[x+.16,y-.13]]
- ];
- if(s.characterId==="frost")return [
-  [[x-.29,y+.08],[x-.22,y+.29]],
-  [[x-.22,y+.29],[x+.22,y+.29]],
-  [[x+.22,y+.29],[x+.29,y+.08]],
-  [[x-.22,y-.13],[x-.39,y-.28+sway]],
-  [[x+.22,y-.13],[x+.39,y-.28-sway]],
-  [[x-.12,y+.015],[x+.15,y+.015]]
- ];
- if(s.characterId==="sprout")return [
-  [[x,y+.26],[x+sway*.55,y+.52]],
-  [[x+sway*.55,y+.52],[x-.25+sway,y+.63]],
-  [[x-.25+sway,y+.63],[x-.1+sway,y+.43]],
-  [[x+sway*.55,y+.52],[x+.3+sway,y+.65]],
-  [[x+.3+sway,y+.65],[x+.15+sway,y+.42]],
-  [[x-.17,y-.15],[x+.17,y-.15]]
- ];
- if(s.characterId==="pixel")return [
-  [[x-.26,y+.2],[x+.26,y+.2]],
-  [[x-.26,y+.2],[x-.26,y-.08]],
-  [[x+.26,y+.2],[x+.26,y-.08]],
-  [[x-.24,y-.08],[x+.24,y-.08]],
-  [[x,y+.29],[x+sway*.35,y+.55]],
-  [[x+sway*.35-.075,y+.55],[x+sway*.35+.075,y+.55]],
-  [[x-.13,y+.055],[x+.13,y+.055]]
- ];
- const flap=Math.sin(s.animationTime*8)*.06;
+ const flutter=Math.sin(s.animationTime*8-s.gaitPhase)*.055-Math.min(1,Math.abs(s.velocityX)/9)*.055;
  return [
-  [[x-.23,y+.055],[x+.23,y+.055]],
-  [[x-.19,y-.06],[x+.17,y-.06]],
-  [[x-.20,y-.09],[x-.47,y-.15+flap]],
-  [[x-.47,y-.15+flap],[x-.73,y-.23+flap]],
-  [[x-.20,y-.13],[x-.44,y-.3+flap*.5]]
+  [[x-.27,y+.045],[x+.27,y+.045]],
+  [[x-.26,y+.04],[x-.44,y+.145+flutter]],
+  [[x-.44,y+.145+flutter],[x-.69,y+.105+flutter*1.5]],
+  [[x-.26,y+.015],[x-.47,y-.085+flutter*.5]],
+  [[x-.47,y-.085+flutter*.5],[x-.64,y-.17+flutter]]
  ];
 }
-
 /** One visual state machine for both renderers, driven by actual movement only. */
 export function airbornePose(s:DuelistRenderState){
  if(s.grounded||s.health<=0)return{phase:"grounded" as const,progress:0};
@@ -274,67 +231,9 @@ export function fighterVisual(s:DuelistRenderState) {
  // Body and costume marks use different ink widths: arms and legs stay bold,
  // while hoods, scarves and armor keep their identifying contours.
  const bodyCount=joints.length;
- // Cosmetic silhouettes are independent from damage and physics.
- if(s.characterId==="bolt"){
-  joints.push(
-   [[head[0]-.28,head[1]+.07],[head[0]-.28,head[1]+.29]],
-   [[head[0]-.28,head[1]+.29],[head[0]+.28,head[1]+.29]],
-   [[head[0]+.28,head[1]+.29],[head[0]+.28,head[1]+.07]],
-   [[head[0],head[1]+.3],[head[0],head[1]+.49]],
-   [[head[0]-.08,head[1]+.49],[head[0]+.08,head[1]+.49]],
-   [[-.18,shoulder[1]-.04],[-.37,shoulder[1]-.12]],
-   [[.18,shoulder[1]-.04],[.37,shoulder[1]-.12]]
-  );
- }else if(s.characterId==="ember"){
-  const flutter=Math.sin(s.animationTime*11-s.gaitPhase)*.11;
-  joints.push(
-   [[head[0]-.26,head[1]+.05],[head[0]-.13,head[1]+.37+flutter]],
-   [[head[0]-.13,head[1]+.37+flutter],[head[0]+.02,head[1]+.26]],
-   [[head[0]+.02,head[1]+.26],[head[0]+.13,head[1]+.48+flutter]],
-   [[head[0]+.13,head[1]+.48+flutter],[head[0]+.27,head[1]+.09]],
-   [[-.2,.2],[-.47,.12+flutter*.3]]
-  );
- }else if(s.characterId==="frost"){
-  const cape=Math.sin(s.animationTime*7-s.gaitPhase)*.13-Math.min(1,Math.abs(s.velocityX)/8)*.1;
-  joints.push(
-   [[head[0]-.3,head[1]],[head[0]-.22,head[1]+.29]],
-   [[head[0]-.22,head[1]+.29],[head[0]+.22,head[1]+.29]],
-   [[head[0]+.22,head[1]+.29],[head[0]+.3,head[1]]],
-   [[-.2,.3],[-.61,.07+cape]],
-   [[-.61,.07+cape],[-.85,-.08+cape*.9]],
-   [[-.17,.08],[-.48,-.13+cape]]
-  );
- }else if(s.characterId==="sprout"){
-  const bob=Math.sin(s.animationTime*5-s.gaitPhase)*.12;
-  joints.push(
-   [[head[0],head[1]+.24],[head[0]+bob*.4,head[1]+.54]],
-   [[head[0]+bob*.4,head[1]+.54],[head[0]-.25+bob,head[1]+.65]],
-   [[head[0]+bob*.4,head[1]+.54],[head[0]+.26+bob,head[1]+.63]],
-   [[-.17,.24],[-.45,.35+bob]],
-   [[.17,.24],[.44,.35-bob]]
-  );
- }else if(s.characterId==="pixel"){
-  const antenna=Math.sin(s.animationTime*13)*.055;
-  joints.push(
-   [[head[0]-.28,head[1]+.25],[head[0]+.28,head[1]+.25]],
-   [[head[0]-.28,head[1]+.25],[head[0]-.28,head[1]-.12]],
-   [[head[0]+.28,head[1]+.25],[head[0]+.28,head[1]-.12]],
-   [[head[0],head[1]+.3],[head[0]+antenna,head[1]+.54]],
-   [[head[0]+antenna-.08,head[1]+.54],[head[0]+antenna+.08,head[1]+.54]],
-   [[-.2,.18],[-.43,.13]],[[.2,.18],[.43,.13]]
-  );
- }else{
-  const sway=Math.sin(s.animationTime*7)*.08;
-  joints.push(
-   [[head[0]-.28,head[1]],[head[0]-.19,head[1]+.28]],
-   [[head[0]-.19,head[1]+.28],[head[0]+.20,head[1]+.28]],
-   [[head[0]+.20,head[1]+.28],[head[0]+.28,head[1]]],
-   [[-.16,.25],[-.46,.24+sway]],
-   [[-.46,.24+sway],[-.82,.18+sway]],
-   [[-.2,.15],[-.55,.02+sway]]
-  );
- }
- const scale=s.enemyType==='boss'?1.18:s.enemyType==='tank'?1.08:1;
+ // One compact stick rig for both characters; headbands are rendered over the round heads.
+  joints.push([[-.2,.24],[-.33,.18]],[[.2,.24],[.34,.16]]);
+  const scale=s.enemyType==='boss'?1.18:s.enemyType==='tank'?1.08:1;
  const squash=land*.16;
  const aerialTilt=flight.phase==="double"?.36*Math.sin(Math.PI*flight.progress):
   flight.phase==="wall"?-.18*Math.sin(Math.PI*flight.progress):
@@ -435,7 +334,7 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
  return lines;
 }
 
-/** Clothing follows the animated pose, without changing combat hitboxes. */
+/** Minimal black stick outfits, matching the two approved fighter silhouettes. */
 export function fighterOutfit(s:DuelistRenderState,pose:ReturnType<typeof fighterVisual>){
  const body=pose.body;
  const partial=(segment:Segment,start:number):Segment=>{
@@ -446,50 +345,12 @@ export function fighterOutfit(s:DuelistRenderState,pose:ReturnType<typeof fighte
   const [a,b]=segment;
   return [a,[a[0]+(b[0]-a[0])*end,a[1]+(b[1]-a[1])*end]];
  };
- const [hx,hy]=pose.head;
- const sway=Math.sin(s.animationTime*6)*.025;
  const vest=[body[0]];
  const gear=[partial(body[2],.48),partial(body[4],.48),
   partial(body[6],.42),partial(body[8],.42),
   shoulder(body[5],.58),shoulder(body[7],.58)];
- const trim:Segment[]=[
-  [[-.18,.27],[.015,.12]],[[.015,.12],[.18,.27]],
-  [[-.17,-.015],[.15,-.015]], [[-.055,.13],[.055,.13]]
- ];
- // Bolt has an armored crest; Shadow has swept hair.
- let hair:Segment[];
- if(s.characterId==="bolt")hair=[
-  [[hx-.24,hy+.22],[hx-.12,hy+.37]],
-  [[hx-.12,hy+.37],[hx+.14,hy+.37]],
-  [[hx+.14,hy+.37],[hx+.25,hy+.21]]
- ];
- else if(s.characterId==="ember")hair=[
-  [[hx-.27,hy+.19],[hx-.17,hy+.34+sway]],
-  [[hx-.17,hy+.34+sway],[hx-.045,hy+.29]],
-  [[hx-.045,hy+.29],[hx+.1,hy+.45+sway]],
-  [[hx+.1,hy+.45+sway],[hx+.24,hy+.19]]
- ];
- else if(s.characterId==="frost")hair=[
-  [[hx-.3,hy+.02],[hx-.24,hy+.32]],
-  [[hx-.24,hy+.32],[hx+.22,hy+.32]],
-  [[hx+.22,hy+.32],[hx+.3,hy+.02]]
- ];
- else if(s.characterId==="sprout")hair=[
-  [[hx-.27,hy+.22],[hx-.13,hy+.29]],
-  [[hx-.13,hy+.29],[hx+.12,hy+.29]],
-  [[hx+.12,hy+.29],[hx+.27,hy+.22]]
- ];
- else if(s.characterId==="pixel")hair=[
-  [[hx-.26,hy+.25],[hx+.26,hy+.25]],
-  [[hx-.26,hy+.25],[hx-.26,hy-.08]],
-  [[hx+.26,hy+.25],[hx+.26,hy-.08]]
- ];
- else hair=[
-  [[hx-.28,hy+.21],[hx-.17,hy+.43+sway]],
-  [[hx-.17,hy+.43+sway],[hx-.045,hy+.33]],
-  [[hx-.045,hy+.33],[hx+.08,hy+.49+sway]],
-  [[hx+.08,hy+.49+sway],[hx+.24,hy+.24]]
- ];
+ const trim:Segment[]=[[[-.12,.20],[0,.14]],[[0,.14],[.11,.2]]];
+ const hair:Segment[]=[]; // No helmets or hair in the reference designs.
  return {vest,gear,trim,hair};
 }
 
@@ -550,21 +411,21 @@ export const FIGHTER_INK_WIDTH={
  head:{halo:.355,outline:.318,core:.274},
  eye:.062
 } as const;
-export function fighterInkPalette(enemy:boolean,characterId:DuelistRenderState["characterId"]="shadow"){
- const base=enemy
-  ?{core:"#ffc48b",outline:"#181725",halo:"#fff2d7",accent:"#ff628b",eye:"#171522",suit:"#80364f",armor:"#d75160",trim:"#ffcf8c",hair:"#352638",metal:"#e5eaf3"}
-  :{core:"#f9fbff",outline:"#091628",halo:"#8be0ff",accent:"#35bafb",eye:"#091628",suit:"#17618d",armor:"#248fc7",trim:"#aff2ff",hair:"#20344f",metal:"#e5efff"};
- // Silhouettes share ink widths and hitbox size; colored accents distinguish
- // the six playable designs without adding textures or rendering passes.
- const colors={
-  shadow:null,
-  bolt:{accent:"#70def0",suit:"#244d7a",armor:"#4996ce",trim:"#c0faff",hair:"#4996ce"},
-  ember:{accent:"#ff924a",suit:"#8b4434",armor:"#c56c47",trim:"#ffd18b",hair:"#ff9b54"},
-  frost:{accent:"#90e4ff",suit:"#46668e",armor:"#76aaca",trim:"#e5f9ff",hair:"#c8e9f9"},
-  sprout:{accent:"#8de77c",suit:"#376852",armor:"#64a47a",trim:"#d8ffa1",hair:"#71be76"},
-  pixel:{accent:"#ce96ff",suit:"#5b488a",armor:"#8d70be",trim:"#e0c2ff",hair:"#a592d6"}
- }[characterId];
- return colors?{...base,...colors}:base;
+export function fighterInkPalette(enemy:boolean,characterId:DuelistRenderState["characterId"]="soldier"){
+ const ninja=characterId==="ninja";
+ return {
+  core:ninja?(enemy?"#171921":"#0b0e15"):(enemy?"#182333":"#0c1827"),
+  outline:"#050a12",
+  halo:ninja?"#f18088":"#9bdafc",
+  face:ninja?"#12141b":"#f9fcff",
+  accent:ninja?"#e72640":"#198fe8",
+  eye:"#0b0d15",
+  suit:ninja?"#12141c":"#111a29",
+  armor:ninja?"#14161f":"#162131",
+  trim:ninja?"#9b1c2c":"#1768af",
+  hair:ninja?"#12141b":"#f9fcff",
+  metal:"#dfe8f0"
+ };
 }
 
 /**
