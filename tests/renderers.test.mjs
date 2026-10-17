@@ -89,10 +89,10 @@ test('Canvas fallback draws the same multi-layer body, head and weapon silhouett
   assert.ok(widths.some(w=>w>=40*.25),"halo must have a wide ink stroke");
   assert.ok(widths.some(w=>w>=40*.13&&w<40*.19),"body core is visibly thicker than legacy lines");
   assert.ok(circles.some(r=>r>=40*.35),"head silhouette must be enlarged");
-  assert.ok(colors.includes("#8be0ff"),"bright outer halo must be present");
+  assert.ok(colors.includes("#f18088"),"Ninja red outer halo must be present");
   widths.length=0;colors.length=0;
   renderer.draw(context,{...s,grounded:false},x=>x,y=>y,40,true);
-  assert.ok(colors.includes("#ffc48b"),"enemy must use distinct warm body colors");
+  assert.ok(colors.includes("#182333"),"enemy Soldier should use contrasting dark-body colors");
   renderer.dispose();
  }finally{if(old===undefined)delete globalThis.window;else globalThis.window=old;}
 });
