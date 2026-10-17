@@ -52,23 +52,29 @@ test("short-screen Missile attack has no aim guide and Pause stays separate",asy
  expect(pause.x+pause.width).toBeLessThan(attack.x);await expect(page.locator(".game-ui__mobile-button--attack")).toBeVisible();
 });
 
-test("short landscape menu scrolls internally and keeps Resume tappable",async({page})=>{
+test("compact pause dialog scrolls internally if needed and keeps Resume tappable",async({page})=>{
  await page.setViewportSize({width:568,height:280});
  await holdPause(page);
  const menu=page.locator(".game-ui__menu"),resume=page.locator('button[data-action="resume"]');
+ const settings=page.locator(".game-ui__pause-settings");
  await expect(resume).toBeVisible();
- await page.locator(".game-ui__menu-extras summary").tap();
+ await expect(settings).toBeVisible();
+ await expect(page.locator(".game-ui__menu-extras summary")).toBeHidden();
+ // Force overflow in the visible pause footer instead of the now-hidden main-menu extras.
  const measurements=await page.evaluate(()=>{
   const menu=document.querySelector(".game-ui__menu");
-  const links=document.querySelector(".game-ui__menu-links");
-  links.style.minHeight="640px";
+  const footer=document.querySelector(".game-ui__pause-footer");
+  footer.style.minHeight="640px";
   const before=menu.scrollTop;
   menu.scrollTop=220;
-  return {
+  const result={
    before,after:menu.scrollTop,scrollHeight:menu.scrollHeight,clientHeight:menu.clientHeight,
    touchAction:getComputedStyle(menu).touchAction,
    bodyTouchAction:getComputedStyle(document.body).touchAction
   };
+  footer.style.minHeight="";
+  menu.scrollTop=0;
+  return result;
  });
  expect(measurements.scrollHeight).toBeGreaterThan(measurements.clientHeight);
  expect(measurements.after).toBeGreaterThan(measurements.before);

@@ -406,6 +406,67 @@ test("player-count and mode cards are separate, with all modes available for 2P"
  assert.equal(ui.pvpHint.hidden,true);
 });
 
+test("pause-only modal, dark backdrop and localized settings preserve menu lifecycle",()=>{
+ const {ui,hud,container}=setup();
+ assert.equal(container.children[0],ui.pauseScrim,"scrim stays behind the menu");
+ assert.equal(container.children[1],ui.root);
+ assert.equal(ui.pauseScrim.hidden,true);
+ assert.equal(ui.pauseHeader.hidden,true);
+ assert.equal(ui.pauseFooter.hidden,true);
+ ui.render(states.PLAYING,hud);
+ assert.equal(ui.pauseScrim.hidden,true,"ordinary gameplay must never be dimmed");
+ ui.render(states.PAUSED,hud);
+ assert.equal(ui.pauseScrim.hidden,false);
+ assert.equal(ui.pauseHeader.hidden,false);
+ assert.equal(ui.pauseFooter.hidden,false);
+ assert.equal(ui.root.getAttribute("role"),"dialog");
+ assert.equal(ui.root.getAttribute("aria-modal"),"true");
+ assert.equal(ui.root.getAttribute("aria-labelledby"),"game-pause-title");
+ assert.equal(ui.pauseTitle.textContent,"GAME PAUSED");
+ assert.equal(ui.pauseSubtitle.textContent,"Ready to return to the fight?");
+ assert.equal(ui.pauseSettingsButton.textContent,"Settings & Help");
+ assert.equal(ui.pauseLanguageButton.textContent,"EN");
+ const resume=ui.buttons.children.find(b=>b.dataset.action==="resume");
+ const restart=ui.buttons.children.find(b=>b.dataset.action==="restart");
+ const menu=ui.buttons.children.find(b=>b.dataset.action==="menu");
+ assert.equal(resume.hidden,false);
+ assert.equal(restart.hidden,false);
+ assert.equal(menu.hidden,false);
+ ui.pauseSettingsButton.click();
+ assert.equal(ui.help.hidden,false,"pause Settings & Help opens the existing help dialog");
+ ui.helpCloseButton.click();
+ assert.equal(ui.help.hidden,true);
+ assert.equal(ui.pauseSettingsButton.focused,true,"return focus to visible pause settings button");
+ ui.pauseLanguageButton.click();
+ assert.equal(ui.pauseLanguageButton.textContent,"فا");
+ assert.equal(ui.pauseTitle.textContent,"بازی متوقف شد");
+ assert.equal(ui.pauseSettingsButton.textContent,"تنظیمات و راهنما");
+ ui.render(states.PLAYING,hud);
+ assert.equal(ui.pauseScrim.hidden,true);
+ assert.equal(ui.pauseHeader.hidden,true);
+ assert.equal(ui.pauseFooter.hidden,true);
+ assert.equal(ui.root.getAttribute("role"),undefined);
+ assert.equal(ui.root.getAttribute("aria-modal"),undefined);
+ ui.render(states.PAUSED,hud);
+ ui.render(states.MENU,hud);
+ assert.equal(ui.pauseScrim.hidden,true,"menu navigation clears dimming");
+ assert.equal(ui.pauseHeader.hidden,true,"new game menu uses its original heading");
+ ui.render(states.GAME_OVER,{...hud,winner:"player"});
+ assert.equal(ui.pauseScrim.hidden,true,"results must not inherit paused overlay");
+ ui.dispose();
+});
+
+test("pause CSS keeps a separate blurred backdrop and a compact responsive dialog",()=>{
+ const css=readFileSync("src/styles.css","utf8");
+ assert.match(css,/#ui-root>\.game-ui__pause-scrim\s*\{/);
+ assert.match(css,/backdrop-filter:blur\(3px\)/);
+ assert.match(css,/\.game-ui__pause-scrim\[hidden\]\{display:none!important\}/);
+ assert.match(css,/\.game-ui\.paused \.game-ui__controls\s*\{/);
+ assert.match(css,/button\[data-action="resume"\]:not\(\[hidden\]\)\s*\{/);
+ assert.match(css,/@media\(max-height:360px\)/);
+ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+});
+
 test("pause offers Resume, results hide setup, returning to menu restores step one",()=>{
  const {ui,hud}=setup();
  ui.stepNextButton.click();
