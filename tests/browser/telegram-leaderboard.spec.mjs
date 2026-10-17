@@ -95,6 +95,19 @@ test("ordinary desktop and mobile browsers hide all Telegram ranking UI without 
  expect(sdkRequests).toBe(0);
 });
 
+test("ordinary browser with SDK object but no signed Telegram identity hides rankings",async({page})=>{
+ let requests=0;
+ await page.addInitScript(()=>{
+  window.Telegram={WebApp:{initData:"",ready(){},expand(){},onEvent(){},offEvent(){}}};
+ });
+ await page.route("**/leaderboard-config.json",route=>{requests++;return route.abort();});
+ await page.goto("/doodlegame/");
+ await expect(page.locator("#boot-fallback")).toHaveCount(0);
+ await expect(page.locator(".game-ui__telegram-ranks")).toHaveCount(0);
+ await expect(page.locator(".telegram-leaderboard")).toHaveCount(0);
+ expect(requests).toBe(0);
+});
+
 test("pre-injected Telegram signed initData shows rankings after URL markers disappear",async({page})=>{
  const worker="https://doodlegame-test.workers.dev";
  const signed="auth_date=123&user=example&hash=server-verified";
