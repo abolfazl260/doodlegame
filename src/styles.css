@@ -2360,6 +2360,7 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  flex-shrink:0;
 }
 .game-ui.paused .game-ui__controls{
+ order:2;
  position:static;
  display:grid;
  grid-template-columns:repeat(2,minmax(0,1fr));
@@ -2413,6 +2414,7 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  outline-offset:2px;
 }
 .game-ui.paused .game-ui__pause-footer{
+ order:3;
  padding-top:.4rem;
  border-top:1px solid #8b9fb638;
  text-align:center;
