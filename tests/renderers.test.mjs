@@ -110,9 +110,9 @@ test('Canvas fallback draws the same multi-layer body, head and weapon silhouett
   const renderer=new CanvasRenderer({clientWidth:800,clientHeight:500,getContext(){return context}});
   const s=state().player;
   renderer.draw(context,{...s,grounded:false,characterId:"ninja"},x=>x,y=>y,40,false);
-  assert.ok(widths.some(w=>Math.abs(w-40*.19)<.00001),"slim body halo is rendered");
-  assert.ok(widths.some(w=>Math.abs(w-40*.095)<.00001),"slim inner limb stroke is rendered");
-  assert.ok(widths.some(w=>Math.abs(w-40*.31)<.00001),"torso is thinner but remains visible");
+  assert.ok(widths.some(w=>Math.abs(w-40*.18)<.00001),"slim body halo is rendered");
+  assert.ok(widths.some(w=>Math.abs(w-40*.09)<.00001),"slim inner limb stroke is rendered");
+  assert.ok(widths.some(w=>Math.abs(w-40*.28)<.00001),"torso is thinner but remains visible");
   assert.ok(circles.some(r=>r>=40*.35),"head silhouette must be enlarged");
   assert.ok(colors.includes("#f18088"),"Ninja red outer halo must be present");
   widths.length=0;colors.length=0;
