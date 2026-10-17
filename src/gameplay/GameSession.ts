@@ -8,8 +8,8 @@ import {getDownloadedArena} from "./DownloadableArenas.js";
 export type PlatformSurface="normal"|"ice"|"slippery"|"oneWay"|"conveyorLeft"|"conveyorRight";
 export interface Platform{readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly surface?:PlatformSurface;}
 export type EnemyType="runner"|"tank"|"shooter"|"jumper"|"bomber"|"ninja"|"boss";
-export type CharacterId="shadow"|"bolt"|"ember"|"frost"|"sprout"|"pixel";
-export const CHARACTER_IDS:readonly CharacterId[]=["shadow","bolt","ember","frost","sprout","pixel"];
+export type CharacterId="soldier"|"ninja";
+export const CHARACTER_IDS:readonly CharacterId[]=["soldier","ninja"];
 export type EnvironmentKind="barrel"|"box"|"wall"|"bounce"|"trap"|"rock"|"crumble"|"fan"|"gravity"|"vent"|"fallingRock";
 export interface EnvironmentRenderState{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;readonly maxHp:number;readonly active:boolean;readonly rotation:number;readonly pulse:number;readonly warning:number;}
 export interface ArenaDebrisRenderState{readonly x:number;readonly y:number;readonly rotation:number;readonly size:number;readonly age:number;readonly life:number;}
@@ -168,7 +168,7 @@ export class GameSession{
   {arena:"ruins",enemy:"boss",health:175}
  ] as const;
  private localPvP=false;
- private selectedCharacter:CharacterId="shadow";
+ private selectedCharacter:CharacterId="soldier";
  private arenaId:ArenaId="classic";private modeId:GameModeId="duel";private startingWeapon:WeaponId="blade";
  private liveData:LiveGameData|null=null;private weaponStats:typeof WEAPONS=WEAPONS;
  private hillPlayer=0;private hillOpponent=0;
@@ -294,7 +294,7 @@ export class GameSession{
  }
  cancelTouchAttack(){this.cancelTransientActions();}
  upgradeWeapon(id:WeaponId){if(this.upgradePoints<=0||this.upgradedWeapons.has(id))return false;this.upgradedWeapons.add(id);this.upgradePoints--;return true;}
- reset(advanceEnemy=true){this.combatCues=[];this.visualFreezeUntil=0;this.elapsed=0;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];this.debris=[];if(advanceEnemy&&!this.localPvP)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,this.localPvP?null:this.runStage?this.runEncounters[this.runStage-1].enemy:types[enemyIndex]);this.opponent.characterId=CHARACTER_IDS[Math.floor(Math.random()*CHARACTER_IDS.length)];if(this.runStage){const hp=this.runEncounters[this.runStage-1].health;this.opponent.health=hp;this.opponent.maxHealth=hp;}if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER;this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(this.modeId!=="random-weapons"&&!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;if(this.localPvP&&this.modeId!=="random-weapons")this.opponent.weapon=this.player.weapon;this.projectiles=[];this.resetEnvironment();this.enemyBrain=this.freshEnemyBrain();this.enemyBrain.lastX=this.opponent.x;this.winner=null;}
+ reset(advanceEnemy=true){this.combatCues=[];this.visualFreezeUntil=0;this.elapsed=0;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];this.debris=[];if(advanceEnemy&&!this.localPvP)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,this.localPvP?null:this.runStage?this.runEncounters[this.runStage-1].enemy:types[enemyIndex]);this.opponent.characterId=this.selectedCharacter==="soldier"?"ninja":"soldier";if(this.runStage){const hp=this.runEncounters[this.runStage-1].health;this.opponent.health=hp;this.opponent.maxHealth=hp;}if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"){const pool=ORDER;this.player.weapon=pool[Math.floor(Math.random()*pool.length)];this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(this.modeId!=="random-weapons"&&!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;if(this.localPvP&&this.modeId!=="random-weapons")this.opponent.weapon=this.player.weapon;this.projectiles=[];this.resetEnvironment();this.enemyBrain=this.freshEnemyBrain();this.enemyBrain.lastX=this.opponent.x;this.winner=null;}
  private availableWeapons():WeaponId[]{if(this.missileRules)return["missile"];if(this.modeId==="melee-only")return["blade","hammer"];if(this.modeId==="random-weapons")return[this.player.weapon];return [...ORDER];}
  /** Switch the logical weapon immediately; only the holster/draw pose is delayed.
   * Retain the already-earned cooldown, and cancel any charge from the old bow.
