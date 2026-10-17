@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {GameSession} from '../.test-build/gameplay/GameSession.js';
-import {fighterVisual,fighterOutfit,FIGHTER_INK_WIDTH,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,toolSegments} from '../.test-build/rendering/FighterVisual.js';
+import {fighterVisual,fighterOutfit,FIGHTER_INK_WIDTH,weaponBaseInk,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,toolSegments} from '../.test-build/rendering/FighterVisual.js';
 
 const session=new GameSession({getState(){return {}},endFrame(){}});
 const base=session.getRenderState().player;
@@ -82,7 +82,7 @@ test('four redesigned weapons retain distinctive color layers and finite artwork
 
 test('thinner weapon ink and color layers preserve animated finite render geometry',()=>{
  const {weapon,body,vest,head}=FIGHTER_INK_WIDTH;
- assert.deepEqual(weapon,{outline:.082,core:.048,accent:.028});
+ assert.deepEqual(weapon,{outline:.060,core:.028,accent:.028});
  assert.ok(body.halo<=.16&&vest.outline<=.24);
  assert.deepEqual(head,{halo:.355,outline:.318,core:.274},'head must not shrink');
  for(const id of ['uzi','boomerang','bomb','missile']){
@@ -139,4 +139,17 @@ test('Spear remains a readable thin silver-tip weapon for both fighters',()=>{
   assert.ok(geometry.some(seg=>seg.some(p=>p[0]>=1.3)),'silver tip reaches forward');
  }
  assert.equal(weaponStyleLayers({...base,weapon:'spear',grabPhase:'hold'}).length,0);
+});
+
+test('Hammer outline no longer paints a thick white rim around the weapon',()=>{
+ const hammer={...base,weapon:'hammer',weaponHolsterFrom:null,weaponDrawTime:0};
+ const ink=weaponBaseInk(hammer);
+ assert.deepEqual(ink,{outline:.05,core:.015,metal:'#7c8b9a'});
+ assert.ok(ink.core<.048/3,'hammer rim becomes less than one-third the previous width');
+ assert.notEqual(ink.metal,'#dfe8f0','white-looking metal is replaced with muted steel');
+ assert.ok(weaponStyleLayers(hammer).some(layer=>layer.color==='#a0aeba'),'hammer head fill remains');
+ for(const weapon of ['blade','uzi','bow','spear']){
+  const normal=weaponBaseInk({...base,weapon,weaponHolsterFrom:null});
+  assert.deepEqual(normal,{outline:.06,core:.028,metal:'#b0bdc9'},weapon+' keeps thin metal ink');
+ }
 });
