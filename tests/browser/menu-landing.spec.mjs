@@ -52,7 +52,7 @@ test('cosmic arcade home uses the reference visual hierarchy without duplicating
   expect(visual.quick.height).toBeGreaterThanOrEqual(height<=390?48:65);
   expect(visual.quick.width).toBeGreaterThanOrEqual(visual.route*1.85);
   expect(visual.settings).toBeGreaterThanOrEqual(visual.route*1.85);
-  expect(visual.glow).toContain('rgb(');
+  expect(visual.glow).toMatch(/rgba?\(/);
   expect(visual.bg).toContain('gradient');
   expect(visual.isSubtitleNested).toBe(true);
   expect(visual.subtitle.length).toBeGreaterThan(6);
