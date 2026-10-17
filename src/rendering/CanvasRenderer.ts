@@ -1,4 +1,4 @@
-import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,characterMarkings,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
+import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,characterMarkings,vikingSkinLayers,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
 import type {Renderer} from "./Renderer";
 import {PlatformInkCache,platformInkReaction} from "./PlatformDecorations.js";
 import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
@@ -229,6 +229,8 @@ export class CanvasRenderer implements Renderer{
   const marks=characterMarkings(s,pose.head);
   lines(marks,ink.outline,width.marking.outline);
   lines(marks,accent,width.marking.core);
+  // Viking's lightweight helmet, curved horns and fur follow the fighter's animated pose.
+  for(const layer of vikingSkinLayers(s,pose))lines(layer.segments,layer.color,layer.width,1);
   if(s.attackTelegraph>0){c.globalAlpha=.95;lines(telegraphSegments(s),ink.halo,.047);c.globalAlpha=1;}
   c.save();c.translate(pose.hand[0]*scale,-pose.hand[1]*scale);c.rotate(-pose.toolAngle);
   const weapon=toolSegments(s);
