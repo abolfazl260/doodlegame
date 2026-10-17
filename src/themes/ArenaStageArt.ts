@@ -124,7 +124,8 @@ export function stageLandmarks(id:BuiltInArenaId):readonly StageShape[]{
   break;
  case "reactor":
   r(.36,.25,.28,.58,"silhouette",.82);
-  e(.5,.52,.14,.25,"accent",.23);e(.5,.52,.095,.16,"secondary",.27);e(.5,.52,.045,.08,"platformEdge",.48);
+  // Keep the central combat lane dark enough for fighters and attacks to read.
+  e(.5,.52,.14,.25,"accent",.10);e(.5,.52,.095,.16,"secondary",.10);e(.5,.52,.045,.08,"platformEdge",.27);
   for(const y of [.3,.42,.63,.75])l([[.34,y],[.66,y]],"accent",.3,.004);
   for(const x of [.14,.84]){tower(x,.3,.055,.56);l([[x+.029,.48],[.36,.52]],"accent",.42,.004);}
   for(const x of [.24,.75])e(x,.85,.042,.035,"accent",.45);
