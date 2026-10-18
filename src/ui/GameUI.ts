@@ -2,7 +2,7 @@ import {ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl,type ArenaCategory} f
 import {MobileOnboarding,type TutorialSignals} from "./MobileOnboarding";
 import type {Storage} from "../storage/Storage";
 import {GameState} from "../core/GameState";
-import {gamePointerInElement,toGamePointerDelta} from "../platform/web/LandscapeOrientation";
+import {gamePointerInElement,toGamePointerDelta} from "../platform/web/LandscapeOrientation.js";
 
 import {getArenaTheme} from "../themes/ArenaThemes";
 import type {ArenaId,BuiltInArenaId,GameModeId,HillState,CharacterId} from "../gameplay/GameSession";
