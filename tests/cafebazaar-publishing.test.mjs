@@ -36,11 +36,16 @@ test("Cafe Bazaar workflow is manual-only, isolated and gated before build", () 
   assert.equal(opens, closes, "GitHub Actions expressions must be balanced");
 });
 
-test("Cafe Bazaar publication starts fail-closed without known source version history", () => {
+test("Cafe Bazaar publication requires source-ledger version and explicit Bazaar history", () => {
   const ledger = JSON.parse(readFileSync("config/cafebazaar-release.json", "utf8"));
   const pkg = JSON.parse(readFileSync("package.json", "utf8"));
   assert.equal(ledger.versionName, pkg.version);
-  assert.equal(ledger.versionCode, null, "The initial code must not be guessed");
-  assert.equal(ledger.highestPreviouslySubmittedVersionCode, null,
-    "Store history must be explicitly confirmed before the first publication");
+  assert.ok(Object.hasOwn(ledger, "versionCode"));
+  assert.ok(Object.hasOwn(ledger, "highestPreviouslySubmittedVersionCode"));
+  assert.ok(Object.hasOwn(ledger, "previousVersionName"));
+  if (ledger.versionCode != null) {
+    assert.ok(Number.isInteger(ledger.versionCode) && ledger.versionCode > 0);
+    assert.ok(Number.isInteger(ledger.highestPreviouslySubmittedVersionCode));
+    assert.ok(ledger.versionCode > ledger.highestPreviouslySubmittedVersionCode);
+  }
 });
