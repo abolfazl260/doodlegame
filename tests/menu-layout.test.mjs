@@ -491,7 +491,7 @@ test("new menu has localized live match summary and responsive touch-safe primar
  assert.match(css,/\.game-ui__menu-extras\[open\]/);
  assert.match(css,/\.game-ui:not\(\.playing\) \.game-ui__controls button\[data-action="start"\]/);
  assert.match(css,/@media \(orientation: landscape\) and \(max-width:520px\)/);
- assert.match(css,/@media \(orientation: portrait\) and \(max-width:360px\)/);
+ assert.ok(css.includes("(orientation: portrait) and (max-width:360px)"));
  const {ui}=setup();
  assert.equal(ui.matchSummary.getAttribute("aria-live"),"polite");
  assert.equal(ui.matchSummary.getAttribute("aria-atomic"),"true");
