@@ -1,7 +1,7 @@
-:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#000;color:#fff}*{box-sizing:border-box}html,body,#app{width:100%;height:100%;margin:0;background:#000;overflow:hidden}body{touch-action:none;overscroll-behavior:none}#game-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}#ui-root{position:absolute;inset:0;z-index:2;display:grid;place-items:center;pointer-events:none}.game-ui{display:grid;gap:.65rem;justify-items:center;min-width:min(24rem,calc(100vw - 2rem));max-width:calc(100vw - 2rem);padding:1rem;border:1px solid #444;border-radius:.75rem;background:#000e;pointer-events:auto;text-align:center}.game-ui.playing{position:absolute;inset:0;display:block;min-width:0;max-width:none;padding:0;border:0;border-radius:0;background:transparent;pointer-events:none;text-align:center}.game-ui.playing h1,.game-ui.playing .game-ui__controls{display:none}.game-ui.playing .game-ui__weapon-list{position:absolute;left:50%;top:4.4rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:.35rem;width:min(92vw,44rem);pointer-events:none}.game-ui.playing .game-ui__weapon-list button{padding:.3rem .5rem;border:1px solid #444;background:#000b;font-size:.7rem;letter-spacing:.04em}.game-ui.playing .game-ui__weapon-list button.active{border-color:#fff;background:#fff;color:#000}.game-ui.playing .game-ui__weapons{position:absolute;left:50%;bottom:1.25rem;transform:translateX(-50%);pointer-events:auto}.game-ui.playing .game-ui__weapons button{background:#000c}.game-ui.playing p{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap}.game-ui.playing p:first-of-type{top:1rem}.game-ui.playing p:nth-of-type(2){top:2.65rem}.game-ui.playing .health-bar{position:absolute;top:1rem;width:min(30vw,16rem);height:1.4rem;border:1px solid #fff;background:#000;text-align:center;font-size:.8rem;line-height:1.3rem;overflow:hidden}.game-ui.playing .health-bar::before{content:"";position:absolute;inset:0;width:var(--health);background:#fff;z-index:0}.game-ui.playing .health-bar{color:#fff}.game-ui.playing .health-bar--player{left:1rem;text-align:center}.game-ui.playing .health-bar--opponent{right:1rem;text-align:center}.game-ui.playing .health-bar::after{content:attr(data-label);position:absolute;inset:0;z-index:1}.game-ui.playing .health-bar{z-index:2}.game-ui h1,.game-ui p{margin:0}.game-ui__controls,.game-ui__weapons{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center}.game-ui button{min-width:5.5rem;padding:.6rem .8rem;border:1px solid #666;border-radius:.5rem;background:#000;color:#fff;font:inherit;cursor:pointer;touch-action:manipulation}.game-ui button:hover,.game-ui button:focus-visible{background:#222}.health-label{position:relative;z-index:2;display:block;line-height:1.3rem;white-space:nowrap;text-align:center;font-weight:700}.game-ui.playing .health-bar::before{transition:width .08s linear;}.game-ui__arena-list{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;width:min(44rem,calc(100vw - 2rem))}.game-ui__arena-list button{min-width:0;padding:.45rem .72rem;border-radius:999px;border-color:#444;background:#090909;font-size:.72rem}.game-ui__arena-list button.active{background:#1a1a1a;color:#fff;border-color:#ddd;box-shadow:inset 0 0 0 1px #ffffff18}.game-ui__arena-list button.active::before{content:"✓";margin-inline-end:.35rem;font-weight:900}.game-ui.playing .game-ui__arena-list{display:none}.game-ui__help{width:min(22rem,calc(100vw - 3rem));padding:.8rem 1rem;border:1px solid #444;background:#000;color:#fff;text-align:left;font-size:.8rem;line-height:1.5}.game-ui__help strong{display:block;text-align:center;font-size:.95rem}.game-ui.playing .game-ui__help{display:none}.game-ui.playing button[data-help]{display:none}.game-ui:not(.playing) .game-ui__bow-panel{display:none!important}.game-ui.playing .game-ui__bow-panel{display:grid}.game-ui .game-ui__bow-panel[hidden]{display:none!important}
-.game-ui__bow-panel{display:grid;gap:.4rem;width:min(22rem,80vw);padding:.55rem .7rem;border:1px solid #444;background:#000b;pointer-events:none}.game-ui__bow-panel strong{font-size:.7rem;letter-spacing:.12em}.game-ui__bow-meter{position:relative;height:.45rem;border:1px solid #666;background:#000;overflow:hidden}.game-ui__bow-meter span{display:block;height:100%;width:0;background:#fff;transition:width .05s linear}.game-ui__bow-value{font-size:.65rem;letter-spacing:.08em}.game-ui.playing .game-ui__bow-panel{position:absolute;left:50%;bottom:1rem;transform:translateX(-50%);width:min(24rem,88vw);z-index:4}.game-ui.game-over .game-ui__bow-panel{display:none}.game-ui__mobile-controls{display:none;position:absolute;inset:0;z-index:20;pointer-events:none}.game-ui__joystick{position:absolute;left:1.1rem;bottom:max(1.1rem,env(safe-area-inset-bottom));width:112px;height:112px;border:2px solid #777;border-radius:50%;background:#000a;pointer-events:auto;touch-action:none}.game-ui__joystick::after{content:"";position:absolute;inset:18px;border:1px solid #444;border-radius:50%}.game-ui__joystick-thumb{position:absolute;left:50%;top:50%;width:54px;height:54px;border:2px solid #fff;border-radius:50%;background:#222e;transform:translate(-50%,-50%);pointer-events:none}.game-ui__mobile-button{position:absolute;width:78px;height:78px;min-width:0;padding:0;border:2px solid #777;border-radius:50%;background:#000b;color:#fff;font-weight:800;font-size:.72rem;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none}.game-ui__mobile-button--attack{right:1.1rem;bottom:max(1.1rem,env(safe-area-inset-bottom));border-color:#fff}.game-ui.playing .game-ui__mobile-controls{display:block}@media (pointer:coarse){.game-ui.playing .game-ui__weapon-list{top:3.5rem;width:min(82vw,32rem);font-size:.65rem}.game-ui.playing .game-ui__mobile-controls{display:block}.game-ui.playing p:first-of-type{top:.45rem}.game-ui.playing p:nth-of-type(2){top:2rem}}@media (pointer:fine){.game-ui__mobile-controls{display:none!important}}@media (pointer:coarse) and (max-width:900px){.game-ui.playing[data-arena="fortress"] .game-ui__weapon-list{display:none}}
-.game-ui:not(.playing){max-height:calc(100vh - 2rem);overflow:auto}
-.game-ui__upgrade-panel{display:grid;gap:.45rem;width:min(40rem,calc(100vw - 3rem));padding:.7rem;border:1px solid #444;border-radius:.55rem;background:#050505}
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#000;color:#fff}*{box-sizing:border-box}html,body,#app{width:100%;height:100%;margin:0;background:#000;overflow:hidden}body{touch-action:none;overscroll-behavior:none}#game-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}#ui-root{position:absolute;inset:0;z-index:2;display:grid;place-items:center;pointer-events:none}.game-ui{display:grid;gap:.65rem;justify-items:center;min-width:min(24rem,calc(100cqw - 2rem));max-width:calc(100cqw - 2rem);padding:1rem;border:1px solid #444;border-radius:.75rem;background:#000e;pointer-events:auto;text-align:center}.game-ui.playing{position:absolute;inset:0;display:block;min-width:0;max-width:none;padding:0;border:0;border-radius:0;background:transparent;pointer-events:none;text-align:center}.game-ui.playing h1,.game-ui.playing .game-ui__controls{display:none}.game-ui.playing .game-ui__weapon-list{position:absolute;left:50%;top:4.4rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:.35rem;width:min(92cqw,44rem);pointer-events:none}.game-ui.playing .game-ui__weapon-list button{padding:.3rem .5rem;border:1px solid #444;background:#000b;font-size:.7rem;letter-spacing:.04em}.game-ui.playing .game-ui__weapon-list button.active{border-color:#fff;background:#fff;color:#000}.game-ui.playing .game-ui__weapons{position:absolute;left:50%;bottom:1.25rem;transform:translateX(-50%);pointer-events:auto}.game-ui.playing .game-ui__weapons button{background:#000c}.game-ui.playing p{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap}.game-ui.playing p:first-of-type{top:1rem}.game-ui.playing p:nth-of-type(2){top:2.65rem}.game-ui.playing .health-bar{position:absolute;top:1rem;width:min(30cqw,16rem);height:1.4rem;border:1px solid #fff;background:#000;text-align:center;font-size:.8rem;line-height:1.3rem;overflow:hidden}.game-ui.playing .health-bar::before{content:"";position:absolute;inset:0;width:var(--health);background:#fff;z-index:0}.game-ui.playing .health-bar{color:#fff}.game-ui.playing .health-bar--player{left:1rem;text-align:center}.game-ui.playing .health-bar--opponent{right:1rem;text-align:center}.game-ui.playing .health-bar::after{content:attr(data-label);position:absolute;inset:0;z-index:1}.game-ui.playing .health-bar{z-index:2}.game-ui h1,.game-ui p{margin:0}.game-ui__controls,.game-ui__weapons{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center}.game-ui button{min-width:5.5rem;padding:.6rem .8rem;border:1px solid #666;border-radius:.5rem;background:#000;color:#fff;font:inherit;cursor:pointer;touch-action:manipulation}.game-ui button:hover,.game-ui button:focus-visible{background:#222}.health-label{position:relative;z-index:2;display:block;line-height:1.3rem;white-space:nowrap;text-align:center;font-weight:700}.game-ui.playing .health-bar::before{transition:width .08s linear;}.game-ui__arena-list{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;width:min(44rem,calc(100cqw - 2rem))}.game-ui__arena-list button{min-width:0;padding:.45rem .72rem;border-radius:999px;border-color:#444;background:#090909;font-size:.72rem}.game-ui__arena-list button.active{background:#1a1a1a;color:#fff;border-color:#ddd;box-shadow:inset 0 0 0 1px #ffffff18}.game-ui__arena-list button.active::before{content:"✓";margin-inline-end:.35rem;font-weight:900}.game-ui.playing .game-ui__arena-list{display:none}.game-ui__help{width:min(22rem,calc(100cqw - 3rem));padding:.8rem 1rem;border:1px solid #444;background:#000;color:#fff;text-align:left;font-size:.8rem;line-height:1.5}.game-ui__help strong{display:block;text-align:center;font-size:.95rem}.game-ui.playing .game-ui__help{display:none}.game-ui.playing button[data-help]{display:none}.game-ui:not(.playing) .game-ui__bow-panel{display:none!important}.game-ui.playing .game-ui__bow-panel{display:grid}.game-ui .game-ui__bow-panel[hidden]{display:none!important}
+.game-ui__bow-panel{display:grid;gap:.4rem;width:min(22rem,80cqw);padding:.55rem .7rem;border:1px solid #444;background:#000b;pointer-events:none}.game-ui__bow-panel strong{font-size:.7rem;letter-spacing:.12em}.game-ui__bow-meter{position:relative;height:.45rem;border:1px solid #666;background:#000;overflow:hidden}.game-ui__bow-meter span{display:block;height:100%;width:0;background:#fff;transition:width .05s linear}.game-ui__bow-value{font-size:.65rem;letter-spacing:.08em}.game-ui.playing .game-ui__bow-panel{position:absolute;left:50%;bottom:1rem;transform:translateX(-50%);width:min(24rem,88cqw);z-index:4}.game-ui.game-over .game-ui__bow-panel{display:none}.game-ui__mobile-controls{display:none;position:absolute;inset:0;z-index:20;pointer-events:none}.game-ui__joystick{position:absolute;left:1.1rem;bottom:max(1.1rem,env(safe-area-inset-bottom));width:112px;height:112px;border:2px solid #777;border-radius:50%;background:#000a;pointer-events:auto;touch-action:none}.game-ui__joystick::after{content:"";position:absolute;inset:18px;border:1px solid #444;border-radius:50%}.game-ui__joystick-thumb{position:absolute;left:50%;top:50%;width:54px;height:54px;border:2px solid #fff;border-radius:50%;background:#222e;transform:translate(-50%,-50%);pointer-events:none}.game-ui__mobile-button{position:absolute;width:78px;height:78px;min-width:0;padding:0;border:2px solid #777;border-radius:50%;background:#000b;color:#fff;font-weight:800;font-size:.72rem;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none}.game-ui__mobile-button--attack{right:1.1rem;bottom:max(1.1rem,env(safe-area-inset-bottom));border-color:#fff}.game-ui.playing .game-ui__mobile-controls{display:block}@media (pointer:coarse){.game-ui.playing .game-ui__weapon-list{top:3.5rem;width:min(82cqw,32rem);font-size:.65rem}.game-ui.playing .game-ui__mobile-controls{display:block}.game-ui.playing p:first-of-type{top:.45rem}.game-ui.playing p:nth-of-type(2){top:2rem}}@media (pointer:fine){.game-ui__mobile-controls{display:none!important}}@media (orientation: landscape) and (pointer:coarse) and (max-width:900px), (orientation: portrait) and (pointer:coarse) and (max-height:900px){.game-ui.playing[data-arena="fortress"] .game-ui__weapon-list{display:none}}
+.game-ui:not(.playing){max-height:calc(100cqh - 2rem);overflow:auto}
+.game-ui__upgrade-panel{display:grid;gap:.45rem;width:min(40rem,calc(100cqw - 3rem));padding:.7rem;border:1px solid #444;border-radius:.55rem;background:#050505}
 .game-ui__upgrade-panel[hidden]{display:none}
 .game-ui__upgrade-panel>strong{font-size:.78rem;letter-spacing:.12em}
 .game-ui__upgrade-points{font-weight:800;font-size:.78rem;letter-spacing:.08em}
@@ -15,7 +15,7 @@
 .game-ui__upgrade-grid button:disabled{cursor:default;opacity:.62}
 .game-ui__upgrade-grid button.upgraded:disabled{opacity:1}
 .game-ui.playing .game-ui__upgrade-panel{display:none!important}
-@media (max-width:640px){
+@media (orientation: landscape) and (max-width:640px), (orientation: portrait) and (max-height:640px){
  .game-ui__upgrade-grid{grid-template-columns:1fr 1fr}
  .game-ui__upgrade-grid button{padding:.42rem .48rem}
  .game-ui__upgrade-grid small{display:none}
@@ -23,32 +23,31 @@
 }
 
 
-.game-ui__section-title{width:min(44rem,calc(100vw - 2rem));margin-top:.15rem;color:#aaa;font-size:.63rem;font-weight:800;letter-spacing:.15em;text-align:center}
-.game-ui__mode-list{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;width:min(44rem,calc(100vw - 2rem))}
+.game-ui__section-title{width:min(44rem,calc(100cqw - 2rem));margin-top:.15rem;color:#aaa;font-size:.63rem;font-weight:800;letter-spacing:.15em;text-align:center}
+.game-ui__mode-list{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;width:min(44rem,calc(100cqw - 2rem))}
 .game-ui__mode-list button{min-width:0;padding:.45rem .72rem;border-radius:999px;border-color:#444;background:#090909;font-size:.72rem;letter-spacing:.02em}
 .game-ui__mode-list button.active{background:#1a1a1a;color:#fff;border-color:#ddd;box-shadow:inset 0 0 0 1px #ffffff18}
 .game-ui__mode-list button.active::before{content:"✓";margin-inline-end:.35rem;font-weight:900}
 .game-ui.playing .game-ui__mode-list{display:none}
-.game-ui__rotate-hint{display:none}
 
-@supports (height:100dvh){
- html,body,#app{height:100dvh}
- .game-ui:not(.playing){max-height:calc(100dvh - 2rem)}
+@supports (height:100cqh){
+ html,body,#app{height:100cqh}
+ .game-ui:not(.playing){max-height:calc(100cqh - 2rem)}
 }
 
 @media (pointer:coarse){
  .game-ui__joystick{
   left:max(1rem,env(safe-area-inset-left));
   bottom:max(1rem,env(safe-area-inset-bottom));
-  width:clamp(84px,22vmin,112px);
-  height:clamp(84px,22vmin,112px);
+  width:clamp(84px,22cqmin,112px);
+  height:clamp(84px,22cqmin,112px);
   opacity:.46;
   transition:opacity .16s ease,transform .16s ease;
  }
  .game-ui__joystick.active{opacity:.94;transform:scale(1.03)}
- .game-ui__joystick::after{inset:clamp(13px,3.6vmin,18px)}
- .game-ui__joystick-thumb{width:clamp(42px,10.5vmin,54px);height:clamp(42px,10.5vmin,54px)}
- .game-ui__mobile-button{width:clamp(60px,15vmin,78px);height:clamp(60px,15vmin,78px);opacity:.72;transition:opacity .12s ease,transform .12s ease}
+ .game-ui__joystick::after{inset:clamp(13px,3.6cqmin,18px)}
+ .game-ui__joystick-thumb{width:clamp(42px,10.5cqmin,54px);height:clamp(42px,10.5cqmin,54px)}
+ .game-ui__mobile-button{width:clamp(60px,15cqmin,78px);height:clamp(60px,15cqmin,78px);opacity:.72;transition:opacity .12s ease,transform .12s ease}
  .game-ui__mobile-button:active{opacity:1;transform:scale(.96)}
  .game-ui__mobile-button--attack{right:max(1rem,env(safe-area-inset-right));bottom:max(1rem,env(safe-area-inset-bottom))}
  .game-ui.playing .health-bar{top:max(1rem,env(safe-area-inset-top))}
@@ -58,34 +57,14 @@
  .game-ui.playing p:nth-of-type(2){top:calc(max(.45rem,env(safe-area-inset-top)) + 1.55rem)}
  .game-ui.playing .game-ui__weapon-list{top:calc(max(.45rem,env(safe-area-inset-top)) + 3rem)}
  .game-ui.playing .game-ui__bow-panel{
-  bottom:calc(max(1rem,env(safe-area-inset-bottom)) + clamp(5.4rem,19vmin,7rem));
-  width:min(58vw,15rem);
+  bottom:calc(max(1rem,env(safe-area-inset-bottom)) + clamp(5.4rem,19cqmin,7rem));
+  width:min(58cqw,15rem);
  }
 }
 
-@media (pointer:coarse) and (max-width:900px){
+@media (orientation: landscape) and (pointer:coarse) and (max-width:900px), (orientation: portrait) and (pointer:coarse) and (max-height:900px){
  .game-ui.playing[data-arena="fortress"]:not([data-mode="duel"]) .game-ui__weapon-list{display:flex}
  .game-ui.playing[data-mode="missile-duel"] .game-ui__weapon-list{display:none}
-}
-
-@media (pointer:coarse) and (orientation:portrait) and (max-width:600px) and (max-height:900px){
- .game-ui.playing .game-ui__rotate-hint{
-  display:block;
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  z-index:30;
-  width:min(78vw,18rem);
-  padding:.65rem .8rem;
-  border:1px solid #777;
-  border-radius:.55rem;
-  background:#000e;
-  font-size:.72rem;
-  font-weight:800;
-  letter-spacing:.08em;
-  pointer-events:none;
- }
 }
 
 .game-ui__language{display:flex;align-items:center;justify-content:center;gap:.45rem;font-size:.72rem}
@@ -93,7 +72,7 @@
 .game-ui.playing .game-ui__language{display:none}.health-label{direction:ltr;unicode-bidi:isolate}
 html[dir="rtl"] .game-ui__help,html[dir="rtl"] .game-ui__upgrade-grid button{text-align:right}
 
-@media (max-width:640px){.game-ui__arena-list,.game-ui__mode-list{gap:.32rem}.game-ui__arena-list button,.game-ui__mode-list button{padding:.4rem .62rem;font-size:.68rem}.game-ui__section-title{font-size:.58rem;letter-spacing:.12em}}
+@media (orientation: landscape) and (max-width:640px), (orientation: portrait) and (max-height:640px){.game-ui__arena-list,.game-ui__mode-list{gap:.32rem}.game-ui__arena-list button,.game-ui__mode-list button{padding:.4rem .62rem;font-size:.68rem}.game-ui__section-title{font-size:.58rem;letter-spacing:.12em}}
 
 
 /* Native/mobile safe-area and compact touch HUD overrides. Capacitor 8 SystemBars
@@ -106,8 +85,8 @@ html[dir="rtl"] .game-ui__help,html[dir="rtl"] .game-ui__upgrade-grid button{tex
 }
 
 .game-ui:not(.playing){
- max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 2rem);
- max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 2rem);
+ max-width:calc(100cqw - var(--safe-left) - var(--safe-right) - 2rem);
+ max-height:calc(100cqh - var(--safe-top) - var(--safe-bottom) - 2rem);
 }
 
 @media (pointer:coarse){
@@ -126,18 +105,18 @@ html[dir="rtl"] .game-ui__help,html[dir="rtl"] .game-ui__upgrade-grid button{tex
  .game-ui.playing p:nth-of-type(2){top:calc(var(--safe-top) + 2rem)}
  .game-ui.playing .game-ui__weapon-list{top:calc(var(--safe-top) + 3rem)}
  .game-ui.playing .game-ui__bow-panel{
-  bottom:calc(var(--safe-bottom) + clamp(5.4rem,19vmin,7rem));
+  bottom:calc(var(--safe-bottom) + clamp(5.4rem,19cqmin,7rem));
  }
 }
 
-@media (pointer:coarse) and (max-width:900px){
+@media (orientation: landscape) and (pointer:coarse) and (max-width:900px), (orientation: portrait) and (pointer:coarse) and (max-height:900px){
 }
 
 
 /* Google Play privacy surface: full local copy remains available without network. */
 .game-ui__privacy{
- width:min(34rem,calc(100vw - 3rem));
- max-height:min(62vh,30rem);
+ width:min(34rem,calc(100cqw - 3rem));
+ max-height:min(62cqh,30rem);
  overflow:auto;
  padding:.9rem 1rem;
  border:1px solid #555;
@@ -168,14 +147,14 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
  .game-ui.playing .game-ui__mobile-weapon-switcher:not([hidden]){
   position:absolute;
   left:calc(var(--safe-left) + 1rem);
-  bottom:calc(var(--safe-bottom) + 1rem + clamp(84px,22vmin,112px) + .5rem);
+  bottom:calc(var(--safe-bottom) + 1rem + clamp(84px,22cqmin,112px) + .5rem);
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
   grid-template-rows:auto 44px;
   align-items:center;
   gap:.25rem;
-  width:clamp(8.6rem,28vw,10.5rem);
-  max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 2rem);
+  width:clamp(8.6rem,28cqw,10.5rem);
+  max-width:calc(100cqw - var(--safe-left) - var(--safe-right) - 2rem);
   padding:.3rem;
   border:1px solid #898989;
   border-radius:.85rem;
@@ -257,7 +236,7 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
   left:auto;
   right:calc(var(--safe-right) + .75rem);
   transform:none;
-  width:min(41vw,12rem);
+  width:min(41cqw,12rem);
  }
 }
 
@@ -272,10 +251,10 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
 .game-ui:not(.playing){
  display:block;
  position:relative;
- width:min(32rem,calc(100vw - var(--safe-left) - var(--safe-right) - 1rem));
+ width:min(32rem,calc(100cqw - var(--safe-left) - var(--safe-right) - 1rem));
  min-width:0;
- max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 1rem);
- max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 1rem);
+ max-width:calc(100cqw - var(--safe-left) - var(--safe-right) - 1rem);
+ max-height:calc(100cqh - var(--safe-top) - var(--safe-bottom) - 1rem);
  padding:0;
  overflow:visible;
  border:1px solid #545454;
@@ -287,10 +266,10 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
 .game-ui.playing .game-ui__menu{display:none!important}
 .game-ui__menu{
  display:grid;
- gap:clamp(.35rem,1.5vh,.75rem);
+ gap:clamp(.35rem,1.5cqh,.75rem);
  width:100%;
  min-width:0;
- padding:clamp(.6rem,2vh,1rem);
+ padding:clamp(.6rem,2cqh,1rem);
  text-align:center;
 }
 .game-ui__menu-header{
@@ -303,7 +282,7 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
 .game-ui__menu-header h1{
  min-width:0;
  margin:0;
- font-size:clamp(1.05rem,2.7vw,1.5rem);
+ font-size:clamp(1.05rem,2.7cqw,1.5rem);
  line-height:1.15;
  letter-spacing:.04em;
  text-align:start;
@@ -456,15 +435,15 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
  top:50%;
  transform:translate(-50%,-50%);
  z-index:100;
- width:min(34rem,calc(100vw - var(--safe-left) - var(--safe-right) - 1.5rem));
- max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 1.5rem);
+ width:min(34rem,calc(100cqw - var(--safe-left) - var(--safe-right) - 1.5rem));
+ max-height:calc(100cqh - var(--safe-top) - var(--safe-bottom) - 1.5rem);
  padding:.85rem;
  overflow-y:auto;
  overscroll-behavior:contain;
  border:1px solid #777;
  border-radius:.7rem;
  background:#090a0efb;
- box-shadow:0 0 0 100vmax #000b,0 14px 35px #000;
+ box-shadow:0 0 0 100cqmax #000b,0 14px 35px #000;
  pointer-events:auto;
  text-align:start;
 }
@@ -480,7 +459,7 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
  font-weight:700;
 }
 .game-ui__help-content{line-height:1.6}
-@media (max-height:520px){
+@media (orientation: landscape) and (max-height:520px), (orientation: portrait) and (max-width:520px){
  .game-ui__menu{gap:.35rem;padding:.55rem .7rem}
  .game-ui__menu-header h1{font-size:1rem}
  .game-ui__menu-header .game-ui__language button{min-height:38px;padding:.2rem .35rem}
@@ -492,7 +471,7 @@ html[dir="rtl"] .game-ui__privacy{text-align:right}
  .game-ui:not(.playing) .game-ui__controls button:not([hidden]){min-height:42px;padding:.35rem}
  .game-ui__menu-links button{min-height:40px;padding:.35rem .45rem}
 }
-@media (max-height:360px){
+@media (orientation: landscape) and (max-height:360px), (orientation: portrait) and (max-width:360px){
  .game-ui__menu{gap:.25rem;padding:.35rem .55rem}
  .game-ui__menu-header .game-ui__language span{display:none}
  .game-ui__menu-header h1{font-size:.9rem}
@@ -590,17 +569,7 @@ html[dir="rtl"] .opening-intro__skip{
 
 /* Three equal-size, touch-friendly pre-fight selectors: mode, arena and starting weapon. */
 .game-ui__menu-settings{grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem}
-@media(max-width:420px){.game-ui__menu-select{font-size:.75rem;padding-inline:.35rem}}
-
-/* Block menus, intro and gameplay whenever the viewport is portrait. */
-#orientation-guard{display:none;position:fixed;inset:0;z-index:20000;align-items:center;justify-content:center;overflow:auto;padding:max(1.5rem,env(safe-area-inset-top)) max(1.5rem,env(safe-area-inset-right)) max(1.5rem,env(safe-area-inset-bottom)) max(1.5rem,env(safe-area-inset-left));background:#050505;color:#fff;text-align:center;pointer-events:auto;touch-action:manipulation}
-.orientation-guard__content{max-width:26rem}
-.orientation-guard__icon{font-size:4.5rem;line-height:1.2;transform:rotate(90deg);margin-bottom:1rem}
-#orientation-guard h1{margin:.35rem 0;font-size:clamp(1.3rem,5vw,2rem)}
-#orientation-guard p{margin:.6rem 0 1.25rem;line-height:1.7}
-#orientation-guard button{min-height:44px;padding:.65rem 1rem;border:1px solid #eee;border-radius:.6rem;background:#222;color:#fff;font:inherit;cursor:pointer}
-#orientation-guard button[hidden]{display:none}
-@media (orientation:portrait){#orientation-guard{display:flex}}
+@media (orientation: landscape) and (max-width:420px), (orientation: portrait) and (max-height:420px){.game-ui__menu-select{font-size:.75rem;padding-inline:.35rem}}
 
 /* Issue #50: touch missile aiming replaces the on-screen sliders. */
 
@@ -610,7 +579,7 @@ html[dir="rtl"] .opening-intro__skip{
 
 
 }
-@media (pointer:coarse) and (max-height:360px){
+@media (orientation: landscape) and (pointer:coarse) and (max-height:360px), (orientation: portrait) and (pointer:coarse) and (max-width:360px){
 
 
 }
@@ -624,7 +593,7 @@ html[dir="rtl"] .opening-intro__skip{
  border-color:#777;
 }
 .game-ui__menu-links .game-ui__combat-toggle[aria-pressed="false"]{color:#aaa;border-color:#444}
-@media (max-height:520px){
+@media (orientation: landscape) and (max-height:520px), (orientation: portrait) and (max-width:520px){
  .game-ui__menu-links .game-ui__combat-toggle{min-height:32px;padding:.12rem .3rem;font-size:.63rem}
 }
 
@@ -641,7 +610,7 @@ html[dir="rtl"] .opening-intro__skip{
  padding:.1rem .18rem;border-radius:.4rem;font-size:.61rem;font-weight:650;letter-spacing:0;
  color:#bbc0cc;background:#12141a;border-color:#484c55;
 }
-@media (max-height:520px){
+@media (orientation: landscape) and (max-height:520px), (orientation: portrait) and (max-width:520px){
  .game-ui:not(.playing) .game-ui__menu-header .game-ui__language button{min-height:26px;height:26px}
 }
 /* One visible update control; no extra update copy in the menu. */
@@ -781,7 +750,7 @@ html[dir="rtl"] .opening-intro__skip{
    scroll. The dialog overlays remain siblings outside this scroll container. */
 body{touch-action:pan-y}
 .game-ui:not(.playing) .game-ui__menu{
- max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 1rem);
+ max-height:calc(100cqh - var(--safe-top) - var(--safe-bottom) - 1rem);
  overflow-x:hidden;
  overflow-y:auto;
  overscroll-behavior:contain;
@@ -856,7 +825,7 @@ body{touch-action:pan-y}
  overflow-wrap:anywhere;
  line-height:1.15;
  font-weight:800;
- font-size:clamp(.7rem,1.8vmin,.85rem);
+ font-size:clamp(.7rem,1.8cqmin,.85rem);
 }
 
 /* Language direction affects the text, never the physical HP positions. */
@@ -871,7 +840,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  text-shadow:none;
  box-shadow:0 0 0 1px #ffffff50;
 }
-@media (pointer:coarse) and (max-height:360px){
+@media (orientation: landscape) and (pointer:coarse) and (max-height:360px), (orientation: portrait) and (pointer:coarse) and (max-width:360px){
  .game-ui.playing .game-ui__top-hud{
   top:calc(var(--safe-top) + .4rem);
   gap:.15rem .35rem;
@@ -918,7 +887,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
 .game-ui .game-ui__run-new{background:#252e42;border-color:#92a0ba}
 .game-ui .game-ui__run-leave{background:#151c29;border-color:#53627b}
 .game-ui .game-ui__run-continue:disabled{opacity:.45;cursor:default}
-@media (max-height:360px){
+@media (orientation: landscape) and (max-height:360px), (orientation: portrait) and (max-width:360px){
  .game-ui__run-panel{gap:.18rem;padding:.32rem .45rem}
  .game-ui__run-medals{font-size:.57rem}
  .game-ui .game-ui__run-controls button{min-height:40px}
@@ -931,29 +900,29 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
   position:absolute;inset:0;z-index:22;display:block;pointer-events:none;
  }
  .game-ui.playing[data-players="2"] .game-ui__mobile-button--attack{
-  left:calc(var(--safe-left) + 1rem + clamp(84px,22vmin,112px) + .5rem);
+  left:calc(var(--safe-left) + 1rem + clamp(84px,22cqmin,112px) + .5rem);
   right:auto;
  }
  .game-ui.playing[data-players="2"] .game-ui__p2-joystick{
   position:absolute;right:calc(var(--safe-right) + 1rem);
   bottom:calc(var(--safe-bottom) + 1rem);
-  width:clamp(84px,22vmin,112px);height:clamp(84px,22vmin,112px);
+  width:clamp(84px,22cqmin,112px);height:clamp(84px,22cqmin,112px);
   border:2px solid #9eb5e2;border-radius:50%;
   background:#0b1722c9;pointer-events:auto;touch-action:none;
   opacity:.78;
  }
  .game-ui.playing[data-players="2"] .game-ui__p2-joystick.active{opacity:1}
  .game-ui__p2-thumb{
-  position:absolute;left:50%;top:50%;width:clamp(42px,10.5vmin,54px);height:clamp(42px,10.5vmin,54px);
+  position:absolute;left:50%;top:50%;width:clamp(42px,10.5cqmin,54px);height:clamp(42px,10.5cqmin,54px);
   border:2px solid #b9d1f5;border-radius:50%;background:#203048e8;
   transform:translate(-50%,-50%);pointer-events:none;
  }
  .game-ui.playing[data-players="2"] .game-ui__p2-attack{
   position:absolute;
-  right:calc(var(--safe-right) + 1rem + clamp(84px,22vmin,112px) + .5rem);
+  right:calc(var(--safe-right) + 1rem + clamp(84px,22cqmin,112px) + .5rem);
   bottom:calc(var(--safe-bottom) + 1rem);
   display:grid;place-items:center;
-  width:clamp(60px,15vmin,78px);height:clamp(60px,15vmin,78px);
+  width:clamp(60px,15cqmin,78px);height:clamp(60px,15cqmin,78px);
   min-width:60px;padding:0;border:2px solid #b9d1f5;border-radius:50%;
   background:#15243ddd;color:#fff;font-weight:800;font-size:.72rem;
   pointer-events:auto;touch-action:none;user-select:none;
@@ -961,8 +930,8 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  .game-ui.playing[data-players="2"] .game-ui__p2-weapons{
   position:absolute;
   right:calc(var(--safe-right) + 1rem);
-  bottom:calc(var(--safe-bottom) + 1.5rem + clamp(84px,22vmin,112px));
-  width:clamp(160px,32vw,210px);
+  bottom:calc(var(--safe-bottom) + 1.5rem + clamp(84px,22cqmin,112px));
+  width:clamp(160px,32cqw,210px);
   display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;
   gap:.15rem;border:1px solid #a6bde0;border-radius:.5rem;background:#0c1825ee;
   color:#f5faff;pointer-events:auto;direction:ltr;
@@ -973,7 +942,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  }
  .game-ui__p2-weapons span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.65rem;font-weight:800}
  .game-ui.playing[data-players="2"] .game-ui__mobile-weapon-switcher:not([hidden]){
-  width:clamp(160px,32vw,210px);
+  width:clamp(160px,32cqw,210px);
  }
 }
 @media (pointer:fine){
@@ -1007,7 +976,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  --menu-muted:#a9b5c7;
  --menu-gold:#ffd779;
  --menu-blue:#78d9f2;
- width:min(38rem,calc(100vw - var(--safe-left) - var(--safe-right) - 1rem));
+ width:min(38rem,calc(100cqw - var(--safe-left) - var(--safe-right) - 1rem));
  border:1px solid #768195;
  border-radius:1.1rem;
  background:linear-gradient(145deg,#172135f4 0%,#0d1220f5 46%,#0b1020f4 100%);
@@ -1015,8 +984,8 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  color:var(--menu-ink);
 }
 .game-ui:not(.playing) .game-ui__menu{
- gap:clamp(.45rem,1.6vh,.75rem);
- padding:clamp(.7rem,2.1vh,1.1rem);
+ gap:clamp(.45rem,1.6cqh,.75rem);
+ padding:clamp(.7rem,2.1cqh,1.1rem);
 }
 .game-ui:not(.playing) .game-ui__menu-header{
  padding-bottom:.15rem;
@@ -1024,7 +993,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
 }
 .game-ui:not(.playing) .game-ui__menu-header h1{
  color:#fff6e2;
- font-size:clamp(1.13rem,2.8vw,1.55rem);
+ font-size:clamp(1.13rem,2.8cqw,1.55rem);
  font-weight:900;
  line-height:1.15;
  letter-spacing:.025em;
@@ -1247,13 +1216,13 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  border-color:#43839a;
  color:#ceeef9;
 }
-@media (max-width:520px){
+@media (orientation: landscape) and (max-width:520px), (orientation: portrait) and (max-height:520px){
  .game-ui:not(.playing) .game-ui__menu-settings{grid-template-columns:repeat(2,minmax(0,1fr))}
  .game-ui:not(.playing) .game-ui__menu-field:first-child{grid-column:1/-1}
  .game-ui .game-ui__quick-mode{padding:.5rem .6rem;min-height:50px;font-size:.7rem}
  .game-ui .game-ui__quick-mode::after{inset-inline-end:.4rem;font-size:.9rem}
 }
-@media (max-height:520px){
+@media (orientation: landscape) and (max-height:520px), (orientation: portrait) and (max-width:520px){
  .game-ui:not(.playing) .game-ui__menu{gap:.36rem;padding:.52rem .7rem}
  .game-ui__menu-setup{gap:.32rem}
  .game-ui .game-ui__quick-mode{min-height:44px;padding:.36rem .65rem}
@@ -1262,7 +1231,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  .game-ui:not(.playing) .game-ui__controls button[data-action="start"]:not([hidden]),
  .game-ui:not(.playing) .game-ui__controls button[data-action="resume"]:not([hidden]){min-height:46px}
 }
-@media (max-height:360px){
+@media (orientation: landscape) and (max-height:360px), (orientation: portrait) and (max-width:360px){
  .game-ui__menu-lead{font-size:.58rem}
  .game-ui__menu-setup-title{font-size:.58rem}
  .game-ui .game-ui__quick-mode{min-height:40px}
@@ -1289,7 +1258,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
 }
 .game-ui__menu-mode-panel,.game-ui__menu-arena-panel{
  display:grid;
- gap:clamp(.45rem,1.35vh,.75rem);
+ gap:clamp(.45rem,1.35cqh,.75rem);
  min-width:0;
  text-align:start;
 }
@@ -1321,7 +1290,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  background:linear-gradient(125deg,#1a2a40,#111d30);
  border:2px solid #586982;
  border-radius:.7rem;
- font-size:clamp(.73rem,2vmin,.88rem);
+ font-size:clamp(.73rem,2cqmin,.88rem);
  font-weight:800;
  line-height:1.35;
  overflow-wrap:anywhere;
@@ -1356,7 +1325,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  border-radius:999px;
  background:#263547;
  color:#f0f5ff;
- font-size:clamp(.58rem,1.5vmin,.68rem);
+ font-size:clamp(.58rem,1.5cqmin,.68rem);
  font-weight:850;
  line-height:1.3;
  white-space:nowrap;
@@ -1473,17 +1442,17 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  font-size:.82rem;font-weight:800;
  box-shadow:none;
 }
-@media (max-width:620px){
+@media (orientation: landscape) and (max-width:620px), (orientation: portrait) and (max-height:620px){
  .game-ui__arena-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
  .game-ui__weapon-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
-@media (max-width:420px){
+@media (orientation: landscape) and (max-width:420px), (orientation: portrait) and (max-height:420px){
  .game-ui:not(.playing) .game-ui__menu-settings.game-ui__mode-grid{grid-template-columns:1fr}
  .game-ui__arena-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .game-ui .game-ui__arena-card{min-height:76px}
  .game-ui__weapon-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-@media (max-height:360px){
+@media (orientation: landscape) and (max-height:360px), (orientation: portrait) and (max-width:360px){
  .game-ui__menu-mode-panel,.game-ui__menu-arena-panel{gap:.36rem}
  .game-ui__menu-progress{font-size:.58rem;padding:.22rem .45rem}
  .game-ui .game-ui__mode-card{min-height:43px;padding:.36rem .55rem;font-size:.7rem}
@@ -1517,8 +1486,8 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  grid-column:1/-1;
  min-height:44px;
 }
-@media(max-width:420px){.game-ui__upgrade-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-height:360px){.game-ui .game-ui__upgrade-card{min-height:40px;padding:.3rem;font-size:.63rem}}
+@media (orientation: landscape) and (max-width:420px), (orientation: portrait) and (max-height:420px){.game-ui__upgrade-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (orientation: landscape) and (max-height:360px), (orientation: portrait) and (max-width:360px){.game-ui .game-ui__upgrade-card{min-height:40px;padding:.3rem;font-size:.63rem}}
 
 
 /* Menu wizard layout correction (reference: Persian desktop screenshot).
@@ -1664,7 +1633,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  background:#ffd779;
  border:2px solid #fff0bb;
  border-radius:.72rem;
- font-size:clamp(.82rem,2vmin,1.02rem);
+ font-size:clamp(.82rem,2cqmin,1.02rem);
  line-height:1.3;
  text-align:center;
  font-weight:950;
@@ -1685,17 +1654,17 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  border:2px solid #718cac;
  font-size:.85rem;
 }
-@media (max-width:520px){
+@media (orientation: landscape) and (max-width:520px), (orientation: portrait) and (max-height:520px){
  .game-ui:not(.playing) .game-ui__menu-settings.game-ui__mode-grid{
   grid-template-columns:repeat(2,minmax(0,1fr));
  }
 }
-@media (max-width:390px){
+@media (orientation: landscape) and (max-width:390px), (orientation: portrait) and (max-height:390px){
  .game-ui:not(.playing) .game-ui__menu-settings.game-ui__mode-grid{
   grid-template-columns:minmax(0,1fr);
  }
 }
-@media (max-height:360px){
+@media (orientation: landscape) and (max-height:360px), (orientation: portrait) and (max-width:360px){
  .game-ui:not(.playing) .game-ui__menu{
   gap:.3rem;
  }
@@ -1712,13 +1681,13 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
 /* Post-match is a compact results surface, not another mode-selection step.
    Keep the two available outcomes readable at screenshot/mobile widths. */
 .game-ui.game-over:not(.playing) .game-ui__menu{
- gap:clamp(.5rem,1.4vh,.8rem);
+ gap:clamp(.5rem,1.4cqh,.8rem);
 }
 .game-ui.game-over:not(.playing) .game-ui__menu-result{
  display:block;
- padding:clamp(.8rem,2.5vh,1.1rem) .8rem;
+ padding:clamp(.8rem,2.5cqh,1.1rem) .8rem;
  text-align:center;
- font-size:clamp(1rem,3.2vmin,1.35rem);
+ font-size:clamp(1rem,3.2cqmin,1.35rem);
  line-height:1.25;
  letter-spacing:.015em;
  overflow-wrap:anywhere;
@@ -1735,7 +1704,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  max-width:100%;
  min-height:52px;
  padding:.65rem .75rem;
- font-size:clamp(.78rem,2vmin,1rem);
+ font-size:clamp(.78rem,2cqmin,1rem);
  line-height:1.35;
  overflow-wrap:anywhere;
 }
@@ -1792,7 +1761,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
 .game-ui.game-over:not(.playing) .game-ui__menu-extras[hidden]{
  display:none!important;
 }
-@media(max-height:400px){
+@media (orientation: landscape) and (max-height:400px), (orientation: portrait) and (max-width:400px){
  .game-ui.game-over:not(.playing) .game-ui__controls button:not([hidden]){
   min-height:44px;
   padding:.48rem .55rem;
@@ -1855,13 +1824,13 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  gap:.55rem;
  max-width:100%;
 }
-@media(max-width:620px){
+@media (orientation: landscape) and (max-width:620px), (orientation: portrait) and (max-height:620px){
  .game-ui__menu-arena-panel .game-ui__arena-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
-@media(max-width:420px){
+@media (orientation: landscape) and (max-width:420px), (orientation: portrait) and (max-height:420px){
  .game-ui__menu-arena-panel .game-ui__arena-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-@media(max-height:360px){
+@media (orientation: landscape) and (max-height:360px), (orientation: portrait) and (max-width:360px){
  .game-ui:not(.playing) .game-ui__arena-shortcut{min-height:42px;padding:.35rem .55rem}
  .game-ui__arena-selection-summary{padding:.3rem .5rem;font-size:.7rem}
 }
@@ -1880,7 +1849,7 @@ html[dir="rtl"] .game-ui__character-name-field{direction:rtl}
 .game-ui.playing .health-label{display:flex;align-items:center;justify-content:center;gap:.35rem;min-width:0;padding:0 .25rem}
 .health-label__name{display:inline-block;max-width:72%;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:isolate}
 .health-label__current{flex:none;font-variant-numeric:tabular-nums}
-@media (max-width:640px){.game-ui__character-names{grid-template-columns:1fr}}
+@media (orientation: landscape) and (max-width:640px), (orientation: portrait) and (max-height:640px){.game-ui__character-names{grid-template-columns:1fr}}
 
 /* One weapon button per player, opening a compact direct-selection palette. */
 .game-ui__mobile-weapon-switcher[hidden],.game-ui__p2-weapons[hidden],.game-ui__aim-pad[hidden],.game-ui__weapon-list[hidden]{display:none!important}
@@ -1892,25 +1861,25 @@ html[dir="rtl"] .game-ui__character-name-field{direction:rtl}
 .game-ui__weapon-toggle::after{content:"▾";font-size:1rem}
 .game-ui__weapon-toggle[aria-expanded="true"]::after{content:"▴"}
 .game-ui.playing .game-ui__weapon-list:not([hidden]){
- display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));top:8.8rem;left:50%;width:min(90vw,32rem);padding:.5rem;background:#07111df5;border:1px solid #9cb3d3;border-radius:.6rem;pointer-events:auto;z-index:30;
+ display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));top:8.8rem;left:50%;width:min(90cqw,32rem);padding:.5rem;background:#07111df5;border:1px solid #9cb3d3;border-radius:.6rem;pointer-events:auto;z-index:30;
 }
 .game-ui.playing .game-ui__weapon-list button{min-width:0;min-height:44px}
 .game-ui__aim-pad{position:absolute;right:1.5rem;bottom:6.8rem;width:56px;height:56px;border:2px solid #adc3e3;border-radius:50%;background:#07111dcc;display:grid;place-items:center;pointer-events:auto;touch-action:none;user-select:none;font-size:1.6rem;z-index:24}
 .game-ui__aim-pad::after{content:"➤";position:absolute;font-size:.8rem;transform:rotate(var(--aim-angle,0deg)) translateX(18px)}
 .game-ui__aim-pad.active,.game-ui__aim-pad:focus-visible{border-color:white;background:#23456cdd}
-.game-ui[data-players="2"] .game-ui__aim-pad[data-player="1"]{left:calc(var(--safe-left,0px) + 1rem + clamp(84px,22vmin,112px) + .65rem);right:auto}
-.game-ui[data-players="2"] .game-ui__aim-pad[data-player="2"]{right:calc(var(--safe-right,0px) + 1rem + clamp(84px,22vmin,112px) + .65rem)}
+.game-ui[data-players="2"] .game-ui__aim-pad[data-player="1"]{left:calc(var(--safe-left,0px) + 1rem + clamp(84px,22cqmin,112px) + .65rem);right:auto}
+.game-ui[data-players="2"] .game-ui__aim-pad[data-player="2"]{right:calc(var(--safe-right,0px) + 1rem + clamp(84px,22cqmin,112px) + .65rem)}
 @media(pointer:coarse){
- .game-ui.playing .game-ui__mobile-weapon-switcher:not([hidden]),.game-ui.playing .game-ui__p2-weapons:not([hidden]){top:auto;bottom:calc(var(--safe-bottom,0px) + 1.5rem + clamp(84px,22vmin,112px));width:clamp(96px,23vmin,124px)}
- .game-ui.playing .game-ui__weapon-list:not([hidden]){top:auto;bottom:calc(var(--safe-bottom,0px) + 5.5rem);width:min(58vw,32rem);max-height:45vh;overflow:auto}
+ .game-ui.playing .game-ui__mobile-weapon-switcher:not([hidden]),.game-ui.playing .game-ui__p2-weapons:not([hidden]){top:auto;bottom:calc(var(--safe-bottom,0px) + 1.5rem + clamp(84px,22cqmin,112px));width:clamp(96px,23cqmin,124px)}
+ .game-ui.playing .game-ui__weapon-list:not([hidden]){top:auto;bottom:calc(var(--safe-bottom,0px) + 5.5rem);width:min(58cqw,32rem);max-height:45cqh;overflow:auto}
  .game-ui.playing .game-ui__weapon-list[data-player="1"]{left:1rem;transform:none}
  .game-ui.playing .game-ui__weapon-list[data-player="2"]{left:auto;right:1rem;transform:none}
- .game-ui__aim-pad{bottom:calc(var(--safe-bottom,0px) + 1.5rem + clamp(60px,15vmin,78px))}
+ .game-ui__aim-pad{bottom:calc(var(--safe-bottom,0px) + 1.5rem + clamp(60px,15cqmin,78px))}
 }
-@media(max-width:650px){.game-ui.playing .game-ui__weapon-list:not([hidden]){grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (orientation: landscape) and (max-width:650px), (orientation: portrait) and (max-height:650px){.game-ui.playing .game-ui__weapon-list:not([hidden]){grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 .game-ui.playing[data-players="2"] .game-ui__p2-weapons .game-ui__weapon-toggle{font-size:.72rem;padding:.45rem .6rem;border:1px solid #9cb3d3;background:#07111de8}
-@media(pointer:coarse){.game-ui.playing[data-players="2"] .game-ui__mobile-weapon-switcher:not([hidden]){width:clamp(96px,23vmin,124px)}}
+@media(pointer:coarse){.game-ui.playing[data-players="2"] .game-ui__mobile-weapon-switcher:not([hidden]){width:clamp(96px,23cqmin,124px)}}
 
 .game-ui__aim-pad[data-player="2"]{--aim-angle:180deg}
 
@@ -1953,8 +1922,8 @@ html[dir="rtl"] .game-ui__character-name-field{direction:rtl}
 .game-ui__download-actions .game-ui__download-install{border-color:#fee49c;background:#5b4324}
 .game-ui__download-actions .game-ui__download-delete{background:#34202d;border-color:#987c85}
 .game-ui__download-actions [aria-pressed="true"]{outline:2px solid #ffdc80}
-@media(max-width:700px){.game-ui__download-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:450px){.game-ui__download-grid{grid-template-columns:1fr}}
+@media (orientation: landscape) and (max-width:700px), (orientation: portrait) and (max-height:700px){.game-ui__download-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (orientation: landscape) and (max-width:450px), (orientation: portrait) and (max-height:450px){.game-ui__download-grid{grid-template-columns:1fr}}
 
 
 /* Telegram Mini App only: native Telegram header/bottom UI and live viewport.
@@ -1968,10 +1937,10 @@ html.telegram-mini-app{
 }
 html.telegram-mini-app,
 html.telegram-mini-app body,
-html.telegram-mini-app #app{height:var(--tg-viewport-height,100dvh);min-height:0}
+html.telegram-mini-app #app{height:var(--tg-viewport-height,100cqh);min-height:0}
 html.telegram-mini-app .game-ui:not(.playing),
 html.telegram-mini-app .game-ui:not(.playing) .game-ui__menu{
- max-height:calc(var(--tg-viewport-height,100dvh) - var(--safe-top) - var(--safe-bottom) - 1rem);
+ max-height:calc(var(--tg-viewport-height,100cqh) - var(--safe-top) - var(--safe-bottom) - 1rem);
 }
 html.telegram-mini-app .game-ui.playing .health-bar,
 html.telegram-mini-app .game-ui.playing .game-ui__mobile-controls,
@@ -1997,7 +1966,7 @@ html.telegram-mini-app .game-ui.playing .game-ui__mobile-pause{
 .game-ui__download-grid{
  min-width:0;
  max-width:100%;
- max-height:clamp(9rem,38dvh,18rem);
+ max-height:clamp(9rem,38cqh,18rem);
  overflow-x:hidden;
  overflow-y:auto;
  overscroll-behavior:contain;
@@ -2059,7 +2028,7 @@ html.telegram-mini-app .game-ui.playing .game-ui__mobile-pause{
 .game-ui__download-card>strong{
  min-width:0;
  color:#f4f7ff;
- font-size:clamp(.7rem,1.65vmin,.8rem);
+ font-size:clamp(.7rem,1.65cqmin,.8rem);
  line-height:1.45;
  text-align:start;
 }
@@ -2087,13 +2056,13 @@ html.telegram-mini-app .game-ui.playing .game-ui__mobile-pause{
  outline:2px solid #f2d98e;
  outline-offset:2px;
 }
-@media(max-width:700px){
+@media (orientation: landscape) and (max-width:700px), (orientation: portrait) and (max-height:700px){
  .game-ui__download-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-@media(max-width:450px){
+@media (orientation: landscape) and (max-width:450px), (orientation: portrait) and (max-height:450px){
  .game-ui__download-grid{grid-template-columns:minmax(0,1fr)}
 }
-@media(max-height:430px){
+@media (orientation: landscape) and (max-height:430px), (orientation: portrait) and (max-width:430px){
  .game-ui:not(.playing) .game-ui__menu{scroll-padding-bottom:4.75rem}
  .game-ui__downloadable-arenas{
   margin-top:.45rem;
@@ -2101,7 +2070,7 @@ html.telegram-mini-app .game-ui.playing .game-ui__mobile-pause{
   gap:.32rem;
  }
  .game-ui__download-grid{
-  max-height:clamp(7.75rem,37dvh,12rem);
+  max-height:clamp(7.75rem,37cqh,12rem);
  }
  .game-ui__download-card{padding:.35rem;gap:.23rem}
  .game-ui__download-preview{aspect-ratio:2.4/1}
@@ -2109,8 +2078,8 @@ html.telegram-mini-app .game-ui.playing .game-ui__mobile-pause{
  .game-ui__download-feedback{font-size:.67rem}
  .game-ui__download-refresh{min-height:38px}
 }
-@media(max-height:330px){
- .game-ui__download-grid{max-height:clamp(6.8rem,33dvh,9rem)}
+@media (orientation: landscape) and (max-height:330px), (orientation: portrait) and (max-width:330px){
+ .game-ui__download-grid{max-height:clamp(6.8rem,33cqh,9rem)}
  .game-ui__download-preview{aspect-ratio:2.8/1}
 }
 
@@ -2129,21 +2098,21 @@ html.telegram-mini-app .game-ui.playing .game-ui__mobile-pause{
 .game-ui__character-copy{display:flex;align-items:center;min-width:0}
 .game-ui__character-name{font-size:.85rem;letter-spacing:.08em}
 html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
-@media(max-width:600px),(max-height:440px){
+@media (orientation: landscape) and (max-width:600px), (orientation: portrait) and (max-height:600px), (orientation: landscape) and (max-height:440px), (orientation: portrait) and (max-width:440px){
  .game-ui__character-picker{padding:.38rem;gap:.25rem}
  .game-ui .game-ui__character-card{gap:.3rem;min-height:67px;padding:.3rem .35rem}
  .game-ui__character-portrait{flex-basis:54px;width:54px;height:57px}
  .game-ui__character-name{font-size:.7rem}
 }
-@media(max-width:360px){.game-ui__character-cards{grid-template-columns:1fr}}
+@media (orientation: landscape) and (max-width:360px), (orientation: portrait) and (max-height:360px){.game-ui__character-cards{grid-template-columns:1fr}}
 
 /* First-match coaching sits above controls and never captures game touches. */
-.game-ui__coach{position:absolute;bottom:calc(var(--safe-bottom) + 124px);left:calc(var(--safe-left) + 12px);width:min(260px,42vw);padding:8px 12px;border:2px solid #f9cf62;border-radius:12px;background:#171a2ff2;color:#fff;z-index:14;pointer-events:none;font-size:13px;line-height:1.4}
+.game-ui__coach{position:absolute;bottom:calc(var(--safe-bottom) + 124px);left:calc(var(--safe-left) + 12px);width:min(260px,42cqw);padding:8px 12px;border:2px solid #f9cf62;border-radius:12px;background:#171a2ff2;color:#fff;z-index:14;pointer-events:none;font-size:13px;line-height:1.4}
 .game-ui__coach[data-target="attack"]{left:auto;right:calc(var(--safe-right) + 12px)}
 .game-ui__coach p{margin:0 0 4px}.game-ui__coach button{pointer-events:auto;min-height:44px;font-size:13px;background:#303650;color:#fff;border:1px solid #f9cf62;border-radius:8px;padding:4px 10px}
 .game-ui__coach[hidden]{display:none}.tutorial-target{outline:3px solid #f9cf62;outline-offset:4px}
 .game-ui__coach button:focus-visible{outline:3px solid white}
-@media(max-height:360px){.game-ui__coach{bottom:calc(var(--safe-bottom) + 98px);width:min(230px,40vw);padding:5px 9px}}
+@media (orientation: landscape) and (max-height:360px), (orientation: portrait) and (max-width:360px){.game-ui__coach{bottom:calc(var(--safe-bottom) + 98px);width:min(230px,40cqw);padding:5px 9px}}
 
 /* Readability floor: reclaim space with scrolling and layout, never tiny copy. */
 .game-ui{--ui-copy:.8125rem;--ui-label:.875rem;--ui-action:1rem}
@@ -2164,7 +2133,7 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui__menu :is(button,summary,p,h2,h3,span){max-width:100%}
 .game-ui__character-card{align-items:center}
 .game-ui.playing .game-ui__coach p{position:static;transform:none;white-space:normal;text-align:start}
-@media(max-height:440px),(max-width:600px){
+@media (orientation: landscape) and (max-height:440px), (orientation: portrait) and (max-width:440px), (orientation: landscape) and (max-width:600px), (orientation: portrait) and (max-height:600px){
  .game-ui__character-picker{padding:.35rem;gap:.3rem}
  .game-ui .game-ui__character-card{min-height:76px;align-items:flex-start}
  .game-ui__character-portrait{flex-basis:44px;width:44px;height:50px}
@@ -2172,9 +2141,9 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  .game-ui__arena-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
  .game-ui__menu-mode-panel,.game-ui__menu-arena-panel{gap:.35rem}
  .game-ui__menu-header{gap:.35rem}
- .game-ui__menu-dialog{padding:.65rem;max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 16px)}
+ .game-ui__menu-dialog{padding:.65rem;max-height:calc(100cqh - var(--safe-top) - var(--safe-bottom) - 16px)}
 }
-@media(max-width:600px){.game-ui__character-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (orientation: landscape) and (max-width:600px), (orientation: portrait) and (max-height:600px){.game-ui__character-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* Adaptive essential HUD: no second row until a live objective needs it. */
 .game-ui.playing .game-ui__top-hud{grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr);grid-template-rows:none;grid-auto-rows:auto;align-items:start;gap:0 .45rem}
@@ -2184,7 +2153,7 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui.playing .game-ui__top-hud .health-label__current{font-size:.875rem;flex:0 0 auto}
 .game-ui.playing .game-ui__top-hud .game-ui__status{grid-column:1/-1;grid-row:2;justify-self:center;width:auto;max-width:100%;margin-top:14px;padding:3px 9px;border-radius:7px;background:#111d30ed;color:#f5f8ff;font-size:.8125rem;line-height:1.3}
 .game-ui__status[hidden]{display:none!important}
-@media(pointer:coarse) and (max-height:360px){
+@media (orientation: landscape) and (pointer:coarse) and (max-height:360px), (orientation: portrait) and (pointer:coarse) and (max-width:360px){
  .game-ui.playing .game-ui__top-hud{left:calc(var(--safe-left) + .6rem);right:calc(var(--safe-right) + .6rem);gap:0 .3rem}
  .game-ui.playing .game-ui__top-hud .health-bar{min-height:34px}
  .game-ui.playing .game-ui__top-hud .game-ui__status{margin-top:12px}
@@ -2229,7 +2198,7 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui[data-menu-view="progression"] .game-ui__menu-progress-details>summary,
 .game-ui[data-menu-view="settings"] .game-ui__menu-extras>summary{display:none}
 .game-ui[data-menu-view="landing"] .game-ui__menu{gap:.5rem}
-@media(max-height:360px){.game-ui__landing-routes{gap:.3rem}.game-ui .game-ui__landing button{min-height:44px;padding:.4rem .55rem}.game-ui .game-ui__landing button[data-route="quick"]{min-height:50px}.game-ui__landing{gap:.3rem}}
+@media (orientation: landscape) and (max-height:360px), (orientation: portrait) and (max-width:360px){.game-ui__landing-routes{gap:.3rem}.game-ui .game-ui__landing button{min-height:44px;padding:.4rem .55rem}.game-ui .game-ui__landing button[data-route="quick"]{min-height:50px}.game-ui__landing{gap:.3rem}}
 
 /* Eight weapon-free reference-matched character portraits. */
 .game-ui__character-portrait--soldier{background:linear-gradient(155deg,#5fbbfb,#173a60)}
@@ -2248,11 +2217,11 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui .game-ui__character-card[data-character="knight"][aria-pressed="true"]{border-color:#e54b59;box-shadow:0 0 0 2px #e54b5988,0 0 16px #e54b5933}
 .game-ui .game-ui__character-card[data-character="mummy"][aria-pressed="true"]{border-color:#e8dcc8;box-shadow:0 0 0 2px #e8dcc888,0 0 16px #e8dcc833}
 .game-ui .game-ui__character-card[data-character="archer"][aria-pressed="true"]{border-color:#a9d46b;box-shadow:0 0 0 2px #a9d46b88,0 0 16px #a9d46b33}
-@media(min-width:760px){.game-ui__character-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(min-width:380px) and (max-width:759px){.game-ui__character-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (orientation: landscape) and (min-width:760px), (orientation: portrait) and (min-height:760px){.game-ui__character-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (orientation: landscape) and (min-width:380px) and (max-width:759px), (orientation: portrait) and (min-height:380px) and (max-height:759px){.game-ui__character-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* Eight options form three desktop rows or four mobile rows; retain touch targets. */
-@media(max-width:759px) and (min-width:361px){.game-ui .game-ui__character-card{gap:.28rem;padding:.32rem .4rem;min-height:68px}.game-ui__character-portrait{flex-basis:56px;width:56px;height:66px}.game-ui__character-name{font-size:clamp(.68rem,2.4vw,.82rem);letter-spacing:0}}
-@media(max-width:360px){.game-ui .game-ui__character-card{min-height:70px}}
+@media (orientation: landscape) and (max-width:759px) and (min-width:361px), (orientation: portrait) and (max-height:759px) and (min-height:361px){.game-ui .game-ui__character-card{gap:.28rem;padding:.32rem .4rem;min-height:68px}.game-ui__character-portrait{flex-basis:56px;width:56px;height:66px}.game-ui__character-name{font-size:clamp(.68rem,2.4cqw,.82rem);letter-spacing:0}}
+@media (orientation: landscape) and (max-width:360px), (orientation: portrait) and (max-height:360px){.game-ui .game-ui__character-card{min-height:70px}}
 
 
 /* Dedicated pause layer: dim + gently blur only the frozen arena, never text.
@@ -2276,9 +2245,9 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  position:relative;
  z-index:1;
  isolation:isolate;
- width:min(33.5rem,calc(100vw - var(--safe-left) - var(--safe-right) - 1.5rem));
- max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 1.5rem);
- max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 1rem);
+ width:min(33.5rem,calc(100cqw - var(--safe-left) - var(--safe-right) - 1.5rem));
+ max-width:calc(100cqw - var(--safe-left) - var(--safe-right) - 1.5rem);
+ max-height:calc(100cqh - var(--safe-top) - var(--safe-bottom) - 1rem);
  overflow:hidden;
  border:1px solid #849bb4;
  border-radius:1rem;
@@ -2290,11 +2259,11 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui.paused .game-ui__menu{
  display:grid;
  grid-template-columns:minmax(0,1fr);
- gap:clamp(.5rem,2.3vh,.85rem);
+ gap:clamp(.5rem,2.3cqh,.85rem);
  width:100%;
  max-width:none;
- max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 1rem);
- padding:clamp(.85rem,3vh,1.35rem);
+ max-height:calc(100cqh - var(--safe-top) - var(--safe-bottom) - 1rem);
+ padding:clamp(.85rem,3cqh,1.35rem);
  overflow-y:auto;
  overscroll-behavior:contain;
  scroll-padding:1rem;
@@ -2310,14 +2279,14 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  align-items:flex-start;
  justify-content:space-between;
  gap:.6rem;
- padding-bottom:clamp(.5rem,1.6vh,.9rem);
+ padding-bottom:clamp(.5rem,1.6cqh,.9rem);
  border-bottom:1px solid #8b9fb641;
 }
 .game-ui.paused .game-ui__pause-heading{min-width:0;display:grid;gap:.2rem}
 .game-ui.paused .game-ui__pause-title{
  position:relative;
  margin:0;
- font-size:clamp(1.15rem,3.9vmin,1.55rem);
+ font-size:clamp(1.15rem,3.9cqmin,1.55rem);
  line-height:1.25;
  font-weight:900;
  color:#fff4d8;
@@ -2343,7 +2312,7 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  margin:0;
  transform:none;
  white-space:normal;
- font-size:clamp(.72rem,2.5vmin,.84rem);
+ font-size:clamp(.72rem,2.5cqmin,.84rem);
  line-height:1.45;
  color:#afc1d6;
 }
@@ -2375,10 +2344,10 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  width:100%;
  min-width:0;
  max-width:none;
- min-height:clamp(42px,11vh,51px);
+ min-height:clamp(42px,11cqh,51px);
  border-radius:.7rem;
  padding:.45rem .4rem;
- font-size:clamp(.78rem,2.5vmin,.94rem);
+ font-size:clamp(.78rem,2.5cqmin,.94rem);
  font-weight:850;
  line-height:1.3;
  white-space:normal;
@@ -2387,12 +2356,12 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 }
 .game-ui.paused .game-ui__controls button[data-action="resume"]:not([hidden]){
  grid-column:1/-1;
- min-height:clamp(49px,13vh,63px);
+ min-height:clamp(49px,13cqh,63px);
  background:linear-gradient(#ffdf8c,#ffd477);
  color:#18243c;
  border:2px solid #fff0bf;
  box-shadow:0 3px 0 #8d6b35;
- font-size:clamp(.95rem,3.2vmin,1.12rem);
+ font-size:clamp(.95rem,3.2cqmin,1.12rem);
 }
 .game-ui.paused .game-ui__controls button[data-action="restart"]:not([hidden]){
  background:#263954;
@@ -2431,12 +2400,12 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  background:transparent;
  color:#c6d7ea;
  border-radius:.6rem;
- font-size:clamp(.76rem,2.5vmin,.875rem);
+ font-size:clamp(.76rem,2.5cqmin,.875rem);
  font-weight:750;
 }
 .game-ui.paused .game-ui__pause-settings::before{content:"⚙";font-size:1.2em;color:#ffda83}
 .game-ui.paused .game-ui__pause-settings:hover{background:#253956;border-color:#7593b5}
-@media(max-height:360px){
+@media (orientation: landscape) and (max-height:360px), (orientation: portrait) and (max-width:360px){
  .game-ui.paused .game-ui__menu{gap:.3rem;padding:.52rem .75rem}
  .game-ui.paused .game-ui__pause-header{padding-bottom:.3rem}
  .game-ui.paused .game-ui__pause-footer{padding-top:.1rem}
@@ -2455,8 +2424,8 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui.menu[data-menu-view="landing"]{
  --arcade-ink:#f4f8ff;
  --arcade-accent:#60caff;
- width:min(52.5rem,calc(100vw - var(--safe-left) - var(--safe-right) - 2rem));
- max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 1rem);
+ width:min(52.5rem,calc(100cqw - var(--safe-left) - var(--safe-right) - 2rem));
+ max-width:calc(100cqw - var(--safe-left) - var(--safe-right) - 1rem);
  border:2px solid #65bfff;
  border-radius:1.4rem;
  background:
@@ -2467,18 +2436,18 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  color:var(--arcade-ink);
 }
 .game-ui.menu[data-menu-view="landing"] .game-ui__menu{
- gap:clamp(.7rem,1.85vh,1.15rem);
- padding:clamp(1rem,2.6vmin,1.9rem);
+ gap:clamp(.7rem,1.85cqh,1.15rem);
+ padding:clamp(1rem,2.6cqmin,1.9rem);
 }
 .game-ui.menu[data-menu-view="landing"] .game-ui__menu-header{
- padding:0 0 clamp(.45rem,1.6vh,.85rem);
+ padding:0 0 clamp(.45rem,1.6cqh,.85rem);
  border-bottom:1px solid #79b7e13d;
  align-items:center;
  gap:.8rem;
 }
 .game-ui.menu[data-menu-view="landing"] .game-ui__menu-header h1{
  color:#f9f8f3;
- font-size:clamp(1.35rem,3.2vmin,2.3rem);
+ font-size:clamp(1.35rem,3.2cqmin,2.3rem);
  line-height:1.16;
  font-weight:950;
  letter-spacing:-.018em;
@@ -2493,7 +2462,7 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  background:linear-gradient(145deg,#192f51,#0c1c35);
  box-shadow:inset 0 1px 0 #c8d8f128;
 }
-.game-ui.menu[data-menu-view="landing"] .game-ui__landing{gap:clamp(.6rem,1.55vh,.95rem)}
+.game-ui.menu[data-menu-view="landing"] .game-ui__landing{gap:clamp(.6rem,1.55cqh,.95rem)}
 .game-ui.menu[data-menu-view="landing"] .game-ui__landing button{
  position:relative;
  font-weight:850;
@@ -2511,8 +2480,8 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  display:flex;
  align-items:center;
  justify-content:center;
- gap:clamp(.65rem,2.5vmin,1.4rem);
- min-height:clamp(66px,11vh,106px);
+ gap:clamp(.65rem,2.5cqmin,1.4rem);
+ min-height:clamp(66px,11cqh,106px);
  padding:.55rem 3.1rem .55rem 3rem;
  border:2px solid #fff2bd;
  border-radius:1rem;
@@ -2528,27 +2497,27 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  display:grid;
  place-items:center;
  flex:0 0 auto;
- font-size:clamp(1.15rem,3.2vmin,1.9rem);
+ font-size:clamp(1.15rem,3.2cqmin,1.9rem);
  filter:drop-shadow(0 1px 0 #a96924);
 }
 .game-ui.menu[data-menu-view="landing"] .game-ui__landing button[data-route="quick"]::after{
  content:"›";
  position:absolute;
- inset-inline-end:clamp(.8rem,2vw,1.4rem);
- font-size:clamp(1.7rem,4vmin,2.5rem);
+ inset-inline-end:clamp(.8rem,2cqw,1.4rem);
+ font-size:clamp(1.7rem,4cqmin,2.5rem);
  line-height:1;
  color:#7c4d1c;
 }
 .game-ui.menu[dir="rtl"][data-menu-view="landing"] .game-ui__landing button[data-route="quick"]::after{content:"‹"}
 .game-ui__landing-quick-copy{display:grid;min-width:0;gap:.15rem}
-.game-ui__landing-quick-label{font-size:clamp(1.12rem,3.5vmin,1.65rem);font-weight:950;line-height:1.1}
+.game-ui__landing-quick-label{font-size:clamp(1.12rem,3.5cqmin,1.65rem);font-weight:950;line-height:1.1}
 .game-ui.menu[data-menu-view="landing"] .game-ui__landing-defaults{
  margin:0;
  position:static;
  transform:none;
  text-align:start;
  color:#6d481e;
- font-size:clamp(.7rem,2vmin,.86rem);
+ font-size:clamp(.7rem,2cqmin,.86rem);
  font-weight:750;
  line-height:1.3;
  white-space:normal;
@@ -2557,14 +2526,14 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  display:flex;
  align-items:center;
  justify-content:center;
- min-height:clamp(49px,7.5vh,72px);
+ min-height:clamp(49px,7.5cqh,72px);
  border:1px solid #69bcff;
  border-radius:.85rem;
  padding:.5rem 3rem;
  background:linear-gradient(125deg,#2c5590,#1d3670 65%,#21428b);
  box-shadow:inset 0 1px 0 #b9dbff3c,0 0 13px #265ed654;
  color:#e5f3ff;
- font-size:clamp(.88rem,2.75vmin,1.12rem);
+ font-size:clamp(.88rem,2.75cqmin,1.12rem);
  font-weight:900;
 }
 .game-ui.menu[data-menu-view="landing"] .game-ui__landing button[data-route="continue"]::before{
@@ -2585,22 +2554,22 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui.menu[data-menu-view="landing"] .game-ui__landing-routes{
  display:grid;
  grid-template-columns:repeat(2,minmax(0,1fr));
- gap:clamp(.45rem,1.2vh,.8rem);
+ gap:clamp(.45rem,1.2cqh,.8rem);
 }
 .game-ui.menu[data-menu-view="landing"] .game-ui__landing-routes button{
  display:flex;
  align-items:center;
- gap:clamp(.55rem,1.5vmin,.85rem);
+ gap:clamp(.55rem,1.5cqmin,.85rem);
  width:100%;
- min-height:clamp(56px,8.4vh,94px);
- padding:clamp(.4rem,1.2vh,.7rem) clamp(.55rem,1.3vw,1rem);
+ min-height:clamp(56px,8.4cqh,94px);
+ padding:clamp(.4rem,1.2cqh,.7rem) clamp(.55rem,1.3cqw,1rem);
  background:linear-gradient(130deg,#132841,#172b49 68%,#0f2038);
  border:1px solid #618eae;
  border-radius:.82rem;
  color:#eaf4ff;
  text-align:start;
  box-shadow:inset 0 1px 0 #cde7ff26,0 3px 9px #0007;
- font-size:clamp(.78rem,2.3vmin,.96rem);
+ font-size:clamp(.78rem,2.3cqmin,.96rem);
  font-weight:800;
 }
 .game-ui.menu[data-menu-view="landing"] .game-ui__landing-routes button::after{
@@ -2616,9 +2585,9 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui__landing-icon{
  display:grid;
  place-items:center;
- flex:0 0 clamp(36px,6vmin,60px);
- width:clamp(36px,6vmin,60px);
- height:clamp(36px,6vmin,60px);
+ flex:0 0 clamp(36px,6cqmin,60px);
+ width:clamp(36px,6cqmin,60px);
+ height:clamp(36px,6cqmin,60px);
  border:1px solid #219bff;
  border-radius:.76rem;
  background:linear-gradient(145deg,#0a5496,#0e2b57);
@@ -2642,7 +2611,7 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui.menu[data-menu-view="landing"] .game-ui__landing-local-hint{
  display:block;
  margin:0;
- font-size:clamp(.66rem,1.65vmin,.76rem);
+ font-size:clamp(.66rem,1.65cqmin,.76rem);
  color:#b2c3db;
  line-height:1.3;
  font-weight:500;
@@ -2650,11 +2619,11 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 @media(hover:hover){
  .game-ui.menu[data-menu-view="landing"] .game-ui__landing button:hover{filter:brightness(1.12)}
 }
-@media(max-height:460px){
+@media (orientation: landscape) and (max-height:460px), (orientation: portrait) and (max-width:460px){
  .game-ui.menu[data-menu-view="landing"]{border-radius:1rem}
  .game-ui.menu[data-menu-view="landing"] .game-ui__menu{gap:.33rem;padding:.5rem .8rem}
  .game-ui.menu[data-menu-view="landing"] .game-ui__menu-header{padding-bottom:.2rem}
- .game-ui.menu[data-menu-view="landing"] .game-ui__menu-header h1{font-size:clamp(1.1rem,3.5vmin,1.4rem)}
+ .game-ui.menu[data-menu-view="landing"] .game-ui__menu-header h1{font-size:clamp(1.1rem,3.5cqmin,1.4rem)}
  .game-ui.menu[data-menu-view="landing"] .game-ui__landing{gap:.35rem}
  .game-ui.menu[data-menu-view="landing"] .game-ui__landing button[data-route="quick"]{min-height:52px;padding:.28rem 2rem}
  .game-ui.menu[data-menu-view="landing"] .game-ui__landing-quick-label{font-size:1rem}
@@ -2666,8 +2635,8 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
  .game-ui.menu[data-menu-view="landing"] .game-ui__landing-route-label{font-size:.78rem}
  .game-ui.menu[data-menu-view="landing"] .game-ui__landing-local-hint{font-size:.65rem}
 }
-@media(max-width:440px){
- .game-ui.menu[data-menu-view="landing"]{width:calc(100vw - var(--safe-left) - var(--safe-right) - 1rem)}
+@media (orientation: landscape) and (max-width:440px), (orientation: portrait) and (max-height:440px){
+ .game-ui.menu[data-menu-view="landing"]{width:calc(100cqw - var(--safe-left) - var(--safe-right) - 1rem)}
  .game-ui.menu[data-menu-view="landing"] .game-ui__landing-routes button{gap:.35rem}
  .game-ui.menu[data-menu-view="landing"] .game-ui__landing-routes button::after{display:none}
  .game-ui.menu[data-menu-view="landing"] .game-ui__landing-icon{width:32px;height:32px;flex-basis:32px}
@@ -2675,4 +2644,33 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 }
 @media(prefers-reduced-motion:reduce){
  .game-ui.menu[data-menu-view="landing"] .game-ui__landing button{transition:none}
+}
+
+/* The full game, HUD, menus and controls share one logical landscape box. */
+html #app{
+ position:fixed;inset:auto;
+ left:var(--game-offset-left,0px);top:var(--game-offset-top,0px);
+ width:var(--game-width,100vw)!important;
+ height:var(--game-height,100dvh)!important;
+ transform:none;transform-origin:top left;container-type:size;overflow:hidden;
+}
+html.software-landscape #app{
+ transform:translateX(var(--game-physical-width,100vw)) rotate(90deg);
+}
+html.software-landscape{
+ --safe-top:max(var(--tg-safe-right,0px),var(--safe-area-inset-right,env(safe-area-inset-right,0px)));
+ --safe-right:max(var(--tg-safe-bottom,0px),var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px)));
+ --safe-bottom:max(var(--tg-safe-left,0px),var(--safe-area-inset-left,env(safe-area-inset-left,0px)));
+ --safe-left:max(var(--tg-safe-top,0px),var(--safe-area-inset-top,env(safe-area-inset-top,0px)));
+}
+html.software-landscape .game-ui__joystick{left:max(1rem,var(--safe-left));bottom:max(1rem,var(--safe-bottom))}
+html.software-landscape .game-ui__mobile-button--attack{right:max(1rem,var(--safe-right));bottom:max(1rem,var(--safe-bottom))}
+html.software-landscape .game-ui.playing .health-bar{top:max(1rem,var(--safe-top))}
+html.software-landscape .game-ui.playing .health-bar--player{left:max(1rem,var(--safe-left))}
+html.software-landscape .game-ui.playing .health-bar--opponent{right:max(1rem,var(--safe-right))}
+html.software-landscape .game-ui.playing p:first-of-type{top:max(.45rem,var(--safe-top))}
+html.software-landscape .game-ui.playing p:nth-of-type(2){top:calc(max(.45rem,var(--safe-top)) + 1.55rem)}
+html.software-landscape .game-ui.playing .game-ui__weapon-list{top:calc(max(.45rem,var(--safe-top)) + 3rem)}
+html.software-landscape .game-ui.playing .game-ui__bow-panel{
+ bottom:calc(max(1rem,var(--safe-bottom)) + clamp(5.4rem,19cqmin,7rem));
 }
