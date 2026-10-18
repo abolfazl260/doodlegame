@@ -2,7 +2,7 @@ import {ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl,type ArenaCategory} f
 import {MobileOnboarding,type TutorialSignals} from "./MobileOnboarding";
 import type {Storage} from "../storage/Storage";
 import {GameState} from "../core/GameState";
-import {gamePointerInElement,toGamePointerDelta} from "../platform/web/LandscapeOrientation.js";
+
 
 import {getArenaTheme} from "../themes/ArenaThemes";
 import type {ArenaId,BuiltInArenaId,GameModeId,HillState,CharacterId} from "../gameplay/GameSession";
@@ -30,6 +30,20 @@ type Actions={
  toggleCombatSound:()=>void;toggleCameraShake:()=>void;updateData:()=>Promise<void>;
  fetchArenaCatalog?:()=>Promise<ArenaListing[]>;installArena?:(listing:ArenaListing)=>Promise<void>;deleteArena?:(id:DownloadedArenaId)=>void;
 };
+/* Keep UI touch conversion self-contained for standalone GameUI test fixtures. */
+const isRotatedGame=()=>Boolean(document.documentElement?.classList?.contains("software-landscape"));
+const toGamePointerDelta=(dx:number,dy:number)=>isRotatedGame()?{x:dy,y:-dx}:{x:dx,y:dy};
+const gamePointerInElement=(element:HTMLElement,event:{clientX:number;clientY:number})=>{
+ const rect=element.getBoundingClientRect(),rotated=isRotatedGame();
+ const width=element.clientWidth||(rotated?rect.height:rect.width);
+ const height=element.clientHeight||(rotated?rect.width:rect.height);
+ return rotated
+  ?{x:(event.clientY-rect.top)/Math.max(1,rect.height)*width,
+    y:((rect.right??rect.left+rect.width)-event.clientX)/Math.max(1,rect.width)*height}
+  :{x:(event.clientX-rect.left)/Math.max(1,rect.width)*width,
+    y:(event.clientY-rect.top)/Math.max(1,rect.height)*height};
+};
+
 /** UI-local to preserve standalone GameUI test harness; matches GrabCombat rules. */
 const grabGesture=(startX:number,startY:number,x:number,y:number,elapsedMs:number)=>{
  const delta=toGamePointerDelta(x-startX,y-startY),dx=delta.x,up=-delta.y;
@@ -739,8 +753,10 @@ export class GameUI{
   let joystickPointer=-1;
   const updateJoystick=(event:PointerEvent)=>{
    const local=gamePointerInElement(this.joystick,event);
-   let dx=local.x-this.joystick.clientWidth/2,dy=local.y-this.joystick.clientHeight/2;
-   const max=Math.max(1,Math.min(this.joystick.clientWidth,this.joystick.clientHeight)/2-12),distance=Math.hypot(dx,dy);
+   const width=this.joystick.clientWidth||this.joystick.getBoundingClientRect().width;
+   const height=this.joystick.clientHeight||this.joystick.getBoundingClientRect().height;
+   let dx=local.x-width/2,dy=local.y-height/2;
+   const max=Math.max(1,Math.min(width,height)/2-12),distance=Math.hypot(dx,dy);
    if(distance>max){dx=dx/distance*max;dy=dy/distance*max;}
    this.joystickThumb.style.transform="translate(calc(-50% + "+dx+"px), calc(-50% + "+dy+"px))";
    actions.setTouchMove(dx/max,dy/max);
@@ -797,8 +813,10 @@ export class GameUI{
   let p2StickPointer=-1,p2AttackPointer=-1;
   const moveP2=(event:PointerEvent)=>{
    const local=gamePointerInElement(this.p2Joystick,event);
-   let dx=local.x-this.p2Joystick.clientWidth/2,dy=local.y-this.p2Joystick.clientHeight/2;
-   const limit=Math.max(1,Math.min(this.p2Joystick.clientWidth,this.p2Joystick.clientHeight)/2-12);
+   const width=this.p2Joystick.clientWidth||this.p2Joystick.getBoundingClientRect().width;
+   const height=this.p2Joystick.clientHeight||this.p2Joystick.getBoundingClientRect().height;
+   let dx=local.x-width/2,dy=local.y-height/2;
+   const limit=Math.max(1,Math.min(width,height)/2-12);
    const len=Math.hypot(dx,dy);
    if(len>limit){dx=dx/len*limit;dy=dy/len*limit;}
    this.p2Thumb.style.transform="translate(calc(-50% + "+dx+"px),calc(-50% + "+dy+"px))";
@@ -998,7 +1016,7 @@ export class GameUI{
    pad.textContent="⊕";
    let pointer:number|null=null;
    const aim=(event:PointerEvent)=>{
-    const local=gamePointerInElement(pad,event),x=local.x-pad.clientWidth/2,y=pad.clientHeight/2-local.y;
+    const local=gamePointerInElement(pad,event),x=local.x-(pad.clientWidth||pad.getBoundingClientRect().width)/2,y=(pad.clientHeight||pad.getBoundingClientRect().height)/2-local.y;
     if(Math.hypot(x,y)<5)return;
     actions.setWeaponAim?.(player,x,y);
     pad.style.setProperty("--aim-angle",(-Math.atan2(y,x)*180/Math.PI)+"deg");
