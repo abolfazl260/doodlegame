@@ -268,7 +268,8 @@ def main() -> None:
     apk = args.apk
     if apk.name != "app-release.apk" or not apk.is_file() or not apk.stat().st_size:
         raise PublishError("Expected nonempty app-release.apk verified by the earlier signing gate.")
-    digest = hashlib.file_digest(apk.open("rb"), "sha256").hexdigest()
+    with apk.open("rb") as apk_file:
+        digest = hashlib.file_digest(apk_file, "sha256").hexdigest()
     if digest != os.environ.get("CAFEBAZAAR_VERIFIED_APK_SHA256", "").lower():
         raise PublishError("APK changed since metadata/signature verification; refusing submission.")
     commit_sha = os.environ.get("GITHUB_SHA", "")
