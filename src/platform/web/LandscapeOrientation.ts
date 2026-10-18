@@ -1,67 +1,73 @@
-import {Capacitor} from "@capacitor/core";
-import type {I18n} from "../../i18n/I18n";
+/**
+ * Maintain landscape game coordinates regardless of the device's orientation.
+ * In portrait, CSS rotates the entire app, not just the rendering canvas.
+ */
+export const isSoftwareLandscape=()=>document.documentElement.classList.contains("software-landscape");
 
-type LandscapeCallbacks={
- onPortrait:()=>void;
- onLandscape:()=>void;
-};
+export function toGamePointerDelta(dx:number,dy:number){
+ return isSoftwareLandscape()?{x:dy,y:-dx}:{x:dx,y:dy};
+}
 
-export function installLandscapeOrientation(i18n:I18n,callbacks:LandscapeCallbacks){
- const portrait=window.matchMedia("(orientation: portrait)");
- const app=document.querySelector<HTMLElement>("#app");
- const title=document.querySelector<HTMLElement>("#orientation-guard-title");
- const message=document.querySelector<HTMLElement>("#orientation-guard-message");
- const button=document.querySelector<HTMLButtonElement>("#orientation-guard-button");
-
- const updateText=()=>{
-  const persian=i18n.locale==="fa";
-  if(title)title.textContent=persian?"حالت افقی الزامی است":"LANDSCAPE ONLY";
-  if(message)message.textContent=i18n.messages.rotateHint;
-  if(button){
-   button.textContent=persian?"تلاش برای چرخش خودکار":"TRY AUTO-ROTATE";
-   button.hidden=Capacitor.isNativePlatform()||typeof screen.orientation?.lock!=="function";
-  }
+/** CSS-box coordinates, accounting for the app's clockwise quarter-turn. */
+export function gamePointerInElement(element:HTMLElement,event:{clientX:number;clientY:number}){
+ const rect=element.getBoundingClientRect();
+ if(isSoftwareLandscape())return {
+  x:(event.clientY-rect.top)/Math.max(1,rect.height)*element.clientWidth,
+  y:(rect.right-event.clientX)/Math.max(1,rect.width)*element.clientHeight
  };
- const unsubscribeLocale=i18n.subscribe(updateText);
- updateText();
-
- const requestLandscape=async(allowFullscreen=false):Promise<void>=>{
-  if(Capacitor.isNativePlatform()||typeof screen.orientation?.lock!=="function")return;
-  try{
-   await screen.orientation.lock("landscape");
-   return;
-  }catch{
-   // Browsers commonly require fullscreen and a user gesture for orientation locking.
-  }
-  if(!allowFullscreen||document.fullscreenElement||!document.documentElement.requestFullscreen)return;
-  try{
-   await document.documentElement.requestFullscreen();
-   await screen.orientation.lock("landscape");
-  }catch{
-   // On unsupported browsers the portrait blocker stays visible until rotated manually.
-  }
- };
-
- const handleChange=()=>{
-  app?.toggleAttribute("inert",portrait.matches);
-  if(portrait.matches)callbacks.onPortrait();
-  else callbacks.onLandscape();
- };
- const onLockClick=()=>{void requestLandscape(true);};
- button?.addEventListener("click",onLockClick);
- portrait.addEventListener("change",handleChange);
- window.addEventListener("resize",handleChange);
- handleChange();
- void requestLandscape();
-
  return {
-  isPortrait:()=>portrait.matches,
-  requestLandscape:()=>{void requestLandscape();},
+  x:(event.clientX-rect.left)/Math.max(1,rect.width)*element.clientWidth,
+  y:(event.clientY-rect.top)/Math.max(1,rect.height)*element.clientHeight
+ };
+}
+
+export function installLandscapeOrientation(callbacks:{onResize:()=>void}){
+ const app=document.querySelector<HTMLElement>("#app");
+ if(!app)throw new Error("Landscape game surface is missing.");
+ const root=document.documentElement;
+ const viewport=window.visualViewport;
+ let scheduled=0,rotated=false,lastSize="";
+ const refresh=()=>{
+  if(scheduled){cancelAnimationFrame(scheduled);scheduled=0;}
+  const physicalWidth=Math.max(1,Math.round(viewport?.width||window.innerWidth));
+  let physicalHeight=Math.max(1,Math.round(viewport?.height||window.innerHeight));
+  // Telegram's usable viewport may be shorter than the WebView layout viewport.
+  const telegramHeight=Number.parseFloat(root.style.getPropertyValue("--tg-viewport-height"));
+  if(root.classList.contains("telegram-mini-app")&&Number.isFinite(telegramHeight)&&telegramHeight>0)
+   physicalHeight=Math.min(physicalHeight,Math.round(telegramHeight));
+  const left=Math.round(viewport?.offsetLeft||0),top=Math.round(viewport?.offsetTop||0);
+  rotated=physicalHeight>physicalWidth;
+  const gameWidth=rotated?physicalHeight:physicalWidth;
+  const gameHeight=rotated?physicalWidth:physicalHeight;
+  const dimensions=[physicalWidth,physicalHeight,left,top,rotated].join(":");
+  if(dimensions===lastSize){callbacks.onResize();return;}
+  lastSize=dimensions;
+  root.classList.toggle("software-landscape",rotated);
+  app.style.setProperty("--game-width",gameWidth+"px");
+  app.style.setProperty("--game-height",gameHeight+"px");
+  app.style.setProperty("--game-physical-width",physicalWidth+"px");
+  app.style.setProperty("--game-offset-left",left+"px");
+  app.style.setProperty("--game-offset-top",top+"px");
+  callbacks.onResize();
+ };
+ const queue=()=>{if(!scheduled)scheduled=requestAnimationFrame(refresh);};
+ window.addEventListener("resize",queue);
+ window.addEventListener("orientationchange",queue);
+ viewport?.addEventListener("resize",queue);
+ viewport?.addEventListener("scroll",queue);
+ refresh();
+ return {
+  isPortrait:()=>rotated,
+  refresh,
   dispose:()=>{
-   unsubscribeLocale();
-   button?.removeEventListener("click",onLockClick);
-   portrait.removeEventListener("change",handleChange);
-   window.removeEventListener("resize",handleChange);
+   window.removeEventListener("resize",queue);
+   window.removeEventListener("orientationchange",queue);
+   viewport?.removeEventListener("resize",queue);
+   viewport?.removeEventListener("scroll",queue);
+   if(scheduled)cancelAnimationFrame(scheduled);
+   root.classList.remove("software-landscape");
+   for(const name of ["--game-width","--game-height","--game-physical-width","--game-offset-left","--game-offset-top"])
+    app.style.removeProperty(name);
   }
  };
 }
