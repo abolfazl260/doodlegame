@@ -1,0 +1,231 @@
+name: Publish Cafe Bazaar (manual)
+
+# Independent production workflow; never triggered by push, PR, tags, or schedules.
+on:
+  workflow_dispatch:
+    inputs:
+      changelog_fa:
+        description: 'Persian release notes (required)'
+        required: true
+        type: string
+      changelog_en:
+        description: 'Optional English release notes'
+        required: false
+        type: string
+      developer_note:
+        description: 'Optional private Bazaar reviewer note'
+        required: false
+        type: string
+      confirm_publish:
+        description: 'I authorize submission and automatic publication AFTER Bazaar approval'
+        type: boolean
+        required: true
+        default: false
+      resume_existing_draft:
+        description: 'Resume a Pishkhan draft I verified myself'
+        type: boolean
+        default: false
+      expected_draft_id:
+        description: 'Required on resume: exact Bazaar draft ID (safety confirmation)'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doodlegame-cafebazaar-production
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - name: Gate operator confirmation before building
+        env:
+          CONFIRM: ${{ inputs.confirm_publish }
+          NOTES_FA: ${{ inputs.changelog_fa }
+          RESUME: ${{ inputs.resume_existing_draft }
+          DRAFT_ID: ${{ inputs.expected_draft_id }
+          BAZAAR_SECRET: ${{ secrets.CAFEBAZAAR_PISHKHAN_API_SECRET }
+          STORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }
+          CERT_SHA256: ${{ secrets.CAFEBAZAAR_EXPECTED_CERT_SHA256 }
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" != "workflow_dispatch" || "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "::error::Cafe Bazaar must be manually dispatched from main."; exit 1
+          fi
+          if [[ "$CONFIRM" != "true" ]]; then
+            echo "::error::Check confirm_publish first."; exit 1
+          fi
+          if [[ -z "$(printf '%s' "$NOTES_FA" | tr -d '[:space:]')" ]]; then
+            echo "::error::Persian changelog_fa cannot be empty."; exit 1
+          fi
+          for name in BAZAAR_SECRET STORE_B64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD CERT_SHA256; do
+            if [[ -z "$(printenv "$name")" ]]; then
+              echo "::error::Missing required Actions secret: $name"; exit 1
+            fi
+          done
+          if [[ "$RESUME" == "true" && -z "$DRAFT_ID" ]]; then
+            echo "::error::expected_draft_id must match the draft you verified in Pishkhan."; exit 1
+          fi
+          if [[ "$RESUME" != "true" && -n "$DRAFT_ID" ]]; then
+            echo "::error::expected_draft_id is only for resume_existing_draft."; exit 1
+          fi
+
+      - name: Checkout exact main revision without retaining token
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Refuse stale main revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin refs/heads/main
+          if [[ "$(git rev-parse HEAD)" != "$GITHUB_SHA" || "$(git rev-parse HEAD)" != "$(git rev-parse FETCH_HEAD)" ]]; then
+            echo "::error::main changed after dispatch. Start a new manual run."; exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Read committed Bazaar version before any APK build
+        id: version
+        run: python3 tool/cafebazaar_version.py --prepare
+
+      - name: Validate source and publishing logic offline
+        run: |
+          set -euo pipefail
+          npm test
+          python3 -m unittest discover -s tool/tests -p 'test_cafebazaar*.py' -v
+
+      - name: Inspect Bazaar release history and existing drafts (GET only)
+        env:
+          CAFEBAZAAR_PISHKHAN_API_SECRET: ${{ secrets.CAFEBAZAAR_PISHKHAN_API_SECRET }
+          CAFEBAZAAR_CHANGELOG_FA: ${{ inputs.changelog_fa }
+          RESUME: ${{ inputs.resume_existing_draft }
+          EXPECTED_DRAFT_ID: ${{ inputs.expected_draft_id }
+        run: |
+          set -euo pipefail
+          args=(--preflight)
+          if [[ "$RESUME" == "true" ]]; then args+=(--resume-existing-draft); fi
+          if [[ -n "$EXPECTED_DRAFT_ID" ]]; then args+=(--expected-draft-id "$EXPECTED_DRAFT_ID"); fi
+          python3 tool/publish_cafebazaar.py "${{args[@]}"
+
+      - name: Decode the production keystore to temporary storage
+        env:
+          STORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }
+        run: |
+          python3 - <<'PY'
+          import base64, os
+          from pathlib import Path
+          p=Path(os.environ["RUNNER_TEMP"])/"doodlegame-bazaar.jks"
+          p.write_bytes(base64.b64decode(os.environ["STORE_B64"],validate=True))
+          p.chmod(0o600)
+          if not p.stat().st_size:
+              raise SystemExit("Empty production keystore")
+          PY
+
+      - name: Generate Capacitor Android sources with explicit Bazaar versionCode
+        env:
+          ANDROID_VERSION_CODE: ${{ steps.version.outputs.version_code }
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/doodlegame-bazaar.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }
+        run: npm run android:sync
+
+      - name: Assemble signed release APK only (never Debug/AAB)
+        env:
+          ANDROID_VERSION_CODE: ${{ steps.version.outputs.version_code }
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/doodlegame-bazaar.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }
+        run: |
+          set -euo pipefail
+          test -s "$ANDROID_KEYSTORE_PATH"
+          node scripts/android/gradle.mjs assembleRelease
+          test -s android/app/build/outputs/apk/release/app-release.apk
+          test ! -e android/app/build/outputs/apk/release/app-release-unsigned.apk
+
+      - name: Audit release privacy and production hardening
+        run: |
+          set -euo pipefail
+          npm run android:audit:privacy
+          npm run android:verify:production
+
+      - name: Validate APK package, versions and pinned certificate
+        id: verified
+        env:
+          CAFEBAZAAR_EXPECTED_CERT_SHA256: ${{ secrets.CAFEBAZAAR_EXPECTED_CERT_SHA256 }
+        run: |
+          set -euo pipefail
+          aapt="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -1)"
+          apksigner="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -1)"
+          test -x "$aapt"
+          test -x "$apksigner"
+          python3 tool/cafebazaar_version.py --verify-apk \
+            android/app/build/outputs/apk/release/app-release.apk \
+            --aapt "$aapt" --apksigner "$apksigner"
+
+      - name: Write immutable artifact metadata
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.version_name }
+          VERSION_CODE: ${{ steps.version.outputs.version_code }
+          APK_HASH: ${{ steps.verified.outputs.sha256 }
+        run: |
+          printf 'App: DoodleGame\nPackage: com.abolfazl.doodlegame\nVersion: %s (%s)\nCommit: %s\nAPK SHA-256: %s\n' \
+            "$VERSION_NAME" "$VERSION_CODE" "$GITHUB_SHA" "$APK_HASH" \
+            > android/app/build/outputs/apk/release/release-metadata.txt
+
+      - name: Store signed APK as a 14-day artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: doodlegame-bazaar-${{ steps.version.outputs.version_name }-code${{ steps.version.outputs.version_code }-${{ github.sha }
+          path: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/apk/release/release-metadata.txt
+          if-no-files-found: error
+          retention-days: 14
+
+      # These POST operations are intentionally non-retryable.
+      - name: Submit APK, then commit with auto-publish AFTER Bazaar approval
+        env:
+          CAFEBAZAAR_PISHKHAN_API_SECRET: ${{ secrets.CAFEBAZAAR_PISHKHAN_API_SECRET }
+          CAFEBAZAAR_CHANGELOG_FA: ${{ inputs.changelog_fa }
+          CAFEBAZAAR_CHANGELOG_EN: ${{ inputs.changelog_en }
+          CAFEBAZAAR_DEVELOPER_NOTE: ${{ inputs.developer_note }
+          CAFEBAZAAR_VERIFIED_APK_SHA256: ${{ steps.verified.outputs.sha256 }
+          RESUME: ${{ inputs.resume_existing_draft }
+          EXPECTED_DRAFT_ID: ${{ inputs.expected_draft_id }
+        run: |
+          set -euo pipefail
+          args=(--apk android/app/build/outputs/apk/release/app-release.apk)
+          if [[ "$RESUME" == "true" ]]; then args+=(--resume-existing-draft); fi
+          if [[ -n "$EXPECTED_DRAFT_ID" ]]; then args+=(--expected-draft-id "$EXPECTED_DRAFT_ID"); fi
+          python3 tool/publish_cafebazaar.py "${{args[@]}"
+
+      - name: Remove temporary production keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/doodlegame-bazaar.jks"
