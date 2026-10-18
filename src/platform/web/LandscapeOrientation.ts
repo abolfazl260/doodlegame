@@ -36,7 +36,8 @@ export function installLandscapeOrientation(callbacks:{onResize:()=>void}){
   if(root.classList.contains("telegram-mini-app")&&Number.isFinite(telegramHeight)&&telegramHeight>0)
    physicalHeight=Math.min(physicalHeight,Math.round(telegramHeight));
   const left=Math.round(viewport?.offsetLeft||0),top=Math.round(viewport?.offsetTop||0);
-  rotated=physicalHeight>physicalWidth;
+  // Virtual keyboards can shrink visualViewport without rotating the device.
+  rotated=window.innerHeight>window.innerWidth;
   const gameWidth=rotated?physicalHeight:physicalWidth;
   const gameHeight=rotated?physicalWidth:physicalHeight;
   const dimensions=[physicalWidth,physicalHeight,left,top,rotated].join(":");
