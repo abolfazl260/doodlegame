@@ -2,7 +2,7 @@
  * Maintain landscape game coordinates regardless of the device's orientation.
  * In portrait, CSS rotates the entire app, not just the rendering canvas.
  */
-export const isSoftwareLandscape=()=>document.documentElement.classList.contains("software-landscape");
+export const isSoftwareLandscape=()=>typeof document!=="undefined"&&Boolean(document.documentElement?.classList?.contains("software-landscape"));
 
 export function toGamePointerDelta(dx:number,dy:number){
  return isSoftwareLandscape()?{x:dy,y:-dx}:{x:dx,y:dy};
@@ -10,14 +10,16 @@ export function toGamePointerDelta(dx:number,dy:number){
 
 /** CSS-box coordinates, accounting for the app's clockwise quarter-turn. */
 export function gamePointerInElement(element:HTMLElement,event:{clientX:number;clientY:number}){
- const rect=element.getBoundingClientRect();
- if(isSoftwareLandscape())return {
-  x:(event.clientY-rect.top)/Math.max(1,rect.height)*element.clientWidth,
-  y:(rect.right-event.clientX)/Math.max(1,rect.width)*element.clientHeight
+ const rect=element.getBoundingClientRect(),rotated=isSoftwareLandscape();
+ const width=element.clientWidth||(rotated?rect.height:rect.width);
+ const height=element.clientHeight||(rotated?rect.width:rect.height);
+ if(rotated)return {
+  x:(event.clientY-rect.top)/Math.max(1,rect.height)*width,
+  y:((rect.right??rect.left+rect.width)-event.clientX)/Math.max(1,rect.width)*height
  };
  return {
-  x:(event.clientX-rect.left)/Math.max(1,rect.width)*element.clientWidth,
-  y:(event.clientY-rect.top)/Math.max(1,rect.height)*element.clientHeight
+  x:(event.clientX-rect.left)/Math.max(1,rect.width)*width,
+  y:(event.clientY-rect.top)/Math.max(1,rect.height)*height
  };
 }
 
