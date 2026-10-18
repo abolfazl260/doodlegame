@@ -138,7 +138,7 @@ export class WebInput implements InputSource {
  }
  private blur(){this.resetTransientState();}
  private context(e:MouseEvent){e.preventDefault();}
- private position(e:PointerEvent){const p=gamePointerInElement(this.canvas,e);this.state.pointerX=p.x/Math.max(this.canvas.clientWidth,1)*2-1;this.state.pointerY=p.y/Math.max(this.canvas.clientHeight,1)*2-1;}
+ private position(e:PointerEvent){const r=this.canvas.getBoundingClientRect(),p=gamePointerInElement(this.canvas,e);const w=this.canvas.clientWidth||r.width,h=this.canvas.clientHeight||r.height;this.state.pointerX=p.x/Math.max(w,1)*2-1;this.state.pointerY=p.y/Math.max(h,1)*2-1;}
  private movement(){
   this.state.aimUpHeld=this.keys.has("KeyR");this.state.aimDownHeld=this.keys.has("KeyF");
   this.p2.aimUpHeld=this.keys.has("PageUp");this.p2.aimDownHeld=this.keys.has("PageDown");
