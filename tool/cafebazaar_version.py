@@ -108,7 +108,8 @@ def verify_apk(
         raise VersionError("APK signer certificate does not match the pinned Bazaar production certificate; never upload with another key.")
     if not re.search(r"Verified using v[23] scheme .*?: true", signature, re.I):
         raise VersionError("APK signature v2/v3 verification did not succeed.")
-    digest = hashlib.file_digest(apk.open("rb"), "sha256").hexdigest()
+    with apk.open("rb") as apk_file:
+        digest = hashlib.file_digest(apk_file, "sha256").hexdigest()
     return digest
 
 
