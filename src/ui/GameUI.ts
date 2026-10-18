@@ -2,6 +2,7 @@ import {ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl,type ArenaCategory} f
 import {MobileOnboarding,type TutorialSignals} from "./MobileOnboarding";
 import type {Storage} from "../storage/Storage";
 import {GameState} from "../core/GameState";
+import {gamePointerInElement,toGamePointerDelta} from "../platform/web/LandscapeOrientation";
 
 import {getArenaTheme} from "../themes/ArenaThemes";
 import type {ArenaId,BuiltInArenaId,GameModeId,HillState,CharacterId} from "../gameplay/GameSession";
@@ -31,7 +32,7 @@ type Actions={
 };
 /** UI-local to preserve standalone GameUI test harness; matches GrabCombat rules. */
 const grabGesture=(startX:number,startY:number,x:number,y:number,elapsedMs:number)=>{
- const dx=x-startX,up=startY-y;
+ const delta=toGamePointerDelta(x-startX,y-startY),dx=delta.x,up=-delta.y;
  return elapsedMs>=0&&elapsedMs<=380&&up>=52&&Math.abs(dx)<=Math.max(30,up*.5);
 };
 type UiAction="start"|"pause"|"resume"|"restart"|"menu";
@@ -245,7 +246,6 @@ export class GameUI{
 
  private arenaTitle=document.createElement("div");
  private modeTitle=document.createElement("div");
- private rotateHint=document.createElement("div");
  private upgradePanel=document.createElement("div");
  private upgradeTitle=document.createElement("strong");
  private upgradeChoices=document.createElement("div");
@@ -650,7 +650,6 @@ export class GameUI{
   this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.characterNames,this.characterPicker,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
   this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaFilters,this.arenaEmpty,this.arenaCards,this.extraArenaSection,this.weaponDetails,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
-  this.rotateHint.className="game-ui__rotate-hint";
 
   this.upgradePanel.className="game-ui__upgrade-panel game-ui__upgrade-panel--compact";
   this.upgradeChoices.className="game-ui__upgrade-choices";
@@ -739,9 +738,9 @@ export class GameUI{
   const haptic=(duration=10)=>{if(typeof navigator!=="undefined"&&"vibrate" in navigator)navigator.vibrate(duration);};
   let joystickPointer=-1;
   const updateJoystick=(event:PointerEvent)=>{
-   const rect=this.joystick.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
-   let dx=event.clientX-cx,dy=event.clientY-cy;
-   const max=Math.max(1,Math.min(rect.width,rect.height)/2-12),distance=Math.hypot(dx,dy);
+   const local=gamePointerInElement(this.joystick,event);
+   let dx=local.x-this.joystick.clientWidth/2,dy=local.y-this.joystick.clientHeight/2;
+   const max=Math.max(1,Math.min(this.joystick.clientWidth,this.joystick.clientHeight)/2-12),distance=Math.hypot(dx,dy);
    if(distance>max){dx=dx/distance*max;dy=dy/distance*max;}
    this.joystickThumb.style.transform="translate(calc(-50% + "+dx+"px), calc(-50% + "+dy+"px))";
    actions.setTouchMove(dx/max,dy/max);
@@ -797,10 +796,9 @@ export class GameUI{
   // Independent pointer ownership: P2 never releases or cancels P1 or the other joystick.
   let p2StickPointer=-1,p2AttackPointer=-1;
   const moveP2=(event:PointerEvent)=>{
-   const rect=this.p2Joystick.getBoundingClientRect();
-   const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
-   let dx=event.clientX-cx,dy=event.clientY-cy;
-   const limit=Math.max(1,Math.min(rect.width,rect.height)/2-12);
+   const local=gamePointerInElement(this.p2Joystick,event);
+   let dx=local.x-this.p2Joystick.clientWidth/2,dy=local.y-this.p2Joystick.clientHeight/2;
+   const limit=Math.max(1,Math.min(this.p2Joystick.clientWidth,this.p2Joystick.clientHeight)/2-12);
    const len=Math.hypot(dx,dy);
    if(len>limit){dx=dx/len*limit;dy=dy/len*limit;}
    this.p2Thumb.style.transform="translate(calc(-50% + "+dx+"px),calc(-50% + "+dy+"px))";
@@ -1000,7 +998,7 @@ export class GameUI{
    pad.textContent="⊕";
    let pointer:number|null=null;
    const aim=(event:PointerEvent)=>{
-    const rect=pad.getBoundingClientRect(),x=event.clientX-rect.left-rect.width/2,y=rect.top+rect.height/2-event.clientY;
+    const local=gamePointerInElement(pad,event),x=local.x-pad.clientWidth/2,y=pad.clientHeight/2-local.y;
     if(Math.hypot(x,y)<5)return;
     actions.setWeaponAim?.(player,x,y);
     pad.style.setProperty("--aim-angle",(-Math.atan2(y,x)*180/Math.PI)+"deg");
@@ -1022,7 +1020,7 @@ export class GameUI{
    });
   }
   this.root.append(this.mobileWeaponSwitcher,this.p2WeaponControls,...this.aimPads);
-  this.root.append(this.menu,this.help,this.privacy,this.topHud,this.mobilePauseButton,this.weaponList,this.bowPanel,this.mobileControls,this.rotateHint);
+  this.root.append(this.menu,this.help,this.privacy,this.topHud,this.mobilePauseButton,this.weaponList,this.bowPanel,this.mobileControls);
   this.root.append(this.coach);
   container.append(this.pauseScrim,this.root);
   this.root.addEventListener("keydown",event=>{
@@ -1598,7 +1596,7 @@ export class GameUI{
   if(!s.tutorial)return;
   const mobile=typeof window.matchMedia==="function"&&window.matchMedia("(pointer: coarse)").matches;
   if(state===GameState.MENU||state===GameState.GAME_OVER){this.onboarding.dismiss();}
-  const eligible=mobile&&state===GameState.PLAYING&&!s.localPvP&&!s.winner&&!document.hidden&&window.innerWidth>window.innerHeight;
+  const eligible=mobile&&state===GameState.PLAYING&&!s.localPvP&&!s.winner&&!document.hidden;
   const step=s.tutorial?this.onboarding.update(s.tutorial,eligible,s.weapon==="missile"):null;
   if(step==="ready")this.coachReadyUntil=performance.now()+1800;
   const ready=eligible&&this.coachReadyUntil>performance.now();
@@ -1691,7 +1689,6 @@ export class GameUI{
   }
   this.playerNameInput.placeholder=messages.characterNames.optional;
   this.secondNameInput.placeholder=messages.characterNames.optional;
-  this.rotateHint.textContent=messages.rotateHint;
   this.updateButton.textContent=messages.buttons.update;
   this.helpButton.textContent=messages.buttons.help;
   this.renderGuide();
