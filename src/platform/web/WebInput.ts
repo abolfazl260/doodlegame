@@ -1,3 +1,4 @@
+import {gamePointerInElement} from "./LandscapeOrientation";
 import type {InputSource,InputState} from "../../input/Input";
 type MutableInputState={-readonly [K in keyof InputState]:InputState[K]};
 const P1:Readonly<Record<string,[number,number]>>={KeyA:[-1,0],KeyD:[1,0],KeyW:[0,-1],KeyS:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
@@ -137,7 +138,7 @@ export class WebInput implements InputSource {
  }
  private blur(){this.resetTransientState();}
  private context(e:MouseEvent){e.preventDefault();}
- private position(e:PointerEvent){const r=this.canvas.getBoundingClientRect();this.state.pointerX=((e.clientX-r.left)/Math.max(r.width,1))*2-1;this.state.pointerY=((e.clientY-r.top)/Math.max(r.height,1))*2-1;}
+ private position(e:PointerEvent){const p=gamePointerInElement(this.canvas,e);this.state.pointerX=p.x/Math.max(this.canvas.clientWidth,1)*2-1;this.state.pointerY=p.y/Math.max(this.canvas.clientHeight,1)*2-1;}
  private movement(){
   this.state.aimUpHeld=this.keys.has("KeyR");this.state.aimDownHeld=this.keys.has("KeyF");
   this.p2.aimUpHeld=this.keys.has("PageUp");this.p2.aimDownHeld=this.keys.has("PageDown");
