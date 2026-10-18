@@ -311,13 +311,13 @@ test("game over is a result screen with only replay/menu actions, not another se
 test("menu provides a safe-area-aware scroll region and sticky primary action",()=>{
  const css=readFileSync("src/styles.css","utf8");
  const menu=css.slice(css.indexOf("/* Issue #37: viewport-fitting menu."));
- assert.ok(menu.includes("max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom)"));
+ assert.ok(menu.includes("max-height:calc(100cqh - var(--safe-top) - var(--safe-bottom)"));
  assert.match(menu,/\.game-ui:not\(\.playing\) \.game-ui__menu\s*\{[^}]*overflow-y:auto/s);
  assert.match(menu,/\.game-ui:not\(\.playing\) \.game-ui__controls\s*\{[^}]*position:sticky/s);
  assert.match(css,/body\{touch-action:pan-y\}/);
  assert.ok(menu.includes("grid-template-columns:repeat(2,minmax(0,1fr))"));
- assert.ok(menu.includes("@media (max-height:520px)"));
- assert.ok(menu.includes("@media (max-height:360px)"));
+ assert.ok(menu.includes("(orientation: landscape) and (max-height:520px)"));
+ assert.ok(menu.includes("(orientation: portrait) and (max-width:360px)"));
  assert.ok(menu.includes("min-height:44px"));
 });
 
@@ -463,7 +463,7 @@ test("pause CSS keeps a separate blurred backdrop and a compact responsive dialo
  assert.match(css,/\.game-ui__pause-scrim\[hidden\]\{display:none!important\}/);
  assert.match(css,/\.game-ui\.paused \.game-ui__controls\s*\{/);
  assert.match(css,/button\[data-action="resume"\]:not\(\[hidden\]\)\s*\{/);
- assert.match(css,/@media\(max-height:360px\)/);
+ assert.match(css,/@media\s*\(orientation:\s*landscape\) and \(max-height:360px\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
 
@@ -490,8 +490,8 @@ test("new menu has localized live match summary and responsive touch-safe primar
  assert.match(css,/\.game-ui__quick-mode\[aria-pressed="true"\]/);
  assert.match(css,/\.game-ui__menu-extras\[open\]/);
  assert.match(css,/\.game-ui:not\(\.playing\) \.game-ui__controls button\[data-action="start"\]/);
- assert.match(css,/@media \(max-width:520px\)/);
- assert.match(css,/@media \(max-height:360px\)/);
+ assert.match(css,/@media \(orientation: landscape\) and \(max-width:520px\)/);
+ assert.match(css,/@media \(orientation: portrait\) and \(max-width:360px\)/);
  const {ui}=setup();
  assert.equal(ui.matchSummary.getAttribute("aria-live"),"polite");
  assert.equal(ui.matchSummary.getAttribute("aria-atomic"),"true");
