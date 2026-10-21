@@ -177,6 +177,10 @@ projectiles continue aging and can never remain indefinitely in a collision.
 Run `npm test` for motion/physics regressions, then `npm run build`.
 
 
+## Android builds run only when requested
+
+Ordinary pull requests and pushes to `main` run the browser/TypeScript CI suite, **not** Android Gradle builds or emulator tests. When an Android test APK is needed, go to **GitHub Actions → Android → Run workflow**. That manual workflow runs game regression tests, builds the debug APK and unsigned release APK/AAB, verifies Android requirements, and runs an emulator smoke test. Official signed releases are still built by **Android Release** when manually requested or when a version release tag is pushed.
+
 ## Android on-demand game data updates
 
 The Android main menu displays one **Update / بروزرسانی** button. It fetches the
