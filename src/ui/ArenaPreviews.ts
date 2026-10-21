@@ -1,6 +1,7 @@
 import {getBuiltInArenaPreviewDefinition,type BuiltInArenaId} from "../gameplay/GameSession.js";
 import {ARENA_THEMES,platformColors} from "../themes/ArenaThemes.js";
 import {stageLandmarksSvg} from "../themes/ArenaStageArt.js";
+import {svgBackdropInnerMarkup} from "../themes/SimplifiedSvgBackdrops.js";
 export const ARENA_CATEGORY_IDS=["all","balanced","vertical","moving","hazards","special"] as const;
 export type ArenaCategory=typeof ARENA_CATEGORY_IDS[number];
 export const BUILT_IN_PREVIEW_IDS=Object.keys(getBuiltInArenaPreviewDefinition()) as BuiltInArenaId[];
@@ -22,7 +23,8 @@ export function arenaPreviewSvg(id:BuiltInArenaId):string{
  const sx=(x:number)=>8+(x+12)*224/24,sy=(y:number)=>88-(y-minY)*80/(maxY-minY);
  const f=(v:number)=>v.toFixed(2),parts:string[]=[];
  const theme=ARENA_THEMES[id];
- const artwork=stageLandmarksSvg(id,theme,240,96);
+ const simpleArt=svgBackdropInnerMarkup(id);
+ const artwork=simpleArt?`<svg x="0" y="0" width="240" height="96" viewBox="0 0 1200 675" preserveAspectRatio="xMidYMid slice">${simpleArt}</svg>`:stageLandmarksSvg(id,theme,240,96);
  for(const [i,p] of arena.platforms.entries()){
   const colors=platformColors(theme,p.surface);
   const color=p.surface?.startsWith("conveyor")?"#fbc56e":p.surface==="ice"||p.surface==="slippery"?"#86dcf3":colors.edge;

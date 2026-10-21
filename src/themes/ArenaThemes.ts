@@ -2,6 +2,7 @@ import type {ArenaId,BuiltInArenaId,PlatformSurface} from "../gameplay/GameSessi
 import {getDownloadedArena,getDownloadedImage} from "../gameplay/DownloadableArenas.js";
 import {paintProfessionalBackdrop} from "./BackgroundArt.js";
 import {paintArenaLandmarks} from "./ArenaStageArt.js";
+import {paintSimpleSvgBackdrop} from "./SimplifiedSvgBackdrops.js";
 
 export type ArenaUiSkin = "doodle" | "neon" | "fantasy";
 export type ArenaBackdrop = "sketch" | "city" | "clouds" | "mountains" | "cavern" | "industrial";
@@ -58,6 +59,8 @@ export function getArenaTheme(arena:ArenaId):ArenaTheme{
 
 /** One cached backdrop implementation for both Canvas2D and WebGL. */
 export function paintArenaBackdrop(ctx:CanvasRenderingContext2D,width:number,height:number,t:ArenaTheme,arena?:ArenaId):void{
+ // Four built-in arenas use stand-alone SVG scenery, with procedural fallback during decode.
+ if(arena&&paintSimpleSvgBackdrop(ctx,width,height,arena))return;
  paintProfessionalBackdrop(ctx,width,height,t);
  // Stage-specific landmarks sit behind collision platforms and are cached by
  // both renderers. Downloadable arenas retain their own supplied backdrops.

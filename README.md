@@ -118,6 +118,9 @@ On mobile, drag the movement joystick **upward to jump**, including diagonally w
 
 ## Rendering
 
+Four built-in arenas (Fortress, Bridge, Crater, and Sky) now use small, self-contained SVG backgrounds in `src/assets/backgrounds/`, shared by both in-game renderers and arena-picker previews. These visual-only assets do not change gameplay physics, collision platforms, or arena definitions; they require no network access.
+
+
 The primary renderer uses **Three.js** for:
 
 - animated stick/doodle fighters

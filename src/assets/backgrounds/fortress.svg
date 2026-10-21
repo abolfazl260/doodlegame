@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="Fortress arena background">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#6485a3"/><stop offset=".63" stop-color="#b1bcc8"/><stop offset="1" stop-color="#d2d2d0"/></linearGradient></defs>
+<rect width="1200" height="675" fill="url(#sky)"/>
+<circle cx="238" cy="139" r="75" fill="#fff1d3" opacity=".74"/>
+<g fill="#fff3df" opacity=".4"><ellipse cx="248" cy="169" rx="129" ry="32"/><ellipse cx="324" cy="154" rx="78" ry="43"/><ellipse cx="835" cy="217" rx="142" ry="29"/><ellipse cx="921" cy="204" rx="84" ry="38"/></g>
+<path d="M0 462 112 395 212 441 322 328 428 405 540 297 660 386 754 329 888 410 992 327 1100 402 1200 363V675H0Z" fill="#6f89a5" opacity=".28"/><path d="M0 525 112 458 212 504 322 391 428 468 540 360 660 449 754 392 888 473 992 390 1100 465 1200 426V675H0Z" fill="#5a7492" opacity=".27"/>
+<g fill="#667d97" opacity=".55">
+<rect x="348" y="284" width="81" height="259"/><path d="M348 285 387 221 429 285Z"/>
+<rect x="437" y="364" width="255" height="190"/>
+<rect x="464" y="337" width="43" height="34"/><rect x="542" y="337" width="43" height="34"/><rect x="620" y="337" width="43" height="34"/>
+<rect x="702" y="302" width="83" height="250"/><path d="M702 302 743 238 785 302Z"/>
+</g>
+<g fill="#3c526e" opacity=".79">
+<path d="M0 269h63v-26h36v26h38v-26h36v26h39v-26h36v26h41v406H0Z"/>
+<rect x="26" y="188" width="220" height="80"/>
+<path d="M915 262h47v-26h37v26h43v-27h36v27h45v-25h35v25h42v413H915Z"/>
+<rect x="943" y="176" width="257" height="91"/>
+<rect x="26" y="165" width="36" height="27"/><rect x="92" y="165" width="36" height="27"/><rect x="158" y="165" width="36" height="27"/>
+<rect x="954" y="153" width="37" height="26"/><rect x="1022" y="153" width="37" height="26"/><rect x="1090" y="153" width="37" height="26"/><rect x="1158" y="153" width="42" height="26"/>
+</g>
+<path d="M90 327q34-54 68 0v93H90Zm943-20q34-54 68 0v105h-68Z" fill="#253b53" opacity=".53"/>
+<g fill="#cb6669"><path d="M192 198v102l-22-16-22 16V198ZM1069 187v105l-22-16-22 16V187Z"/></g>
+<g stroke="#384e66" stroke-width="5"><path d="M192 199v-69M1068 187v-65"/></g>
+<path d="m192 130 45 10-17 8 17 10-45-3Zm876-8 47 10-17 8 17 11-47-4Z" fill="#b64c52"/>
+<path d="M0 590q150-29 311 8 140-42 291 0 169-42 300 1 157-39 298-4v80H0Z" fill="#364963" opacity=".45"/>
+
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="Bridge Canyon arena background">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#e7a778"/><stop offset=".62" stop-color="#f5ce9f"/><stop offset="1" stop-color="#c48e7f"/></linearGradient></defs>
+<rect width="1200" height="675" fill="url(#sky)"/>
+<circle cx="890" cy="174" r="82" fill="#fff0c9" opacity=".84"/>
+<g fill="#fff1d6" opacity=".4"><ellipse cx="248" cy="163" rx="129" ry="32"/><ellipse cx="324" cy="148" rx="78" ry="43"/><ellipse cx="835" cy="211" rx="142" ry="29"/><ellipse cx="921" cy="198" rx="84" ry="38"/></g>
+<path d="M0 456 112 389 212 435 322 322 428 399 540 291 660 380 754 323 888 404 992 321 1100 396 1200 357V675H0Z" fill="#cb8769" opacity=".24"/><path d="M0 534 112 467 212 513 322 400 428 477 540 369 660 458 754 401 888 482 992 399 1100 474 1200 435V675H0Z" fill="#a96a65" opacity=".27"/>
+<path d="M515 675q92-88 194-131l156-67q-135 107-149 198Z" fill="#b8d4d7" opacity=".7"/>
+<path d="M563 675q87-82 155-115l145-77" fill="none" stroke="#e9e9d9" stroke-width="9" opacity=".4"/>
+<g fill="#ae6651"><path d="M0 258 64 227 136 236 197 268 249 264 289 302 251 404 190 490 160 675H0Z"/><path d="M1200 238 1142 211 1066 215 995 247 936 268 953 375 1017 466 1051 675h149Z"/></g>
+<path d="M0 261 65 222 140 231 202 266 279 272v22l-95-9-83-30-101 34Zm1200-19-55-33-79 7-70 26-57 26v24l77-28 79-21 105 14Z" fill="#e7af75" opacity=".83"/>
+<g fill="#6f453c" opacity=".72">
+<rect x="248" y="273" width="14" height="81" rx="4"/>
+<rect x="943" y="248" width="14" height="79" rx="4"/>
+</g>
+<g fill="none" stroke="#74493d" stroke-linecap="round">
+<path d="M247 311Q594 499 952 288" stroke-width="13" opacity=".8"/>
+<path d="M250 295Q582 389 948 275" stroke-width="5"/>
+<path d="M260 326v40M327 360v45M396 389v43M469 410v44M541 425v41M613 421v42M687 406v44M756 381v41M827 351v39M898 315v37" stroke-width="5" opacity=".85"/>
+</g>
+<path d="M253 319Q594 481 951 289" fill="none" stroke="#d1a27d" stroke-width="8" stroke-dasharray="45 8" opacity=".86"/>
+<g fill="#82905a" opacity=".5"><ellipse cx="83" cy="257" rx="71" ry="14"/><ellipse cx="1124" cy="231" rx="91" ry="17"/></g>
+<path d="M0 644q146-30 233 7v24H0Zm1012 3q104-35 188-9v37h-188Z" fill="#674945" opacity=".47"/>
+
+</svg>
