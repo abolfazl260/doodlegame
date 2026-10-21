@@ -15,8 +15,8 @@ export class Game{
   }
  }
  initialize(){this.assertNotDisposed();if(this.initialized)return;this.initialized=true;this.renderer.resize();this.renderer.render(this.session.getRenderState());}
- quickPlay(){this.ready();if(this.state.getState()!==GameState.MENU)return false;if(this.inRun)this.leaveRun();this.quickPlaySnapshot=this.session.getMatchSetup();this.session.setLocalPvP(false);this.session.setMode("duel");this.session.setArena("classic");this.session.setStartingWeapon("blade");this.start();return true;}
- start(){this.ready();this.session.cancelTransientActions();if(this.inRun)this.leaveRun();const s=this.state.getState();if(s===GameState.MENU||s===GameState.GAME_OVER){this.session.reset();this.state.transitionTo(GameState.PLAYING);}else if(s===GameState.PAUSED)this.state.transitionTo(GameState.PLAYING);this.loop.start();}
+ quickPlay(){this.ready();if(this.state.getState()!==GameState.MENU)return false;if(this.inRun)this.leaveRun();if(!this.session.hasConfirmedLoadout())return false;this.quickPlaySnapshot=this.session.getMatchSetup();this.session.setLocalPvP(false);this.session.setMode("duel");this.session.setArena("classic");this.session.setStartingWeapon("blade");this.start();return true;}
+ start(){this.ready();this.session.cancelTransientActions();if(this.inRun)this.leaveRun();const s=this.state.getState();if(s===GameState.MENU||s===GameState.GAME_OVER){if(!this.session.lockLoadout())return false;this.session.reset();this.state.transitionTo(GameState.PLAYING);}else if(s===GameState.PAUSED)this.state.transitionTo(GameState.PLAYING);this.loop.start();return true;}
  pause(){this.ready();if(this.state.getState()===GameState.PLAYING){this.loop.stop();this.session.cancelTransientActions();this.state.transitionTo(GameState.PAUSED);}}
  resume(){this.ready();if(this.state.getState()===GameState.PAUSED){this.session.cancelTransientActions();this.state.transitionTo(GameState.PLAYING);this.loop.start();}}
  endGame(){this.ready();if(this.state.getState()===GameState.PLAYING){
@@ -26,13 +26,16 @@ export class Game{
   }
   this.state.transitionTo(GameState.GAME_OVER);
  }}
- stop(){if(this.disposed)return;this.loop.stop();this.session.cancelTransientActions();if(this.inRun){this.progression?.suspend(this.session.getUpgradeSnapshot());this.leaveRun();return;}if(this.quickPlaySnapshot){this.session.restoreMatchSetup(this.quickPlaySnapshot);this.quickPlaySnapshot=null;}if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);}
+ stop(){if(this.disposed)return;this.loop.stop();this.session.cancelTransientActions();if(this.inRun){this.progression?.suspend(this.session.getUpgradeSnapshot());this.leaveRun();return;}if(this.quickPlaySnapshot){this.session.restoreMatchSetup(this.quickPlaySnapshot);this.quickPlaySnapshot=null;}this.session.clearLoadoutSelections();if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);else this.state.notify();}
  restart(){this.ready();this.loop.stop();this.session.cancelTransientActions();this.state.reset();this.start();}
- selectWeapon(direction:1|-1){this.ready();this.session.selectWeapon(direction);}
- selectPlayer2Weapon(direction:1|-1){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectPlayer2Weapon(direction);}
+ selectWeapon(direction:1|-1){this.ready();if(this.state.getState()===GameState.MENU)this.session.selectWeapon(direction);}
+ selectPlayer2Weapon(direction:1|-1){this.ready();if(this.state.getState()===GameState.MENU)this.session.selectPlayer2Weapon(direction);}
  selectCharacter(id:CharacterId){this.ready();const state=this.state.getState();if(state!==GameState.MENU&&state!==GameState.GAME_OVER)return;this.session.setCharacterId(id);this.state.notify();}
+ selectPlayer2Character(id:CharacterId){this.ready();if(this.state.getState()!==GameState.MENU)return;this.session.setPlayer2CharacterId(id);this.state.notify();}
+ selectPlayer2StartingWeapon(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()!==GameState.MENU)return false;const selected=this.session.setPlayer2StartingWeapon(id);if(selected)this.state.notify();return selected;}
+ chooseRandomStartingWeapon(player:1|2){this.ready();if(this.state.getState()!==GameState.MENU)return false;const selected=this.session.chooseRandomStartingWeapon(player);if(selected)this.state.notify();return selected;}
  selectStartingWeapon(id:import("../input/Input").WeaponId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return false;const selected=this.session.setStartingWeapon(id);if(selected)this.state.notify();return selected;}
- selectWeaponById(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectWeaponById(id);}
+ selectWeaponById(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()===GameState.MENU)this.session.selectWeaponById(id);}
  upgradeWeapon(id:import("../input/Input").WeaponId){
   this.ready();const state=this.state.getState();
   if(state===GameState.PLAYING||state===GameState.PAUSED||this.session.isLocalPvP())return false;
@@ -46,7 +49,7 @@ export class Game{
   return upgraded;
  }
  selectPlayerCount(count:1|2){this.ready();if(this.state.getState()!==GameState.MENU&&this.state.getState()!==GameState.GAME_OVER)return;this.loop.stop();if(this.inRun)this.leaveRun();this.session.setLocalPvP(count===2);this.state.reset();}
- selectPlayer2WeaponById(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.selectPlayer2WeaponById(id);}
+ selectPlayer2WeaponById(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()===GameState.MENU)this.session.selectPlayer2WeaponById(id);}
  setWeaponAim(player:1|2,x:number,y:number){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.setWeaponAim(player,x,y);}
  fireWeapon(mobile=false){this.ready();if(this.state.getState()===GameState.PLAYING)this.session.fireWeapon(mobile);}
  cancelTouchAttack(){this.ready();this.session.cancelTouchAttack();}
