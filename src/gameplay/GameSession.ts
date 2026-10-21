@@ -267,19 +267,23 @@ export class GameSession{
  restoreMatchSetup(setup:MatchSetupSnapshot){this.startingWeapon=setup.startingWeapon;this.setMode(setup.mode);this.setLocalPvP(setup.localPvP);this.setArena(setup.arena);}
  setStartingWeapon(id:WeaponId){
   if(this.loadoutLocked||this.modeId==="random-weapons"||!this.availableWeapons().includes(id))return false;
-  this.startingWeapon=id;this.weaponChosen=true;this.equipWeapon(this.player,id);
+  this.startingWeapon=id;this.weaponChosen=true;
+  // Selecting equipment also confirms the already displayed character.
+  // Otherwise START stays disabled until the player re-taps the default portrait.
+  this.characterChosen=true;this.equipWeapon(this.player,id);
   return true;
  }
  setPlayer2StartingWeapon(id:WeaponId){
   if(this.loadoutLocked||!this.localPvP||this.modeId==="random-weapons"||!this.availableWeapons().includes(id))return false;
-  this.secondStartingWeapon=id;this.secondWeaponChosen=true;this.equipWeapon(this.opponent,id);
+  this.secondStartingWeapon=id;this.secondWeaponChosen=true;
+  this.secondCharacterChosen=true;this.equipWeapon(this.opponent,id);
   return true;
  }
  chooseRandomStartingWeapon(player:1|2){
   if(this.loadoutLocked||this.modeId!=="random-weapons"||(player===2&&!this.localPvP))return false;
   const id=ORDER[Math.floor(Math.random()*ORDER.length)];
-  if(player===1){this.startingWeapon=id;this.weaponChosen=true;this.equipWeapon(this.player,id);}
-  else{this.secondStartingWeapon=id;this.secondWeaponChosen=true;this.equipWeapon(this.opponent,id);}
+  if(player===1){this.startingWeapon=id;this.weaponChosen=true;this.characterChosen=true;this.equipWeapon(this.player,id);}
+  else{this.secondStartingWeapon=id;this.secondWeaponChosen=true;this.secondCharacterChosen=true;this.equipWeapon(this.opponent,id);}
   return true;
  }
  fireWeapon(mobile=false){
