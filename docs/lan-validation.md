@@ -4,13 +4,13 @@ Date: 2026-10-21. Source implementation is available for review; **physical feas
 
 ## Automated evidence
 
-- `npm test`: 390 passing tests including 14 LAN unit/integration tests. Coverage: handshake/token; strict protocol and address validation; input edge resend/deduplication; 60 Hz timing; host-authoritative P2 movement/aim/bow; all 16 arena DTOs; interpolation; consented pause/resume/rematch; rejoin/expiry; old input rejection; forged authority messages; native source registration/security assertions. In-memory transports are intentionally used for portable orchestration tests.
+- `npm test`: 397 passing tests including 21 LAN unit/integration tests. Coverage: handshake/token; strict protocol and address validation; input edge resend/deduplication; 60 Hz timing; host-authoritative P2 movement/aim/bow; all 16 arena DTOs; interpolation; consented pause/resume/rematch; rejoin/expiry; old input rejection; forged authority messages; native source registration/security assertions. In-memory transports are intentionally used for portable orchestration tests.
 - `npm run build`: passes TypeScript and Vite production compilation.
 - Native project generation followed by `npm run android:sync` in a fresh source copy: passes asset build/sync, source copying and plugin registration. Generated Java matches the repository source. HTTPS origin, usesCleartextTraffic=false and restricted navigation remain.
 - `npm run android:build:debug`: **blocked**, not passed. This container cannot fetch the Gradle distribution (`Network is unreachable`); it also has only JRE 17, while Capacitor 8 requires JDK 21, and no Android SDK is provisioned. No APK compilation or native runtime success is claimed.
 - Release manifest/privacy/production gates require an actual release build. They remain pending, even though their source baseline is updated for ACCESS_NETWORK_STATE.
 - Browser integration: all 5 LAN cases (host/guest × Persian/English, plus public-IP rejection) pass. The 4 existing loadout cases and all 8 same-device PvP cases pass (17 total targeted browser cases). Old PvP fixtures were updated to explicitly confirm loadouts, as required by the existing production contract. Browser tests use an in-memory transport, not native sockets. The standard Chromium CDN was unavailable, so these runs used a temporary Chromium 153 binary from the npm-distributed `@sparticuz/chromium` package with Playwright 1.56.1; that temporary dependency/config is not part of the repository.
-- `ci:bundle-budget`: passes, 984,439 total JavaScript bytes against 1,500,000 budget (gzip 267,652 bytes).
+- `ci:bundle-budget`: passes, 986,389 total JavaScript bytes against 1,500,000 budget (gzip 268,130 bytes).
 - `ci:verify-monetization` and `ci:verify-audience`: pass, including inspection of the configured Android source manifest.
 
 ## Required physical sign-off (not run here)
@@ -36,3 +36,9 @@ Record at least five minutes on two midrange phones at 20 Hz snapshots / 30 Hz i
 ## Release rule
 
 Keep #163 open and this PR in draft until native compilation, release gates, the WAN-disconnected two-phone match/rematch and performance evidence are supplied. Existing manually requested Android Actions can build debug/release artifacts and run the single-emulator smoke test; one emulator is not evidence for two-phone LAN acceptance.
+
+## Follow-up review
+
+Seven added regression cases cover same-tick pause snapshots, rejoining a completed match, a fixed rejoin deadline across failed retries, cancelled native listen setup, post-result effect expiry and cue acknowledgement, cancellation while a native listener registers, and listener cleanup if native close rejects. The five orchestration regressions were reproduced against the previous implementation before correction. Protocol v2 adds independent snapshot revisions and a match-scoped presentation acknowledgement; old APKs are rejected by handshake version/fingerprint.
+
+This follow-up does not change the outstanding physical-device or native APK compilation status.

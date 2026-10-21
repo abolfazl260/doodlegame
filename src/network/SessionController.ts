@@ -35,6 +35,7 @@ export class SessionController {
  private handshakeDeadline=0;
  private lostAt=0;
  private tick=0;
+ private snapshotRevision=0;
  private seq=0;
  private lastInputSeq=0;
  private inputClock=0;
@@ -45,6 +46,7 @@ export class SessionController {
  private aim:[number,number]|null=null;
  private weapon:WeaponId|null=null;
  private cueAck=0;
+ private explicitCueAck=0;
  private cueSeen=0;
  private cues:CombatCue[]=[];
  private queue:Message[]=[];
@@ -68,9 +70,10 @@ export class SessionController {
  private begin(){this.input.setLocalPvPEnabled?.(false);this.loop.start();this.maintenance=setInterval(()=>this.maintain(),1000);this.lastHeard=this.clock();}
  async create(){
   await this.close();this.view={role:'host',address:'',port:0,token:sessionToken(),connected:false,connecting:true,error:null,lobby:initialLobby(),rtt:0};this.notify();
-  try{const gen=++this.connectGeneration;const room=await this.transport.listen();if(gen!==this.connectGeneration)return;
+  const gen=++this.connectGeneration;
+  try{const room=await this.transport.listen();if(gen!==this.connectGeneration)return;
    this.view.address=room.address;this.view.port=room.port;this.view.connecting=false;this.begin();this.notify();
-  }catch(error){this.view.connecting=false;this.view.error=this.errorCode(error);this.notify();}
+  }catch(error){if(gen!==this.connectGeneration)return;this.view.connecting=false;this.view.error=this.errorCode(error);this.notify();}
  }
  async join(address:string,port:number,token:string){
   if(!isLanAddress(address)||!Number.isInteger(port)||port<1024||port>65535||!/[a-f0-9]{32}/i.test(token)||token.length!==32)throw new Error('address');
@@ -147,10 +150,19 @@ export class SessionController {
      if(l.phase!=='playing')return;
      const second=this.remote.next();this.hostInput.second=second.input;this.apply(second,2);
      this.apply({input:this.input.getState(),aim:this.aim,weapon:this.weapon},1);this.weapon=null;
-     this.session!.update(step);this.tick++;this.collectCues();
+     this.session!.update(step);this.tick++;this.collectCues(step);
      if(this.session!.getRenderState().winner){l.phase='result';this.clearInputs();this.publishLobby();this.snapshot();this.notify();}
     });
     this.snapshotClock+=dt;if(this.snapshotClock>=.05){this.snapshotClock%=.05;this.snapshot();}
+   }else if(l.phase==='result'&&this.session){
+    const state=this.session.getRenderState();
+    if(state.combatCues.length||state.explosions.length||state.debris.length){
+     // GameSession's winner branch ages presentation only; it cannot apply new damage.
+     this.step.advance(dt,step=>{this.session!.update(step);this.tick++;this.collectCues(step);});
+     this.snapshotClock+=dt;
+     const current=this.session.getRenderState();
+     if(this.snapshotClock>=.05||!current.combatCues.length&&!current.explosions.length&&!current.debris.length){this.snapshotClock%=.05;this.snapshot();}
+    }
    }
   }else if(l.phase==='playing'){
    // The clock guard also prevents a delayed PLAYING packet bypassing the local countdown.
@@ -160,14 +172,27 @@ export class SessionController {
    }catch{this.fail('backpressure');}
   }
  }
- private render(){const frame=this.frame;if(frame){this.callbacks.render(frame,this.getState());if(this.view.role==='guest')for(const cue of frame.combatCues)this.cueAck=Math.max(this.cueAck,cue.id);}}
- private collectCues(){
-  if(!this.session)return;for(const cue of this.session.getRenderState().combatCues)if(cue.id>this.cueSeen){this.cues.push(cue);this.cueSeen=cue.id;}
+ private render(){
+  const frame=this.frame;if(!frame)return;
+  this.callbacks.render(frame,this.getState());
+  if(this.view.role==='guest'){
+   for(const cue of frame.combatCues)this.cueAck=Math.max(this.cueAck,cue.id);
+   // Playing packets carry this ack too. Paused/results have no INPUT stream.
+   if(this.cueAck>this.explicitCueAck&&this.view.lobby.phase!=='playing'){this.send({type:'CUE_ACK',match:this.view.lobby.match,ack:this.cueAck});this.explicitCueAck=this.cueAck;}
+  }
+ }
+ private collectCues(dt:number){
+  if(!this.session)return;
+  const current=this.session.getRenderState().combatCues;
+  const live=new Map(current.map(cue=>[cue.id,cue]));
+  this.cues=this.cues.map(cue=>live.get(cue.id)??{...cue,age:Math.min(60,cue.age+dt)});
+  for(const cue of current)if(cue.id>this.cueSeen){this.cues.push(cue);this.cueSeen=cue.id;}
   if(this.cues.length>128)this.fail('backpressure');
  }
+ private acknowledgeCues(ack:number){this.cues=this.cues.filter(c=>c.id>Math.min(ack,this.cueSeen));}
  private snapshot(){
   if(!this.session||!this.authorized)return;
-  try{const state={...this.session.getRenderState(),combatCues:this.cues};const frame=encodeFrame(this.tick,this.view.lobby.epoch,this.view.lobby.match,this.remote.ack,state);this.send({type:'SNAPSHOT',frame});}
+  try{const state={...this.session.getRenderState(),combatCues:this.cues};const frame=encodeFrame(this.tick,this.view.lobby.epoch,this.view.lobby.match,this.remote.ack,state,++this.snapshotRevision);this.send({type:'SNAPSHOT',frame});}
   catch{this.fail('packet');}
  }
  private clearInputs(){this.remote.clear();this.journal.clear();this.step.reset();this.input.resetTransientState();this.hostInput.second=this.remote.next().input;this.aim=null;this.weapon=null;this.lastInputSeq=0;this.seq=0;this.inputClock=this.snapshotClock=0;}
@@ -183,7 +208,7 @@ export class SessionController {
   if(event.type==='disconnected'){
    const wasAuthorized=this.authorized;this.socketConnected=false;this.authorized=false;this.generation++;this.queue=[];this.pendingSnapshot=null;
    if(wasAuthorized||this.view.role==='guest'){
-    this.freeze();this.view.connected=false;this.view.connecting=false;this.view.lobby.phase='lost';this.view.error??='connection';this.lostAt=this.clock();this.notify();
+    this.freeze();this.view.connected=false;this.view.connecting=false;this.view.lobby.phase='lost';this.view.error??='connection';if(wasAuthorized||!this.lostAt)this.lostAt=this.clock();this.notify();
    }return;
   }
   if(event.type==='message'){
@@ -202,12 +227,12 @@ export class SessionController {
     const reason=this.attempts.length>12?'full':message.version!==PROTOCOL||message.fingerprint!==BUILD_FINGERPRINT?'version':message.token!==this.view.token?'token':l.phase==='lost'&&this.clock()-this.lostAt>30000?'expired':null;
     if(reason){void this.reject(reason);return;}
     this.authorized=true;this.view.connected=true;this.view.error=null;this.view.connecting=false;
-    if(l.phase==='lost')l.phase=this.session?'paused':'lobby';l.hostReady=l.guestReady=false;
+    if(l.phase==='lost')l.phase=this.session?.getRenderState().winner?'result':this.session?'paused':'lobby';l.hostReady=l.guestReady=false;
     this.clearInputs();this.send({type:'ACCEPT',version:PROTOCOL,fingerprint:BUILD_FINGERPRINT});this.publishLobby();this.snapshot();this.notify();return;
    }
    if(message.type==='ACCEPT'&&this.view.role==='guest'){
     if(message.version!==PROTOCOL||message.fingerprint!==BUILD_FINGERPRINT){this.fail('version');return;}
-    this.authorized=true;this.view.connected=true;this.view.connecting=false;this.view.error=null;this.clearInputs();this.snapshots.clear();this.notify();return;
+    this.authorized=true;this.view.connected=true;this.view.connecting=false;this.view.error=null;this.clearInputs();this.snapshots.clear();this.explicitCueAck=0;this.notify();return;
    }
    throw new Error('packet');
   }
@@ -220,10 +245,11 @@ export class SessionController {
     case 'READY':if(l.phase==='lobby'){l.guestCharacter=message.character;l.guestWeapon=message.weapon;l.guestReady=message.ready;this.publishLobby();this.notify();}return;
     case 'RESUME_READY':if(l.phase==='paused'){l.guestReady=true;this.publishLobby();this.tryResume();this.notify();}return;
     case 'REMATCH':if(l.phase==='result'){l.guestReady=true;this.publishLobby();this.tryResume();this.notify();}return;
+    case 'CUE_ACK':if(message.match===l.match)this.acknowledgeCues(message.ack);return;
     case 'INPUT':
      if(l.phase!=='playing'||message.epoch!==l.epoch||message.seq<=this.lastInputSeq)return;
      this.lastInputSeq=message.seq;this.remote.accept(message.held,message.edges);
-     this.cues=this.cues.filter(c=>c.id>Math.min(message.cueAck,this.cueSeen));return;
+     this.acknowledgeCues(message.cueAck);return;
     default:throw new Error('packet'); // Guests cannot author snapshots, selections or results.
    }
   }
@@ -232,7 +258,7 @@ export class SessionController {
     if(message.lobby.epoch<l.epoch)return;
     const was=l.phase,epochChanged=message.lobby.epoch!==l.epoch,matchChanged=message.lobby.match!==l.match;
     this.view.lobby=message.lobby;
-    if(epochChanged){this.clearInputs();this.snapshots.clear();if(matchChanged)this.cueAck=0;}
+    if(epochChanged){this.clearInputs();this.snapshots.clear();if(matchChanged)this.explicitCueAck=this.cueAck=0;}
     if(message.lobby.phase==='countdown'&&was!=='countdown')this.guestStartAt=this.clock()+message.lobby.remaining*1000;
     if(message.lobby.phase==='paused')this.localPause=false;
     if(message.lobby.phase==='playing'&&this.localPause){this.view.lobby.phase='paused';this.send({type:'PAUSE'});}
@@ -288,7 +314,7 @@ export class SessionController {
   this.connectGeneration++;this.generation++;this.loop.stop();if(this.maintenance)clearInterval(this.maintenance);this.maintenance=null;
   this.authorized=this.socketConnected=false;this.queue=[];this.pendingSnapshot=null;this.clearInputs();this.snapshots.clear();this.session?.dispose();this.session=null;
   this.view={role:null,address:'',port:0,token:'',connected:false,connecting:false,error:null,lobby:initialLobby(),rtt:0};
-  this.lostAt=0;this.localPause=false;this.cueAck=this.cueSeen=0;this.cues=[];await this.transport.close();if(was)this.notify();
+  this.snapshotRevision=0;this.lostAt=0;this.localPause=false;this.explicitCueAck=this.cueAck=this.cueSeen=0;this.cues=[];await this.transport.close();if(was)this.notify();
  }
  dispose(){void this.close();this.unsubscribe();}
 }

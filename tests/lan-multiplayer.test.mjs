@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {NativeLanTransport} from '../.test-build/network/NativeLanTransport.js';
 import {SessionController} from '../.test-build/network/SessionController.js';
 import {FixedStep} from '../.test-build/network/FixedStep.js';
 import {HostInput,RemoteInput,InputJournal,IDLE} from '../.test-build/network/NetworkInput.js';
@@ -82,7 +83,7 @@ test('snapshot projection strips simulation internals, validates all built-in ar
  for(const arena of ['classic','towers','pit','steps','zigzag','sky','moving','fortress','bridge','crater','vertical','ruins','conveyor','collapse','storm','reactor']){
   session.setArena(arena);session.reset(false);const frame=encodeFrame(1,1,1,0,session.getRenderState());assert.equal('cooldown' in frame.state.player,false);assert.ok(JSON.stringify(frame).length<MAX_PACKET_BYTES);
  }
- const a=encodeFrame(1,1,1,0,session.getRenderState());const b=structuredClone(a);b.tick=4;b.state.player.x+=10;b.state.player.health=33;
+ const a=encodeFrame(1,1,1,0,session.getRenderState());const b=structuredClone(a);b.tick=4;b.revision=4;b.state.player.x+=10;b.state.player.health=33;
  const buffer=new SnapshotBuffer();buffer.push(a,0);buffer.push(b,50);assert.equal(buffer.render(75).player.x,a.state.player.x+5);assert.equal(buffer.render(75).player.health,33);assert.equal(buffer.push(a,80),false);
 });
 test('pause, foreground, rotation interruption and resume require both ready, cancel held inputs and a fresh epoch',async t=>{
@@ -127,4 +128,49 @@ test('backgrounding in lobby revokes readiness without poisoning initial countdo
 
 test('LAN starts local input in one-player layout even after shared-screen PvP',async t=>{
  const r=await room(t);let enabled=true;r.hi.setLocalPvPEnabled=v=>{enabled=v;};await r.host.close();await r.host.create();assert.equal(enabled,false);
+});
+
+test('pause correction reaches the guest even when no simulation tick has elapsed',async t=>{
+ const r=await room(t);await r.play();r.guest.selectWeapon('bow');r.gi.state={...IDLE,attackHeld:true,attackPressed:true};await r.step(20);
+ r.host.snapshot();await flush();const tick=r.guest.snapshots.latest.tick;assert.ok(r.guest.frame.opponent.bowCharge>0);
+ r.host.pause();await flush();assert.equal(r.guest.snapshots.latest.tick,tick);assert.equal(r.guest.frame.opponent.bowCharge,0);
+});
+
+test('rejoining a completed match restores the result and rematches a fresh fight',async t=>{
+ const r=await room(t);await r.play();r.host.session.winner='player';r.host.session.opponent.health=0;await r.step(5);
+ await r.gt.dropPeer();await flush();await r.guest.retry();await flush();assert.equal(r.host.view.lobby.phase,'result');assert.equal(r.guest.view.lobby.phase,'result');
+ const match=r.host.view.lobby.match;r.host.ready();r.guest.ready();await flush();await r.step(185);assert.equal(r.host.view.lobby.match,match+1);assert.equal(r.guest.frame.winner,null);assert.equal(r.host.frame.opponent.health,100);
+});
+
+test('failed reconnect attempts cannot extend the original rejoin deadline',async t=>{
+ const r=await room(t);await r.play();await r.gt.dropPeer();await flush();const lostAt=r.guest.lostAt;
+ r.advanceClock(10000);r.gt.connect=async()=>{r.gt.emit({type:'disconnected'});};await r.guest.retry();await flush();assert.equal(r.guest.lostAt,lostAt);
+ r.advanceClock(20001);r.guest.maintain();assert.equal(r.guest.view.error,'expired');
+});
+
+test('cancelled native listen cannot overwrite the closed room with a stale error',async t=>{
+ const r=await room(t);await r.host.close();let rejectListen;r.ht.listen=()=>new Promise((_,reject)=>{rejectListen=reject;});
+ const pending=r.host.create();await flush();await r.host.close();rejectListen(new Error('cancelled'));await pending;
+ assert.equal(r.host.view.role,null);assert.equal(r.host.view.error,null);assert.equal(r.host.maintenance,null);
+});
+
+test('post-result effects expire on both peers and cues are acknowledged without guest input',async t=>{
+ const r=await room(t);await r.play();r.host.session.emitCue('explosion','bomb',0,0,1,1);r.host.session.explosions.push({x:0,y:0,age:0,life:.2,radius:2});r.host.session.winner='player';await r.step(5);
+ assert.ok(r.guest.frame.explosions.length>0);await r.step(45);assert.equal(r.host.frame.explosions.length,0);assert.equal(r.guest.frame.explosions.length,0);
+ assert.equal(r.host.cues.length,0);assert.ok(r.gt.sent.some(m=>m.type==='CUE_ACK'));
+});
+
+
+test('closing during native listener registration cannot reopen an orphan room',async()=>{
+ let register,removed=0,opened=0;
+ const native={addListener:()=>new Promise(resolve=>{register=resolve;}),listen:async()=>{opened++;return{address:'192.168.4.2',port:23000};},close:async()=>{}};
+ const transport=new NativeLanTransport(native,()=>true);
+ const pending=transport.listen();await transport.close();register({remove:async()=>{removed++;}});
+ await assert.rejects(pending,/cancelled/);assert.equal(opened,0);assert.equal(removed,1);
+});
+
+test('native listeners are released even if socket cleanup rejects',async()=>{
+ let removed=0;
+ const native={addListener:async()=>({remove:async()=>{removed++;}}),listen:async()=>({address:'192.168.4.2',port:23000}),close:async()=>{throw new Error('cleanup');}};
+ const transport=new NativeLanTransport(native,()=>true);await transport.listen();await assert.rejects(()=>transport.close(),/cleanup/);assert.equal(removed,1);
 });

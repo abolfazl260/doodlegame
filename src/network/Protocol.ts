@@ -4,7 +4,7 @@ import type {InputSample,InputEdge} from './NetworkInput';
 import {object,num,integer,bool,str,choice,list} from './Validation.js';
 import {MAX_PACKET_BYTES} from './LanTransport.js';
 import {decodeFrame,type MatchFrame} from './StateCodec.js';
-export const PROTOCOL=1;
+export const PROTOCOL=2;
 export const ARENAS:readonly BuiltInArenaId[]=['classic','towers','pit','steps','zigzag','sky','moving','fortress','bridge','crater','vertical','ruins','conveyor','collapse','storm','reactor'];
 export const WEAPONS:readonly WeaponId[]=['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile','spear','grapple'];
 export const CHARACTERS:readonly CharacterId[]=['soldier','ninja','viking','ranger','pharaoh','knight','mummy','archer'];
@@ -19,6 +19,7 @@ export type Message=
  |{type:'START';epoch:number;remaining:number;match:number}
  |{type:'INPUT';epoch:number;seq:number;held:InputSample;edges:InputEdge[];cueAck:number}
  |{type:'SNAPSHOT';frame:MatchFrame}
+ |{type:'CUE_ACK';match:number;ack:number}
  |{type:'PING'|'PONG';time:number}
  |{type:'PAUSE'|'BACKGROUND'|'RESUME_READY'|'REMATCH'|'LEAVE'};
 export function decodeInput(value:unknown):InputState {
@@ -44,6 +45,7 @@ export function decodeMessage(data:string):Message {
   case 'START':return{type,epoch:integer(p.epoch),remaining:num(p.remaining,0,10),match:integer(p.match)};
   case 'INPUT':return{type,epoch:integer(p.epoch),seq:integer(p.seq,1),held:sample(p.held),edges:list(p.edges,64,v=>{const e=object(v);return{...sample(e),id:integer(e.id,1)};}),cueAck:integer(p.cueAck)};
   case 'SNAPSHOT':return{type,frame:decodeFrame(p.frame)};
+  case 'CUE_ACK':return{type,match:integer(p.match),ack:integer(p.ack)};
   case 'PING':case 'PONG':return{type,time:num(p.time,0,Number.MAX_SAFE_INTEGER)};
   case 'PAUSE':case 'BACKGROUND':case 'RESUME_READY':case 'REMATCH':case 'LEAVE':return{type};
   default:throw new Error('packet');

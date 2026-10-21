@@ -1,7 +1,7 @@
 import type {GameRenderState,DuelistRenderState,GrappleRenderState} from '../gameplay/GameSession';
 import {object,num,integer,bool,choice,list} from './Validation.js';
 import {ARENAS,WEAPONS,CHARACTERS} from './Protocol.js';
-export type MatchFrame={tick:number;epoch:number;match:number;ack:number;state:GameRenderState};
+export type MatchFrame={revision:number;tick:number;epoch:number;match:number;ack:number;state:GameRenderState};
 const nullableNum=(v:unknown)=>v==null?null:num(v);
 function grapple(value:unknown):GrappleRenderState|null{
  if(value==null)return null;const p=object(value);
@@ -34,17 +34,17 @@ export function decodeState(value:unknown):GameRenderState{
  };
 }
 export function decodeFrame(value:unknown):MatchFrame{
- const p=object(value);return{tick:integer(p.tick),epoch:integer(p.epoch),match:integer(p.match),ack:integer(p.ack),state:decodeState(p.state)};
+ const p=object(value);return{revision:integer(p.revision),tick:integer(p.tick),epoch:integer(p.epoch),match:integer(p.match),ack:integer(p.ack),state:decodeState(p.state)};
 }
-export const encodeFrame=(tick:number,epoch:number,match:number,ack:number,state:GameRenderState):MatchFrame=>({tick,epoch,match,ack,state:decodeState(state)});
+export const encodeFrame=(tick:number,epoch:number,match:number,ack:number,state:GameRenderState,revision=tick):MatchFrame=>({revision,tick,epoch,match,ack,state:decodeState(state)});
 /** One snapshot of interpolation delay; never predict hits/health/winner on the guest. */
 export class SnapshotBuffer {
  private previous:MatchFrame|null=null;
  private latest:MatchFrame|null=null;
  private receivedAt=0;
  push(frame:MatchFrame,now:number){
-  if(this.latest&&(frame.epoch<this.latest.epoch||frame.epoch===this.latest.epoch&&frame.tick<=this.latest.tick))return false;
-  this.previous=this.latest?.epoch===frame.epoch?this.latest:null;this.latest=frame;this.receivedAt=now;return true;
+  if(this.latest&&(frame.epoch<this.latest.epoch||frame.epoch===this.latest.epoch&&(frame.revision<=this.latest.revision||frame.tick<this.latest.tick)))return false;
+  this.previous=this.latest?.epoch===frame.epoch&&frame.tick>this.latest.tick?this.latest:null;this.latest=frame;this.receivedAt=now;return true;
  }
  render(now:number):GameRenderState|null{
   if(!this.latest)return null;

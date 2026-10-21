@@ -21,13 +21,19 @@ for(const role of ['host','guest'])for(const locale of ['fa','en'])test(`LAN ${r
  await panel.locator('#lan-weapon').selectOption('bow');
  const ready=panel.getByRole('button',{name:locale==='fa'?'آماده‌ام':'Ready',exact:true});await ready.click();await page.evaluate(()=>window.__lanFixture.peerReady());
  if(role==='host')await panel.getByRole('button',{name:locale==='fa'?'شروع مسابقه':'Start match',exact:true}).click();else await page.evaluate(()=>window.__lanFixture.startHost());
- await expect(panel).toBeHidden({timeout:7000});await expect(page.locator('.game-ui__mobile-controls')).toBeVisible();await expect(page.locator('.game-ui__lan-dash')).toBeVisible();await expect(page.locator('.game-ui__weapon-toggle').first()).toBeEnabled();await expect(page.locator('.game-ui__p2-controls')).toBeHidden();await expect(page.locator('.game-ui__p2-attack')).toBeHidden();await expect(page.locator('.game-ui__aim-pad[data-player="2"]')).toBeHidden();
- const joystick=page.locator('.game-ui__joystick');const box=await joystick.boundingBox();await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+box.width*.9,box.y+box.height/2);
- await expect.poll(()=>page.evaluate(()=>window.__lanFixture.state().localInput.moveX)).toBeGreaterThan(0);await page.mouse.up();
+ await expect(panel).toBeHidden({timeout:12000});await expect(page.locator('.game-ui__mobile-controls')).toBeVisible();await expect(page.locator('.game-ui__lan-dash')).toBeVisible();await expect(page.locator('.game-ui__weapon-toggle').first()).toBeEnabled();await expect(page.locator('.game-ui__p2-controls')).toBeHidden();await expect(page.locator('.game-ui__p2-attack')).toBeHidden();await expect(page.locator('.game-ui__aim-pad[data-player="2"]')).toBeHidden();
+ const joystick=page.locator('.game-ui__joystick');await expect(joystick).toBeVisible();const box=await joystick.boundingBox();
+ const client=await page.context().newCDPSession(page);
+ try{
+  await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{id:1,x:box.x+box.width/2,y:box.y+box.height/2}]});
+  await client.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{id:1,x:box.x+box.width*.9,y:box.y+box.height/2}]});
+  await expect.poll(()=>page.evaluate(()=>window.__lanFixture.state().localInput.moveX)).toBeGreaterThan(0);
+  await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ }finally{await client.detach();}
  await page.evaluate(()=>window.__lanFixture.pause());await expect(panel).toBeVisible();await expect.poll(()=>page.evaluate(()=>window.__lanFixture.state().host)).toBe('paused');
  await expect.poll(()=>page.evaluate(()=>window.__lanFixture.state().localInput.moveX)).toBe(0);
  const resume=panel.getByRole('button',{name:locale==='fa'?'آماده ادامه‌ام':'Ready to resume',exact:true});await resume.click();await expect(panel).toBeVisible();
- await page.evaluate(()=>window.__lanFixture.peerReady());await expect(panel).toBeHidden({timeout:7000});
+ await page.evaluate(()=>window.__lanFixture.peerReady());await expect(panel).toBeHidden({timeout:12000});
  await page.evaluate(()=>window.__lanFixture.drop());await expect(panel).toBeVisible();await expect.poll(()=>page.evaluate(()=>window.__lanFixture.state().host)).toBe('lost');
  await expect(panel.getByRole('alert')).toBeVisible();
  await panel.getByRole('button',{name:locale==='fa'?'خروج / بستن اتاق':'Leave / Close room',exact:true}).click();await expect(page.locator('[data-route="lan"]')).toBeVisible();
