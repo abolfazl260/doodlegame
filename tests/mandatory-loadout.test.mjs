@@ -20,12 +20,12 @@ function setup(progression){
 }
 const memory=()=>{const values=new Map();return {get:k=>values.get(k)??null,set:(k,v)=>values.set(k,structuredClone(v)),remove:k=>values.delete(k),has:k=>values.has(k)};};
 
-test("starting a match requires a deliberate character and weapon selection",()=>{
+test("selecting a weapon confirms the shown character while allowing customization before START",()=>{
  const {game,session,input}=setup();
  assert.equal(game.start(),false);
  assert.equal(game.getState(),"MENU");
  game.selectStartingWeapon("bow");
- assert.equal(game.start(),false,"weapon alone is insufficient");
+ assert.equal(session.getHudState().characterChosen,true,"the displayed default character is confirmed");
  game.selectCharacter("archer");
  assert.equal(game.start(),true);
  assert.equal(game.getState(),"PLAYING");
@@ -47,7 +47,7 @@ test("starting a match requires a deliberate character and weapon selection",()=
  game.dispose();
 });
 
-test("both local fighters must separately confirm their character and weapon",()=>{
+test("both local fighters must confirm a weapon and can customize their characters",()=>{
  const {game,session}=setup();
  game.selectPlayerCount(2);
  game.selectCharacter("ninja");game.selectStartingWeapon("uzi");
