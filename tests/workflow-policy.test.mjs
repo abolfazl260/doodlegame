@@ -4,6 +4,7 @@ import {readFileSync} from "node:fs";
 
 const android=readFileSync(".github/workflows/android.yml","utf8");
 const ci=readFileSync(".github/workflows/ci.yml","utf8");
+const release=readFileSync(".github/workflows/android-release.yml","utf8");
 
 function step(workflow,name){
  const header="      - name: "+name+"\n";
@@ -15,45 +16,34 @@ function step(workflow,name){
  return workflow.slice(start,boundaries.length?Math.min(...boundaries):workflow.length);
 }
 
-test("every PR runs fast CI, while obsolete PR runs can be cancelled",()=>{
+test("routine pull requests retain fast source CI without starting Android builds",()=>{
  assert.match(ci,/pull_request:\s*\n\s*branches: \[main\]/);
  assert.match(ci,/cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/);
- assert.match(android,/pull_request:\s*\n\s*branches: \[main\]/);
- assert.match(android,/cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/);
+ assert.doesNotMatch(android,/^  (push|pull_request|schedule):/m,
+  "Android workflow must not run on commits, merges, PRs or timers");
+ assert.match(android,/^  workflow_dispatch:\s*$/m);
+ assert.match(android,/cancel-in-progress: false/);
 });
 
-test("PRs compile and size-check an Android debug APK without building releases",()=>{
+test("a manually requested Android build includes debug APK, release checks and emulator tests",()=>{
+ assert.match(step(android,"Run game regression tests for manual runs"),/npm test/);
  assert.match(step(android,"Build Android debug APK"),/npm run android:build:debug/);
- assert.doesNotMatch(step(android,"Build Android debug APK"),/if:/);
  assert.match(step(android,"Verify debug APK size"),/app-debug\.apk/);
- assert.doesNotMatch(step(android,"Upload debug APK"),/if: github\.event_name != 'pull_request'/);
- const releaseSteps=[
-  "Validate unsigned release APK and AAB",
-  "Verify Google Play technical compliance",
-  "Audit Google Play privacy surface",
-  "Verify monetization guardrail",
-  "Verify target audience guardrail",
-  "Verify production hardening",
-  "Verify Google Play reviewer readiness",
-  "Upload reviewer readiness report",
-  "Upload production hardening report",
-  "Upload privacy audit report",
-  "Upload monetization dependency inventory",
-  "Upload target audience audit",
-  "Upload Google Play compliance report",
-  "Report Android artifact sizes"
- ];
- for(const name of releaseSteps){
-  assert.match(step(android,name),/if: github\.event_name != 'pull_request'/,name);
- }
+ assert.match(step(android,"Upload debug APK"),/doodlegame-debug-apk/);
+ assert.match(step(android,"Validate unsigned release APK and AAB"),/assembleRelease bundleRelease/);
+ assert.match(step(android,"Verify Google Play technical compliance"),/npm run android:verify:play/);
+ assert.match(step(android,"Audit Google Play privacy surface"),/npm run android:audit:privacy/);
+ const emulator=android.match(/^  emulator-smoke:\n([\s\S]*?)^    steps:/m);
+ assert.ok(emulator,"manual build must retain emulator smoke checks");
+ assert.match(emulator[1],/needs: debug-apk/);
+ assert.match(android,/android-emulator-runner@v2/);
+ assert.match(android,/scripts\/android\/emulator-smoke\.sh/);
 });
 
-test("emulator runs after debug APK, but only for main or manual Android runs",()=>{
- const match=android.match(/^  emulator-smoke:\n([\s\S]*?)^    steps:/m);
- assert.ok(match,"missing emulator smoke job");
- assert.match(match[1],/if: github\.event_name != 'pull_request'/);
- assert.match(match[1],/needs: debug-apk/);
- assert.match(android,/push:\s*\n\s*branches: \[main\]/);
- assert.match(android,/workflow_dispatch:/);
- assert.match(step(android,"Run game regression tests for manual runs"),/if: github\.event_name == 'workflow_dispatch'/);
+test("official Android releases remain explicitly requested or triggered by release tags",()=>{
+ assert.match(release,/workflow_dispatch:/);
+ assert.match(release,/push:\s*\n\s*tags:/);
+ assert.doesNotMatch(release,/pull_request:/);
+ assert.doesNotMatch(release,/branches:\s*\[main\]/);
+ assert.match(step(release,"Run game regression tests"),/npm test/);
 });
