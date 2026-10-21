@@ -31,7 +31,8 @@ export const GUIDE_EN:GuideCopy={
   bow:"Hold ATTACK to draw, release to launch an arrow. Charge changes speed and trajectory; aim before releasing and use distance to buy charging time.",
   bomb:"Throw a bouncing timed explosive. Aim toward a platform or route the opponent may cross; keep clear of the eventual blast. Sticky Bomb attaches on the first platform landing.",
   missile:"Tap ATTACK for one explosive Missile, respecting cooldown. Its arc is fixed and mirrored by facing; no angle/power controls or direction-pad aiming. Reposition to line up the landing point. Cluster Missile releases mini missiles after the main blast.",
-  spear:"Tap ATTACK to throw a long, narrow spear in the aiming direction. It flies forward and gradually drops; the Twin Spear upgrade throws two spears at slightly different angles."
+  spear:"Tap ATTACK to throw a long, narrow spear in the aiming direction. It flies forward and gradually drops; the Twin Spear upgrade throws two spears at slightly different angles.",
+  grapple:"Aim with the direction pad and tap ATTACK to launch a hook. It anchors to platforms and cover, reels you in, and lets you swing with movement. Tap ATTACK again to release; on a fighter it deals light damage and tugs them. Long Cable improves reach and reel speed."
  },
  modes:{
   duel:"Solo versus AI or two selected humans. Deplete the opponent’s HP to win. All weapons are available; use the arena’s cover.",
@@ -82,7 +83,8 @@ export const GUIDE_FA:GuideCopy={
   bow:"حمله را برای کشیدن کمان نگه دار و برای شلیک تیر رها کن. شارژ سرعت و مسیر تیر را تغییر می‌دهد؛ قبل از رهاکردن نشانه بگیر و از فاصله برای شارژ استفاده کن.",
   bomb:"مواد منفجرهٔ زمان‌دار و جهنده پرتاب می‌کند. سکوی مقصد یا مسیر حرکت حریف را هدف بگیر و از انفجار فاصله داشته باش. بمب چسبنده در اولین فرود روی سکو می‌چسبد.",
   missile:"برای یک شلیک انفجاری، حمله را بزن و منتظر بازیابی بمان. مسیر ثابت و وابسته به جهت شخصیت است؛ زاویه و قدرت یا گوی نشانه‌گیری ندارد. با جای‌گیری، محل فرود را تنظیم کن. ارتقای خوشه‌ای پس از انفجار اصلی موشک‌های کوچک آزاد می‌کند.",
-  spear:"برای پرتاب نیزهٔ بلند و باریک، حمله را بزن. نیزه در جهت نشانه‌گیری حرکت می‌کند و به‌تدریج پایین می‌آید. ارتقای نیزهٔ دوتایی دو نیزه با زاویه‌های کمی متفاوت پرتاب می‌کند."
+  spear:"برای پرتاب نیزهٔ بلند و باریک، حمله را بزن. نیزه در جهت نشانه‌گیری حرکت می‌کند و به‌تدریج پایین می‌آید. ارتقای نیزهٔ دوتایی دو نیزه با زاویه‌های کمی متفاوت پرتاب می‌کند.",
+  grapple:"با گوی جهت‌دهی نشانه بگیر و ATTACK را بزن تا قلاب پرتاب شود. قلاب به سکو یا مانع وصل می‌شود، تو را می‌کشد و امکان تاب‌خوردن می‌دهد. با ATTACK دوباره طناب جدا می‌شود. برخورد به دشمن آسیب کمی دارد و او را می‌کشد. ارتقای طناب بلند برد و سرعت جمع‌شدن را بیشتر می‌کند."
  },
  modes:{
   duel:"تک‌نفره مقابل هوش مصنوعی یا دو انسان انتخاب‌شده. با تمام‌کردن سلامت حریف ببر. همهٔ سلاح‌ها در دسترس‌اند؛ از پوشش میدان استفاده کن.",
