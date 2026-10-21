@@ -162,7 +162,7 @@ export function fighterVisual(s:DuelistRenderState) {
   hand=[.45+swing*.24,.22+swing*.08];
   back=[.1-swing*.1,.18];toolAngle=.08+swing*.04;
  }
- else if(weapon==='blaster'||weapon==='uzi'||weapon==='missile') {
+ else if(weapon==='blaster'||weapon==='uzi'||weapon==='missile'||weapon==='grapple') {
   hand=[.43-swing*.09,.18+swing*.03];back=[.23-swing*.09,.12];
   toolAngle=weapon==='missile'?s.missileAngle*Math.PI/180:swing*.09;
  } else {hand=[.45-swing*.2,.05+swing*.3];toolAngle=-swing*.8;}
@@ -693,6 +693,7 @@ export function weaponAccentColor(s:DuelistRenderState):string {
   case "bomb":return "#ff9a3d";
   case "missile":return "#ef4040";
   case "spear":return "#f6bf35";
+  case "grapple":return "#f3c967";
  }
 }
 export function weaponAccentSegments(s:DuelistRenderState):Segment[]{

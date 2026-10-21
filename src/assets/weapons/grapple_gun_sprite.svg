@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="530" height="271" viewBox="82 55 530 271">
+ <g stroke="#111820" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+  <!-- REAR / SPINDLE HOUSING -->
+  <path d="M127 134 Q95 138 94 167 L98 215 Q108 233 132 230 L223 230 L252 201 259 139 224 117 164 115Z" fill="#d9dde0"/>
+  <path d="M117 142 Q99 155 105 194" fill="none" stroke="#fffef9" stroke-width="4"/>
+  <path d="M215 218 248 188" fill="none" stroke="#37414a" stroke-width="3"/>
+  <!-- RETRACT MOTOR TOP -->
+  <path d="M141 103 L159 83 213 83 233 101 233 124 141 126Z" fill="#111820"/>
+  <path d="M157 98 217 98" stroke="#fffef9" stroke-width="4"/>
+  <path d="M200 83 206 65 233 66 237 87" fill="#d9dde0"/>
+  <path d="M205 73 231 73" stroke="#37414a" stroke-width="3"/>
+  <!-- REEL / ROPE COIL -->
+  <circle cx="165" cy="174" r="66" fill="#fffef9"/>
+  <circle cx="165" cy="174" r="55" fill="#9da5ac"/>
+  <circle cx="165" cy="174" r="45" fill="#d9dde0" stroke-width="3"/>
+  <path d="M146 132 C122 151 123 183 148 202 C172 222 208 200 207 173 C207 153 188 139 172 143 C146 149 144 175 163 185 C179 193 191 176 182 166 C178 159 166 160 164 168" stroke="#37414a" stroke-width="7" fill="none"/>
+  <circle cx="165" cy="174" r="17" fill="#fffef9"/>
+  <circle cx="165" cy="174" r="7" fill="#111820" stroke-width="2"/>
+  <path d="M122 127 115 118 M201 124 208 116 M111 208 102 218" stroke-width="3" fill="none"/>
+  <!-- MAIN FRAME -->
+  <path d="M232 114 L309 106 427 118 460 130 470 181 432 217 265 217 229 191 235 159Z" fill="#fffef9"/>
+  <path d="M259 132 409 133 434 147 430 189 266 193 250 176Z" fill="#d9dde0" stroke-width="3.5"/>
+  <path d="M286 146 396 146 M286 160 378 160" stroke="#fffef9" stroke-width="5"/>
+  <path d="M309 118 299 103 347 98 373 117" fill="#37414a"/>
+  <path d="M331 98 339 84 365 84 375 107" fill="#fffef9" stroke-width="4"/>
+  <!-- TUBE / MAIN MUZZLE -->
+  <path d="M435 128 L526 119 Q546 120 546 138 L547 184 Q540 200 526 200 L435 190Z" fill="#9da5ac"/>
+  <path d="M444 141 529 138 M442 176 529 180" fill="none" stroke="#fffef9" stroke-width="7"/>
+  <path d="M540 113 572 112 572 204 539 207 Q531 201 532 187 L532 131 Q533 119 540 113Z" fill="#37414a"/>
+  <path d="M551 122 L553 195" stroke="#fffef9" stroke-width="5"/>
+  <rect x="565" y="123" width="32" height="68" rx="9" fill="#fffef9"/>
+  <ellipse cx="597" cy="157" rx="12" ry="31" fill="#37414a"/>
+  <ellipse cx="600" cy="157" rx="5" ry="20" fill="#111820" stroke="none"/>
+  <!-- cable guide -->
+  <path d="M206 176 C225 177 227 167 248 168 L403 168 531 159 596 158" fill="none" stroke="#37414a" stroke-width="7"/>
+  <path d="M209 174 C235 171 245 168 272 168 L403 168 531 159 596 158" fill="none" stroke="#fffef9" stroke-width="2.5"/>
+  <!-- top release lever -->
+  <path d="M418 114 Q426 93 452 93 L472 98 476 113 460 126" fill="#fffef9" stroke-width="4"/>
+  <path d="M456 96 475 96" stroke="#37414a" stroke-width="3"/>
+  <!-- HANDLE -->
+  <path d="M292 210 L362 211 336 269 337 297 Q334 313 317 316 L278 315 Q261 313 261 299 L278 243Z" fill="#37414a"/>
+  <path d="M285 238 328 238 316 291 277 289Z" fill="#d9dde0" stroke-width="3"/>
+  <path d="M290 251 319 251 M285 262 316 262 M283 275 313 275" stroke="#37414a" stroke-width="4"/>
+  <path d="M278 310 323 310" stroke="#fffef9" stroke-width="4"/>
+  <!-- trigger and guard -->
+  <path d="M354 213 L421 210 423 231 Q406 250 374 247 L345 236" fill="none" stroke-width="6"/>
+  <path d="M370 209 Q387 225 368 236" fill="none" stroke="#37414a" stroke-width="7"/>
+  <!-- bolt details -->
+  <circle cx="270" cy="199" r="7" fill="#fffef9" stroke-width="3"/><circle cx="270" cy="199" r="2" fill="#111820" stroke="none"/>
+  <circle cx="417" cy="200" r="7" fill="#fffef9" stroke-width="3"/><circle cx="417" cy="200" r="2" fill="#111820" stroke="none"/>
+  <path d="M400 178 424 178" stroke="#37414a" stroke-width="4"/>
+  <path d="M260 190 281 190 276 199 255 199Z" fill="#f3c967" stroke-width="2"/>
+ </g></svg>

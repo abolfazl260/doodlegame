@@ -7,7 +7,7 @@ for(const [width,height] of [[568,280],[568,320],[640,320],[844,390]])for(const 
  const controls=dialog.locator('[data-guide-section="controls"]');await expect(controls).toHaveAttribute('open','');await controls.locator('summary').click();await expect(controls).not.toHaveAttribute('open','');
  for(const section of ['advanced','weapons','modes','progression','local']){
   const details=dialog.locator(`[data-guide-section="${section}"]`);await details.locator('summary').click();await expect(details).toHaveAttribute('open','');
-  if(section==='weapons'||section==='modes')await expect(details.locator('article')).toHaveCount(section==='weapons'?9:8);
+  if(section==='weapons'||section==='modes')await expect(details.locator('article')).toHaveCount(section==='weapons'?10:8);
   if(section==='local')await expect(details).toContainText('Numpad1');
   expect(await dialog.evaluate(n=>n.scrollWidth<=n.clientWidth+1)).toBe(true);
   await details.locator('summary').click();

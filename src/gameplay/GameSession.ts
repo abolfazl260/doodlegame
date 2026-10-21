@@ -14,7 +14,8 @@ export type EnvironmentKind="barrel"|"box"|"wall"|"bounce"|"trap"|"rock"|"crumbl
 export interface EnvironmentRenderState{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;readonly maxHp:number;readonly active:boolean;readonly rotation:number;readonly pulse:number;readonly warning:number;}
 export interface ArenaDebrisRenderState{readonly x:number;readonly y:number;readonly rotation:number;readonly size:number;readonly age:number;readonly life:number;}
 export type SlamPhase="startup"|"descent"|"impact"|"recovery"|null;
-export interface DuelistRenderState{readonly characterId:CharacterId;readonly slamPhase:SlamPhase;readonly slamElapsed:number;readonly visualFacing:number;readonly turnPoseTime:number;readonly jumpStage:0|1|2;readonly doubleJumpPoseTime:number;readonly wallJumpPoseTime:number;readonly weaponDrawTime:number;readonly weaponHolsterFrom:WeaponId|null;readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly aimAngle?:number|null;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly maxHealth:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;readonly gaitPhase:number;readonly landingTime:number;readonly hitTime:number;readonly bossPhase:number;readonly attackTelegraph:number;readonly kickKind:KickKind|null;readonly kickElapsed:number;readonly grabPhase:GrabPhase;readonly grabElapsed:number;}
+export interface GrappleRenderState{readonly phase:"flying"|"latched";readonly x:number;readonly y:number;readonly vx:number;readonly vy:number;readonly angle:number;readonly ropeLength:number;readonly travel:number;readonly target:"arena"|"enemy";readonly platformIndex:number;readonly offsetX:number;readonly offsetY:number;}
+export interface DuelistRenderState{readonly grapple?:GrappleRenderState|null;readonly characterId:CharacterId;readonly slamPhase:SlamPhase;readonly slamElapsed:number;readonly visualFacing:number;readonly turnPoseTime:number;readonly jumpStage:0|1|2;readonly doubleJumpPoseTime:number;readonly wallJumpPoseTime:number;readonly weaponDrawTime:number;readonly weaponHolsterFrom:WeaponId|null;readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly aimAngle?:number|null;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly maxHealth:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;readonly gaitPhase:number;readonly landingTime:number;readonly hitTime:number;readonly bossPhase:number;readonly attackTelegraph:number;readonly kickKind:KickKind|null;readonly kickElapsed:number;readonly grabPhase:GrabPhase;readonly grabElapsed:number;}
 export interface ProjectileRenderState{readonly x:number;readonly y:number;readonly vx:number;readonly vy:number;readonly life:number;readonly weapon:WeaponId;readonly rotation:number;readonly age:number;}
 export interface ExplosionRenderState{readonly x:number;readonly y:number;age:number;readonly life:number;readonly radius:number;}
 export type BuiltInArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fortress"|"bridge"|"crater"|"vertical"|"ruins"|"conveyor"|"collapse"|"storm"|"reactor";
@@ -24,7 +25,8 @@ export interface HillState{readonly player:number;readonly opponent:number;reado
 export interface ArenaDefinition{readonly id:ArenaId;readonly name:string;readonly platforms:readonly Platform[];readonly spawnX:[number,number];readonly speedMultiplier:number;readonly jumpMultiplier:number;readonly gravity:number;readonly fallLimit:number|null;readonly movingPlatforms:boolean;readonly windStrength?:number;readonly gravityWell?:{readonly x:number;readonly y:number;readonly radius:number;readonly strength:number;};}
 export interface GameRenderState{readonly player:DuelistRenderState;readonly opponent:DuelistRenderState;readonly projectiles:readonly ProjectileRenderState[];readonly explosions:readonly ExplosionRenderState[];readonly platforms:readonly Platform[];readonly environment:readonly EnvironmentRenderState[];readonly debris:readonly ArenaDebrisRenderState[];readonly winner:"player"|"opponent"|"draw"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];readonly combatCues:readonly CombatCue[];readonly cameraShake:Readonly<{x:number;y:number}>;}
 export interface GameHudState{readonly tutorial?:import("../ui/MobileOnboarding").TutorialSignals;readonly characterId:CharacterId;readonly opponentCharacterId:CharacterId;readonly weaponAimAngle?:number|null;readonly secondAimAngle?:number|null;readonly localPvP?:boolean;readonly playerHealth:number;readonly playerMaxHealth:number;readonly opponentHealth:number;readonly opponentMaxHealth:number;readonly weapon:WeaponId;readonly winner:"player"|"opponent"|"draw"|null;readonly arena:ArenaId;readonly mode:GameModeId;readonly hill:HillState;readonly bowCharge:number;readonly missileAngle:number;readonly missilePower:number;readonly playerFacing:number;readonly upgradePoints:number;readonly upgradedWeapons:readonly WeaponId[];readonly secondWeapon?:WeaponId;readonly secondBowCharge?:number;readonly characterChosen:boolean;readonly weaponChosen:boolean;readonly secondCharacterChosen:boolean;readonly secondWeaponChosen:boolean;}
-interface Fighter{characterId:CharacterId;slamPhase:SlamPhase;slamElapsed:number;slamAvailable:boolean;slamAttackLatch:boolean;visualFacing:number;turnPoseTime:number;jumpStage:0|1|2;doubleJumpPoseTime:number;wallJumpPoseTime:number;weaponDrawTime:number;weaponHolsterFrom:WeaponId|null;aimAngle:number|null;x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;gaitPhase:number;landingTime:number;hitTime:number;bossPhase:number;attackTelegraph:number;kickKind:KickKind|null;kickElapsed:number;kickHit:boolean;kickComboRemaining:number;grabPhase:GrabPhase;grabElapsed:number;grabCooldown:number;grabImmunity:number;grabOffsetY:number;}
+type GrappleState={-readonly [K in keyof GrappleRenderState]:GrappleRenderState[K]};
+interface Fighter{grapple:GrappleState|null;characterId:CharacterId;slamPhase:SlamPhase;slamElapsed:number;slamAvailable:boolean;slamAttackLatch:boolean;visualFacing:number;turnPoseTime:number;jumpStage:0|1|2;doubleJumpPoseTime:number;wallJumpPoseTime:number;weaponDrawTime:number;weaponHolsterFrom:WeaponId|null;aimAngle:number|null;x:number;y:number;velocityX:number;velocityY:number;grounded:boolean;facing:number;health:number;maxHealth:number;enemyType:EnemyType|null;weapon:WeaponId;attackTime:number;cooldown:number;bowCharge:number;bowCharging:boolean;attackVariant:number;doubleJumpAvailable:boolean;airDashAvailable:boolean;dashCooldown:number;wallJumpCooldown:number;gaitPhase:number;landingTime:number;hitTime:number;bossPhase:number;attackTelegraph:number;kickKind:KickKind|null;kickElapsed:number;kickHit:boolean;kickComboRemaining:number;grabPhase:GrabPhase;grabElapsed:number;grabCooldown:number;grabImmunity:number;grabOffsetY:number;}
 interface EnemyBrain{plan:EnemyPlan;thinkClock:number;chargeTime:number;chargeTotal:number;recoverTime:number;dodgeCooldown:number;jumpCooldown:number;transitionTime:number;phase:number;phaseAttacks:number;lastX:number;stuckTime:number;}
 interface Projectile{x:number;y:number;vx:number;vy:number;life:number;weapon:WeaponId;owner:"player"|"opponent";originX:number;returning:boolean;spin:number;age:number;bounce:number;ricochets:number;deflectCooldown?:number;damageScale?:number;sticky?:boolean;stuck?:boolean;clusterChild?:boolean;}
 interface EnvironmentBody{kind:EnvironmentKind;x:number;y:number;width:number;height:number;hp:number;maxHp:number;active:boolean;rotation:number;pulse:number;warning:number;falling:boolean;vx:number;vy:number;grounded:boolean;cooldown:number;timer:number;}
@@ -150,9 +152,10 @@ const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:numb
  bow:{damage:12,range:0,cooldown:.9,knockback:3,projectileSpeed:18},
  bomb:{damage:18,range:0,cooldown:1.15,knockback:9,projectileSpeed:8,radius:1.8},
  missile:{damage:22,range:0,cooldown:1.05,knockback:10,projectileSpeed:1,radius:1.15},
- spear:{damage:13,range:0,cooldown:.85,knockback:5,projectileSpeed:19}
+ spear:{damage:13,range:0,cooldown:.85,knockback:5,projectileSpeed:19},
+ grapple:{damage:6,range:0,cooldown:.6,knockback:0,projectileSpeed:24}
 };
-const ORDER:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"];
+const ORDER:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear","grapple"];
 const IDLE_P2_INPUT:Readonly<InputState>={moveX:0,moveY:0,pointerX:0,pointerY:0,pointerDown:false,pointerPressed:false,pointerReleased:false,attackHeld:false,attackCancelled:false,jumpPressed:false,dashPressed:false,attackPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};
 /** Read-only baseline geometry shared with static menu previews. */
 export const getBuiltInArenaPreviewDefinition=()=>Object.fromEntries(Object.entries(ARENAS).map(([id,arena])=>[id,{arena,environment:ENVIRONMENT_TEMPLATES[id as BuiltInArenaId]}])) as Readonly<Record<BuiltInArenaId,{arena:ArenaDefinition;environment:readonly EnvironmentTemplate[]}>>;
@@ -220,7 +223,7 @@ export class GameSession{
  private create(x:number,facing:number,enemyType:EnemyType|null):Fighter{
   const p=this.platformAtSpawn(x);
   const stats=enemyType===null?{health:100,weapon:"blade" as WeaponId,speed:1,jump:1}:{health:100,weapon:{runner:"blade",tank:"hammer",shooter:"blaster",jumper:"boomerang",bomber:"bomb",ninja:"uzi",boss:"hammer"}[enemyType] as WeaponId,speed:{runner:1.35,tank:.68,shooter:.82,jumper:1.05,bomber:.9,ninja:1.2,boss:.92}[enemyType],jump:{runner:1.1,tank:.8,shooter:.9,jumper:1.35,bomber:1,ninja:1.15,boss:1.1}[enemyType]};
-  return{characterId:this.selectedCharacter,slamPhase:null,slamElapsed:0,slamAvailable:true,slamAttackLatch:false,visualFacing:facing,turnPoseTime:0,jumpStage:0,doubleJumpPoseTime:0,wallJumpPoseTime:0,weaponDrawTime:0,weaponHolsterFrom:null,aimAngle:null,x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.missileRules?"missile":stats.weapon,attackTime:0,cooldown:0,bowCharge:0,bowCharging:false,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0,gaitPhase:0,landingTime:0,hitTime:0,bossPhase:0,attackTelegraph:0,kickKind:null,kickElapsed:0,kickHit:false,kickComboRemaining:0,grabPhase:null,grabElapsed:0,grabCooldown:0,grabImmunity:0,grabOffsetY:0};
+  return{grapple:null,characterId:this.selectedCharacter,slamPhase:null,slamElapsed:0,slamAvailable:true,slamAttackLatch:false,visualFacing:facing,turnPoseTime:0,jumpStage:0,doubleJumpPoseTime:0,wallJumpPoseTime:0,weaponDrawTime:0,weaponHolsterFrom:null,aimAngle:null,x,y:p.y+p.height+HH/2,velocityX:0,velocityY:0,grounded:true,facing,health:stats.health,maxHealth:stats.health,enemyType,weapon:this.missileRules?"missile":stats.weapon,attackTime:0,cooldown:0,bowCharge:0,bowCharging:false,attackVariant:0,doubleJumpAvailable:true,airDashAvailable:true,dashCooldown:0,wallJumpCooldown:0,gaitPhase:0,landingTime:0,hitTime:0,bossPhase:0,attackTelegraph:0,kickKind:null,kickElapsed:0,kickHit:false,kickComboRemaining:0,grabPhase:null,grabElapsed:0,grabCooldown:0,grabImmunity:0,grabOffsetY:0};
 }
  setArena(id:ArenaId){
   if(id.startsWith("extra-")&&!getDownloadedArena(id))return;
@@ -326,6 +329,7 @@ export class GameSession{
   if(id===f.weapon)return;
   this.cancelKick(f);this.cancelSlam(f);
   f.weaponHolsterFrom=f.weapon;
+  f.grapple=null;
   f.weapon=id;
   f.weaponDrawTime=WEAPON_DRAW_DURATION;
   f.bowCharging=false;f.bowCharge=0;
@@ -404,7 +408,7 @@ export class GameSession{
   this.updateAim(this.opponent,secondInput,dt);
   this.handleHumanAttack(this.opponent,this.player,secondInput,dt);
  }
- this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0&&this.opponent.health<=0)this.winner=this.localPvP?"draw":"player";else if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0){this.winner="player";if(!this.localPvP)this.upgradePoints++;}else this.updateHill(dt);if(this.winner){this.cancelSlam(this.player);this.cancelSlam(this.opponent);this.clearAirPose(this.player);this.clearAirPose(this.opponent);this.cancelGrab(this.player,this.opponent);this.cancelGrab(this.opponent,this.player);this.cancelKick(this.player);this.cancelKick(this.opponent);if(this.winner==="draw"){for(const defeated of [this.player,this.opponent])this.emitCue("defeat",defeated.weapon,defeated.x,defeated.y+.3,defeated.facing,1.2);}else{const defeated=this.winner==="player"?this.opponent:this.player;this.emitCue("defeat",defeated.weapon,defeated.x,defeated.y+.3,defeated.facing,1.4);}}
+ this.updateGrapples(dt);this.updateProjectiles(dt);this.player.attackTime=Math.max(0,this.player.attackTime-dt);this.opponent.attackTime=Math.max(0,this.opponent.attackTime-dt);this.player.cooldown=Math.max(0,this.player.cooldown-dt);this.opponent.cooldown=Math.max(0,this.opponent.cooldown-dt);if(this.player.health<=0&&this.opponent.health<=0)this.winner=this.localPvP?"draw":"player";else if(this.player.health<=0)this.winner="opponent";else if(this.opponent.health<=0){this.winner="player";if(!this.localPvP)this.upgradePoints++;}else this.updateHill(dt);if(this.winner){this.cancelSlam(this.player);this.cancelSlam(this.opponent);this.clearAirPose(this.player);this.clearAirPose(this.opponent);this.cancelGrab(this.player,this.opponent);this.cancelGrab(this.opponent,this.player);this.cancelKick(this.player);this.cancelKick(this.opponent);if(this.winner==="draw"){for(const defeated of [this.player,this.opponent])this.emitCue("defeat",defeated.weapon,defeated.x,defeated.y+.3,defeated.facing,1.2);}else{const defeated=this.winner==="player"?this.opponent:this.player;this.emitCue("defeat",defeated.weapon,defeated.x,defeated.y+.3,defeated.facing,1.4);}}
  }
  private updatePlayer(input:InputState,dt:number){
   const d=Math.abs(input.moveX)>.01?Math.sign(input.moveX):0;
@@ -970,6 +974,8 @@ export class GameSession{
  }
  private attack(a:Fighter,t:Fighter,pressed:boolean){
   const w=this.weaponStats[a.weapon];
+  // A second ATTACK always releases an active rope (even during launch cooldown).
+  if(pressed&&a.weapon==="grapple"&&a.grapple){a.grapple=null;a.cooldown=Math.min(a.cooldown,.12);return;}
   if(!pressed||a.cooldown>0||a.kickKind||a.slamPhase||a.grabPhase!==null)return;
   this.clearAirPose(a);this.cancelWeaponDraw(a);
   const upgraded=!this.localPvP&&a===this.player&&this.upgradedWeapons.has(a.weapon);
@@ -985,6 +991,14 @@ export class GameSession{
   if(this.missileRules&&a.weapon!=="missile")a.weapon="missile";
   a.cooldown=w.cooldown;
   this.emitCue("attack",a.weapon,a.x+a.facing*.65,a.y+.35,a.facing,a.weapon==="hammer"||a.weapon==="missile"?1.25:.65);
+   if(a.weapon==="grapple"){
+    const angle=this.aimFor(a,Math.PI/9),speed=w.projectileSpeed??24;
+    a.grapple={phase:"flying",x:a.x+Math.cos(angle)*.7,y:a.y+.24+Math.sin(angle)*.7,
+      vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,angle,ropeLength:1,travel:0,
+      target:"arena",platformIndex:-1,offsetX:0,offsetY:0};
+    a.attackTime=.22;
+    return;
+   }
    if(a.weapon==="missile"&&(a===this.player||this.localPvP)){
     // All player-controlled ranged weapons share the same retained aim direction.
     // Without manual input, keep the familiar upward 45-degree missile launch.
@@ -1282,6 +1296,83 @@ export class GameSession{
   p.x=cx+f.facing*.35;p.y=cy;p.owner=f===this.player?'player':'opponent';p.deflectCooldown=.12;
   f.velocityX-=f.facing*.6;
    this.emitCue("deflect",f.weapon,cx,cy,f.facing,1);return true;
+ }
+ /**
+  * Grapple is a tether, not an ordinary damaging projectile. Keep it outside
+  * projectile deflection/explosion code so the rope can remain anchored.
+  * Sweep small samples along each step to avoid tunnelling through thin ledges.
+  */
+ private updateGrapples(dt:number){
+  for(const [owner,enemy] of [[this.player,this.opponent],[this.opponent,this.player]] as const){
+   const g=owner.grapple;
+   if(!g)continue;
+   if(owner.health<=0||owner.weapon!=="grapple"){owner.grapple=null;continue;}
+   const upgraded=!this.localPvP&&owner===this.player&&this.upgradedWeapons.has("grapple");
+   if(g.phase==="flying"){
+    const oldX=g.x,oldY=g.y,dx=g.vx*dt,dy=g.vy*dt;
+    const n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/.12));
+    let found=false;
+    const platforms=this.platforms;
+    for(let i=1;i<=n;i++){
+     const x=oldX+dx*i/n,y=oldY+dy*i/n;
+     if(Math.abs(x-enemy.x)<.42&&Math.abs(y-(enemy.y+.20))<.84&&enemy.health>0){
+      g.x=x;g.y=y;g.target="enemy";g.phase="latched";g.travel=0;
+      g.ropeLength=Math.hypot(x-owner.x,y-owner.y);
+      this.damage(enemy,this.weaponStats.grapple.damage,0,"grapple");
+      found=true;break;
+     }
+     const index=platforms.findIndex(p=>x>=p.x&&x<=p.x+p.width&&y>=p.y&&y<=p.y+p.height);
+     if(index!==-1){
+      const p=platforms[index];
+      g.x=x;g.y=y;g.target="arena";g.phase="latched";g.platformIndex=index;
+      g.offsetX=x-p.x;g.offsetY=y-p.y;g.travel=0;
+      g.ropeLength=Math.max(1.15,Math.hypot(x-owner.x,y-(owner.y+.20))*.94);
+      found=true;break;
+     }
+     const block=this.environment.find(e=>e.active&&x>=e.x-e.width/2&&x<=e.x+e.width/2&&y>=e.y-e.height/2&&y<=e.y+e.height/2);
+     if(block){
+      g.x=x;g.y=y;g.target="arena";g.phase="latched";g.platformIndex=-1;
+      g.ropeLength=Math.max(1.15,Math.hypot(x-owner.x,y-(owner.y+.20))*.94);
+      found=true;break;
+     }
+    }
+    if(!found){g.x=oldX+dx;g.y=oldY+dy;g.travel+=Math.hypot(dx,dy);}
+    if(g.travel>(upgraded?13:10)||g.x< -16||g.x>16||g.y< -4||g.y>12)owner.grapple=null;
+    continue;
+   }
+   g.travel+=dt;
+   if(g.travel>6){owner.grapple=null;continue;}
+   if(g.target==="enemy"){
+    if(enemy.health<=0){owner.grapple=null;continue;}
+    g.x=enemy.x;g.y=enemy.y+.2;
+    const dx=owner.x-enemy.x,dy=(owner.y+.2)-(enemy.y+.2);
+    const d=Math.max(.001,Math.hypot(dx,dy));
+    const mass=enemy.enemyType==="boss"?3:enemy.enemyType==="tank"?2:1;
+    enemy.velocityX+=(dx/d)*12*dt/mass;
+    enemy.velocityY+=(dy/d)*12*dt/mass;
+    if(d<1.1)owner.grapple=null;
+    continue;
+   }
+   if(g.platformIndex>=0){
+    const platform=this.platforms[g.platformIndex];
+    if(!platform){owner.grapple=null;continue;}
+    g.x=platform.x+g.offsetX;g.y=platform.y+g.offsetY;
+   }
+   const dx=g.x-owner.x,dy=g.y-(owner.y+.2),d=Math.max(.001,Math.hypot(dx,dy));
+   g.ropeLength=Math.max(1.2,g.ropeLength-(upgraded?6.5:4.6)*dt);
+   if(d>g.ropeLength){
+    const nx=dx/d,ny=dy/d;
+    const pull=Math.min(42,25+(d-g.ropeLength)*18);
+    owner.velocityX+=nx*pull*dt;
+    owner.velocityY+=ny*pull*dt;
+    // Constrain velocity out of the taut rope while keeping tangential
+    // momentum for swinging (jump and sideways inputs still work).
+    const away=owner.velocityX*nx+owner.velocityY*ny;
+    if(away<0){owner.velocityX-=nx*away*.65;owner.velocityY-=ny*away*.65;}
+    owner.grounded=false;
+   }
+   if(d<1.0)owner.grapple=null;
+  }
  }
  private updateProjectiles(dt:number){
   for(let i=this.projectiles.length-1;i>=0;i--){

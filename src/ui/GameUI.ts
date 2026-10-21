@@ -55,7 +55,7 @@ type MenuStep="mode"|"arena"|"loadout";
 const MENU_STEPS:readonly MenuStep[]=["mode","arena","loadout"];
 
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
-const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"];
+const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear","grapple"];
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
 const CHARACTER_IDS:readonly CharacterId[]=["soldier","ninja","viking","ranger","pharaoh","knight","mummy","archer"];
 const CHARACTER_TEXT={
@@ -698,7 +698,7 @@ export class GameUI{
     for(const item of this.upgradeCardGrid.children){
      (item as HTMLButtonElement).setAttribute("aria-pressed",String((item as HTMLButtonElement).dataset.upgradeWeapon===id));
     }
-    this.setText(this.upgradeHint,this.i18n.messages.upgrades[id].description);
+    this.setText(this.upgradeHint,(this.i18n.messages.upgrades[id]?.description??""));
    };
    this.upgradeCardGrid.append(card);
   }
@@ -1376,7 +1376,7 @@ export class GameUI{
      messages.weapons[s.weapon]);
    }
    const upgraded=new Set(s.upgradedWeapons);
-   const equipped=upgraded.has(s.weapon)?messages.upgrades[s.weapon].name:messages.weapons[s.weapon];
+   const equipped=upgraded.has(s.weapon)?(messages.upgrades[s.weapon]?.name??messages.weapons[s.weapon]):messages.weapons[s.weapon];
    if(state===GameState.MENU||state===GameState.GAME_OVER){
     if(modeChanged||localeChanged||stateChanged){
      for(const item of this.menuSettings.children){
@@ -1427,9 +1427,9 @@ export class GameUI{
     this.upgradeButton.disabled=disabled;
     this.setHidden(this.upgradeChoices,disabled);
     this.setHidden(this.upgradeSummary,upgraded.size===0||s.upgradePoints>0);
-    this.setText(this.upgradeSummary,WEAPON_IDS.filter(id=>upgraded.has(id)).map(id=>messages.upgrades[id].name).join(" · "));
+    this.setText(this.upgradeSummary,WEAPON_IDS.filter(id=>upgraded.has(id)).map(id=>(messages.upgrades[id]?.name??id)).join(" · "));
     this.setText(this.upgradePointsLabel,messages.upgrade.points+"  "+s.upgradePoints);
-    this.setText(this.upgradeHint,s.upgradePoints>0&&selected?messages.upgrades[selected].description:messages.upgrade.earn);
+    this.setText(this.upgradeHint,s.upgradePoints>0&&selected?(messages.upgrades[selected]?.description??""):messages.upgrade.earn);
    }
    if(progressChanged||stateChanged||localeChanged){
     const availableRun=Boolean(s.progression);
@@ -1693,7 +1693,7 @@ export class GameUI{
   };
   for(const id of ["controls","advanced","weapons","modes","progression","local"] as const){
    const section=document.createElement("details"),summary=document.createElement("summary");section.dataset.guideSection=id;section.open=id==="controls";summary.textContent=guide.sections[id];section.append(summary);
-   if(id==="weapons")entries(section,WEAPON_IDS.map(weapon=>({title:messages.weapons[weapon],body:guide.weapons[weapon]+" "+guide.upgradeLabel+": "+messages.upgrades[weapon].name+" — "+messages.upgrades[weapon].description})));
+   if(id==="weapons")entries(section,WEAPON_IDS.map(weapon=>({title:messages.weapons[weapon],body:guide.weapons[weapon]+" "+guide.upgradeLabel+": "+(messages.upgrades[weapon]?.name??weapon)+" — "+(messages.upgrades[weapon]?.description??"")})));
    else if(id==="modes")entries(section,[...MODE_IDS,"local-pvp" as const].map(mode=>({title:messages.modes[mode],body:guide.modes[mode]})));
    else entries(section,guide[id]);this.helpContent.append(section);
   }
@@ -1824,7 +1824,7 @@ export class GameUI{
   this.randomWeaponButton.textContent=this.i18n.locale==="fa"?"انتخاب اسلحه تصادفی":"CHOOSE RANDOM WEAPON";
   for(const item of this.upgradeCardGrid.children){
    const card=item as HTMLButtonElement,id=card.dataset.upgradeWeapon as WeaponId;
-   card.textContent=messages.weapons[id]+" → "+messages.upgrades[id].name;
+   card.textContent=messages.weapons[id]+" → "+(messages.upgrades[id]?.name??id);
   }
   for(const item of this.weaponList.children){
    const button=item as HTMLButtonElement;
