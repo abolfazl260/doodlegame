@@ -1,5 +1,6 @@
-import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,capsulePositions,characterMarkings,characterSkinLayers,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
+import {weaponDrawPose,fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,capsulePositions,characterMarkings,characterSkinLayers,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
 import * as THREE from "three";
+import {GRAPPLE_GUN_URL,GRAPPLE_FLIGHT_URL,GRAPPLE_OPEN_URL} from "./GrappleAssets.js";
 import {getArenaTheme,paintArenaBackdrop,platformColors,svgBackdropRevision} from "../themes/ArenaThemes";
 import {getDownloadedImage} from "../gameplay/DownloadableArenas.js";
 import type {Renderer} from "./Renderer";
@@ -10,9 +11,27 @@ import {combatCameraFrame,type CombatCameraFrame} from "./CombatCamera.js";
 export class ThreeRenderer implements Renderer{
  private platformInk=new PlatformInkCache();private platformInkGroups:THREE.Group[]=[];private platformInkKeys:string[]=[];private platformInkActive:boolean[]=[];private platformInkLayers:Array<Array<{line:THREE.LineSegments;strokes:readonly PlatformInkStroke[];positions:Float32Array}>>=[];
  private scene=new THREE.Scene();private camera=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);private renderer:THREE.WebGLRenderer;private contextLifecycle:WebGLContextLifecycle;
+ private readonly grappleTextures=(()=>{
+  const loader=new THREE.TextureLoader();
+  const gun=loader.load(GRAPPLE_GUN_URL),flight=loader.load(GRAPPLE_FLIGHT_URL),open=loader.load(GRAPPLE_OPEN_URL);
+  for(const tex of [gun,flight,open])tex.colorSpace=THREE.SRGBColorSpace;
+  return {gun,flight,open};
+ })();
+ private readonly grappleLines:THREE.Line[]=[];
+ private readonly grappleHooks:THREE.Mesh[]=[];
  private player=this.fighter(0xffffff,false);private opponent=this.fighter(0x555555,true);private platforms:THREE.Mesh[]=[];private platformEdges:THREE.Mesh[]=[];private themeArena:GameRenderState["arena"]|null=null;private themeBackgroundImage:HTMLImageElement|undefined;private themeArtRevision=-1;private themeTexture:THREE.CanvasTexture|null=null;private projectiles:THREE.Mesh[]=[];private missileTrails:THREE.Mesh[]=[];private missileFlashes:THREE.Mesh[]=[];
  private projectileGeometry=new THREE.CircleGeometry(.09,10);private bowProjectiles:THREE.LineSegments[]=[];private explosionVisuals:THREE.Group[]=[];private combatVisuals:THREE.Group[]=[];private cameraFrame:CombatCameraFrame|null=null;private framedArena:GameRenderState["arena"]|null=null;private bombVisuals:THREE.Group[]=[];private boomerangIcons:THREE.Group[]=[];private missileIcons:THREE.Group[]=[];private spearIcons:THREE.Group[]=[];private platformMaterial=new THREE.MeshBasicMaterial({color:0x777777});private icePlatformMaterial=new THREE.MeshBasicMaterial({color:0x9a9a9a});private slipperyPlatformMaterial=new THREE.MeshBasicMaterial({color:0x858585});private oneWayPlatformMaterial=new THREE.MeshBasicMaterial({color:0x6f6f6f});private conveyorLeftPlatformMaterial=new THREE.MeshBasicMaterial({color:0x5a5a5a});private conveyorRightPlatformMaterial=new THREE.MeshBasicMaterial({color:0xaaaaaa});private environmentGroup=new THREE.Group();private environmentVisuals:THREE.Group[]=[];private debrisVisuals:THREE.Mesh[]=[];private environmentArena:GameRenderState["arena"]|null=null;private fortressGroup:THREE.Group;
- constructor(private readonly canvas:HTMLCanvasElement,private readonly animateDecorations=true){this.fortressGroup=this.buildFortress();this.renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:"high-performance"});this.contextLifecycle=new WebGLContextLifecycle(canvas,()=>this.resize());this.renderer.setClearColor(0,1);this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));this.camera.position.z=20;for(const _ of [0,1,2,3,4,5,6,7]){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),this.platformMaterial);this.platforms.push(m);this.scene.add(m);const edge=new THREE.Mesh(new THREE.BoxGeometry(1,1,.02),new THREE.MeshBasicMaterial({color:0xffffff}));this.platformEdges.push(edge);this.scene.add(edge);}this.scene.add(this.player.group,this.opponent.group,this.fortressGroup,this.environmentGroup);this.resize();}
+ constructor(private readonly canvas:HTMLCanvasElement,private readonly animateDecorations=true){this.fortressGroup=this.buildFortress();this.renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:"high-performance"});this.contextLifecycle=new WebGLContextLifecycle(canvas,()=>this.resize());this.renderer.setClearColor(0,1);this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));this.camera.position.z=20;for(const _ of [0,1,2,3,4,5,6,7]){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),this.platformMaterial);this.platforms.push(m);this.scene.add(m);const edge=new THREE.Mesh(new THREE.BoxGeometry(1,1,.02),new THREE.MeshBasicMaterial({color:0xffffff}));this.platformEdges.push(edge);this.scene.add(edge);}this.scene.add(this.player.group,this.opponent.group,this.fortressGroup,this.environmentGroup);
+  for(let i=0;i<2;i++){
+   const ropeGeometry=new THREE.BufferGeometry();
+   ropeGeometry.setAttribute("position",new THREE.BufferAttribute(new Float32Array(6),3));
+   const rope=new THREE.Line(ropeGeometry,new THREE.LineBasicMaterial({color:0xf8f6f0,depthTest:false,transparent:true,opacity:.97}));
+   rope.visible=false;rope.frustumCulled=false;rope.renderOrder=20;
+   const hook=new THREE.Mesh(new THREE.PlaneGeometry(.48,.34),new THREE.MeshBasicMaterial({map:this.grappleTextures.flight,transparent:true,depthTest:false,side:THREE.DoubleSide}));
+   hook.visible=false;hook.frustumCulled=false;hook.renderOrder=21;
+   this.grappleLines.push(rope);this.grappleHooks.push(hook);this.scene.add(rope,hook);
+  }
+  this.resize();}
  private fighter(_color:number,enemy:boolean){
   const group=new THREE.Group(),ink=fighterInkPalette(enemy),width=FIGHTER_INK_WIDTH;
   // Solid meshes replace legacy one-pixel GL line geometry entirely.
@@ -42,15 +61,18 @@ export class ThreeRenderer implements Renderer{
   const toolOutline=stroke(ink.outline,.068),toolCore=stroke(ink.metal,.072);
    const styleMeshes=[stroke("#ffffff",.073),stroke("#ffffff",.074),stroke("#ffffff",.075),stroke("#ffffff",.076)];
    const weaponAccent=stroke("#65e6ff",.079);
+  const grappleGun=new THREE.Mesh(new THREE.PlaneGeometry(1.05,.537),
+   new THREE.MeshBasicMaterial({map:this.grappleTextures.gun,transparent:true,depthTest:false,side:THREE.DoubleSide}));
+  grappleGun.visible=false;grappleGun.renderOrder=19;
   const effect=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
   effect.position.z=.082;
   group.add(bodyHalo,bodyOutline,bodyCore,vestOutline,vestCore,gearOutline,gearCore,
    costumeOutline,costumeCore,trim,headHalo,headOutline,head,hairOutline,hairCore,
    markingOutline,markingCore,...skinMeshes,otherEye,otherEyeGlint,eye,eyeGlint,
-   toolOutline,toolCore,...styleMeshes,weaponAccent,effect);
+   toolOutline,toolCore,...styleMeshes,weaponAccent,effect,grappleGun);
   return {group,head,headHalo,headOutline,eye,eyeGlint,otherEye,otherEyeGlint,effect,
    bodyHalo,bodyOutline,bodyCore,vestOutline,vestCore,gearOutline,gearCore,trim,
-   costumeOutline,costumeCore,hairOutline,hairCore,markingOutline,markingCore,skinMeshes,toolOutline,toolCore,styleMeshes,weaponAccent,enemy};
+   costumeOutline,costumeCore,hairOutline,hairCore,markingOutline,markingCore,skinMeshes,toolOutline,toolCore,styleMeshes,weaponAccent,grappleGun,enemy};
  }
  private setCapsules(mesh:THREE.Mesh,segments:readonly Segment[],width:number){
   const old=mesh.geometry.getAttribute("position") as THREE.BufferAttribute|undefined;
@@ -294,9 +316,27 @@ export class ThreeRenderer implements Renderer{
   const icon=p.weapon==="boomerang"?boomerangIcon:p.weapon==="spear"?spearIcon:missileIcon;
   icon.position.set(p.x,p.y,.16);icon.rotation.z=p.rotation;
  }
- const bomb=this.bombVisuals[i];bomb.visible=Boolean(p&&p.weapon==="bomb");if(p&&p.weapon==="bomb"){bomb.position.set(p.x,p.y,.2);bomb.rotation.z=p.rotation;const warning=p.life<.55?1+Math.sin(p.age*45)*.1:1;bomb.scale.setScalar(warning);bomb.children[3].scale.setScalar(.7+.6*Math.abs(Math.sin(p.age*38)));}this.missileTrails[i].visible=Boolean(p&&p.weapon==="missile");this.missileFlashes[i].visible=false;if(this.bowProjectiles[i])this.bowProjectiles[i].visible=Boolean(p&&p.weapon==="bow");if(p){m.position.set(p.x,p.y,.1);m.rotation.z=p.rotation;const speed=Math.hypot(p.vx,p.vy);if(p.weapon==="bow"&&this.bowProjectiles[i]){const q=this.bowProjectiles[i],a=q.geometry.attributes.position.array as Float32Array,L=.56,H=.11;a.set([-L,0,0,L,0,0,L,0,0,L-H,-H*.65,0,L,0,0,L-H,H*.65,0,-L,0,0,-L+H*.9,-H,0,-L,0,0,-L+H*.9,H,0]);q.position.set(p.x,p.y,.14);q.rotation.z=p.rotation;q.geometry.attributes.position.needsUpdate=true;}m.scale.set(Math.max(1,speed/10),1,1);const size=p.weapon==="bomb"?.1:p.weapon==="boomerang"?.13:p.weapon==="bow"?.055:p.weapon==="missile"?.12:.09;m.scale.set(p.weapon==="bow"?2.8:p.weapon==="missile"?4.6:1,p.weapon==="bow"?.45:p.weapon==="missile"?.72:1,1);m.scale.multiplyScalar(size/.09);if(p.weapon==="missile"){const len=Math.max(.45,Math.min(1.6,.38+speed*.055));const nx=speed>0.01?p.vx/speed:0,ny=speed>0.01?p.vy/speed:0;const trail=this.missileTrails[i];trail.position.set(p.x-nx*(.38+len*.35),p.y-ny*(.38+len*.35),.06);trail.rotation.z=p.rotation;trail.scale.set(len,1,1);const flame=this.missileFlashes[i];flame.position.set(p.x-nx*.34,p.y-ny*.34,.08);flame.rotation.z=p.rotation;flame.scale.setScalar(.7+Math.min(1.2,speed/12));flame.visible=true;((flame.material as THREE.MeshBasicMaterial).opacity)=.55*(.72+.28*Math.sin(p.age*55));}if(p.weapon==="bomb"&&p.life<.6)m.scale.multiplyScalar(Math.floor(p.life*18)%2===0?.35:1);}});this.drawArenaDebris(state);this.drawCombatCues(state);const aspect=Math.max(1,this.canvas.clientWidth)/Math.max(1,this.canvas.clientHeight);const previous=this.framedArena===state.arena?this.cameraFrame:null;this.cameraFrame=combatCameraFrame(state,aspect,previous);this.framedArena=state.arena;const vh=this.cameraFrame.height;this.camera.left=-aspect*vh/2;this.camera.right=aspect*vh/2;this.camera.top=vh/2;this.camera.bottom=-vh/2;this.camera.updateProjectionMatrix();this.camera.position.x=this.cameraFrame.x+state.cameraShake.x;this.camera.position.y=this.cameraFrame.y+state.cameraShake.y;this.renderer.render(this.scene,this.camera);}
+ const bomb=this.bombVisuals[i];bomb.visible=Boolean(p&&p.weapon==="bomb");if(p&&p.weapon==="bomb"){bomb.position.set(p.x,p.y,.2);bomb.rotation.z=p.rotation;const warning=p.life<.55?1+Math.sin(p.age*45)*.1:1;bomb.scale.setScalar(warning);bomb.children[3].scale.setScalar(.7+.6*Math.abs(Math.sin(p.age*38)));}this.missileTrails[i].visible=Boolean(p&&p.weapon==="missile");this.missileFlashes[i].visible=false;if(this.bowProjectiles[i])this.bowProjectiles[i].visible=Boolean(p&&p.weapon==="bow");if(p){m.position.set(p.x,p.y,.1);m.rotation.z=p.rotation;const speed=Math.hypot(p.vx,p.vy);if(p.weapon==="bow"&&this.bowProjectiles[i]){const q=this.bowProjectiles[i],a=q.geometry.attributes.position.array as Float32Array,L=.56,H=.11;a.set([-L,0,0,L,0,0,L,0,0,L-H,-H*.65,0,L,0,0,L-H,H*.65,0,-L,0,0,-L+H*.9,-H,0,-L,0,0,-L+H*.9,H,0]);q.position.set(p.x,p.y,.14);q.rotation.z=p.rotation;q.geometry.attributes.position.needsUpdate=true;}m.scale.set(Math.max(1,speed/10),1,1);const size=p.weapon==="bomb"?.1:p.weapon==="boomerang"?.13:p.weapon==="bow"?.055:p.weapon==="missile"?.12:.09;m.scale.set(p.weapon==="bow"?2.8:p.weapon==="missile"?4.6:1,p.weapon==="bow"?.45:p.weapon==="missile"?.72:1,1);m.scale.multiplyScalar(size/.09);if(p.weapon==="missile"){const len=Math.max(.45,Math.min(1.6,.38+speed*.055));const nx=speed>0.01?p.vx/speed:0,ny=speed>0.01?p.vy/speed:0;const trail=this.missileTrails[i];trail.position.set(p.x-nx*(.38+len*.35),p.y-ny*(.38+len*.35),.06);trail.rotation.z=p.rotation;trail.scale.set(len,1,1);const flame=this.missileFlashes[i];flame.position.set(p.x-nx*.34,p.y-ny*.34,.08);flame.rotation.z=p.rotation;flame.scale.setScalar(.7+Math.min(1.2,speed/12));flame.visible=true;((flame.material as THREE.MeshBasicMaterial).opacity)=.55*(.72+.28*Math.sin(p.age*55));}if(p.weapon==="bomb"&&p.life<.6)m.scale.multiplyScalar(Math.floor(p.life*18)%2===0?.35:1);}});this.drawArenaDebris(state);this.drawCombatCues(state);const aspect=Math.max(1,this.canvas.clientWidth)/Math.max(1,this.canvas.clientHeight);const previous=this.framedArena===state.arena?this.cameraFrame:null;this.cameraFrame=combatCameraFrame(state,aspect,previous);this.framedArena=state.arena;const vh=this.cameraFrame.height;this.camera.left=-aspect*vh/2;this.camera.right=aspect*vh/2;this.camera.top=vh/2;this.camera.bottom=-vh/2;this.camera.updateProjectionMatrix();this.camera.position.x=this.cameraFrame.x+state.cameraShake.x;this.camera.position.y=this.cameraFrame.y+state.cameraShake.y;this.drawGrapples(state);this.renderer.render(this.scene,this.camera);}
+ private drawGrapples(state:GameRenderState){
+  for(const [i,s] of [state.player,state.opponent].entries()){
+   const rope=this.grappleLines[i],hook=this.grappleHooks[i],g=s.grapple;
+   rope.visible=Boolean(g);hook.visible=Boolean(g);
+   if(!g)continue;
+   const points=rope.geometry.getAttribute("position") as THREE.BufferAttribute;
+   points.setXYZ(0,s.x+s.facing*.57,s.y+.23,.36);
+   points.setXYZ(1,g.x,g.y,.36);
+   points.needsUpdate=true;
+   hook.position.set(g.x,g.y,.37);
+   hook.rotation.z=g.angle;
+   (hook.material as THREE.MeshBasicMaterial).map=g.phase==="latched"?this.grappleTextures.open:this.grappleTextures.flight;
+   (hook.material as THREE.MeshBasicMaterial).needsUpdate=true;
+  }
+ }
  private draw(view:ReturnType<ThreeRenderer['fighter']>,s:DuelistRenderState){
   const pose=fighterVisual(s),width=FIGHTER_INK_WIDTH,ink=fighterInkPalette(view.enemy,s.characterId);
+  view.grappleGun.visible=weaponDrawPose(s).weapon==="grapple"&&s.grabPhase===null;
+  view.grappleGun.position.set(pose.hand[0]+.205,pose.hand[1]-.045,.084);
+  view.grappleGun.rotation.z=pose.toolAngle;
   view.group.position.set(s.x,s.y,.1);
   // Recolor existing meshes; do not rebuild materials or GPU geometry per frame.
   (view.bodyHalo.material as THREE.MeshBasicMaterial).color.set(ink.halo);
@@ -345,7 +385,7 @@ export class ThreeRenderer implements Renderer{
    this.setCapsules(mesh,layer?.segments??[],layer?.width??.01);
    if(layer)(mesh.material as THREE.MeshBasicMaterial).color.set(layer.color);
   }
-  const weapon=toolSegments(s);
+  const weapon=view.grappleGun.visible?[]:toolSegments(s);
   const baseInk=weaponBaseInk(s);
   this.setCapsules(view.toolOutline,weapon,baseInk.outline);
   this.setCapsules(view.toolCore,weapon,baseInk.core);
@@ -372,5 +412,5 @@ export class ThreeRenderer implements Renderer{
   this.setLines(view.effect,segmentPositions(effect));
   (view.effect.material as THREE.LineBasicMaterial).opacity=effect.length?(s.attackTelegraph>0?.95:.6):0;
  }
- dispose(){this.platformInk.clear();this.contextLifecycle.dispose();this.themeTexture?.dispose();this.themeTexture=null;for(const m of this.missileTrails)this.scene.remove(m);for(const m of this.missileFlashes)this.scene.remove(m);for(const m of this.bowProjectiles)this.scene.remove(m);this.renderer.dispose();this.renderer.forceContextLoss();this.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});this.scene.clear();this.projectileGeometry.dispose();this.platformMaterial.dispose();this.icePlatformMaterial.dispose();this.slipperyPlatformMaterial.dispose();this.oneWayPlatformMaterial.dispose();this.conveyorLeftPlatformMaterial.dispose();this.conveyorRightPlatformMaterial.dispose();this.environmentVisuals.forEach(g=>g.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}}));}
+ dispose(){for(const line of this.grappleLines){line.geometry.dispose();(line.material as THREE.Material).dispose();}for(const texture of Object.values(this.grappleTextures))texture.dispose();this.platformInk.clear();this.contextLifecycle.dispose();this.themeTexture?.dispose();this.themeTexture=null;for(const m of this.missileTrails)this.scene.remove(m);for(const m of this.missileFlashes)this.scene.remove(m);for(const m of this.bowProjectiles)this.scene.remove(m);this.renderer.dispose();this.renderer.forceContextLoss();this.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});this.scene.clear();this.projectileGeometry.dispose();this.platformMaterial.dispose();this.icePlatformMaterial.dispose();this.slipperyPlatformMaterial.dispose();this.oneWayPlatformMaterial.dispose();this.conveyorLeftPlatformMaterial.dispose();this.conveyorRightPlatformMaterial.dispose();this.environmentVisuals.forEach(g=>g.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}}));}
 }
