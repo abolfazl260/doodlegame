@@ -15,7 +15,7 @@ export class Game{
   }
  }
  initialize(){this.assertNotDisposed();if(this.initialized)return;this.initialized=true;this.renderer.resize();this.renderer.render(this.session.getRenderState());}
- quickPlay(){this.ready();if(this.state.getState()!==GameState.MENU)return false;if(this.inRun)this.leaveRun();if(!this.session.hasConfirmedLoadout())return false;this.quickPlaySnapshot=this.session.getMatchSetup();this.session.setLocalPvP(false);this.session.setMode("duel");this.session.setArena("classic");this.session.setStartingWeapon("blade");this.start();return true;}
+ quickPlay(){this.ready();return false;} // Bypass removed: players must complete the setup wizard.
  start(){this.ready();this.session.cancelTransientActions();if(this.inRun)this.leaveRun();const s=this.state.getState();if(s===GameState.MENU||s===GameState.GAME_OVER){if(!this.session.lockLoadout())return false;this.session.reset();this.state.transitionTo(GameState.PLAYING);}else if(s===GameState.PAUSED)this.state.transitionTo(GameState.PLAYING);this.loop.start();return true;}
  pause(){this.ready();if(this.state.getState()===GameState.PLAYING){this.loop.stop();this.session.cancelTransientActions();this.state.transitionTo(GameState.PAUSED);}}
  resume(){this.ready();if(this.state.getState()===GameState.PAUSED){this.session.cancelTransientActions();this.state.transitionTo(GameState.PLAYING);this.loop.start();}}
@@ -57,14 +57,14 @@ export class Game{
  selectMode(id:GameModeId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return;if(current===GameState.GAME_OVER)this.loop.stop();this.session.setMode(id);if(current===GameState.GAME_OVER)this.state.reset();else this.state.notify();}
  newRun(){
   this.ready();const state=this.state.getState();
-  if(!this.progression||state===GameState.PLAYING||state===GameState.PAUSED)return false;
+  if(!this.progression||state===GameState.PLAYING||state===GameState.PAUSED||!this.session.hasConfirmedLoadout())return false;
   if(this.inRun)this.loop.stop();
   this.progression.begin();
   return this.continueRun();
  }
  continueRun(){
   this.ready();const state=this.state.getState();
-  if(!this.progression||(state!==GameState.MENU&&state!==GameState.GAME_OVER))return false;
+  if(!this.progression||(state!==GameState.MENU&&state!==GameState.GAME_OVER)||!this.session.lockLoadout())return false;
   const view=this.progression.getView(),run=view.run;
   if(!run||run.status==="complete")return false;
   // Coming back from the main menu with a pending reward opens intermission first.
@@ -99,7 +99,7 @@ export class Game{
   this.loop.stop();
   this.session.cancelTransientActions();
   this.inRun=false;
-  this.session.leaveRun();
+  this.session.leaveRun();this.session.clearLoadoutSelections();
   if(this.normalSnapshot){
    this.session.setMode(this.normalSnapshot.mode);
    this.session.setLocalPvP(this.normalSnapshot.localPvP);
