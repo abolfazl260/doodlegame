@@ -2204,7 +2204,7 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui__character-portrait--soldier{background:linear-gradient(155deg,#5fbbfb,#173a60)}
 .game-ui__character-portrait--ninja{background:linear-gradient(155deg,#4c345f,#151628)}
 .game-ui__character-portrait--viking{background:linear-gradient(155deg,#765238,#251d19)}
-.game-ui__character-portrait--ranger{background:linear-gradient(155deg,#15514b,#0d343a)}
+.game-ui__character-portrait--ranger{background:linear-gradient(155deg,#217692,#101f3c)}
 .game-ui__character-portrait--pharaoh{background:linear-gradient(155deg,#704c25,#302014)}
 .game-ui__character-portrait--knight{background:linear-gradient(155deg,#682336,#24101f)}
 .game-ui__character-portrait--mummy{background:linear-gradient(155deg,#4b3274,#1c143c)}
@@ -2212,7 +2212,7 @@ html[dir="rtl"] .game-ui__character-card{direction:rtl;text-align:right}
 .game-ui .game-ui__character-card[data-character="soldier"][aria-pressed="true"]{border-color:#46c8ff;box-shadow:0 0 0 2px #46c8ff88,0 0 16px #46c8ff33}
 .game-ui .game-ui__character-card[data-character="ninja"][aria-pressed="true"]{border-color:#ff5670;box-shadow:0 0 0 2px #ff567088,0 0 16px #ff567033}
 .game-ui .game-ui__character-card[data-character="viking"][aria-pressed="true"]{border-color:#e4b85f;box-shadow:0 0 0 2px #e4b85f88,0 0 16px #e4b85f33}
-.game-ui .game-ui__character-card[data-character="ranger"][aria-pressed="true"]{border-color:#82be65;box-shadow:0 0 0 2px #82be6588,0 0 16px #82be6533}
+.game-ui .game-ui__character-card[data-character="ranger"][aria-pressed="true"]{border-color:#4be6f1;box-shadow:0 0 0 2px #4be6f188,0 0 16px #4be6f133}
 .game-ui .game-ui__character-card[data-character="pharaoh"][aria-pressed="true"]{border-color:#e4bb57;box-shadow:0 0 0 2px #e4bb5788,0 0 16px #e4bb5733}
 .game-ui .game-ui__character-card[data-character="knight"][aria-pressed="true"]{border-color:#e54b59;box-shadow:0 0 0 2px #e54b5988,0 0 16px #e54b5933}
 .game-ui .game-ui__character-card[data-character="mummy"][aria-pressed="true"]{border-color:#e8dcc8;box-shadow:0 0 0 2px #e8dcc888,0 0 16px #e8dcc833}
