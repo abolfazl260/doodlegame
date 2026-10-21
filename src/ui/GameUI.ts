@@ -1162,6 +1162,7 @@ export class GameUI{
     }
     for(const item of this.weaponCards.children){
      const card=item as HTMLButtonElement,id=card.dataset.startingWeapon as WeaponId;
+     if(card===this.randomWeaponButton)continue;
      const random=s.mode==="random-weapons";
      const allowed=!random&&(s.mode!=="missile-duel"||id==="missile")&&(s.mode!=="melee-only"||id==="blade"||id==="hammer");
      this.setHidden(card,random||!allowed);card.disabled=!allowed;
