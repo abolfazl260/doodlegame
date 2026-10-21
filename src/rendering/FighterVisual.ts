@@ -569,38 +569,43 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
   ];
  }
  if(s.characterId==="ranger"){
-  // Close the hood at the cheek rather than drawing a loose diagonal tail.
-  const hood=head([[-.38,-.04],[-.42,.13],[-.24,.39],[-.02,.48],[.21,.32],[.37,.08],[.30,-.10]]);
-  const hoodInset=head([[-.32,-.045],[-.28,.17],[-.075,.34],[.17,.25],[.30,.025]]);
-  const goldRim=head([[-.36,-.045],[-.27,.19],[-.06,.365],[.22,.255],[.34,.04]]);
-  // The eye slit must stop inside the green mask, never project past its edge.
-  const eye=head([[-.145,-.105],[.025,-.09],[.17,-.075]]);
-  const cape=path([[-.22,.30],[-.45,.09],[-.53,-.39],[-.34,-.65],[-.06,-.42]]);
-  const capeTail=path([[.1,.30],[.40,.08],[.37,-.38],[.22,-.54]]);
-  const breast=path([[-.22,.23],[-.17,-.20],[.16,-.28],[.26,.22]]);
-  const strap=path([[-.28,.2],[.03,-.10],[.23,-.24]]);
-  const belt=line([-.23,-.16],[.28,-.16]);
-  const buckle=path([[-.043,-.205],[.04,-.205],[.04,-.105],[-.043,-.105],[-.043,-.205]]);
-  const shoulders=path([[-.2,.30],[-.34,.25],[-.39,.15]]).concat(path([[.17,.30],[.33,.25],[.39,.15]]));
-  const guards=leg.map(([a,b])=>[
-   [a[0]+(b[0]-a[0])*.27,a[1]+(b[1]-a[1])*.27],
-   [a[0]+(b[0]-a[0])*.48,a[1]+(b[1]-a[1])*.48]
-  ] as Segment);
+  // Ranger is an ice-blue high-tech scout, not an olive hooded archer.
+  // Angular helmet, cyan visor, radio aerial and armored field jacket.
+  const helmet=head([[-.32,-.15],[-.35,.075],[-.22,.30],[-.04,.41],[.17,.38],[.32,.20],[.34,-.10],[.19,-.23]]);
+  const brow=head([[-.33,.07],[-.20,.23],[.065,.31],[.31,.14]]);
+  const visor=head([[-.255,-.055],[-.15,.015],[.02,.038],[.22,.01],[.265,-.085]]);
+  const cheek=head([[-.22,-.115],[-.095,-.22],[.11,-.23],[.24,-.12]]);
+  const aerial=head([[-.29,.24],[-.43,.35],[-.43,.60]]);
+  const aerialTip=head([[-.485,.60],[-.375,.60]]);
+  const earpiece=head([[-.34,.025],[-.41,-.03],[-.375,-.15]]);
+  const jacket=path([[-.20,.28],[-.26,.04],[-.19,-.25],[.19,-.25],[.27,.04],[.20,.28]]);
+  const coatTail=path([[-.22,.14],[-.38,-.02],[-.36,-.35],[-.24,-.47],[-.17,-.31]]);
+  const chestPlates=path([[-.18,.18],[-.02,.13],[0,-.12],[-.16,-.18]]).concat(
+   path([[.18,.18],[.025,.13],[0,-.12],[.17,-.18]]));
+  const centerSeam=line([0,.12],[0,-.21]);
+  const pauldron=path([[-.17,.27],[-.33,.32],[-.42,.17],[-.31,.07]]).concat(
+   path([[.18,.27],[.31,.26],[.38,.12],[.28,.035]]));
+  const shoulderLights=line([-.33,.22],[-.24,.18]).concat(line([.28,.20],[.35,.13]));
+  const band=line([-.23,-.23],[.22,-.23]);
+  const buckle=path([[-.065,-.28],[.065,-.28],[.065,-.18],[-.065,-.18],[-.065,-.28]]);
+  const shins=leg.map(part=>strip(part,.47,.106));
+  const boots=leg.map(part=>strip(part,.78,.093));
+  const gauntlets=arm.map(part=>strip(part,.75,.086));
   return [
-   layer("#030e0c",.172,[...cape,...capeTail,...hood,...shoulders]),
-   layer("#123a2c",.18,[...cape,...capeTail]),
-   layer("#286d3c",.14,breast),
-   layer("#09251d",.20,hood),
-   layer("#1c5132",.15,hoodInset),
-   layer("#d2b24b",.055,goldRim),
-   layer("#020b12",.13,head([[-.19,-.12],[.19,-.12]])),
-   layer("#f7fcf6",.061,eye),
-   layer("#478e4b",.105,shoulders),
-   layer("#5f3b22",.082,[...strap,...belt,...cuffs,...feet]),
-   layer("#d9b56c",.050,buckle),
-   layer("#426b26",.125,guards),
-   layer("#ad8546",.052,feet),
-   layer("#84ab67",.027,head([[.13,.24],[.23,.145]]))
+   layer("#041321",.174,[...helmet,...jacket,...coatTail,...pauldron]),
+   layer("#143d58",.173,[...coatTail,...jacket]),
+   layer("#25617f",.136,[...chestPlates,...centerSeam]),
+   layer("#455f77",.194,helmet),
+   layer("#09263b",.156,[...visor,...cheek]),
+   layer("#43e5f0",.091,visor),
+   layer("#b6d0df",.062,[...brow,...earpiece]),
+   layer("#5d7b93",.092,cheek),
+   layer("#1596b4",.130,pauldron),
+   layer("#263d54",.101,[...band,...gauntlets,...boots]),
+   layer("#a2c2d5",.104,[...shins,...aerial]),
+   layer("#ff9c58",.067,[...buckle,...aerialTip]),
+   layer("#65f6ed",.065,[...shoulderLights,...centerSeam]),
+   layer("#eefcff",.034,head([[-.165,.015],[.04,.03],[.18,.005]]))
   ];
  }
  if(s.characterId==="pharaoh"){
@@ -827,7 +832,7 @@ export function fighterInkPalette(enemy:boolean,characterId:DuelistRenderState["
   soldier:{core:enemy?"#182333":"#0c1827",halo:"#9bdafc",face:"#f9fcff",accent:"#198fe8",suit:"#111a29",armor:"#162131",trim:"#1768af"},
   ninja:{core:enemy?"#171921":"#0b0e15",halo:"#f18088",face:"#12141b",accent:"#e72640",suit:"#12141c",armor:"#14161f",trim:"#9b1c2c"},
   viking:{core:enemy?"#17191e":"#0c1017",halo:"#b18b59",face:"#10131a",accent:"#d8ac4b",suit:"#11151c",armor:"#29262a",trim:"#ba8b48"},
-  ranger:{core:enemy?"#172720":"#0b1b15",halo:"#75b77e",face:"#07120f",accent:"#93ce65",suit:"#142b1f",armor:"#24432b",trim:"#c5a14b"},
+  ranger:{core:enemy?"#152c40":"#0b1c2c",halo:"#66e4ef",face:"#061421",accent:"#43e5f0",suit:"#142d43",armor:"#25617f",trim:"#ff9c58"},
   pharaoh:{core:enemy?"#1c2231":"#0d1628",halo:"#dcb964",face:"#060b12",accent:"#34ddf7",suit:"#121d30",armor:"#12417a",trim:"#e3b74e"},
   knight:{core:enemy?"#282a33":"#141925",halo:"#d9a7a7",face:"#252c38",accent:"#e3b957",suit:"#303441",armor:"#788593",trim:"#bd3345"},
   mummy:{core:enemy?"#242326":"#141718",halo:"#e8dfc6",face:"#111317",accent:"#23d7f1",suit:"#39332f",armor:"#e5dbc8",trim:"#bc8a3b"},
