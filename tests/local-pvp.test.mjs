@@ -39,7 +39,7 @@ test("independent WASD/Arrow inputs drive simultaneous movement and jumping",()=
  key(input,"KeyW",false);key(input,"ArrowUp",false);
  session.dispose();
 });
-test("P2 attack, hold, release and weapon switching never modify the P1 input state",()=>{
+test("P2 attack and rejected mid-game weapon hotkeys never modify P1 state",()=>{
  const {input,session}=setup();
  key(input,"Enter",true);
  assert.equal(input.getPlayer2State().attackPressed,true);
@@ -52,7 +52,7 @@ test("P2 attack, hold, release and weapon switching never modify the P1 input st
  assert.equal(input.getPlayer2State().attackHeld,false);
  key(input,"BracketRight",true);
  session.update(1/60);
- assert.equal(session.getHudState().secondWeapon,"hammer");
+ assert.equal(session.getHudState().secondWeapon,"blade");
  assert.equal(session.getHudState().weapon,"blade");
  key(input,"BracketRight",false);
  session.dispose();
@@ -135,18 +135,25 @@ test("choosing a new arena and rematching retain local PvP; returning to Duel re
 });
 
 
-test("chosen starting weapon is symmetric for both human players, including rematches",()=>{
+test("independent chosen starting weapons persist for both humans through rematches",()=>{
  const {session}=setup();
  assert.equal(session.setStartingWeapon("blaster"),true);
+ assert.equal(session.setPlayer2StartingWeapon("hammer"),true);
+ session.setCharacterId("archer");
+ session.setPlayer2CharacterId("viking");
  session.reset(false);
  assert.equal(session.getHudState().weapon,"blaster");
- assert.equal(session.getHudState().secondWeapon,"blaster");
+ assert.equal(session.getHudState().secondWeapon,"hammer");
+ assert.equal(session.getHudState().characterId,"archer");
+ assert.equal(session.getHudState().opponentCharacterId,"viking");
+ assert.equal(session.lockLoadout(),true);
  session.selectPlayer2Weapon(1);
+ session.selectWeapon(1);
  assert.equal(session.getHudState().weapon,"blaster");
- assert.equal(session.getHudState().secondWeapon,"uzi");
+ assert.equal(session.getHudState().secondWeapon,"hammer");
  session.reset(false);
  assert.equal(session.getHudState().weapon,"blaster");
- assert.equal(session.getHudState().secondWeapon,"blaster");
+ assert.equal(session.getHudState().secondWeapon,"hammer");
  session.dispose();
 });
 
