@@ -66,7 +66,7 @@ export class ThreeRenderer implements Renderer{
    const styleMeshes=[stroke("#ffffff",.073),stroke("#ffffff",.074),stroke("#ffffff",.075),stroke("#ffffff",.076)];
    const weaponAccent=stroke("#65e6ff",.079);
   const grappleGun=new THREE.Mesh(new THREE.PlaneGeometry(1.05,.537),
-   new THREE.MeshBasicMaterial({map:this.grappleTextures.gun,transparent:true,depthTest:false,side:THREE.DoubleSide}));
+   new THREE.MeshBasicMaterial({map:this.grappleTextures?.gun??null,transparent:true,depthTest:false,side:THREE.DoubleSide}));
   grappleGun.visible=false;grappleGun.renderOrder=19;
   const effect=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
   effect.position.z=.082;
