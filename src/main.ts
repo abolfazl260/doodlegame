@@ -101,7 +101,7 @@ try{
   input.resetTransientState();
   const runStart=ui.consumeRunStart();
   if(runStart==="new")game.newRun();
-  else if(runStart==="continue")game.continueRun();
+  else if(runStart==="continue"){if(game.continueRun()&&game.getState()===GameState.MENU)ui.showRunIntermission();}
   else game.start();
  };
  const restartGame=()=>{input.resetTransientState();game.restart();};
