@@ -1072,6 +1072,7 @@ export class GameUI{
   this.pendingRunStart=kind;
  }
  consumeRunStart(){const action=this.pendingRunStart;this.pendingRunStart=null;return action;}
+ showRunIntermission(){this.openMenuRoute("progression");}
  private openMenuRoute(route:"home"|"custom"|"local"|"arenas"|"progression"|"settings"){
   if(this.currentState!==GameState.MENU)return;
   this.pendingRunStart=null;
