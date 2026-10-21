@@ -16,13 +16,13 @@ type HudState={
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
  progression?:ProgressionView|null;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;
- characterId?:CharacterId;opponentCharacterId?:CharacterId;weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;
+ characterId?:CharacterId;opponentCharacterId?:CharacterId;characterChosen?:boolean;weaponChosen?:boolean;secondCharacterChosen?:boolean;secondWeaponChosen?:boolean;weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;
 };
 type Actions={
  quickPlay?:()=>void;
  newRun?:()=>void;continueRun?:()=>void;leaveRun?:()=>void;
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;stopToMenu?:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
- weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
+ weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;player2StartingWeapon?:(id:WeaponId)=>void;randomStartingWeapon?:(player:1|2)=>void;player2CharacterSelect?:(id:CharacterId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  playerCountSelect?:(count:1|2)=>void;setWeaponAim?:(player:1|2,x:number,y:number)=>void;player2WeaponSelect?:(id:WeaponId)=>void;
  setCharacterName?:(player:1|2,name:string)=>void;characterSelect?:(id:CharacterId)=>void;
  setTouchMove:(x:number,y:number)=>void;touchGrab:()=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;
@@ -50,9 +50,9 @@ const grabGesture=(startX:number,startY:number,x:number,y:number,elapsedMs:numbe
  return elapsedMs>=0&&elapsedMs<=380&&up>=52&&Math.abs(dx)<=Math.max(30,up*.5);
 };
 type UiAction="start"|"pause"|"resume"|"restart"|"menu";
-type MenuStep="mode"|"arena";
+type MenuStep="mode"|"arena"|"loadout";
 // Append another step here and give it a page in syncWizard to extend the setup.
-const MENU_STEPS:readonly MenuStep[]=["mode","arena"];
+const MENU_STEPS:readonly MenuStep[]=["mode","arena","loadout"];
 
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"];
@@ -181,6 +181,13 @@ export class GameUI{
  private menuProgress=document.createElement("div");
  private menuModePanel=document.createElement("section");
  private menuArenaPanel=document.createElement("section");
+ private menuLoadoutPanel=document.createElement("section");
+ private loadoutPlayer:1|2=1;
+ private loadoutPlayerTabs=document.createElement("div");
+ private loadoutP1Button=document.createElement("button");
+ private loadoutP2Button=document.createElement("button");
+ private loadoutStatus=document.createElement("p");
+ private randomWeaponButton=document.createElement("button");
  private arenaFilter:ArenaCategory="all";
  private arenaFilters=document.createElement("div");
  private arenaEmpty=document.createElement("p");
@@ -249,6 +256,8 @@ export class GameUI{
  }
  private toggleWeaponPicker(player:1|2){
   if(this.currentState!==GameState.PLAYING)return;
+  // In-match weapon selection is disabled: choices stay locked until returning to the menu.
+  return;
   const hud=this.readHud?.();if(!hud||hud.winner||hud.mode==="missile-duel"||hud.mode==="random-weapons")return;
   if(this.weaponPickerOpen&&this.weaponPickerPlayer===player){this.closeWeaponPicker();return;}
   this.weaponPickerPlayer=player;this.weaponPickerOpen=true;
@@ -282,7 +291,7 @@ export class GameUI{
  private readHud:(()=>HudState)|null=null;
  private hudFrame:number|null=null;
  private currentState=GameState.MENU;
- private lastView:{state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId;playerName?:string;secondPlayerName?:string;localPvP?:boolean;characterId?:CharacterId;opponentCharacterId?:CharacterId}|null=null;
+ private lastView:{selectionKey:string;state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId;playerName?:string;secondPlayerName?:string;localPvP?:boolean;characterId?:CharacterId;opponentCharacterId?:CharacterId}|null=null;
  private lastHealth:{playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;locale:string}|null=null;
  private lastBowPercent=NaN;
  private lastBowCharging=false;
@@ -303,7 +312,7 @@ export class GameUI{
   this.extraActions=actions;
   if(actions.quickPlay)this.menuView="landing";
   this.landing.className="game-ui__landing";this.landing.hidden=true;
-  this.landingQuick.type="button";this.landingQuick.dataset.route="quick";this.landingQuick.onclick=()=>actions.quickPlay?.();
+  this.landingQuick.type="button";this.landingQuick.dataset.route="quick";this.landingQuick.onclick=()=>this.openMenuRoute("custom");
   this.landingQuickLabel.className="game-ui__landing-quick-label";
   this.landingQuickCopy.className="game-ui__landing-quick-copy";
   this.landingDefaults.className="game-ui__landing-defaults";
@@ -545,6 +554,14 @@ export class GameUI{
   this.menuProgress.setAttribute("aria-live","polite");
   this.menuModePanel.className="game-ui__menu-mode-panel";
   this.menuArenaPanel.className="game-ui__menu-arena-panel";this.menuArenaPanel.hidden=true;
+  this.menuLoadoutPanel.className="game-ui__menu-loadout-panel";this.menuLoadoutPanel.hidden=true;
+  this.loadoutPlayerTabs.className="game-ui__loadout-player-tabs";this.loadoutPlayerTabs.setAttribute("role","group");
+  for(const [button,player] of [[this.loadoutP1Button,1],[this.loadoutP2Button,2]] as const){
+   button.type="button";button.className="game-ui__loadout-player-tab";
+   button.onclick=()=>{this.loadoutPlayer=player;this.syncWizard(this.currentState,this.readHud?.()??null);};
+   this.loadoutPlayerTabs.append(button);
+  }
+  this.loadoutStatus.className="game-ui__loadout-status";this.loadoutStatus.setAttribute("role","status");
   this.arenaCards.className="game-ui__arena-grid";
   this.extraArenaSection.className="game-ui__downloadable-arenas";
   this.extraArenaHeading.className="game-ui__section-title";
@@ -599,7 +616,7 @@ export class GameUI{
    const name=document.createElement("strong");name.className="game-ui__character-name";
    copy.append(name);card.append(portrait,copy);
    this.characterLabels.set(id,name);
-   card.onclick=()=>actions.characterSelect?.(id);
+   card.onclick=()=>{if(this.loadoutPlayer===2)actions.player2CharacterSelect?.(id);else actions.characterSelect?.(id);};
    this.characterCards.append(card);
   }
   this.characterPicker.append(this.characterPickerTitle,this.characterCards);
@@ -657,12 +674,16 @@ export class GameUI{
    card.type="button";card.className="game-ui__loadout-card";
    card.dataset.startingWeapon=id;
    card.setAttribute("aria-pressed","false");
-   card.onclick=()=>actions.selectStartingWeapon(id);
+   card.onclick=()=>{if(this.loadoutPlayer===2)actions.player2StartingWeapon?.(id);else actions.selectStartingWeapon(id);};
    this.weaponCards.append(card);
   }
-  // Name inputs belong to player setup, not the map selection screen.
-  this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.characterNames,this.characterPicker,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
-  this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaFilters,this.arenaEmpty,this.arenaCards,this.extraArenaSection,this.weaponDetails,this.matchSummary);
+  this.randomWeaponButton.type="button";this.randomWeaponButton.className="game-ui__random-loadout";
+   this.randomWeaponButton.onclick=()=>actions.randomStartingWeapon?.(this.loadoutPlayer);
+   this.weaponCards.append(this.randomWeaponButton);
+   // Name inputs belong to player setup, not the map selection screen.
+  this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.characterNames,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
+  this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaFilters,this.arenaEmpty,this.arenaCards,this.extraArenaSection);
+   this.menuLoadoutPanel.append(this.loadoutPlayerTabs,this.characterPicker,this.weaponDetails,this.loadoutStatus,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
 
   this.upgradePanel.className="game-ui__upgrade-panel game-ui__upgrade-panel--compact";
@@ -773,7 +794,7 @@ export class GameUI{
   this.joystick.addEventListener("pointerup",releaseJoystick);
   this.joystick.addEventListener("pointercancel",releaseJoystick);
   this.joystick.addEventListener("lostpointercapture",releaseJoystick);
-  this.nextWeaponButton.onclick=()=>{haptic(8);this.toggleWeaponPicker(1);};
+  this.nextWeaponButton.disabled=true;this.nextWeaponButton.onclick=()=>{};
   // A captured pointer owns ATTACK independently of the movement joystick.
   // Missile gestures fire only on pointerup; cancellation never launches a missile.
   let attackPointer=-1;
@@ -1005,7 +1026,7 @@ export class GameUI{
   this.menuLinks.append(this.helpButton,this.privacyButton,this.combatSoundButton,this.combatShakeButton,this.updateButton);
   this.menuExtras.append(this.menuLinks);
   this.menuProgressDetails.append(this.upgradePanel,this.runPanel);
-  this.menuSetupSection.append(this.menuProgress,this.menuLead,this.menuModePanel,this.menuArenaPanel);
+  this.menuSetupSection.append(this.menuProgress,this.menuLead,this.menuModePanel,this.menuArenaPanel,this.menuLoadoutPanel);
   this.menuHeader.append(this.menuHome);
   this.menu.append(this.menuHeader,this.pauseHeader,this.landing,this.menuResult,this.menuSetupSection,this.menuProgressDetails,this.menuExtras,this.pauseFooter,this.buttons);
   this.topHud.append(this.playerHealth,this.status,this.opponentHealth);
@@ -1058,7 +1079,7 @@ export class GameUI{
   if(this.currentState!==GameState.MENU)return;
   if(route==="local")this.extraActions.playerCountSelect?.(2);
   this.menuView=route==="home"?"landing":route==="progression"||route==="settings"?route:"setup";
-  if(route==="custom"||route==="local")this.menuStepIndex=0;
+  if(route==="custom"||route==="local"){this.menuStepIndex=0;this.loadoutPlayer=1;}
   if(route==="arenas")this.menuStepIndex=1;
   this.menu.scrollTop=0;this.syncWizard(this.currentState,this.readHud?.()??null);
   if(route==="home")this.landingQuick.focus();else this.menuHome.focus();
@@ -1098,7 +1119,7 @@ export class GameUI{
   this.menuStepIndex=next;
   this.menu.scrollTop=0;
   this.syncWizard(this.currentState,this.readHud?.()??null);
-  const heading=next===0?this.menuLead:this.arenaTitle;
+  const heading=next===0?this.menuLead:next===1?this.arenaTitle:this.characterPickerTitle;
   heading.focus?.();
  }
  private selectProgressTab(view:"run"|"upgrades"){
@@ -1107,61 +1128,89 @@ export class GameUI{
   this.syncWizard(this.currentState,this.readHud?.()??null);
  }
  private syncWizard(state:GameState,s:HudState|null){
-  const choosing=state===GameState.MENU;
-  const results=state===GameState.GAME_OVER;
-  const onArena=MENU_STEPS[this.menuStepIndex]==="arena";
-  if(s)this.setHidden(this.secondNameLabel,!(s.localPvP??s.mode==="local-pvp"));
-  // The result is NOT the first step of the setup wizard.
+  const choosing=state===GameState.MENU,results=state===GameState.GAME_OVER;
+  const step=MENU_STEPS[this.menuStepIndex],onMode=step==="mode",onArena=step==="arena",onLoadout=step==="loadout";
+  const twoPlayers=Boolean(s?.localPvP??s?.mode==="local-pvp");
+  if(s)this.setHidden(this.secondNameLabel,!twoPlayers);
   this.setHidden(this.menuSetupSection,!choosing);
-  this.setHidden(this.menuModePanel,!choosing||onArena);
+  this.setHidden(this.menuModePanel,!choosing||!onMode);
   this.setHidden(this.menuArenaPanel,!choosing||!onArena);
-  this.setHidden(this.stepBackButton,!choosing||!onArena);
-  this.setHidden(this.stepNextButton,!choosing||onArena);
-  this.setHidden(this.menuExtras,results||(choosing&&onArena));
+  this.setHidden(this.menuLoadoutPanel,!choosing||!onLoadout);
+  this.setHidden(this.stepBackButton,!choosing||onMode);
+  this.setHidden(this.stepNextButton,!choosing||onLoadout);
+  this.setHidden(this.menuExtras,results||(choosing&&!onMode));
+  const complete=Boolean(s?.characterChosen&&s.weaponChosen&&(!twoPlayers||(s.secondCharacterChosen&&s.secondWeaponChosen)));
   for(const item of this.buttons.children){
    const button=item as HTMLButtonElement;
-   if(button.dataset.action==="start")this.setHidden(button,!choosing||!onArena);
+   if(button.dataset.action==="start"){this.setHidden(button,!choosing||!onLoadout);button.disabled=!complete;}
   }
   if(s){
    const rewardScreen=results&&Boolean(s.inRun);
-   const menuExtras=choosing&&!onArena;
-   const hasRun=Boolean(s.progression)&&!(s.localPvP??s.mode==="local-pvp");
-   const hasUpgrades=!(s.localPvP??s.mode==="local-pvp")&&
-    (s.upgradePoints>0||s.upgradedWeapons.length>0);
-   // In the normal menu, show one optional view at a time. During a Run
-   // intermission the reward choices and Next Fight action remain together.
+   const menuExtras=choosing&&onMode;
+   const hasRun=Boolean(s.progression)&&!twoPlayers;
+   const hasUpgrades=!twoPlayers&&(s.upgradePoints>0||s.upgradedWeapons.length>0);
    const combined=rewardScreen||(menuExtras&&Boolean(s.inRun));
    const tabs=menuExtras&&!combined&&hasRun&&hasUpgrades;
    this.setHidden(this.menuProgressTabs,!tabs);
    this.menuRunTab.setAttribute("aria-pressed",String(this.menuProgressView==="run"));
    this.menuUpgradeTab.setAttribute("aria-pressed",String(this.menuProgressView==="upgrades"));
-   const showRun=(menuExtras||rewardScreen)&&hasRun&&
-    (combined||!hasUpgrades||this.menuProgressView==="run");
-   const showUpgrade=(menuExtras||rewardScreen)&&hasUpgrades&&
-    (combined||!hasRun||this.menuProgressView==="upgrades");
-   this.setHidden(this.runPanel,!showRun);
-   this.setHidden(this.upgradePanel,!showUpgrade);
-   const showProgress=(menuExtras||rewardScreen)&&(hasRun||hasUpgrades);
-   this.setHidden(this.menuProgressDetails,!showProgress);
-   if(results&&rewardScreen&&this.lastView?.state!==state)
-    this.menuProgressDetails.open=true;
-   if(choosing&&s.inRun&&this.lastView?.state!==state)
-    this.menuProgressDetails.open=true;
+   this.setHidden(this.runPanel,!(menuExtras||rewardScreen)||!hasRun||
+    (!combined&&hasUpgrades&&this.menuProgressView!=="run"));
+   this.setHidden(this.upgradePanel,!(menuExtras||rewardScreen)||!hasUpgrades||
+    (!combined&&hasRun&&this.menuProgressView!=="upgrades"));
+   this.setHidden(this.menuProgressDetails,!(menuExtras||rewardScreen)||(!hasRun&&!hasUpgrades));
+   if(results&&rewardScreen&&this.lastView?.state!==state)this.menuProgressDetails.open=true;
+   if(choosing&&s.inRun&&this.lastView?.state!==state)this.menuProgressDetails.open=true;
+   if(onLoadout){
+    if(!twoPlayers)this.loadoutPlayer=1;
+    this.setHidden(this.loadoutP2Button,!twoPlayers);
+    const player=this.loadoutPlayer,chosenCharacter=player===1?s.characterChosen:s.secondCharacterChosen;
+    const chosenWeapon=player===1?s.weaponChosen:s.secondWeaponChosen;
+    this.weaponDetails.open=true;
+    for(const item of this.characterCards.children){
+     const card=item as HTMLButtonElement;
+     card.setAttribute("aria-pressed",String(Boolean(chosenCharacter)&&card.dataset.character===(player===1?s.characterId:s.opponentCharacterId)));
+    }
+    for(const item of this.weaponCards.children){
+     const card=item as HTMLButtonElement,id=card.dataset.startingWeapon as WeaponId;
+     const random=s.mode==="random-weapons";
+     const allowed=!random&&(s.mode!=="missile-duel"||id==="missile")&&(s.mode!=="melee-only"||id==="blade"||id==="hammer");
+     this.setHidden(card,random||!allowed);card.disabled=!allowed;
+     card.setAttribute("aria-pressed",String(Boolean(chosenWeapon)&&id===(player===1?s.weapon:s.secondWeapon)));
+    }
+    this.setHidden(this.randomWeaponButton,s.mode!=="random-weapons");
+    this.randomWeaponButton.setAttribute("aria-pressed",String(Boolean(chosenWeapon)));
+    this.loadoutP1Button.setAttribute("aria-pressed",String(player===1));
+    this.loadoutP2Button.setAttribute("aria-pressed",String(player===2));
+    const fa=this.i18n.locale==="fa";
+    this.loadoutP1Button.textContent=fa?"بازیکن ۱":"PLAYER 1";
+    this.loadoutP2Button.textContent=fa?"بازیکن ۲":"PLAYER 2";
+    this.setText(this.loadoutStatus,(fa?"شخصیت: ":"Character: ")+(chosenCharacter?(fa?"انتخاب شد":"Selected"):(fa?"انتخاب لازم است":"Required"))+
+     "  ·  "+(fa?"اسلحه: ":"Weapon: ")+(chosenWeapon?(fa?"انتخاب شد":"Selected"):(fa?"انتخاب لازم است":"Required"))+
+     (twoPlayers&&!complete?" · "+(fa?"هر دو بازیکن باید انتخاب کنند":"Both players must confirm"):""));
+   }
   }else this.setHidden(this.menuProgressDetails,true);
-  const labels=this.i18n.messages.menu;
-  this.setText(this.menuLead,onArena?(labels?.chooseArena??"CHOOSE ARENA"):
-   (labels?.kickoff??"CHOOSE YOUR FIGHT"));
-  this.setText(this.stepNextButton,(s?.localPvP??s?.mode==="local-pvp")?
-   (labels?.nextAllArenas??"NEXT · ALL 16 ARENAS"):
-   (labels?.nextArena??"NEXT · CHOOSE ARENA"));
-  const stepLabel=onArena?this.i18n.messages.sections.arena:
+  const labels=this.i18n.messages.menu,fa=this.i18n.locale==="fa";
+  this.setText(this.menuLead,onLoadout?(fa?"شخصیت و اسلحه را انتخاب کن":"CHOOSE CHARACTER & WEAPON"):
+   onArena?(labels?.chooseArena??"CHOOSE ARENA"):(labels?.kickoff??"CHOOSE YOUR FIGHT"));
+  this.setText(this.stepNextButton,onArena?(fa?"بعدی · شخصیت و اسلحه":"NEXT · CHARACTER & WEAPON"):
+   twoPlayers?(labels?.nextAllArenas??"NEXT · ALL ARENAS"):(labels?.nextArena??"NEXT · CHOOSE ARENA"));
+  const stepLabel=onLoadout?(fa?"تجهیزات":"LOADOUT"):onArena?this.i18n.messages.sections.arena:
    (labels?.selectMode??this.i18n.messages.sections.gameMode);
-  this.setText(this.menuProgress,(labels?.step??"STEP")+" "+
-   (this.menuStepIndex+1)+" / "+MENU_STEPS.length+" · "+stepLabel);
+  this.setText(this.menuProgress,(labels?.step??"STEP")+" "+(this.menuStepIndex+1)+" / "+MENU_STEPS.length+" · "+stepLabel);
   this.syncMenuView(state,s);
  }
- advanceMenuStep(){if(this.currentState!==GameState.MENU)return;if(this.extraActions.quickPlay&&this.menuView==="landing"){this.extraActions.quickPlay();return;}if(this.menuView==="setup")this.changeMenuStep(this.menuStepIndex+1);}
- canStartMatch(){return this.currentState===GameState.MENU&&this.menuView==="setup"&&this.menuStepIndex===MENU_STEPS.length-1;}
+ advanceMenuStep(){
+  if(this.currentState!==GameState.MENU)return;
+  if(this.menuView==="landing"){this.openMenuRoute("custom");return;}
+  if(this.menuView==="setup")this.changeMenuStep(this.menuStepIndex+1);
+ }
+ canStartMatch(){
+  const s=this.readHud?.();
+  return this.currentState===GameState.MENU&&this.menuView==="setup"&&
+   this.menuStepIndex===MENU_STEPS.length-1&&Boolean(s?.characterChosen&&s.weaponChosen&&
+    (!(s.localPvP??s.mode==="local-pvp")||(s.secondCharacterChosen&&s.secondWeaponChosen)));
+ }
  setUpdateVisible(visible:boolean){this.updateButton.hidden=!visible;}
  setUpdateOutcome(result:"success"|"error"){this.updateButton.dataset.result=result;}
  bind(subscribe:(listener:(state:GameState)=>void)=>()=>void,read:()=>HudState){
