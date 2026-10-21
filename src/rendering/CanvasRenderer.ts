@@ -1,9 +1,8 @@
 import {fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,characterMarkings,characterSkinLayers,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
 import type {Renderer} from "./Renderer";
 import {PlatformInkCache,platformInkReaction} from "./PlatformDecorations.js";
-import {getArenaTheme,paintArenaBackdrop,platformColors} from "../themes/ArenaThemes";
+import {getArenaTheme,paintArenaBackdrop,platformColors,svgBackdropRevision} from "../themes/ArenaThemes";
 import {getDownloadedImage} from "../gameplay/DownloadableArenas.js";
-import {svgBackdropRevision} from "../themes/SimplifiedSvgBackdrops.js";
 import {combatCameraFrame,type CombatCameraFrame} from "./CombatCamera.js";
 import type {GameRenderState,DuelistRenderState} from "../gameplay/GameSession";
 export class CanvasRenderer implements Renderer{

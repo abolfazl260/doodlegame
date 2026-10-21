@@ -2,7 +2,8 @@ import type {ArenaId,BuiltInArenaId,PlatformSurface} from "../gameplay/GameSessi
 import {getDownloadedArena,getDownloadedImage} from "../gameplay/DownloadableArenas.js";
 import {paintProfessionalBackdrop} from "./BackgroundArt.js";
 import {paintArenaLandmarks} from "./ArenaStageArt.js";
-import {paintSimpleSvgBackdrop} from "./SimplifiedSvgBackdrops.js";
+import {paintSimpleSvgBackdrop,svgBackdropRevision} from "./SimplifiedSvgBackdrops.js";
+export {svgBackdropRevision};
 
 export type ArenaUiSkin = "doodle" | "neon" | "fantasy";
 export type ArenaBackdrop = "sketch" | "city" | "clouds" | "mountains" | "cavern" | "industrial";
