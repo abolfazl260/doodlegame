@@ -1,3 +1,4 @@
+import {startMatch} from "./setup.mjs";
 import {test,expect} from "@playwright/test";
 import {readFileSync} from "node:fs";
 import {WEBP_SAMPLE_BASE64,WEBP_SAMPLE_DESCRIPTOR,WEBP_SAMPLE_LISTING} from "../fixtures/downloadable-webp.mjs";
@@ -36,7 +37,7 @@ test("players can download new GitHub arenas, choose them, and replay them offli
  await expect(cards.first().locator(".game-ui__download-play")).toBeVisible();
  await cards.first().locator(".game-ui__download-play").tap();
  await expect(page.locator(".game-ui__arena-selection-summary")).toContainText("جنگل مه‌آلود");
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe("extra-forest");
  await page.unrouteAll();
  await page.route(raw+"**",route=>route.abort());
@@ -78,7 +79,7 @@ test("three new landscapes can each be downloaded, selected and reused offline",
  await expect(page.locator(".game-ui__download-play")).toHaveCount(3);
  const offlineCard=page.locator(".game-ui__download-card").filter({hasText:"بام‌های نئونی"});
  await offlineCard.locator(".game-ui__download-play").tap();
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe("extra-neon-city");
  await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
 });
@@ -109,7 +110,7 @@ test("short landscape gallery keeps all downloadable cards independently reachab
  await expect(last.locator(".game-ui__download-play")).toBeVisible();
  await last.locator(".game-ui__download-play").tap();
  await expect(page.locator(".game-ui__arena-selection-summary")).toContainText("باغ شکوفه‌های گیلاس");
- await expect(page.locator('button[data-action="start"]')).toBeInViewport();
+ await expect(page.locator('button[data-action="next"]')).toBeInViewport();
 });
 
 test("downloadable previews appear before install, then switch to cached SVG after installing",async({page})=>{
@@ -160,7 +161,7 @@ test("WebP arena downloads as binary, displays its thumbnail and plays again off
  await expect(saved.locator(".game-ui__download-play")).toBeVisible();
  await expect(saved.locator(".game-ui__download-preview")).toHaveCSS("background-image",/data:image\/webp;base64,/);
  await saved.locator(".game-ui__download-play").tap();
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe("extra-webp-demo");
  await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
 });
@@ -172,6 +173,6 @@ test("failed catalog request never blocks the original sixteen offline arenas",a
  await expect(page.locator(".game-ui__download-feedback")).toContainText(/گیت‌هاب|GitHub/);
  await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
  await page.locator('.game-ui__arena-card[data-arena="sky"]').tap();
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe("sky");
 });

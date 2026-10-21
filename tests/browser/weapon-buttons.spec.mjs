@@ -1,42 +1,45 @@
+import {startMatch} from "./setup.mjs";
 import {test,expect} from "@playwright/test";
-const button=id=>`.game-ui.playing .game-ui__weapon-list button[data-weapon="${id}"]`;
 const toggle=".game-ui__mobile-weapon-switcher .game-ui__weapon-toggle";
 const selected=page=>page.evaluate(()=>window.__weaponFixture.selected());
 const changeMode=(page,mode)=>page.evaluate(m=>window.__weaponFixture.setMode(m),mode);
 const changeArena=(page,arena)=>page.evaluate(a=>window.__weaponFixture.setArena(a),arena);
+for(const id of ["hammer","blaster","uzi","boomerang","bow","bomb","missile","spear","grapple","blade"]){
+ test(`starting ${id} stays locked during offline combat`,async({page})=>{
+  await page.setViewportSize({width:1280,height:720});
+  await page.goto("tests/browser/run-progression.html");
+  await startMatch(page,id);
+  expect(await page.evaluate(()=>window.__runFixture.view().weapon)).toBe(id);
+  await expect(page.locator(toggle)).toBeHidden();
+  await page.keyboard.press("e");
+  await page.evaluate(()=>window.__runFixture.nextFrame());
+  expect(await page.evaluate(()=>window.__runFixture.view().weapon)).toBe(id);
+  expect(await page.evaluate(()=>window.__runFixture.pvpSnapshot().p1Input.attackHeld)).toBe(false);
+ });
+}
+
+test.describe("offline combat controls",()=>{
 test.beforeEach(async({page})=>{
  await page.setViewportSize({width:1280,height:720});
  await page.goto("tests/browser/weapon-picker.html");
  await page.waitForFunction(()=>Boolean(window.__weaponFixture));
 });
-test("one weapon button opens a palette and closes after choosing",async({page})=>{
- await expect(page.locator(toggle)).toBeVisible();
- await expect(page.locator(".game-ui__weapon-list")).toBeHidden();
- for(const id of ["hammer","blaster","uzi","boomerang","bow","bomb","missile","spear","blade"]){
-  await page.locator(toggle).click();await expect(page.locator(button(id))).toBeEnabled();
-  await page.evaluate(()=>window.__weaponFixture.clearAttack());
-  await page.locator(button(id)).click();expect(await selected(page)).toBe(id);
-  await expect(page.locator(".game-ui__weapon-list")).toBeHidden();
-  expect(await page.evaluate(()=>window.__weaponFixture.attackPressed())).toBe(false);
- }
-});
-test("palette closes with its button or Escape without firing",async({page})=>{
- await page.locator(toggle).click();await page.locator(toggle).click();
- await expect(page.locator(".game-ui__weapon-list")).toBeHidden();
- await page.locator(toggle).click();await page.keyboard.press("Escape");
+test("Escape does not reveal a palette or fire an attack",async({page})=>{
+ await page.keyboard.press("Escape");
+ await expect(page.locator(toggle)).toBeHidden();
  await expect(page.locator(".game-ui__weapon-list")).toBeHidden();
  expect(await page.evaluate(()=>window.__weaponFixture.attackPressed())).toBe(false);
 });
-test("melee-only excludes ranged weapons",async({page})=>{
- await changeMode(page,"melee-only");await page.locator(toggle).click();
- for(const id of ["blaster","uzi","boomerang","bow","bomb","missile","spear"]){await expect(page.locator(button(id))).toBeHidden();await expect(page.locator(button(id))).toBeDisabled();}
- await page.locator(button("hammer")).click();expect(await selected(page)).toBe("hammer");
+test("melee-only keeps its default weapon and hides manual combat selection",async({page})=>{
+ await changeMode(page,"melee-only");
+ await expect(page.locator(toggle)).toBeHidden();
+ expect(await selected(page)).toBe("blade");
 });
-test("Missile Duel locks the weapon; Fortress allows all standard weapons",async({page})=>{
+test("Missile Duel and Fortress both hide the offline combat palette",async({page})=>{
  await changeMode(page,"missile-duel");expect(await selected(page)).toBe("missile");await expect(page.locator(toggle)).toBeHidden();
  await changeMode(page,"duel");await changeArena(page,"fortress");expect(await selected(page)).toBe("blade");
- await page.locator(toggle).click();await page.locator(button("missile")).click();expect(await selected(page)).toBe("missile");
- await page.locator(toggle).click();await page.locator(button("bow")).click();expect(await selected(page)).toBe("bow");
+ await expect(page.locator(toggle)).toBeHidden();
+ await expect(page.locator(".game-ui__weapon-list")).toBeHidden();
 });
 test("random weapons disables manual selection",async({page})=>{
  await changeMode(page,"random-weapons");await expect(page.locator(toggle)).toBeHidden();await expect(page.locator(".game-ui__weapon-list")).toBeHidden();
@@ -72,4 +75,6 @@ test("mouse release over a blocking overlay still ends the captured canvas attac
  }finally{
   await page.evaluate(()=>document.querySelector("#pointer-interception-test")?.remove());
  }
+});
+
 });

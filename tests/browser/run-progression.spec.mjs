@@ -1,3 +1,4 @@
+import {startMatch,launchRun} from "./setup.mjs";
 import {test,expect} from "@playwright/test";
 
 test.use({viewport:{width:740,height:360},hasTouch:true,isMobile:true});
@@ -13,7 +14,7 @@ const getView=page=>page.evaluate(()=>window.__runFixture.view());
 const status=page=>page.evaluate(()=>window.__runFixture.state());
 
 test("complete three encounters and a boss with one upgrade choice after each win",async({page})=>{
- await page.locator(".game-ui__run-new").tap();
+ await launchRun(page);
  for(let stage=1;stage<=4;stage++){
   expect(await status(page)).toBe("PLAYING");
   const active=await getView(page);
@@ -38,7 +39,7 @@ test("complete three encounters and a boss with one upgrade choice after each wi
    expect(upgraded.progression.run.upgradedWeapons).toContain(selected);
    expect(upgraded.progression.run.points).toBe(0);
    await expect(page.locator(".game-ui__run-continue")).toBeEnabled();
-   await page.locator(".game-ui__run-continue").tap();
+   await launchRun(page,"continue");
   }
  }
  const finished=await getView(page);
@@ -49,13 +50,13 @@ test("complete three encounters and a boss with one upgrade choice after each wi
  expect(await status(page)).toBe("MENU");
  expect((await getView(page)).inRun).toBe(false);
  await page.locator('button[data-action="next"]').tap();
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  expect(await status(page)).toBe("PLAYING");
  expect((await getView(page)).inRun).toBe(false);
 });
 
 test("pending reward and purchased upgrades survive reload; English Run copy switches",async({page})=>{
- await page.locator(".game-ui__run-new").tap();
+ await launchRun(page);
  await page.evaluate(()=>window.__runFixture.win());
  await page.reload();
  await page.waitForFunction(()=>Boolean(window.__runFixture));
@@ -74,17 +75,17 @@ test("pending reward and purchased upgrades survive reload; English Run copy swi
  await page.locator(".game-ui__language button").tap();
  await expect(page.locator(".game-ui__run-heading")).toHaveText("FOUR-FIGHT RUN");
  await expect(page.locator(".game-ui__run-continue")).toHaveText("NEXT FIGHT");
- await page.locator(".game-ui__run-continue").tap();
+ await launchRun(page,"continue");
  expect((await getView(page)).progression.run.stage).toBe(2);
 });
 
 test("a lost Run encounter can be retried; a reload during combat restarts the same wave",async({page})=>{
- await page.locator(".game-ui__run-new").tap();
+ await launchRun(page);
  await page.evaluate(()=>window.__runFixture.lose());
  let progress=await getView(page);
  expect(progress.progression.totalWins).toBe(0);
  expect(progress.progression.run.status).toBe("defeat");
- await page.locator(".game-ui__run-continue").tap();
+ await launchRun(page,"continue");
  expect((await getView(page)).progression.run.stage).toBe(1);
  await page.reload();
  await page.waitForFunction(()=>Boolean(window.__runFixture));
@@ -92,19 +93,19 @@ test("a lost Run encounter can be retried; a reload during combat restarts the s
  expect(progress.progression.run.status).toBe("ready");
  expect(progress.progression.run.stage).toBe(1);
  await page.locator(".game-ui__menu-progress-details > summary").tap();
- await page.locator(".game-ui__run-continue").tap();
+ await launchRun(page,"continue");
  await page.evaluate(()=>window.__runFixture.win());
  expect((await getView(page)).progression.totalWins).toBe(1);
 });
 
 test("Android Back saves a retryable wave and an unfinished reward can reenter intermission",async({page})=>{
- await page.locator(".game-ui__run-new").tap();
+ await launchRun(page);
  await page.evaluate(()=>window.__runFixture.back());
  let view=await getView(page);
  expect(await status(page)).toBe("MENU");
  expect(view.inRun).toBe(false);
  expect(view.progression.run.status).toBe("ready");
- await page.locator(".game-ui__run-continue").tap();
+ await launchRun(page,"continue");
  expect(await status(page)).toBe("PLAYING");
  await page.evaluate(()=>window.__runFixture.win());
  view=await getView(page);
@@ -112,7 +113,7 @@ test("Android Back saves a retryable wave and an unfinished reward can reenter i
  await page.evaluate(()=>window.__runFixture.back());
  expect(await status(page)).toBe("MENU");
  await expect(page.locator(".game-ui__run-continue")).toBeEnabled();
- await page.locator(".game-ui__run-continue").tap();
+ await launchRun(page,"continue");
  view=await getView(page);
  expect(view.inRun).toBe(true);
  expect(view.progression.run.status).toBe("victory");
@@ -120,6 +121,6 @@ test("Android Back saves a retryable wave and an unfinished reward can reenter i
  const choice=view.progression.choices[0];
  await page.locator(`.game-ui__upgrade-card[data-upgrade-weapon="${choice}"]`).tap();
  await page.locator(".game-ui__upgrade-choices > button").tap();
- await page.locator(".game-ui__run-continue").tap();
+ await launchRun(page,"continue");
  expect((await getView(page)).progression.run.stage).toBe(2);
 });

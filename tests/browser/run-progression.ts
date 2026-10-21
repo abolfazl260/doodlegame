@@ -27,7 +27,14 @@ const game=new Game(renderer,session,scheduler,error=>{throw error;},progression
 const readHud=()=>({...game.getHudState(),playerName:playerNames.get(1),secondPlayerName:playerNames.get(2)});
 const ui=new GameUI(root,{
  ...(new URLSearchParams(location.search).has("landing")?{quickPlay:()=>{input.resetTransientState();game.quickPlay();}}:{}),
- start:()=>game.start(),pause:()=>game.pause(),resume:()=>game.resume(),restart:()=>game.restart(),
+ start:()=>{
+  if(!ui.canStartMatch())return;
+  input.resetTransientState();
+  const pending=ui.consumeRunStart();
+  if(pending==="new")game.newRun();
+  else if(pending==="continue"){if(game.continueRun()&&game.getState()===GameState.MENU)ui.showRunIntermission();}
+  else game.start();
+ },pause:()=>game.pause(),resume:()=>game.resume(),restart:()=>game.restart(),
  stopToMenu:()=>{input.resetTransientState();game.stop();},
  newRun:()=>{game.newRun();},continueRun:()=>{game.continueRun();},leaveRun:()=>{game.leaveRun();},
  weaponNext:()=>game.selectWeapon(1),weaponPrevious:()=>game.selectWeapon(-1),

@@ -4,7 +4,8 @@ const canvas=document.querySelector<HTMLCanvasElement>("#scene")!;
 const ids:ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
 function render(id:ArenaId,width=640,height=360){
  canvas.width=width;canvas.height=height;
- const c=canvas.getContext("2d");
+ // Pixel hashes require one consistent readback backend from the first frame.
+ const c=canvas.getContext("2d",{willReadFrequently:true});
  if(!c)throw Error("Canvas2D unavailable");
  paintArenaBackdrop(c,width,height,getArenaTheme(id));
  const {data}=c.getImageData(0,0,width,height);

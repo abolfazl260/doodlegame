@@ -1,3 +1,4 @@
+import {chooseLoadout,startMatch,launchRun} from "./setup.mjs";
 import {test,expect} from "@playwright/test";
 
 test.use({viewport:{width:844,height:390},hasTouch:true,isMobile:true});
@@ -62,7 +63,7 @@ test("Online Multiplayer stays disabled for touch, keyboard, and both locales",a
 test("missile duel has no aim controls or extra HUD details",async({page})=>{
  await page.locator('.game-ui__mode-card[data-mode="missile-duel"]').tap();
  await page.locator('button[data-action="next"]').tap();
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  await expect(page.locator(".game-ui.playing")).toBeVisible();
  await expect(page.locator(".game-ui__missile-panel")).toHaveCount(0);
  await expect(page.locator(".game-ui__mobile-button--attack")).toBeVisible();
@@ -95,7 +96,7 @@ test("player-count cards preserve all mode choices and arena is selected on the 
  await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
  await page.locator('.game-ui__arena-card[data-arena="ruins"]').tap();
  await expect(page.locator('.game-ui__arena-card[data-arena="ruins"]')).toHaveAttribute("aria-pressed","true");
- await page.locator(".game-ui__weapon-details summary").tap();
+ await page.locator('[data-action="next"]').tap();
  await page.locator('.game-ui__loadout-card[data-starting-weapon="bow"]').tap();
  await expect(page.locator(".game-ui__match-summary")).toContainText("ویرانه‌ها");
  await expect(page.locator(".game-ui__match-summary")).toContainText("کمان");
@@ -104,6 +105,7 @@ test("player-count cards preserve all mode choices and arena is selected on the 
  await expect(page.locator(".game-ui__match-summary")).toContainText("RUINS");
  await expect(page.locator(".game-ui__match-summary")).toContainText("BOW");
  await page.locator('button[data-action="back"]').tap();
+ await page.locator('[data-action="back"]').tap();
  await expect(page.locator('.game-ui__mode-card[data-mode="low-gravity"]')).toHaveAttribute("aria-pressed","true");
  await expect(page.locator(".game-ui__menu-arena-panel")).toBeHidden();
 });
@@ -133,11 +135,11 @@ test("short landscape wizard keeps NEXT and START hittable while arena gallery s
  const next=page.locator('button[data-action="next"]');
  await expect(next).toBeInViewport();
  await next.tap();
- const start=page.locator('button[data-action="start"]');
- await expect(start).toBeInViewport();
+ const arenaNext=page.locator('button[data-action="next"]');
+ await expect(arenaNext).toBeInViewport();
  const geometry=await page.evaluate(()=>{
   const menu=document.querySelector(".game-ui__menu");
-  const button=document.querySelector('[data-action="start"]');
+  const button=document.querySelector('[data-action="next"]');
   const before=menu.scrollTop;
   menu.scrollTop=menu.scrollHeight;
   const rect=button.getBoundingClientRect(),x=rect.left+rect.width/2,y=rect.top+rect.height/2;
@@ -148,13 +150,15 @@ test("short landscape wizard keeps NEXT and START hittable while arena gallery s
  expect(geometry.after).toBeGreaterThan(geometry.before);
  expect(geometry.touchAction).toBe("pan-y");
  expect(geometry.hit).toBe(true);
- await start.tap();
+ await chooseLoadout(page);
+ await expect(page.locator('[data-action="start"]')).toBeInViewport();
+ await page.locator('[data-action="start"]').tap();
  expect(await page.evaluate(()=>window.__runFixture.state())).toBe("PLAYING");
 });
 
 test("centered translucent pause ignores a short touch and opens after a two-second hold",async({page})=>{
  await page.locator('button[data-action="next"]').tap();
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  const button=page.locator(".game-ui__mobile-pause");
  await expect(button).toBeVisible();
  const bounds=await button.boundingBox();
@@ -176,7 +180,7 @@ test("pause shows Resume without match setup and Run remains reachable from the 
  await expect(run).toBeVisible();
  await expect(run.locator(".game-ui__run-new")).toBeVisible();
  await page.locator('button[data-action="next"]').tap();
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  await holdToPause(page);
  await expect(page.locator(".game-ui__menu-setup")).toBeHidden();
  await expect(page.locator('button[data-action="resume"]')).toBeVisible();
@@ -242,7 +246,7 @@ test("wizard navigation labels persist after changing language and only one step
 test("1610x738 results screen has only two full-width readable actions without collisions",async({page})=>{
  await page.setViewportSize({width:1610,height:738});
  await page.locator('button[data-action="next"]').tap();
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  await page.evaluate(()=>window.__runFixture.win());
  await expect(page.locator(".game-ui.game-over")).toBeVisible();
  await expect(page.locator(".game-ui__menu-result")).toContainText("بردی");
@@ -284,7 +288,7 @@ test("1610x738 results screen has only two full-width readable actions without c
 test("2048x1807 upgrade screen uses one optional view at a time and keeps CTA tappable",async({page})=>{
  await page.setViewportSize({width:2048,height:1807});
  await page.locator('button[data-action="next"]').tap();
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  await page.evaluate(()=>window.__runFixture.win());
  await page.locator('button[data-action="menu"]').tap();
  const drawer=page.locator(".game-ui__menu-progress-details");
@@ -304,12 +308,12 @@ test("2048x1807 upgrade screen uses one optional view at a time and keeps CTA ta
  await next.tap();
  await expect(drawer).toBeHidden();
  await expect(page.locator(".game-ui__menu-arena-panel")).toBeVisible();
- await expect(page.locator('button[data-action="start"]')).toBeVisible();
+ await expect(page.locator('button[data-action="next"]')).toBeVisible();
 });
 
 test("Run intermission exposes reward tiles and next fight together without showing setup or next arena",async({page})=>{
  await page.locator(".game-ui__menu-progress-details > summary").tap();
- await page.locator(".game-ui__run-new").tap();
+ await launchRun(page);
  await page.evaluate(()=>window.__runFixture.win());
  await expect(page.locator(".game-ui.game-over")).toBeVisible();
  await expect(page.locator(".game-ui__menu-setup")).toBeHidden();
@@ -350,7 +354,7 @@ test("direct map shortcut exposes all sixteen selectable maps and the chosen are
  await page.locator('.game-ui__arena-card[data-arena="sky"]').tap();
  await expect(page.locator('.game-ui__arena-card[data-arena="sky"]')).toHaveAttribute("aria-pressed","true");
  expect((await page.evaluate(()=>window.__runFixture.view())).arena).toBe("sky");
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  const state=await page.evaluate(()=>window.__runFixture.pvpSnapshot());
  expect(state.arena).toBe("sky");
  expect(state.localPvP).toBe(true);
@@ -364,7 +368,7 @@ test("character names persist across launches and are used for both local fighte
  await page.waitForFunction(()=>Boolean(window.__runFixture));
  await expect(first).toHaveValue("آرش");
  await page.locator('button[data-action="next"]').tap();
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  await expect(page.locator(".health-bar--player .health-label__name")).toHaveText("آرش");
  await holdToPause(page);
  await page.locator('button[data-action="menu"]').tap();
@@ -374,7 +378,7 @@ test("character names persist across launches and are used for both local fighte
  await second.fill("سام");
  await page.locator('button[data-action="next"]').tap();
  await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  await expect(page.locator(".health-bar--opponent .health-label__name")).toHaveText("سام");
 });
 
@@ -406,7 +410,7 @@ test("real keyboard typing works for both local players and every arena is selec
   await expect(card).toHaveAttribute("aria-pressed","true");
   expect((await page.evaluate(()=>window.__runFixture.view())).arena).toBe(id);
  }
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  const match=await page.evaluate(()=>window.__runFixture.pvpSnapshot());
  expect(match.arena).toBe("reactor");
  expect(match.localPvP).toBe(true);
@@ -442,7 +446,7 @@ test("local PvP names follow the physical left and right characters in Persian a
  await expect(right).toHaveValue("Right Hero");
  await positions();
  await page.locator('button[data-action="next"]').tap();
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  const fighters=await page.evaluate(()=>window.__runFixture.pvpSnapshot());
  expect(fighters.player.x).toBeLessThan(fighters.opponent.x);
  expect(fighters.localPvP).toBe(true);
@@ -464,7 +468,7 @@ test("compact landscape names stay assigned to the correct side despite stacked 
  await names.nth(0).fill("بازیکن چپ");
  await names.nth(1).fill("بازیکن راست");
  await page.locator('button[data-action="next"]').tap();
- await page.locator('button[data-action="start"]').tap();
+ await startMatch(page);
  await expect(page.locator(".health-bar--player .health-label__name")).toHaveText("بازیکن چپ");
  await expect(page.locator(".health-bar--opponent .health-label__name")).toHaveText("بازیکن راست");
 });
