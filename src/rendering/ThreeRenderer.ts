@@ -1,6 +1,10 @@
 import {weaponDrawPose,fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,capsulePositions,characterMarkings,characterSkinLayers,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
 import * as THREE from "three";
-import {GRAPPLE_GUN_URL,GRAPPLE_FLIGHT_URL,GRAPPLE_OPEN_URL} from "./GrappleAssets.js";
+// Public SVGs work under GitHub Pages, Android's relative base and test data URLs.
+const GRAPPLE_ASSET_BASE=(import.meta as ImportMeta & {env?:{BASE_URL?:string}}).env?.BASE_URL??"/";
+const GRAPPLE_GUN_URL=GRAPPLE_ASSET_BASE+"weapons/grapple_gun_sprite.svg";
+const GRAPPLE_FLIGHT_URL=GRAPPLE_ASSET_BASE+"weapons/grapple_hook_flight.svg";
+const GRAPPLE_OPEN_URL=GRAPPLE_ASSET_BASE+"weapons/grapple_hook_open.svg";
 import {getArenaTheme,paintArenaBackdrop,platformColors,svgBackdropRevision} from "../themes/ArenaThemes";
 import {getDownloadedImage} from "../gameplay/DownloadableArenas.js";
 import type {Renderer} from "./Renderer";
@@ -328,8 +332,9 @@ export class ThreeRenderer implements Renderer{
    points.needsUpdate=true;
    hook.position.set(g.x,g.y,.37);
    hook.rotation.z=g.angle;
-   (hook.material as THREE.MeshBasicMaterial).map=g.phase==="latched"?this.grappleTextures.open:this.grappleTextures.flight;
-   (hook.material as THREE.MeshBasicMaterial).needsUpdate=true;
+   const material=hook.material as THREE.MeshBasicMaterial;
+   const map=g.phase==="latched"?this.grappleTextures.open:this.grappleTextures.flight;
+   if(material.map!==map){material.map=map;material.needsUpdate=true;}
   }
  }
  private draw(view:ReturnType<ThreeRenderer['fighter']>,s:DuelistRenderState){
