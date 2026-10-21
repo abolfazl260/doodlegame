@@ -15,9 +15,9 @@ test('ordinary jump lands and remains grounded, with a transient landing pose',(
  assert.ok(landed);for(let i=0;i<60;i++)game.update(1/120);
  const p=game.getRenderState().player;assert.equal(p.velocityY,0);assert.ok(p.grounded);assert.equal(p.landingTime,0);
 });
-test('substeps consume jump and weapon change once per input frame',()=>{
+test('substeps consume jump but ignore mid-fight weapon hotkeys',()=>{
  const {game,input}=setup();input.state.jumpPressed=true;input.state.weaponNextPressed=true;game.update(.1);
- assert.equal(input.frames,1);assert.equal(game.player.doubleJumpAvailable,true);assert.equal(game.getRenderState().player.weapon,'hammer');
+ assert.equal(input.frames,1);assert.equal(game.player.doubleJumpAvailable,true);assert.equal(game.getRenderState().player.weapon,'blade');
 });
 test('ice retains momentum and makes direction changes slower',()=>{
  const normal=setup().game,ice=setup().game;
