@@ -126,7 +126,7 @@ test("Viking horns, metal helmet, fur mantle and boots follow animation without 
 test("three reference-matched cosmetic outfits include distinctive helmet, hood, and regal details",()=>{
  const base=session().getRenderState().player,signatures=new Set();
  const expected={
-  ranger:["#d2b24b","#f7fcf6","#478e4b","#5f3b22","#426b26"],
+  ranger:["#455f77","#43e5f0","#b6d0df","#1596b4","#ff9c58"],
   pharaoh:["#d6a13b","#0754a1","#32e8ff","#fff3da","#f0c46b"],
   knight:["#b91f30","#aeb8c5","#d5a946","#d52937","#8a929e"]
  };
@@ -171,10 +171,11 @@ test("layered armor has no dangling legacy ticks or oversized exposed cloth stro
  }
  const ranger={...base,characterId:"ranger"};
  const rangerPose=fighterVisual(ranger),rangerLayers=characterSkinLayers(ranger,rangerPose);
- const whiteEye=rangerLayers.find(layer=>layer.color==="#f7fcf6");
- assert.ok(whiteEye);
- assert.ok(whiteEye.segments.every(([a,b])=>a[0]-rangerPose.head[0]<=.2&&b[0]-rangerPose.head[0]<=.2),
-  "the white visor line is contained inside the hood");
+ const cyanVisor=rangerLayers.find(layer=>layer.color==="#43e5f0");
+ assert.ok(cyanVisor);
+ assert.ok(cyanVisor.segments.every(([a,b])=>[a,b].every(([x,y])=>
+  Math.abs(x-rangerPose.head[0])<=.27&&Math.abs(y-rangerPose.head[1])<=.10)),
+  "the cyan visor must stay inside the helmet while animating");
  const pharaoh={...base,characterId:"pharaoh"};
  const pharaohLayers=characterSkinLayers(pharaoh,fighterVisual(pharaoh));
  const folds=pharaohLayers.find(layer=>layer.color==="#fff3da");
@@ -227,4 +228,28 @@ test("Mummy wrapping and Archer hood/quiver are animated and equipment-neutral",
  const archer={...base,characterId:"archer"},archerLayers=characterSkinLayers(archer,fighterVisual(archer));
  assert.ok(archerLayers.find(x=>x.color==="#b5e657")?.segments.length>=6,
   "three arrow fletchings visibly protrude from the quiver");
+});
+
+
+test("Ranger is visually distinct from green Archer in palette, headgear and proportions",()=>{
+ const base=session().getRenderState().player;
+ const ranger={...base,characterId:"ranger",animationTime:1.2,velocityX:5,gaitPhase:1.7};
+ const archer={...ranger,characterId:"archer"};
+ const rangerPose=fighterVisual(ranger),archerPose=fighterVisual(archer);
+ const rangerLayers=characterSkinLayers(ranger,rangerPose);
+ const archerLayers=characterSkinLayers(archer,archerPose);
+ const rangerPalette=fighterInkPalette(false,"ranger");
+ const archerPalette=fighterInkPalette(false,"archer");
+ assert.equal(rangerLayers.length,14);
+ assert.equal(archerLayers.length,14);
+ assert.equal(rangerPalette.accent,"#43e5f0");
+ assert.equal(archerPalette.accent,"#b5e657");
+ assert.notEqual(rangerPalette.halo,archerPalette.halo);
+ assert.notDeepEqual(rangerLayers.flatMap(x=>x.segments),archerLayers.flatMap(x=>x.segments));
+ assert.ok(rangerLayers.some(x=>x.color==="#a2c2d5"&&x.segments.some(([a,b])=>
+  Math.max(a[1],b[1])>rangerPose.head[1]+.5)),"Ranger radio aerial rises above helmet");
+ assert.ok(!rangerLayers.some(x=>["#315737","#263c23","#b5e657"].includes(x.color)),
+  "Ranger must not reuse Archer's forest-green hood and quiver tones");
+ assert.ok(finite(rangerLayers.flatMap(x=>x.segments)));
+ assert.deepEqual(toolSegments(ranger),toolSegments(archer),"skin change must not alter weapons");
 });
