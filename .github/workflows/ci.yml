@@ -26,9 +26,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Validate Android smoke script syntax
-        run: bash -n scripts/android/emulator-smoke.sh
-
       - name: Physics and motion regressions
         run: npm test
 

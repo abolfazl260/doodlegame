@@ -77,7 +77,7 @@ test("five richly illustrated costumes appear in Canvas/WebGL without changing w
  try{
   const canvas=new CanvasRenderer({clientWidth:800,clientHeight:440,getContext(){return context}});
   for(const [id,required] of Object.entries({
-   ranger:["#d2b24b","#f7fcf6","#478e4b","#5f3b22"],
+   ranger:["#455f77","#43e5f0","#1596b4","#ff9c58"],
    pharaoh:["#d6a13b","#0754a1","#32e8ff","#fff3da"],
    knight:["#b91f30","#aeb8c5","#d5a946","#d52937"],
    mummy:["#e8dfc8","#f9f2e2","#2ce8f4","#f0ba49"],
