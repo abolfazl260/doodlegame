@@ -118,6 +118,9 @@ manifest = manifest.replace(
 manifest = manifest
   .replace(/android:icon="@mipmap\/ic_launcher"/, 'android:icon="@mipmap/doodlegame_launcher"')
   .replace(/android:roundIcon="@mipmap\/ic_launcher_round"/, 'android:roundIcon="@mipmap/doodlegame_launcher_round"');
+if (!manifest.includes('android.permission.ACCESS_NETWORK_STATE')) {
+  manifest = manifest.replace('<application', '<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n    <application');
+}
 write(manifestPath, manifest);
 
 write(mainActivityPath, `package com.abolfazl.doodlegame;
@@ -130,6 +133,7 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(DoodleLanPlugin.class);
         super.onCreate(savedInstanceState);
         boolean debuggable = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         WebView.setWebContentsDebuggingEnabled(debuggable);
@@ -138,6 +142,9 @@ public class MainActivity extends BridgeActivity {
     }
 }
 `);
+
+// Versioned native plugin survives android:reset; never edit the generated copy.
+copyFileSync("scripts/android/native/DoodleLanPlugin.java", "android/app/src/main/java/com/abolfazl/doodlegame/DoodleLanPlugin.java");
 
 // The art file is the single source of truth for all Android launcher resources.
 const launcherArtPath = "assets/android/doodlegame-launcher.webp";

@@ -61,9 +61,10 @@ ui.bind(listener=>game.subscribe(listener),readHud);
 const fixture={
  state:()=>game.getState(),
  view:()=>game.getHudState(),
- startPvP:()=>{
+ startPvP:(secondWeapon:import("../../src/input/Input").WeaponId="blade")=>{
   if(game.getState()!==GameState.MENU)throw Error("startPvP requires menu");
   game.selectPlayerCount(2);
+  game.selectStartingWeapon("blade");game.selectPlayer2StartingWeapon(secondWeapon);
   input.resetTransientState();
   game.start();
  },

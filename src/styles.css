@@ -2716,3 +2716,24 @@ html.software-landscape .game-ui.playing .game-ui__bow-panel{
  .game-ui:not(.playing) .game-ui__menu-loadout-panel .game-ui__character-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
  .game-ui__loadout-status{font-size:.7rem;padding:.4rem}
 }
+
+/* Native LAN shares the existing single-device touch controls, with a separate room UI. */
+#ui-root[data-lan-open="true"] .game-ui__menu,
+#ui-root[data-lan-open="true"] .game-ui__pause-scrim { display:none !important; }
+.lan-panel { position:absolute; z-index:100; inset:4% 10%; overflow:auto; padding:clamp(12px,3vw,28px); border:2px solid #78bfff; border-radius:20px; background:#0c172cf5; color:#fff; pointer-events:auto; display:flex; flex-wrap:wrap; gap:12px; align-content:start; box-shadow:0 20px 80px #0009; }
+.lan-panel[hidden],.lan-panel [hidden] { display:none !important; }
+.lan-panel h2,.lan-panel p,.lan-panel form { flex-basis:100%; margin:0; white-space:pre-line; }
+.lan-panel p { line-height:1.6; }
+.lan-panel form { display:flex; gap:8px; flex-wrap:wrap; }
+.lan-panel button,.lan-panel input,.lan-panel select { font:inherit; border-radius:10px; padding:10px; min-height:44px; border:1px solid #78bfff; color:#fff; background:#182c49; }
+.lan-panel input { min-width:100px; max-width:100%; flex:1; }
+.lan-panel input:last-of-type { flex-basis:100%; }
+.lan-panel label { align-self:center; }
+.lan-panel button:disabled { opacity:.45; }
+.lan-panel__error { color:#ffc4a9; }
+.lan-panel__address { user-select:text; font-family:monospace; overflow-wrap:anywhere; background:#0005; padding:8px; }
+.game-ui__lan-entry { border-color:#78bfff !important; }
+
+#ui-root[data-lan-open="true"] .game-ui.playing[data-lan-player] .game-ui__mobile-weapon-switcher:not([hidden]){display:block!important;top:4.4rem;left:1rem;width:8.5rem}
+.game-ui__lan-dash{display:none}
+.game-ui.playing[data-lan-player] .game-ui__lan-dash:not([hidden]){display:block;position:absolute;left:calc(1rem + clamp(84px,22cqmin,112px) + 12px);bottom:1.2rem;z-index:24;pointer-events:auto;min-width:44px;min-height:44px;font-size:.7rem}
