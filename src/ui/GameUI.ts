@@ -55,7 +55,7 @@ type MenuStep="mode"|"arena"|"loadout";
 const MENU_STEPS:readonly MenuStep[]=["mode","arena","loadout"];
 
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
-const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"];
+const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear","grapple"];
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
 const CHARACTER_IDS:readonly CharacterId[]=["soldier","ninja","viking","ranger","pharaoh","knight","mummy","archer"];
 const CHARACTER_TEXT={
