@@ -25,13 +25,31 @@ const scheduler={request:(_callback:(timestamp:number)=>void)=>++scheduleId,canc
 const renderer={resize(){},render(){},dispose(){}};
 const game=new Game(renderer,session,scheduler,error=>{throw error;},progression);
 const readHud=()=>({...game.getHudState(),playerName:playerNames.get(1),secondPlayerName:playerNames.get(2)});
+const launchFromSetup=()=>{
+ if(game.getState()===GameState.MENU&&!ui.canStartMatch())return;
+ const requested=ui.consumeRunStart();
+ if(requested==="new")game.newRun();
+ else if(requested==="continue"){if(game.continueRun()&&game.getState()===GameState.MENU)ui.showRunIntermission();}
+ else game.start();
+};
+const selectDefaultLoadout=()=>{
+ const hud=game.getHudState();
+ game.selectCharacter("soldier");
+ if(hud.mode==="random-weapons")game.chooseRandomStartingWeapon(1);
+ else game.selectStartingWeapon(hud.mode==="missile-duel"?"missile":"blade");
+ if(hud.localPvP){game.selectPlayer2Character("ninja");
+  if(hud.mode==="random-weapons")game.chooseRandomStartingWeapon(2);
+  else game.selectPlayer2StartingWeapon(hud.mode==="missile-duel"?"missile":"blade");}
+};
 const ui=new GameUI(root,{
  ...(new URLSearchParams(location.search).has("landing")?{quickPlay:()=>{input.resetTransientState();game.quickPlay();}}:{}),
- start:()=>game.start(),pause:()=>game.pause(),resume:()=>game.resume(),restart:()=>game.restart(),
+ start:()=>launchFromSetup(),pause:()=>game.pause(),resume:()=>game.resume(),restart:()=>game.restart(),
  stopToMenu:()=>{input.resetTransientState();game.stop();},
  newRun:()=>{game.newRun();},continueRun:()=>{game.continueRun();},leaveRun:()=>{game.leaveRun();},
  weaponNext:()=>game.selectWeapon(1),weaponPrevious:()=>game.selectWeapon(-1),
  weaponSelect:id=>game.selectWeaponById(id),selectStartingWeapon:id=>game.selectStartingWeapon(id),
+ player2StartingWeapon:id=>game.selectPlayer2StartingWeapon(id),player2CharacterSelect:id=>game.selectPlayer2Character(id),
+ randomStartingWeapon:player=>game.chooseRandomStartingWeapon(player),characterSelect:id=>game.selectCharacter(id),
  upgradeWeapon:id=>game.upgradeWeapon(id),arenaSelect:id=>game.selectArena(id),
  fetchArenaCatalog:()=>loadArenaCatalog(),
  installArena:async entry=>{await installDownloadedArena(entry,storage);},
@@ -58,9 +76,11 @@ ui.bind(listener=>game.subscribe(listener),readHud);
 const fixture={
  state:()=>game.getState(),
  view:()=>game.getHudState(),
+  confirmDefaultLoadout:selectDefaultLoadout,
  startPvP:()=>{
   if(game.getState()!==GameState.MENU)throw Error("startPvP requires menu");
   game.selectPlayerCount(2);
+  selectDefaultLoadout();
   input.resetTransientState();
   game.start();
  },
@@ -84,7 +104,7 @@ const fixture={
  back:()=>game.stop(),
  startBowDuel:()=>{
   if(game.getState()!==GameState.MENU)throw Error("not in menu");
-  game.selectStartingWeapon("bow");
+  game.selectCharacter("archer");game.selectStartingWeapon("bow");
   input.resetTransientState();
   game.start();
  },
