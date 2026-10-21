@@ -23,8 +23,9 @@ test('Grapple Gun shoots a tether instead of a damaging projectile and second AT
  assert.ok(hook.vx>0);
  assert.equal(game.projectiles.length,0,'the rope must not use ordinary projectile physics');
  assert.equal(game.opponent.health,oldHealth);
+ const launchX=hook.x;
  game.updateGrapples(1/120);
- assert.ok(game.player.grapple.x>hook.x);
+ assert.ok(game.player.grapple.x>launchX);
  game.attack(game.player,game.opponent,true);
  assert.equal(game.getRenderState().player.grapple,null,'second tap cancels even if weapon cooldown remains');
 });
