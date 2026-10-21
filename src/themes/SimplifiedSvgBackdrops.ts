@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import type {ArenaId} from "../gameplay/GameSession.js";
 import fortress from "../assets/backgrounds/fortress.svg?raw";
 import bridge from "../assets/backgrounds/bridge.svg?raw";
