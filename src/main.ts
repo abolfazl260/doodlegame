@@ -91,45 +91,31 @@ try{
  let landscape:ReturnType<typeof installLandscapeOrientation>|null=null;
  let telegram:ReturnType<typeof installTelegramMiniApp>|null=null;
  const rankings=new TelegramLeaderboard(root,()=>telegram?.retryInitialization());
- let pausedForPortrait=false;
  const pauseGame=()=>{input.resetTransientState();game.pause();};
- const resumeGame=()=>{if(landscape?.isPortrait())return;input.resetTransientState();game.resume();};
- const stopToMenu=()=>{pausedForPortrait=false;input.resetTransientState();game.stop();};
+ const resumeGame=()=>{input.resetTransientState();game.resume();};
+ const stopToMenu=()=>{input.resetTransientState();game.stop();};
  const startGame=()=>{
-  if(landscape?.isPortrait())return;
   telegram?.requestFullscreen();
-  landscape?.requestLandscape();
   input.resetTransientState();
   game.start();
  };
- const restartGame=()=>{if(landscape?.isPortrait())return;input.resetTransientState();game.restart();};
+ const restartGame=()=>{input.resetTransientState();game.restart();};
  const disposeWebVisibility=installWebVisibilityLifecycle(document,()=>{
   if(game.getState()===GameState.PLAYING)pauseGame();
  });
 
- landscape=installLandscapeOrientation(i18n,{
-  onPortrait:()=>{
-   if(game.getState()===GameState.PLAYING){pausedForPortrait=true;pauseGame();}
-  },
-  onLandscape:()=>{
-   if(pausedForPortrait){
-    pausedForPortrait=false;
-    if(game.getState()===GameState.PAUSED&&document.visibilityState==="visible")resumeGame();
-   }
-   game.resize();
-  }
- });
+ landscape=installLandscapeOrientation({onResize:()=>game.resize()});
 
  const readHud=()=>({...game.getHudState(),playerName:playerNames.get(1),secondPlayerName:playerNames.get(2)});
  const ui=new GameUI(root,{
   start:startGame,
-  quickPlay:()=>{if(landscape?.isPortrait())return;telegram?.requestFullscreen();landscape?.requestLandscape();input.resetTransientState();game.quickPlay();},
+  quickPlay:()=>{telegram?.requestFullscreen();input.resetTransientState();game.quickPlay();},
   pause:pauseGame,
   resume:resumeGame,
   restart:restartGame,
   stopToMenu,
-  newRun:()=>{if(!landscape?.isPortrait()){input.resetTransientState();game.newRun();}},
-  continueRun:()=>{if(!landscape?.isPortrait()){input.resetTransientState();game.continueRun();}},
+  newRun:()=>{input.resetTransientState();game.newRun();},
+  continueRun:()=>{input.resetTransientState();game.continueRun();},
   leaveRun:()=>{input.resetTransientState();game.leaveRun();},
   weaponNext:()=>game.selectWeapon(1),
   weaponPrevious:()=>game.selectWeapon(-1),
@@ -203,7 +189,7 @@ try{
     if(current===GameState.PLAYING)pauseGame();
     else if(current===GameState.PAUSED||current===GameState.GAME_OVER)stopToMenu();
    },
-   onResize:()=>game.resize(),
+   onResize:()=>landscape?.refresh(),
    onReady:app=>{if(isTelegramMiniAppLaunch(window))rankings.connect(app);},
    onFailure:()=>{if(isTelegramMiniAppLaunch(window))rankings.reportSdkFailure();}
   });
@@ -268,8 +254,6 @@ try{
   console.warn("Opening animation could not start; showing the menu.",error);
   intro.dispose();
  }
- const resize=()=>game.resize();
- window.addEventListener("resize",resize);
  window.addEventListener("beforeunload",()=>{
   unsubscribeTelegram();
   unsubscribeRankings();

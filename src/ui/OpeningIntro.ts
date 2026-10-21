@@ -66,7 +66,7 @@ export class OpeningIntro{
   this.duration=this.reducedMotion?REDUCED_MOTION_DURATION_MS:OPENING_DURATION_MS;
   this.elapsed=restoring?this.duration+3400:0;
   this.active=true;
-  document.body.append(this.overlay);
+  (this.menuRoot.closest?.("#app")??document.body).append(this.overlay);
   this.menuRoot.inert=true;
   window.addEventListener("keydown",this.handleKeyDown,true);
   window.addEventListener("resize",this.resize);

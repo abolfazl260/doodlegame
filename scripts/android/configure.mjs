@@ -102,18 +102,18 @@ if (!manifest.includes('android:usesCleartextTraffic="false"')) {
     '<application\n        android:usesCleartextTraffic="false"'
   );
 }
-// Force the actual launch activity to landscape, including when a generated
-// Android project already has a different screenOrientation attribute.
+// Keep the native activity orientation unrestricted. Portrait is handled by
+// a 90-degree software rotation of the entire game surface.
 const mainActivityMatch = manifest.match(/<activity\b[^>]*android:name="\.MainActivity"[^>]*>/);
 if (!mainActivityMatch) {
-  throw new Error("Android MainActivity was not found; cannot enforce landscape orientation.");
+  throw new Error("Android MainActivity was not found; cannot configure activity orientation.");
 }
 const activityTag = mainActivityMatch[0];
 manifest = manifest.replace(
   activityTag,
   /android:screenOrientation="[^"]*"/.test(activityTag)
-    ? activityTag.replace(/android:screenOrientation="[^"]*"/, 'android:screenOrientation="landscape"')
-    : activityTag.replace("<activity", '<activity\n            android:screenOrientation="landscape"')
+    ? activityTag.replace(/android:screenOrientation="[^"]*"/, 'android:screenOrientation="unspecified"')
+    : activityTag.replace("<activity", '<activity\n            android:screenOrientation="unspecified"')
 );
 manifest = manifest
   .replace(/android:icon="@mipmap\/ic_launcher"/, 'android:icon="@mipmap/doodlegame_launcher"')

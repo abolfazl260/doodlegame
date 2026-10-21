@@ -109,7 +109,7 @@ export class TelegramLeaderboard{
   panel.append(heading,profile,status,entries,actions);
   modal.append(panel);
   modal.addEventListener("pointerdown",event=>{if(event.target===modal)this.close();});
-  document.body.append(modal);
+  (this.root.closest?.("#app")??document.body).append(modal);
   this.modal=modal;this.profile=profile;this.status=status;this.entries=entries;this.refreshButton=reload;
   if(this.lastStatus)this.status.textContent=this.lastStatus;
  }
