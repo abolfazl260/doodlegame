@@ -89,7 +89,7 @@ function setup(withLanding=false){
  ].map(name=>[name,()=>{}]));
  actions.updateData=async()=>{};if(withLanding)actions.quickPlay=()=>{};
  const hud={playerHealth:100,playerMaxHealth:100,opponentHealth:100,opponentMaxHealth:100,
-  weapon:"blade",winner:null,arena:"classic",mode:"duel",hill:{player:0,opponent:0,target:8},
+  weapon:"blade",characterChosen:true,weaponChosen:true,secondCharacterChosen:true,secondWeaponChosen:true,winner:null,arena:"classic",mode:"duel",hill:{player:0,opponent:0,target:8},
   bowCharge:0,missileAngle:45,missilePower:13,upgradePoints:0,upgradedWeapons:[]};
  const ui=new GameUI(new SpyNode("root"),actions,i18n);
  ui.bind(()=>()=>{},()=>hud);

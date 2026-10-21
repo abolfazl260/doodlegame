@@ -12,7 +12,7 @@ test('both guides completely cover every weapon, mode and required section',()=>
 });
 test('guide reflects fixed Missile, start-only random assignment and distinct slam moves',()=>{
  assert.match(GUIDE_EN.weapons.missile,/fixed/);assert.match(GUIDE_FA.weapons.missile,/ثابت/);
- assert.match(GUIDE_EN.modes['random-weapons'],/do not automatically cycle/);assert.match(GUIDE_FA.modes['random-weapons'],/خودکار عوض نمی‌شود/);
+ assert.match(GUIDE_EN.modes['random-weapons'],/never cycles/);assert.match(GUIDE_FA.modes['random-weapons'],/خودکار تغییر نمی‌کند/);
  assert.match(GUIDE_EN.weapons.hammer,/not the airborne/);assert.match(GUIDE_EN.controls.find(x=>x.title==='Pause / Resume').body,/two seconds/);
  assert.match(GUIDE_EN.modes['king-of-hill'],/8 seconds/);assert.match(GUIDE_EN.progression.find(x=>x.title==='Career vs Run').body,/do not become permanent/);
 });

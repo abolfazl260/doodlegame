@@ -71,10 +71,15 @@ const messages={
 };
 function setup(hudOverride={}){
  const calls=[];
+ let ui;
  const actions={
   start:()=>calls.push(["start"]),pause(){},resume(){},restart(){},stopToMenu(){},
   weaponNext(){},weaponPrevious(){},weaponSelect(){},
-  selectStartingWeapon:id=>calls.push(["startingWeapon",id]),
+  selectStartingWeapon:id=>{calls.push(["startingWeapon",id]);hud.weapon=id;hud.weaponChosen=true;ui?.render(states.MENU,hud);},
+  player2StartingWeapon:id=>{calls.push(["startingWeapon2",id]);hud.secondWeapon=id;hud.secondWeaponChosen=true;ui?.render(states.MENU,hud);},
+  randomStartingWeapon:player=>{calls.push(["randomWeapon",player]);if(player===1){hud.weapon="bow";hud.weaponChosen=true;}else{hud.secondWeapon="hammer";hud.secondWeaponChosen=true;}ui?.render(states.MENU,hud);},
+  characterSelect:id=>{calls.push(["character",id]);hud.characterId=id;hud.characterChosen=true;ui?.render(states.MENU,hud);},
+  player2CharacterSelect:id=>{calls.push(["character2",id]);hud.opponentCharacterId=id;hud.secondCharacterChosen=true;ui?.render(states.MENU,hud);},
   upgradeWeapon:id=>calls.push(["upgrade",id]),
   arenaSelect:id=>calls.push(["arena",id]),
   modeSelect:id=>calls.push(["mode",id]),
@@ -96,10 +101,10 @@ function setup(hudOverride={}){
   subscribe(listener){listeners.add(listener);return ()=>listeners.delete(listener);}
  };
  const hud={playerHealth:100,playerMaxHealth:100,opponentHealth:100,opponentMaxHealth:100,
-  weapon:"blade",winner:null,arena:"classic",mode:"duel",hill:{player:0,opponent:0,target:8},
+  weapon:"blade",characterChosen:true,weaponChosen:true,secondCharacterChosen:true,secondWeaponChosen:true,winner:null,arena:"classic",mode:"duel",hill:{player:0,opponent:0,target:8},
   bowCharge:0,missileAngle:40,missilePower:12,upgradePoints:0,upgradedWeapons:[],...hudOverride};
  const container=new FakeNode("root");
- const ui=new GameUI(container,actions,i18n);
+ ui=new GameUI(container,actions,i18n);
  ui.bind(()=>()=>{},()=>hud);
  return {ui,calls,hud,container};
 }
@@ -155,11 +160,11 @@ test("skin picker lists eight weapon-free character appearances with name-only c
 });
 function i18nCleanup(_ui){} // No extra description/tooltip nodes to clean up.
 
-test("wizard selects player count and mode cards before arena and optional weapon cards",()=>{
+test("wizard requires character and weapon selection after mode and arena",()=>{
  const {ui,calls,hud}=setup();
  assert.equal(ui.menuSettings.children.length,8);
  assert.equal(ui.arenaCards.children.length,16);
- assert.equal(ui.weaponCards.children.length,9);
+ assert.equal(ui.weaponCards.children.length,10);
  assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"true");
  assert.equal(ui.menuModePanel.hidden,false);
  assert.equal(ui.menuArenaPanel.hidden,true);
@@ -173,11 +178,14 @@ test("wizard selects player count and mode cards before arena and optional weapo
  assert.equal(ui.menuModePanel.hidden,true);
  assert.equal(ui.menuArenaPanel.hidden,false);
  assert.equal(ui.stepBackButton.hidden,false);
- assert.equal(ui.buttons.children.find(b=>b.dataset.action==="start").hidden,false);
+ assert.equal(ui.buttons.children.find(b=>b.dataset.action==="start").hidden,true);
  ui.arenaCards.children.find(b=>b.dataset.arena==="reactor").click();
  hud.arena="reactor";ui.render(states.MENU,hud);
  assert.deepEqual(calls.at(-1),["arena","reactor"]);
  assert.equal(ui.arenaCards.children.find(b=>b.dataset.arena==="reactor").getAttribute("aria-pressed"),"true");
+ ui.stepNextButton.click();
+ assert.equal(ui.menuLoadoutPanel.hidden,false);
+ assert.equal(ui.menuArenaPanel.hidden,true);
  ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="bow").click();
  hud.weapon="bow";ui.render(states.MENU,hud);
  assert.deepEqual(calls.at(-1),["startingWeapon","bow"]);
@@ -186,7 +194,7 @@ test("wizard selects player count and mode cards before arena and optional weapo
  ui.buttons.children.find(b=>b.dataset.action==="start").click();
  assert.deepEqual(calls.at(-1),["start"]);
  ui.stepBackButton.click();
- assert.equal(ui.menuModePanel.hidden,false);
+ assert.equal(ui.menuArenaPanel.hidden,false);
  assert.equal(ui.stepNextButton.hidden,false);
  assert.equal(hud.mode,"low-gravity","navigation preserves the selected mode");
 });
@@ -217,14 +225,17 @@ test("Online Multiplayer is a localized, non-interactive mode placeholder",()=>{
  assert.deepEqual(calls.at(-1),["mode","low-gravity"],"offline modes remain selectable");
 });
 
-test("native Enter navigation advances the wizard once and only starts from the arena step",()=>{
+test("native Enter requires completion of the loadout step",()=>{
  const {ui,hud}=setup();
  assert.equal(ui.canStartMatch(),false);
  assert.equal(ui.menuModePanel.hidden,false);
  ui.advanceMenuStep();
- assert.equal(ui.canStartMatch(),true);
+ assert.equal(ui.canStartMatch(),false);
  assert.equal(ui.menuArenaPanel.hidden,false);
  assert.equal(ui.menuModePanel.hidden,true);
+ ui.advanceMenuStep();
+ assert.equal(ui.canStartMatch(),true);
+ assert.equal(ui.menuLoadoutPanel.hidden,false);
  ui.advanceMenuStep();
  assert.equal(ui.canStartMatch(),true,"advancing at the final step does not wrap");
  ui.render(states.PLAYING,hud);
@@ -328,7 +339,7 @@ test("missile fights use the normal aim pad without extra weapon details",()=>{
  assert.equal(ui.aimPads[0].hidden,false);assert.equal(readFileSync("src/styles.css","utf8").includes("game-ui__details"),false);
 });
 
-test("optional starting weapon cards honor missile, melee and random restrictions",()=>{
+test("required starting weapon cards honor missile, melee and random restrictions",()=>{
  const {ui,hud}=setup();
  assert.equal(ui.weaponDetails.hidden,false);
  assert.equal(ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="missile").hidden,false);
@@ -336,9 +347,12 @@ test("optional starting weapon cards honor missile, melee and random restriction
  assert.equal(ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="blaster").hidden,true);
  assert.equal(ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="hammer").disabled,false);
  hud.mode="missile-duel";hud.weapon="missile";ui.render(states.MENU,hud);
- assert.equal(ui.weaponDetails.hidden,true);
+ assert.equal(ui.weaponDetails.hidden,false);
  hud.mode="random-weapons";hud.weapon="bow";ui.render(states.MENU,hud);
- assert.equal(ui.weaponDetails.hidden,true);
+ assert.equal(ui.weaponDetails.hidden,false);
+ ui.stepNextButton.click();ui.stepNextButton.click();
+ assert.equal(ui.randomWeaponButton.hidden,false);
+ assert.equal(ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="blade").hidden,true);
 });
 
 test("health display is a single number from 100 to 0 in either locale",()=>{
@@ -506,11 +520,14 @@ test("wizard cannot start early, supports keyboard focus and contains zero nativ
  assert.equal(ui.menuSettings.getAttribute("role"),"group");
  assert.equal(ui.quickModes.getAttribute("role"),"group");
  ui.stepNextButton.click();
- assert.equal(ui.canStartMatch(),true);
+ assert.equal(ui.canStartMatch(),false);
  assert.equal(ui.menuStepIndex,1);
+ ui.stepNextButton.click();
+ assert.equal(ui.canStartMatch(),true);
+ assert.equal(ui.menuStepIndex,2);
  ui.stepBackButton.click();
  assert.equal(ui.canStartMatch(),false);
- assert.equal(ui.menuStepIndex,0);
+ assert.equal(ui.menuStepIndex,1);
 });
 
 test("menu wizard CTA always has a translated label and each step hides the other",()=>{
@@ -528,9 +545,13 @@ test("menu wizard CTA always has a translated label and each step hides the othe
  assert.equal(ui.menuArenaPanel.hidden,false);
  assert.equal(ui.menuProgressDetails.hidden,true);
  assert.equal(ui.menuExtras.hidden,true);
+ assert.equal(ui.stepNextButton.hidden,false);
+ ui.stepNextButton.click();
+ assert.equal(ui.menuLoadoutPanel.hidden,false);
  assert.equal(ui.stepNextButton.hidden,true);
  assert.equal(ui.stepBackButton.hidden,false);
  assert.ok(next.textContent.length>0);
+ ui.stepBackButton.click();
  ui.stepBackButton.click();
  assert.equal(ui.menuModePanel.hidden,false);
  assert.equal(ui.menuArenaPanel.hidden,true);
@@ -637,4 +658,35 @@ test("name-input grid preserves P1 left and P2 right even under Persian RTL",()=
  hud.mode="duel";ui.render(states.MENU,hud);
  assert.equal(ui.playerNameCaption.textContent,"PLAYER 1");
  assert.equal(ui.secondNameLabel.hidden,true);
+});
+
+test("required P1/P2 fighter confirmations block Start and in-match swaps stay hidden",()=>{
+ const {ui,hud,calls}=setup({localPvP:true,characterChosen:false,weaponChosen:false,secondCharacterChosen:false,secondWeaponChosen:false,characterId:"soldier",opponentCharacterId:"ninja"});
+ ui.stepNextButton.click();ui.stepNextButton.click();
+ const start=ui.buttons.children.find(b=>b.dataset.action==="start");
+ assert.equal(ui.canStartMatch(),false);
+ assert.equal(start.disabled,true);
+ ui.characterCards.children.find(b=>b.dataset.character==="archer").click();
+ ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="bow").click();
+ assert.equal(ui.canStartMatch(),false,"P2 still needs choices");
+ ui.loadoutP2Button.click();
+ ui.characterCards.children.find(b=>b.dataset.character==="viking").click();
+ ui.weaponCards.children.find(b=>b.dataset.startingWeapon==="hammer").click();
+ assert.deepEqual(calls.slice(-2),[["character2","viking"],["startingWeapon2","hammer"]]);
+ assert.equal(ui.canStartMatch(),true);
+ assert.equal(start.disabled,false);
+ ui.render(states.PLAYING,hud);
+ assert.equal(ui.mobileWeaponSwitcher.hidden,true);
+ assert.equal(ui.p2WeaponControls.hidden,true);
+ assert.equal(ui.weaponList.hidden,true);
+});
+test("random weapon requires explicit confirmation rather than skipping the loadout step",()=>{
+ const {ui,hud,calls}=setup({mode:"random-weapons",characterChosen:false,weaponChosen:false});
+ ui.stepNextButton.click();ui.stepNextButton.click();
+ assert.equal(ui.canStartMatch(),false);
+ ui.characterCards.children.find(b=>b.dataset.character==="ninja").click();
+ assert.equal(ui.canStartMatch(),false);
+ ui.randomWeaponButton.click();
+ assert.deepEqual(calls.at(-1),["randomWeapon",1]);
+ assert.equal(ui.canStartMatch(),true);
 });

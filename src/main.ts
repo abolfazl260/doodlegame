@@ -77,6 +77,7 @@ try{
  restoreDownloadedArenas(storage);
  const session=new GameSession(input);
  try{const saved=storage.get<unknown>("doodlegame.selectedCharacter");if(CHARACTER_IDS.includes(saved as CharacterId))session.setCharacterId(saved as CharacterId);else if(saved==="shadow")session.setCharacterId("ninja");}catch{ /* Storage can be unavailable in private browsing. */ }
+ session.clearLoadoutSelections(); // Saved appearance is not an explicit match selection.
  let appliedGameData:(ReturnType<typeof parseLiveGameData>)=null;
  try{appliedGameData=parseLiveGameData(storage.get<unknown>(GAME_DATA_STORAGE_KEY));}
  catch(error){console.warn("Invalid cached game data; using bundled defaults.",error);}
@@ -95,9 +96,13 @@ try{
  const resumeGame=()=>{input.resetTransientState();game.resume();};
  const stopToMenu=()=>{input.resetTransientState();game.stop();};
  const startGame=()=>{
+  if(game.getState()===GameState.MENU&&!ui.canStartMatch())return;
   telegram?.requestFullscreen();
   input.resetTransientState();
-  game.start();
+  const runStart=ui.consumeRunStart();
+  if(runStart==="new")game.newRun();
+  else if(runStart==="continue"){if(game.continueRun()&&game.getState()===GameState.MENU)ui.showRunIntermission();}
+  else game.start();
  };
  const restartGame=()=>{input.resetTransientState();game.restart();};
  const disposeWebVisibility=installWebVisibilityLifecycle(document,()=>{
@@ -121,6 +126,9 @@ try{
   weaponPrevious:()=>game.selectWeapon(-1),
   weaponSelect:(id)=>game.selectWeaponById(id),
   selectStartingWeapon:(id)=>game.selectStartingWeapon(id),
+  player2StartingWeapon:(id)=>game.selectPlayer2StartingWeapon(id),
+  randomStartingWeapon:(player)=>game.chooseRandomStartingWeapon(player),
+  player2CharacterSelect:(id)=>game.selectPlayer2Character(id),
   characterSelect:(id:CharacterId)=>{game.selectCharacter(id);try{storage.set("doodlegame.selectedCharacter",id);}catch(error){console.warn("Could not save selected character.",error);}},
   upgradeWeapon:(id)=>game.upgradeWeapon(id),
   arenaSelect:(id:ArenaId)=>game.selectArena(id),

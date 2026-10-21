@@ -10,7 +10,7 @@ export const GUIDE_EN:GuideCopy={
   {title:"Move",body:"Mobile: drag the joystick left or right. Solo keyboard also accepts arrow keys.",keys:"P1: A / D · Solo: ← / →"},
   {title:"Jump",body:"Push the joystick upward, including diagonally while moving. A grounded jump starts the aerial sequence.",keys:"P1: W / Space · Solo: ↑"},
   {title:"Attack",body:"Tap ATTACK or click the battlefield. UZI supports held fire; Bow charges while held and fires on release. Missile fires a fixed arc with a tap; dragging never adjusts its angle or power.",keys:"P1: Z / X · Mouse: click / hold / release"},
-  {title:"Change weapon",body:"Tap the weapon button to open the palette, then pick once. Missile Duel locks Missile; Melee Only allows Blade/Hammer; Random Weapons locks the assigned weapon. The optional starting weapon applies when legal.",keys:"P1: Q / E · Solo alternatives: O / P"},
+  {title:"Choose fighter & weapon",body:"Before the match, complete Mode, Arena, then mandatory Character and Weapon. Both local players choose independently. The selected weapon is locked throughout the match; there are no switch controls. Missile Duel requires Missile; Melee Only offers Blade/Hammer; Random Weapons requires a random-weapon confirmation.",keys:"Selection: before the match only"},
   {title:"Weapon direction",body:"Drag the ⊕ pad for ranged weapons except Missile. Keyboard rotation works for non-Missile weapons. Missile always follows facing with a fixed arc.",keys:"P1: R / F · P2: PageUp / PageDown"},
   {title:"Pause / Resume",body:"Hold the Pause control for two seconds on mobile or with a pointer, then choose Resume. Keyboard on the Pause control: hold Enter or Space. The menu also offers Main Menu and restart where available."}
  ],
@@ -37,8 +37,8 @@ export const GUIDE_EN:GuideCopy={
   duel:"Solo versus AI or two selected humans. Deplete the opponent’s HP to win. All weapons are available; use the arena’s cover.",
   "missile-duel":"Missile-only weapon selection. Tap Attack for the fixed facing-aware arc; deplete the opponent’s HP. Reposition and time shots. Manual switching/aiming and airborne Ground Slam are disabled.",
   "melee-only":"Blade and Hammer only. Win by depleting HP. Close distance with jumps and use cover against heavy swings.",
-  "random-weapons":"Each fighter receives a random weapon at the start of the round; manual switching and starting-weapon selection are locked. Weapons do not automatically cycle during the round. Win by depleting HP and adapt to your assigned range.",
-  "sudden-death":"A successful damaging hit can eliminate a fighter. Movement and weapon choices remain available. Avoid exposure before committing.",
+  "random-weapons":"Before the round each human must confirm a randomly assigned starting weapon. The weapon remains locked during the round and never cycles. Win by depleting HP and adapt to your assigned range.",
+  "sudden-death":"A successful damaging hit can eliminate a fighter. Movement stays available; the preselected weapon remains locked. Avoid exposure before committing.",
   "low-gravity":"Reduced gravity gives longer air time. Win by depleting HP; account for altered aerial motion and projectile arcs.",
   "king-of-hill":"Stand inside the center alone to accumulate 8 seconds of control; contested center awards neither side. Reach the target or defeat the opponent to win. Push rivals outside the scoring zone.",
   "local-pvp":"Player-count option, not an online mode: two humans share one device and choose any game mode/arena. Both have independent controls; career/Run rewards are not awarded in local PvP."
@@ -50,9 +50,9 @@ export const GUIDE_EN:GuideCopy={
   {title:"Arena mechanics",body:"Arena cards show real platform/cover silhouettes and feature filters. Dashed platforms indicate movement; gaps, breakable bridges, crumbling surfaces, conveyors, wind, vents and gravity wells change tactics. Ice/slippery surfaces affect grip. Downloadable arenas require installation first; installed arenas work offline."}
  ],
  local:[
-  {title:"Same device, two humans",body:"Choose Local 2 Players, then a mode and arena. Enter independent optional names. On mobile, use each player’s own movement stick, ATTACK and weapon button. Physical left/right controls do not swap in Persian."},
-  {title:"Player 1 keyboard",body:"The left fighter uses these bindings. Solo arrow-key aliases belong to Player 2 when local play is enabled.",keys:"Move A/D · Down S · Jump W/Space · Attack Z/X · Grab C · Dash Shift · Weapons Q/E · Aim R/F"},
-  {title:"Player 2 keyboard",body:"The right fighter has independent actions and ranged aiming. Missile uses facing only.",keys:"Move ←/→ or Numpad4/6 · Down ↓ · Jump ↑/Numpad8 · Attack Enter/Numpad0 · Grab Numpad1 · Dash Numpad5 · Weapons [ / ] · Aim PageUp/PageDown"}
+  {title:"Same device, two humans",body:"Choose Local 2 Players, then a mode and arena. Enter independent optional names. Before starting, each player must select a character and weapon; in combat each uses an independent movement stick and ATTACK. Physical left/right controls do not swap in Persian."},
+  {title:"Player 1 keyboard",body:"The left fighter uses these bindings. Solo arrow-key aliases belong to Player 2 when local play is enabled.",keys:"Move A/D · Down S · Jump W/Space · Attack Z/X · Grab C · Dash Shift · Aim R/F"},
+  {title:"Player 2 keyboard",body:"The right fighter has independent actions and ranged aiming. Missile uses facing only.",keys:"Move ←/→ or Numpad4/6 · Down ↓ · Jump ↑/Numpad8 · Attack Enter/Numpad0 · Grab Numpad1 · Dash Numpad5 · Aim PageUp/PageDown"}
  ]
 };
 export const GUIDE_FA:GuideCopy={
@@ -61,7 +61,7 @@ export const GUIDE_FA:GuideCopy={
   {title:"حرکت",body:"موبایل: گوی حرکت را به چپ یا راست بکش. در بازی تک‌نفره کلیدهای جهت هم قابل استفاده‌اند.",keys:"P1: A / D · Solo: ← / →"},
   {title:"پرش",body:"گوی را بالا ببر؛ جهت مورب هم حرکت و پرش را هم‌زمان انجام می‌دهد. پرش معتبر از زمین، حرکت هوایی را شروع می‌کند.",keys:"P1: W / Space · Solo: ↑"},
   {title:"حمله",body:"حمله را بزن یا روی میدان کلیک کن. یوزی با نگه‌داشتن شلیک می‌کند؛ کمان با نگه‌داشتن شارژ و با رهاکردن شلیک می‌کند. موشک با یک لمس و مسیر ثابت شلیک می‌شود؛ کشیدن انگشت زاویه یا قدرت آن را عوض نمی‌کند.",keys:"P1: Z / X · Mouse: click / hold / release"},
-  {title:"تعویض سلاح",body:"دکمهٔ سلاح را بزن و از پنجرهٔ انتخاب، سلاح را انتخاب کن. دوئل موشکی فقط موشک دارد؛ تن‌به‌تن فقط تیغه و چکش؛ سلاح تصادفی تعویض را قفل می‌کند. سلاح شروع اختیاری فقط در حالت مجاز اعمال می‌شود.",keys:"P1: Q / E · Solo: O / P"},
+  {title:"انتخاب شخصیت و سلاح",body:"پیش از شروع مسابقه سه مرحلهٔ حالت بازی، زمین، و انتخاب اجباری شخصیت و اسلحه را تکمیل کن. هر بازیکن در دونفره جداگانه انتخاب می‌کند. سلاح تا پایان مسابقه ثابت می‌ماند و دکمهٔ تعویض وجود ندارد. در دوئل موشکی موشک و در تن‌به‌تن تیغه/چکش در دسترس است. در حالت تصادفی باید انتخاب تصادفی را تأیید کنی.",keys:"انتخاب فقط پیش از شروع بازی"},
   {title:"جهت سلاح",body:"برای سلاح‌های دوربرد به‌جز موشک، گوی ⊕ را بکش. چرخش با کیبورد نیز برای موشک غیرفعال است. موشک همواره با مسیر ثابت در جهت شخصیت شلیک می‌شود.",keys:"P1: R / F · P2: PageUp / PageDown"},
   {title:"توقف و ادامه",body:"روی موبایل یا با نشانگر، دکمهٔ توقف را دو ثانیه نگه دار؛ سپس «ادامه» را بزن. با فوکوس روی توقف، Enter یا Space را نگه دار. منو امکان بازگشت به منوی اصلی و شروع دوباره در حالت مجاز را هم دارد."}
  ],
@@ -88,8 +88,8 @@ export const GUIDE_FA:GuideCopy={
   duel:"تک‌نفره مقابل هوش مصنوعی یا دو انسان انتخاب‌شده. با تمام‌کردن سلامت حریف ببر. همهٔ سلاح‌ها در دسترس‌اند؛ از پوشش میدان استفاده کن.",
   "missile-duel":"انتخاب سلاح فقط موشک است. حمله، موشک را با مسیر ثابت در جهت شخصیت شلیک می‌کند؛ سلامت حریف را تمام کن. جای‌گیری و زمان‌بندی مهم‌اند. تعویض دستی، نشانه‌گیری موشک و کوبش هوایی غیرفعال‌اند.",
   "melee-only":"فقط تیغه و چکش. سلامت حریف را تمام کن؛ با پرش نزدیک شو و در برابر ضربهٔ سنگین از پوشش کمک بگیر.",
-  "random-weapons":"ابتدای هر مسابقه برای هر مبارز یک سلاح تصادفی تعیین می‌شود؛ تعویض دستی و سلاح شروع قفل‌اند. سلاح در طول مسابقه خودکار عوض نمی‌شود. برای بردن سلامت حریف را تمام کن و با برد سلاح خود سازگار شو.",
-  "sudden-death":"یک ضربهٔ آسیب‌زننده می‌تواند مبارز را حذف کند. حرکت و انتخاب سلاح در دسترس است؛ پیش از حمله، خودت را در معرض ضربه قرار نده.",
+  "random-weapons":"قبل از شروع هر مسابقه بازیکن باید اسلحهٔ تصادفی اختصاص‌یافته را تأیید کند. سلاح تا پایان مسابقه قفل است و خودکار تغییر نمی‌کند. برای بردن سلامت حریف را تمام کن و با برد سلاح خود سازگار شو.",
+  "sudden-death":"یک ضربهٔ آسیب‌زننده می‌تواند مبارز را حذف کند. حرکت در دسترس است و اسلحهٔ انتخاب‌شده ثابت می‌ماند؛ پیش از حمله، خودت را در معرض ضربه قرار نده.",
   "low-gravity":"جاذبهٔ کمتر، زمان بیشتری در هوا می‌دهد. سلامت حریف را تمام کن؛ مسیر پرش و پرتابه‌ها را با جاذبهٔ تازه بسنج.",
   "king-of-hill":"تنها در مرکز بمان تا ۸ ثانیه کنترل جمع کنی؛ حضور هر دو نفر امتیاز نمی‌دهد. رسیدن به هدف یا شکست حریف باعث برد است. حریف را از محدودهٔ امتیاز بیرون بران.",
   "local-pvp":"گزینهٔ تعداد بازیکنان است، نه بازی آنلاین: دو انسان روی یک دستگاه هر حالت و زمین را انتخاب می‌کنند. کنترل‌ها مستقل‌اند و پیشرفت یا پاداش مسیر به بازی محلی تعلق نمی‌گیرد."
@@ -101,7 +101,7 @@ export const GUIDE_FA:GuideCopy={
   {title:"ویژگی زمین‌ها",body:"کارت زمین، طرح واقعی سکو و پوشش را همراه فیلتر ویژگی نشان می‌دهد. خط‌چین نشانهٔ حرکت است؛ شکاف، پل شکستنی، سطح فروریزشی، نوار نقاله، باد، دریچه و میدان جاذبه بر تاکتیک اثر دارند. یخ و سطح لغزنده اصطکاک را تغییر می‌دهند. زمین دانلودی ابتدا باید نصب شود و پس از نصب آفلاین قابل بازی است."}
  ],
  local:[
-  {title:"دو انسان، یک دستگاه",body:"دو نفرهٔ محلی، سپس حالت و زمین را انتخاب کن. نام‌های اختیاری مستقل بنویس. در موبایل هر نفر گوی حرکت، حمله و دکمهٔ سلاح خودش را دارد. جای فیزیکی چپ و راست در زبان فارسی عوض نمی‌شود."},
+  {title:"دو انسان، یک دستگاه",body:"دو نفرهٔ محلی، سپس حالت و زمین را انتخاب کن. نام‌های اختیاری مستقل بنویس. قبل از شروع هر بازیکن باید شخصیت و سلاح خود را انتخاب کند؛ در بازی هر نفر گوی حرکت و حملهٔ مستقل دارد. جای فیزیکی چپ و راست در زبان فارسی عوض نمی‌شود."},
   {title:"کیبورد بازیکن اول",body:"مبارز چپ از این کلیدها استفاده می‌کند. در بازی محلی کلیدهای جهتِ تک‌نفره به بازیکن دوم اختصاص دارند.",keys:"Move A/D · Down S · Jump W/Space · Attack Z/X · Grab C · Dash Shift · Weapons Q/E · Aim R/F"},
   {title:"کیبورد بازیکن دوم",body:"مبارز راست کنترل مستقل دارد. برای موشک فقط جهت شخصیت اعمال می‌شود.",keys:"Move ←/→ or Numpad4/6 · Down ↓ · Jump ↑/Numpad8 · Attack Enter/Numpad0 · Grab Numpad1 · Dash Numpad5 · Weapons [ / ] · Aim PageUp/PageDown"}
  ]

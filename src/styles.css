@@ -1242,7 +1242,7 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  .game-ui .game-ui__quick-mode{transition:none}
 }
 
-/* Two-step, expandable match wizard. No native selection dropdowns in match setup. */
+/* Three-step, mandatory loadout wizard. No native selection dropdowns in match setup. */
 .game-ui__menu-progress{
  display:block;
  padding:.3rem .55rem;
@@ -1256,13 +1256,13 @@ html[dir="rtl"] .game-ui.playing .game-ui__top-hud .game-ui__status{direction:rt
  color:#dbebff;
  background:#1b2b42ee;
 }
-.game-ui__menu-mode-panel,.game-ui__menu-arena-panel{
+.game-ui__menu-mode-panel,.game-ui__menu-arena-panel,.game-ui__menu-loadout-panel{
  display:grid;
  gap:clamp(.45rem,1.35cqh,.75rem);
  min-width:0;
  text-align:start;
 }
-.game-ui__menu-mode-panel[hidden],.game-ui__menu-arena-panel[hidden],
+.game-ui__menu-mode-panel[hidden],.game-ui__menu-arena-panel[hidden],.game-ui__menu-loadout-panel[hidden],
 .game-ui__mode-card[hidden],.game-ui__arena-card[hidden],
 .game-ui__loadout-card[hidden],.game-ui__weapon-details[hidden]{display:none!important}
 .game-ui__menu-mode-panel .game-ui__section-title{margin:.15rem 0 0;color:#afbed3;font-size:.7rem;letter-spacing:.1em}
@@ -2673,4 +2673,46 @@ html.software-landscape .game-ui.playing p:nth-of-type(2){top:calc(max(.45rem,va
 html.software-landscape .game-ui.playing .game-ui__weapon-list{top:calc(max(.45rem,var(--safe-top)) + 3rem)}
 html.software-landscape .game-ui.playing .game-ui__bow-panel{
  bottom:calc(max(1rem,var(--safe-bottom)) + clamp(5.4rem,19cqmin,7rem));
+}
+
+/* Mandatory pre-match character and locked weapon confirmation. */
+.game-ui:not(.playing) .game-ui__menu-loadout-panel{
+ display:grid;gap:clamp(.4rem,1.3cqh,.7rem);
+ width:100%;max-width:100%;min-width:0;text-align:start;
+}
+.game-ui__loadout-player-tabs{display:flex;flex-wrap:wrap;gap:.5rem}
+.game-ui .game-ui__loadout-player-tab{
+ flex:1;min-width:7rem;min-height:44px;padding:.55rem .9rem;
+ background:#172638;border:2px solid #65748b;border-radius:.65rem;
+ color:#e9f4ff;font:800 .82rem system-ui,sans-serif;cursor:pointer;
+}
+.game-ui .game-ui__loadout-player-tab[aria-pressed="true"]{
+ border-color:#ffdb83;background:#37412d;color:#fff9df;
+}
+.game-ui__loadout-status{
+ margin:0;padding:.6rem .75rem;border:1px solid #76869e;border-radius:.55rem;
+ background:#152336;color:#e9f2ff;font-size:.79rem;line-height:1.5;
+}
+.game-ui .game-ui__random-loadout{
+ min-height:48px;border:2px solid #b19d65;border-radius:.6rem;background:#26374b;
+ color:#fff3d6;font-weight:800;cursor:pointer;padding:.55rem;
+}
+.game-ui .game-ui__random-loadout[aria-pressed="true"]{
+ border-color:#ffdd79;background:#314836;
+}
+.game-ui .game-ui__random-loadout[hidden]{display:none!important}
+.game-ui:not(.playing) .game-ui__menu-loadout-panel .game-ui__weapon-details{
+ display:block;min-width:0;max-width:100%;
+}
+.game-ui:not(.playing) .game-ui__menu-loadout-panel .game-ui__weapon-grid{min-width:0;max-width:100%}
+.game-ui [data-action="start"]:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.55)}
+/* No in-match switches: hide legacy swap controls even before UI render settles. */
+.game-ui.playing .game-ui__mobile-weapon-switcher,
+.game-ui.playing .game-ui__p2-weapons,
+.game-ui.playing .game-ui__weapon-list{display:none!important}
+@media (orientation:landscape) and (max-height:430px), (orientation:portrait) and (max-width:430px){
+ .game-ui:not(.playing) .game-ui__menu-loadout-panel .game-ui__character-card{min-height:62px}
+ .game-ui:not(.playing) .game-ui__menu-loadout-panel .game-ui__character-portrait{height:50px;width:48px;flex-basis:48px}
+ .game-ui:not(.playing) .game-ui__menu-loadout-panel .game-ui__character-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .game-ui__loadout-status{font-size:.7rem;padding:.4rem}
 }

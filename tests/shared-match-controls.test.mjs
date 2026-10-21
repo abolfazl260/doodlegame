@@ -23,7 +23,7 @@ test('every game rule keeps two human fighters across arena changes and rematche
 test('missile is a persistent starting weapon in standard matches on every arena',()=>{
  const {session}=setup();
  for(const arena of ['classic','towers','pit','steps','zigzag','sky','moving','fortress','bridge','crater','vertical','ruins','conveyor','collapse','storm','reactor']){
-  session.setArena(arena);assert.equal(session.setStartingWeapon('missile'),true);session.reset();
+  session.setArena(arena);assert.equal(session.setStartingWeapon('missile'),true);assert.equal(session.setPlayer2StartingWeapon('missile'),true);session.reset();
   assert.equal(session.getHudState().weapon,'missile');assert.equal(session.getHudState().secondWeapon,'missile');
   session.selectWeaponById('blaster');session.selectPlayer2WeaponById('bomb');
   assert.equal(session.getHudState().weapon,'blaster');assert.equal(session.getHudState().secondWeapon,'bomb');
@@ -34,7 +34,7 @@ test('missile is a persistent starting weapon in standard matches on every arena
 test('both humans fire every ranged weapon, including missiles, in their own selected directions',()=>{
  const {session}=setup();
  for(const weapon of ['blaster','uzi','bow','bomb','boomerang','missile']){
-  session.setStartingWeapon(weapon);session.reset(false);
+  session.setStartingWeapon(weapon);session.setPlayer2StartingWeapon(weapon);session.reset(false);
   session.setWeaponAim(1,1,1);session.setWeaponAim(2,-1,-1);
   assert.equal(session.getRenderState().projectiles.length,0,'aiming alone never fires');
   if(weapon==='bow'){session.fireBow(session.player,1);session.fireBow(session.opponent,1);}
