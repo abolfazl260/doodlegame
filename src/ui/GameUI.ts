@@ -1184,7 +1184,7 @@ export class GameUI{
   this.setText(this.menuLead,onLoadout?(fa?"شخصیت و اسلحه را انتخاب کن":"CHOOSE CHARACTER & WEAPON"):
    onArena?(labels?.chooseArena??"CHOOSE ARENA"):(labels?.kickoff??"CHOOSE YOUR FIGHT"));
   this.setText(this.stepNextButton,onArena?(fa?"بعدی · شخصیت و اسلحه":"NEXT · CHARACTER & WEAPON"):
-   twoPlayers?(labels?.nextAllArenas??"NEXT · ALL ARENAS"):(labels?.nextArena??"NEXT · CHOOSE ARENA"));
+   twoPlayers?(labels?.nextAllArenas??"NEXT · ALL 16 ARENAS"):(labels?.nextArena??"NEXT · CHOOSE ARENA"));
   const stepLabel=onLoadout?(fa?"تجهیزات":"LOADOUT"):onArena?this.i18n.messages.sections.arena:
    (labels?.selectMode??this.i18n.messages.sections.gameMode);
   this.setText(this.menuProgress,(labels?.step??"STEP")+" "+(this.menuStepIndex+1)+" / "+MENU_STEPS.length+" · "+stepLabel);
