@@ -99,7 +99,10 @@ try{
   if(game.getState()===GameState.MENU&&!ui.canStartMatch())return;
   telegram?.requestFullscreen();
   input.resetTransientState();
-  game.start();
+  const runStart=ui.consumeRunStart();
+  if(runStart==="new")game.newRun();
+  else if(runStart==="continue")game.continueRun();
+  else game.start();
  };
  const restartGame=()=>{input.resetTransientState();game.restart();};
  const disposeWebVisibility=installWebVisibilityLifecycle(document,()=>{
