@@ -22,7 +22,7 @@ test("Canvas, WebGL and arena preview share the same SVG art",()=>{
  const previews=read("src/ui/ArenaPreviews.ts");
  const canvas=read("src/rendering/CanvasRenderer.ts");
  const three=read("src/rendering/ThreeRenderer.ts");
- for(const id of arenas)assert.match(backgrounds,new RegExp('backgrounds/'+id+'\\.svg\\?raw'));
+ for(const id of arenas)assert.ok(backgrounds.includes(JSON.stringify(read("src/assets/backgrounds/"+id+".svg"))),id+" must match its embedded scene");
  assert.match(themes,/paintSimpleSvgBackdrop\(/);
  assert.match(previews,/svgBackdropInnerMarkup\(/);
  assert.match(canvas,/svgBackdropRevision\(/);
