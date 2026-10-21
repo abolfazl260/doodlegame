@@ -167,6 +167,7 @@ export class GameUI{
  private onlineModeBadge=document.createElement("span");
  private menuStepIndex=0;
  private menuView:"landing"|"setup"|"progression"|"settings"="setup";
+ private pendingRunStart:"new"|"continue"|null=null;
  private landing=document.createElement("section");
  private landingDefaults=document.createElement("p");
  private landingQuick=document.createElement("button");
@@ -307,7 +308,7 @@ export class GameUI{
   this.landingDefaults.className="game-ui__landing-defaults";
   this.landingQuickCopy.append(this.landingQuickLabel,this.landingDefaults);
   this.landingQuick.append(this.landingQuickCopy);
-  this.landingContinue.type="button";this.landingContinue.dataset.route="continue";this.landingContinue.onclick=()=>{this.openMenuRoute("progression");actions.continueRun?.();};
+  this.landingContinue.type="button";this.landingContinue.dataset.route="continue";this.landingContinue.onclick=()=>this.prepareRunStart("continue");
   this.landingRoutes.className="game-ui__landing-routes";
   for(const route of ["custom","local","arenas","progression","settings"] as const){
    const button=document.createElement("button"),label=document.createElement("span");
@@ -1003,10 +1004,10 @@ export class GameUI{
   this.runControls.className="game-ui__run-controls";
   this.runNewButton.type="button";
   this.runNewButton.className="game-ui__run-new";
-  this.runNewButton.onclick=()=>actions.newRun?.();
+  this.runNewButton.onclick=()=>this.prepareRunStart("new");
   this.runContinueButton.type="button";
   this.runContinueButton.className="game-ui__run-continue";
-  this.runContinueButton.onclick=()=>actions.continueRun?.();
+  this.runContinueButton.onclick=()=>{const hud=this.readHud?.();if(hud?.inRun&&hud.characterChosen&&hud.weaponChosen)actions.continueRun?.();else this.prepareRunStart("continue");};
   this.runLeaveButton.type="button";
   this.runLeaveButton.className="game-ui__run-leave";
   this.runLeaveButton.onclick=()=>actions.leaveRun?.();
@@ -1064,8 +1065,16 @@ export class GameUI{
   });
  }
 
+ private prepareRunStart(kind:"new"|"continue"){
+  if(this.currentState===GameState.GAME_OVER)this.extraActions.stopToMenu?.();
+  if(this.currentState!==GameState.MENU)return;
+  this.openMenuRoute("custom");
+  this.pendingRunStart=kind;
+ }
+ consumeRunStart(){const action=this.pendingRunStart;this.pendingRunStart=null;return action;}
  private openMenuRoute(route:"home"|"custom"|"local"|"arenas"|"progression"|"settings"){
   if(this.currentState!==GameState.MENU)return;
+  this.pendingRunStart=null;
   if(route==="local")this.extraActions.playerCountSelect?.(2);
   this.menuView=route==="home"?"landing":route==="progression"||route==="settings"?route:"setup";
   if(route==="custom"||route==="local"){this.menuStepIndex=0;this.loadoutPlayer=1;}
