@@ -254,20 +254,9 @@ export class GameUI{
   this.weaponPickerOpen=false;this.setHidden(this.weaponList,true);
   this.nextWeaponButton.setAttribute("aria-expanded","false");this.p2Next.setAttribute("aria-expanded","false");
  }
- private toggleWeaponPicker(player:1|2){
-  if(this.currentState!==GameState.PLAYING)return;
-  // In-match weapon selection is disabled: choices stay locked until returning to the menu.
-  return;
-  const hud=this.readHud?.();if(!hud||hud.winner||hud.mode==="missile-duel"||hud.mode==="random-weapons")return;
-  if(this.weaponPickerOpen&&this.weaponPickerPlayer===player){this.closeWeaponPicker();return;}
-  this.weaponPickerPlayer=player;this.weaponPickerOpen=true;
-  this.weaponList.dataset.player=String(player);
-  this.nextWeaponButton.setAttribute("aria-expanded",String(player===1));this.p2Next.setAttribute("aria-expanded",String(player===2));
-  this.setHidden(this.weaponList,false);
-  for(const item of this.weaponList.children){const button=item as HTMLButtonElement;button.classList.toggle("active",button.dataset.weapon===(player===1?hud.weapon:hud.secondWeapon));}
- }
-
- private arenaTitle=document.createElement("div");
+ private toggleWeaponPicker(_player:1|2){this.closeWeaponPicker();}
+ 
+  private arenaTitle=document.createElement("div");
  private modeTitle=document.createElement("div");
  private upgradePanel=document.createElement("div");
  private upgradeTitle=document.createElement("strong");
@@ -1261,7 +1250,9 @@ export class GameUI{
   const pointsChanged=!old||old.upgradePoints!==s.upgradePoints;
   const upgradesChanged=!old||old.upgradedWeapons.length!==s.upgradedWeapons.length||
    s.upgradedWeapons.some((id,index)=>id!==old.upgradedWeapons[index]);
-  const staticChanged=stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged||secondWeaponChanged||nameChanged||characterChanged;
+  const selectionKey=[s.characterChosen,s.weaponChosen,s.secondCharacterChosen,s.secondWeaponChosen].join(":");
+   const selectionChanged=!old||old.selectionKey!==selectionKey;
+   const staticChanged=selectionChanged||stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged||secondWeaponChanged||nameChanged||characterChanged;
   const missileRules=s.mode==="missile-duel";
 
   if(staticChanged){
@@ -1395,13 +1386,14 @@ export class GameUI{
     }
     if(weaponChanged||modeChanged||arenaChanged||localeChanged||stateChanged){
      const fixed=missileRules||s.mode==="random-weapons";
-     this.setHidden(this.weaponDetails,fixed);
+     // Weapon selection remains required, including restricted modes.
      for(const item of this.weaponCards.children){
       const card=item as HTMLButtonElement,id=card.dataset.startingWeapon as WeaponId;
+      if(!id)continue;
       const allowed=!fixed&&(s.mode!=="melee-only"||id==="blade"||id==="hammer");
       this.setHidden(card,!allowed);
       card.disabled=!allowed;
-      card.setAttribute("aria-pressed",String(id===s.weapon));
+      card.setAttribute("aria-pressed",String(Boolean(s.weaponChosen)&&id===s.weapon));
      }
     }
     const runIntermission=Boolean(s.inRun&&s.progression?.run?.status==="victory");
@@ -1481,12 +1473,12 @@ export class GameUI{
    if(stateChanged||weaponChanged||winnerChanged||modeChanged||arenaChanged){
     const playing=state===GameState.PLAYING&&s.winner===null;
     if(!playing||modeChanged||weaponChanged||secondWeaponChanged)this.closeWeaponPicker();
-    this.setHidden(this.weaponList,!playing||!this.weaponPickerOpen);
-    this.setHidden(this.p2WeaponControls,!playing||!(s.localPvP??s.mode==="local-pvp")||missileRules||s.mode==="random-weapons");
+    this.setHidden(this.weaponList,true);
+    this.setHidden(this.p2WeaponControls,true);
     // Missile uses the same directional pad as the other ranged weapons.
     this.setHidden(this.aimPads[0],!playing);
     this.setHidden(this.aimPads[1],!playing||!(s.localPvP??s.mode==="local-pvp"));
-    this.setHidden(this.mobileWeaponSwitcher,!playing||missileRules||s.mode==="random-weapons");
+    this.setHidden(this.mobileWeaponSwitcher,true);
     this.setHidden(this.bowPanel,!playing||s.weapon!=="bow");
     this.setHidden(this.mobileControls,!playing);
     this.setHidden(this.mobilePauseButton,!playing);
@@ -1495,7 +1487,7 @@ export class GameUI{
     if(!playing&&(stateChanged||winnerChanged))this.cancelTouchControls();
    }
    this.syncWizard(state,s);
-   this.lastView={state,locale,arena:s.arena,mode:s.mode,weapon:s.weapon,winner:s.winner,
+   this.lastView={selectionKey,state,locale,arena:s.arena,mode:s.mode,weapon:s.weapon,winner:s.winner,
     upgradePoints:s.upgradePoints,upgradedWeapons:[...s.upgradedWeapons],progressKey,inRun:Boolean(s.inRun),secondWeapon:s.secondWeapon,
     playerName:s.playerName,secondPlayerName:s.secondPlayerName,localPvP:s.localPvP,
      characterId:s.characterId,opponentCharacterId:s.opponentCharacterId};
@@ -1699,7 +1691,7 @@ export class GameUI{
  private applyLocale(){
   const messages=this.i18n.messages;
   if(messages.landing){
-   this.landingQuickLabel.textContent=messages.landing.quick;
+   this.landingQuickLabel.textContent=this.i18n.locale==="fa"?"شروع · انتخاب شخصیت و اسلحه":"START · CHOOSE CHARACTER & WEAPON";
    this.landingDefaults.textContent=messages.landing.defaults;
    this.menuHome.textContent=messages.landing.home;
    this.landingLocalHint.textContent=messages.landing.localHint;
@@ -1727,7 +1719,7 @@ export class GameUI{
   this.menuLead.textContent=messages.menu?.kickoff??"CHOOSE YOUR FIGHT";
   this.stepNextButton.textContent=messages.menu?.nextArena??"NEXT: CHOOSE ARENA";
   this.stepBackButton.textContent=messages.menu?.back??"BACK";
-  this.weaponDetailsTitle.textContent=messages.menu?.loadout??"STARTING WEAPON · OPTIONAL";
+  this.weaponDetailsTitle.textContent=this.i18n.locale==="fa"?"انتخاب اسلحه · اجباری":"CHOOSE WEAPON · REQUIRED";
   this.menuSetupTitle.textContent=messages.menu?.players??"NUMBER OF PLAYERS";
   this.menuProgressTitle.textContent=messages.menu?.progressOptions??"RUN & UPGRADES";
   this.menuRunTab.textContent=messages.run?.title??"FOUR-FIGHT RUN";
@@ -1746,7 +1738,7 @@ export class GameUI{
   this.startingWeaponTitle.textContent=messages.sections.weapon;
   this.playerNameCaption.textContent=messages.characterNames.playerOne;
   this.secondNameCaption.textContent=messages.characterNames.playerTwo;
-  this.characterPickerTitle.textContent=this.i18n.locale==="fa"?"اسکین شخصیت را انتخاب کن":"CHOOSE YOUR SKIN";
+  this.characterPickerTitle.textContent=this.i18n.locale==="fa"?"انتخاب شخصیت · اجباری":"CHOOSE CHARACTER · REQUIRED";
   this.characterCards.setAttribute("aria-label",this.characterPickerTitle.textContent);
   for(const item of this.characterCards.children){
    const card=item as HTMLButtonElement,id=card.dataset.character as CharacterId;
@@ -1815,8 +1807,10 @@ export class GameUI{
   this.arenaFilters.setAttribute("aria-label",messages.sections.arena);this.arenaEmpty.textContent=this.i18n.locale==="fa"?"زمینی در این دسته نیست.":"No arenas in this category.";
   for(const item of this.weaponCards.children){
    const card=item as HTMLButtonElement;
+   if(card===this.randomWeaponButton)continue;
    card.textContent=messages.weapons[card.dataset.startingWeapon as WeaponId];
   }
+  this.randomWeaponButton.textContent=this.i18n.locale==="fa"?"انتخاب اسلحه تصادفی":"CHOOSE RANDOM WEAPON";
   for(const item of this.upgradeCardGrid.children){
    const card=item as HTMLButtonElement,id=card.dataset.upgradeWeapon as WeaponId;
    card.textContent=messages.weapons[id]+" → "+messages.upgrades[id].name;
