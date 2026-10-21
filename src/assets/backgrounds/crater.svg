@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="Crater Lava arena background">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#481d35"/><stop offset=".53" stop-color="#aa3d3b"/><stop offset="1" stop-color="#eb7742"/></linearGradient></defs>
+<rect width="1200" height="675" fill="url(#sky)"/>
+<circle cx="865" cy="213" r="117" fill="#ff8e54" opacity=".22"/>
+<g fill="#e67553" opacity=".25"><ellipse cx="452" cy="231" rx="169" ry="34"/><ellipse cx="564" cy="208" rx="116" ry="54"/><ellipse cx="844" cy="155" rx="106" ry="46"/></g>
+<path d="M0 470 112 403 212 449 322 336 428 413 540 305 660 394 754 337 888 418 992 335 1100 410 1200 371V675H0Z" fill="#70283c" opacity=".69"/>
+<path d="M130 543 292 442 431 475 516 332 604 223 690 331 813 426 978 405 1080 553Z" fill="#4b2338" opacity=".95"/>
+<path d="m577 261 27-62 21 26 18-7 26 50-36-16-37 9Z" fill="#fe9d54"/>
+<g fill="none" stroke="#ee7140" stroke-linecap="round" opacity=".62">
+<path d="m602 255-38 115 40 46-39 85" stroke-width="12"/>
+<path d="m651 277 53 109-21 62 47 72" stroke-width="10"/>
+<path d="m546 375-42 68 16 58" stroke-width="7"/>
+</g>
+<g fill="#392033"><path d="M0 463 115 447 203 478 262 466 333 518 307 675H0Z"/><path d="M1200 460 1117 431 1021 474 926 454 859 526 888 675H1200Z"/></g>
+<path d="M0 571q146-40 275 16 101 35 232-11 125-45 222-7 143 42 255-4 109-39 216-3v113H0Z" fill="#9e4034" opacity=".83"/>
+<path d="M0 609q133-34 261 17 145 48 284-5 127-47 251-8 130 46 243-3 85-33 161-2v67H0Z" fill="#f18b36"/>
+<g stroke="#ffd078" stroke-width="12" stroke-linecap="round" fill="none" opacity=".7"><path d="M10 638q86-21 176 11t190 2M456 650q109-33 213-4t202-6M985 645q94-36 206-8"/></g>
+<g fill="#211b2b" opacity=".64"><ellipse cx="243" cy="573" rx="46" ry="16"/><ellipse cx="1092" cy="576" rx="61" ry="21"/><ellipse cx="864" cy="632" rx="32" ry="13"/></g>
+<g fill="#ffac62" opacity=".56"><circle cx="563" cy="144" r="10"/><circle cx="644" cy="163" r="6"/><circle cx="528" cy="189" r="5"/></g>
+
+</svg>

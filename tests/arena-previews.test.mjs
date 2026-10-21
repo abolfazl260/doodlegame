@@ -3,6 +3,7 @@ import {BUILT_IN_PREVIEW_IDS,arenaPreviewSvg,arenaPreviewUrl,arenaCategories,ARE
 import {getBuiltInArenaPreviewDefinition} from '../.test-build/gameplay/GameSession.js';
 import {ARENA_THEMES} from "../.test-build/themes/ArenaThemes.js";
 import {stageLandmarks,stageLandmarksSvg} from "../.test-build/themes/ArenaStageArt.js";
+import {svgBackdropInnerMarkup} from "../.test-build/themes/SimplifiedSvgBackdrops.js";
 test('exactly sixteen distinct previews derive from every real arena definition',()=>{
  const defs=getBuiltInArenaPreviewDefinition();assert.equal(BUILT_IN_PREVIEW_IDS.length,16);assert.deepEqual(new Set(BUILT_IN_PREVIEW_IDS),new Set(Object.keys(defs)));
  const images=BUILT_IN_PREVIEW_IDS.map(arenaPreviewSvg);assert.equal(new Set(images).size,16);
@@ -24,7 +25,11 @@ test("sixteen illustrated thumbnails use corresponding in-game landmarks, never 
   const landmarks=stageLandmarks(id),markup=stageLandmarksSvg(id,theme,240,96),svg=arenaPreviewSvg(id);
   assert.ok(landmarks.length>=8,id+" should have a recognizable signature");
   assert.ok(markup.length>=150,id+" landmark illustration should be substantial");
-  assert.ok(svg.includes(markup),"preview has same stage-specific landmarks as gameplay");
+  const replacement=svgBackdropInnerMarkup(id);
+  if(replacement){
+   assert.ok(svg.includes(replacement),"preview uses the exact shared SVG backdrop");
+   assert.ok(svg.includes('viewBox="0 0 1200 675"'),"replacement artwork keeps its vector viewBox");
+  }else assert.ok(svg.includes(markup),"other previews keep the stage-specific landmarks");
   assert.ok(svg.includes(theme.skyTop)&&svg.includes(theme.skyBottom),"preview follows arena palette");
   assert.match(svg,/linearGradient/,"preview has an atmospheric themed sky");
   assert.match(svg,/clipPath/,"preview stays clipped to rounded image bounds");

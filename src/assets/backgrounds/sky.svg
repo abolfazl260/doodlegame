@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="Sky Islands arena background">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#619ecd"/><stop offset=".61" stop-color="#b7d9eb"/><stop offset="1" stop-color="#e0eef5"/></linearGradient></defs>
+<rect width="1200" height="675" fill="url(#sky)"/>
+<circle cx="224" cy="147" r="86" fill="#f7f8ea" opacity=".53"/>
+<g fill="#f0f9fc" opacity=".72"><ellipse cx="144" cy="271" rx="131" ry="46"/><ellipse cx="242" cy="241" rx="93" ry="64"/><ellipse cx="341" cy="277" rx="135" ry="43"/><ellipse cx="723" cy="181" rx="156" ry="35"/><ellipse cx="822" cy="153" rx="78" ry="54"/><ellipse cx="1039" cy="322" rx="162" ry="42"/></g>
+<path d="M0 560q157-70 315-8 143-58 283 10 172-58 309 0 141-53 293 8v105H0Z" fill="#eef8fc" opacity=".6"/>
+<g opacity=".59">
+<path d="M132 296h149l-35 67-43 41-37-59Z" fill="#507d9d"/><path d="M125 294h161l-25 18H144Z" fill="#77b692"/>
+<path d="M414 260h194l-40 70-60 40-43-66Z" fill="#5684a3"/><path d="M408 258h206l-33 19H433Z" fill="#7fbf99"/>
+<path d="M881 306h265l-51 81-78 79-67-87Z" fill="#477493"/><path d="M877 303h276l-28 25H909Z" fill="#73b68d"/>
+</g>
+<g fill="#7299b6" opacity=".73">
+<rect x="940" y="215" width="166" height="95"/>
+<rect x="964" y="172" width="38" height="138"/><path d="m960 175 23-43 23 43Z"/>
+<rect x="1022" y="149" width="43" height="161"/><path d="m1018 150 26-55 25 55Z"/>
+<rect x="1082" y="198" width="30" height="112"/><path d="m1078 201 19-36 18 36Z"/>
+</g>
+<g fill="#e3f3ff" opacity=".66"><rect x="975" y="206" width="10" height="24" rx="5"/><rect x="1038" y="181" width="10" height="30" rx="5"/><rect x="1092" y="229" width="10" height="22" rx="5"/></g>
+<g fill="#87b7a0" opacity=".65"><ellipse cx="956" cy="303" rx="38" ry="21"/><ellipse cx="1095" cy="302" rx="44" ry="26"/></g>
+<g fill="#8dd0ed" opacity=".42"><path d="M1105 326h27l-12 218h-16ZM496 275h19l-9 107h-9Z"/></g>
+<g fill="#eff9fd" opacity=".82"><ellipse cx="87" cy="637" rx="164" ry="61"/><ellipse cx="304" cy="655" rx="176" ry="55"/><ellipse cx="571" cy="627" rx="190" ry="64"/><ellipse cx="821" cy="657" rx="172" ry="53"/><ellipse cx="1108" cy="631" rx="181" ry="63"/></g>
+
+</svg>
