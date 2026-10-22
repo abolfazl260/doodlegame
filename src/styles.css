@@ -2741,9 +2741,14 @@ html.software-landscape .game-ui.playing .game-ui__bow-panel{
 
 /* Local same-device best-of-three: compact in-match score, readable match results. */
 .game-ui__pvp-score-hud[hidden],.game-ui__pvp-countdown[hidden]{display:none!important}
-.game-ui.playing .game-ui__top-hud .game-ui__pvp-score-hud{
- grid-column:2;
- grid-row:1;
+.game-ui.playing .game-ui__pvp-score-hud{
+ position:absolute;
+ top:calc(var(--safe-top) + .75rem);
+ left:50%;
+ width:min(32%,22rem);
+ transform:translateX(-50%);
+ z-index:5;
+ pointer-events:none;
  min-width:0;
  color:#f4f8ff;
  background:#111d30eb;
