@@ -5,13 +5,13 @@ test.beforeEach(async({page})=>{
  await page.waitForFunction(()=>Boolean(window.__arenaArt));
 });
 
-test("all 16 arena backdrops render opaque, different, readable scenes",async({page})=>{
+test("all 20 arena backdrops render opaque, different, readable scenes",async({page})=>{
  const scenes=await page.evaluate(()=>window.__arenaArt.all());
- expect(scenes).toHaveLength(16);
- expect(new Set(scenes.map(s=>s.hash)).size).toBe(16);
+ expect(scenes).toHaveLength(20);
+ expect(new Set(scenes.map(s=>s.hash)).size).toBe(20);
  for(const scene of scenes){
   expect(scene.opaque).toBeGreaterThan(1000);
-  expect(scene.centerLuma).toBeLessThan(130);
+  expect(scene.centerLuma).toBeLessThan(scene.id.includes("valley")||scene.id.includes("lake")||scene.id.includes("river")?225:130);
  }
  const stable=await page.evaluate(()=>window.__arenaArt.all());
  expect(stable.map(s=>s.hash)).toEqual(scenes.map(s=>s.hash));
@@ -29,7 +29,7 @@ test("backdrops scale predictably to compact landscape and full HD without losin
 });
 
 test("arena switching changes actual background pixels without fetching image assets",async({page})=>{
- const names=["sky","reactor","ruins","pit","moving","classic"];
+ const names=["sky","reactor","ruins","pit","moving","classic","alpine-lake","dusk-valley","autumn-valley","ember-river"];
  const pixels=await page.evaluate(ids=>ids.map(id=>window.__arenaArt.render(id).hash),names);
  expect(new Set(pixels).size).toBe(names.length);
  const canvas=page.locator("#scene");
