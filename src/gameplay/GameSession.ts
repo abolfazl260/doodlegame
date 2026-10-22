@@ -1086,7 +1086,7 @@ export class GameSession{
     const distance=t.x-a.x;
     if(upgraded&&a.grounded){
       const slamRadius=2.35;
-      if(Math.abs(distance)<=slamRadius&&Math.abs(t.y-a.y)<1.55){
+      if(Math.abs(distance)<=slamRadius&&Math.abs(t.y-a.y)<1.55&&this.kickPathClear(a,t)){
         const direction=Math.sign(distance)||a.facing;
         this.damage(t,w.damage*1.15,direction*w.knockback*1.35,"hammer");
         t.velocityY=Math.max(t.velocityY,7);
@@ -1097,7 +1097,7 @@ export class GameSession{
       a.velocityX*=.35;
       return;
     }
-    if(Math.sign(distance)===a.facing&&Math.abs(distance)<=w.range*1.08&&Math.abs(t.y-a.y)<1.2){
+    if(Math.sign(distance)===a.facing&&Math.abs(distance)<=w.range*1.08&&Math.abs(t.y-a.y)<1.2&&this.kickPathClear(a,t)){
       this.damage(t,w.damage,a.facing*w.knockback*1.15,"hammer");
       t.velocityY=Math.max(t.velocityY,a.grounded?5.2:3.6);
       if(a.grounded)a.velocityX*=.55;
@@ -1107,7 +1107,7 @@ export class GameSession{
   }
   if(a.weapon==="blade"){
     const distance=t.x-a.x,range=w.range*(upgraded?1.12:1),damage=w.damage*(upgraded?1.65:1),knockback=w.knockback*(upgraded?1.12:1);
-    if(Math.sign(distance)===a.facing&&Math.abs(distance)<=range&&Math.abs(t.y-a.y)<1.2)this.damage(t,damage,a.facing*knockback,"blade");
+    if(Math.sign(distance)===a.facing&&Math.abs(distance)<=range&&Math.abs(t.y-a.y)<1.2&&this.kickPathClear(a,t))this.damage(t,damage,a.facing*knockback,"blade");
     this.strikeEnvironment(a,damage*.9,a.facing*knockback);
     return;
   }
@@ -1155,7 +1155,17 @@ export class GameSession{
   if(a.weapon==="boomerang"&&upgraded){spawn(4,.72);spawn(1.2,.72);return;}
   spawn(a.weapon==="boomerang"?2.8:a.weapon==="bomb"?2.4:a.weapon==="bow"?1.8:0,1,a.weapon==="uzi"&&upgraded?2:0);
 }
- private damage(t:Fighter,damage:number,knockback:number,weapon:WeaponId="blade"){if(t.health<=0||damage<=0)return;this.cancelSlam(t);this.interruptGrab(t);this.cancelKick(t);this.clearAirPose(t);this.emitCue("hit",weapon,t.x,t.y+.3,Math.sign(knockback)||t.facing,Math.max(.45,Math.min(1.65,damage/15)));const mass=t.enemyType==="tank"?1.8:t.enemyType==="boss"?2.2:1;t.health=Math.max(0,t.health-(this.modeId==="sudden-death"&&damage>0?t.health:damage));t.velocityX+=knockback/mass;t.velocityY=Math.max(t.velocityY,2/mass);t.grounded=false;t.hitTime=.22;}
+ private damage(t:Fighter,damage:number,knockback:number,weapon:WeaponId="blade",reaction?:Readonly<{ignoreMass?:boolean;minVerticalSpeed?:number;restoreAirActions?:boolean}>){
+  if(t.health<=0||damage<=0)return;
+  this.cancelSlam(t);this.interruptGrab(t);this.cancelKick(t);this.clearAirPose(t);
+  this.emitCue("hit",weapon,t.x,t.y+.3,Math.sign(knockback)||t.facing,Math.max(.45,Math.min(1.65,damage/15)));
+  const mass=t.enemyType==="tank"?1.8:t.enemyType==="boss"?2.2:1;
+  t.health=Math.max(0,t.health-(this.modeId==="sudden-death"?t.health:damage));
+  t.velocityX+=knockback/(reaction?.ignoreMass?1:mass);
+  t.velocityY=Math.max(t.velocityY,reaction?.minVerticalSpeed??2/mass);
+  t.grounded=false;t.hitTime=.22;
+  if(reaction?.restoreAirActions){t.doubleJumpAvailable=true;t.airDashAvailable=true;}
+ }
  private updateHill(dt:number){if(this.modeId!=="king-of-hill")return;const playerIn=Math.abs(this.player.x)<=HILL_HALF_WIDTH,opponentIn=Math.abs(this.opponent.x)<=HILL_HALF_WIDTH;if(playerIn===opponentIn)return;if(playerIn)this.hillPlayer=Math.min(HILL_TARGET,this.hillPlayer+dt);else this.hillOpponent=Math.min(HILL_TARGET,this.hillOpponent+dt);if(this.hillPlayer>=HILL_TARGET){this.winner="player";if(!this.localPvP)this.upgradePoints++;}else if(this.hillOpponent>=HILL_TARGET)this.winner="opponent";}
  private spawnDebris(e:EnvironmentBody){
   for(let i=0;i<4;i++){
@@ -1526,13 +1536,10 @@ export class GameSession{
     if(dist>radius)continue;
     const falloff=Math.max(.15,1-dist/radius);
     const dirX=Math.abs(dx)>.05?Math.sign(dx):Math.sign(p.vx)||1;
-    if(target.health>0)this.emitCue("hit","missile",target.x,target.y+.3,dirX,1.2);
-     target.health=Math.max(0,target.health-(this.modeId==="sudden-death"?target.health:w.damage*damageScale*falloff));
-    target.velocityX+=dirX*(7.5+5*falloff);
-    target.velocityY=Math.max(target.velocityY,6+8*falloff);
-    target.grounded=false;this.clearAirPose(target);
-    target.doubleJumpAvailable=true;
-    target.airDashAvailable=true;
+    // Match the normal hit/interruption pipeline while retaining the missile impulse.
+    this.damage(target,w.damage*damageScale*falloff,dirX*(7.5+5*falloff),"missile",{
+      ignoreMass:true,minVerticalSpeed:6+8*falloff,restoreAirActions:true
+    });
   }
   const owner=p.owner==="player"?this.player:this.opponent;
   const ownerDistance=Math.hypot(owner.x-p.x,(owner.y+.25)-p.y);
