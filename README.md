@@ -81,6 +81,12 @@ The game includes 20 selectable built-in arenas, including four illustrated moun
 - **Collapse** — cracked bridge sections arm under a fighter and collapse after a short warning window.
 - **Storm** — oscillating wind gusts push fighters, movable cover, and projectiles.
 - **Reactor** — a local gravity well pulls fighters, movable cover, and projectiles toward the arena core.
+- **Alpine Lake** — snowy blue peaks, evergreen woodland and a pale-blue glacier river, with icy side platforms.
+- **Twilight Valley** — layered blue mountain ridges, a gold-pink sunset and a turquoise lake.
+- **Autumn Valley** — an autumn forest below angular peaks, warm valley light and multi-level duel platforms.
+- **Ember River** — crimson-orange sunset mountains, dark fir silhouettes and a winding teal river.
+
+The four scenic landscapes are self-contained SVG recreations of the reference images, not remote image URLs. Background art is shared by arena previews, Canvas2D and WebGL. The stages work in the web game, same-device two-player mode, and the Android local Wi-Fi LAN duel. Public internet matchmaking is not available.
 
 ### Weapons
 
