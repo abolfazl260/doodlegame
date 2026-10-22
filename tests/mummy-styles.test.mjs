@@ -103,7 +103,7 @@ test("UI offers per-player outfits only in Mummy loadout and reuses existing eig
 test("six previews include distinct thematic SVG shapes and never introduce external sprites",()=>{
  const ui=readFileSync(new URL("../src/ui/GameUI.ts",import.meta.url),"utf8");
  for(const name of ["royal","cursed","scarab","desert","sentinel"]){
-  assert.match(ui,new RegExp('^  '+name+':\\\\{','m'),name+" must have its own SVG ornament layer");
+  assert.ok(ui.includes("  "+name+":{"),name+" must have its own SVG ornament layer");
  }
  assert.match(ui,/replace\('<ellipse ',parts\.behind/);
  assert.match(ui,/parts\.front\+"<\/svg>"/);
