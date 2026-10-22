@@ -42,7 +42,11 @@ export const ARENA_THEMES:Readonly<Record<BuiltInArenaId,ArenaTheme>>={
  conveyor:theme("neon","industrial","#22202e","#0c111b","#1d2832","#4a5459","#ffcf43","#ffd14a","#54d5e8"),
  collapse:theme("doodle","cavern","#39202a","#140e17","#2b1821","#77565b","#f59e83","#ff9475","#d2af9c"),
  storm:theme("neon","mountains","#122943","#080f24","#112641","#364a67","#82baff","#6fa9ff","#e2edf9"),
- reactor:theme("neon","industrial","#132f2d","#061b22","#102d2e","#2b6865","#93ffae","#76f3ab","#68d9f2")
+ reactor:theme("neon","industrial","#132f2d","#061b22","#102d2e","#2b6865","#93ffae","#76f3ab","#68d9f2"),
+ "alpine-lake":theme("fantasy","mountains","#c9e3fa","#a2c7e6","#264b69","#3c6684","#d6edff","#c3e6fa","#8abadd"),
+ "dusk-valley":theme("fantasy","mountains","#316e98","#f1b39d","#233f66","#375c7c","#f2c2a5","#ffe2a6","#70b9ba"),
+ "autumn-valley":theme("fantasy","mountains","#ddc2b2","#f7d4bd","#304b53","#687e59","#f3d5a3","#fba560","#b6c37e"),
+ "ember-river":theme("fantasy","mountains","#b9502d","#ffb06b","#202c39","#53444a","#efa05d","#ffb967","#50b9ae")
 };
 
 /** The gameplay surface type still communicates its physics in every palette. */
