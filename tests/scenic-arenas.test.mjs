@@ -21,7 +21,7 @@ test("the four illustrated landscapes are distinct offline SVGs and share in-gam
   assert.ok(svg.length>2000,"rich layered scene "+id);
   assert.match(svg,/<path\b/);
   assert.match(svg,/linearGradient/);
-  assert.doesNotMatch(svg,/<(?:image|script|foreignObject|iframe)\b|https?:\/\//i);
+  assert.doesNotMatch(svg,/<(?:image|script|foreignObject|iframe)\b|(?:href|xlink:href)\s*=|url\(https?:/i);
   const inner=svgBackdropInnerMarkup(id);
   assert.ok(inner&&inner.length>2000);
   assert.ok(arenaPreviewSvg(id).includes(inner),"arena picker and gameplay share scene");
