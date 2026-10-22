@@ -43,6 +43,7 @@ const ui=new GameUI(root,{
  weaponSelect:id=>game.selectWeaponById(id),selectStartingWeapon:id=>game.selectStartingWeapon(id),
  randomStartingWeapon:player=>game.chooseRandomStartingWeapon(player),
  player2StartingWeapon:id=>game.selectPlayer2StartingWeapon(id),
+ mummyStyleSelect:(player,style)=>game.selectMummyStyle(player,style),
  characterSelect:id=>game.selectCharacter(id),player2CharacterSelect:id=>game.selectPlayer2Character(id),
  upgradeWeapon:id=>game.upgradeWeapon(id),arenaSelect:id=>game.selectArena(id),
  fetchArenaCatalog:()=>loadArenaCatalog(),
