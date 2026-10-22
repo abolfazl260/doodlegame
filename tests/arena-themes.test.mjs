@@ -97,5 +97,5 @@ test("distinct stage landmarks paint deterministically on Canvas and stay within
    assert.ok(numbers.every(Number.isFinite),"finite stage landmark geometry: "+id);
   }
  }
- assert.equal(new Set(eventCounts).size,16,"each arena renders a different composition");
+ assert.equal(new Set(eventCounts).size,20,"each arena renders a different composition");
 });
