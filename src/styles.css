@@ -2737,3 +2737,93 @@ html.software-landscape .game-ui.playing .game-ui__bow-panel{
 #ui-root[data-lan-open="true"] .game-ui.playing[data-lan-player] .game-ui__mobile-weapon-switcher:not([hidden]){display:block!important;top:4.4rem;left:1rem;width:8.5rem}
 .game-ui__lan-dash{display:none}
 .game-ui.playing[data-lan-player] .game-ui__lan-dash:not([hidden]){display:block;position:absolute;left:calc(1rem + clamp(84px,22cqmin,112px) + 12px);bottom:1.2rem;z-index:24;pointer-events:auto;min-width:44px;min-height:44px;font-size:.7rem}
+
+
+/* Local same-device best-of-three: compact in-match score, readable match results. */
+.game-ui__pvp-score-hud[hidden],.game-ui__pvp-countdown[hidden]{display:none!important}
+.game-ui.playing .game-ui__top-hud .game-ui__pvp-score-hud{
+ grid-column:2;
+ grid-row:1;
+ min-width:0;
+ color:#f4f8ff;
+ background:#111d30eb;
+ border:1px solid #92a8be;
+ border-radius:.55rem;
+ padding:.3rem .5rem;
+ text-align:center;
+ font-size:clamp(.58rem,1.45cqmin,.8rem);
+ font-weight:900;
+ line-height:1.25;
+ font-variant-numeric:tabular-nums;
+ text-wrap:balance;
+}
+.game-ui__pvp-countdown{
+ position:absolute;
+ left:50%;
+ top:50%;
+ transform:translate(-50%,-50%);
+ z-index:8;
+ pointer-events:none;
+ color:#fff;
+ background:#111d30ef;
+ border:2px solid #f6d67a;
+ border-radius:1rem;
+ padding:clamp(.8rem,3vmin,1.6rem) clamp(1.3rem,5vmin,2.8rem);
+ font-size:clamp(1.5rem,6vmin,3.2rem);
+ font-weight:950;
+ font-variant-numeric:tabular-nums;
+ text-shadow:0 2px 0 #000b;
+ box-shadow:0 12px 35px #0008;
+ white-space:nowrap;
+}
+.game-ui__pvp-result{
+ display:grid;
+ gap:clamp(.35rem,1.3cqh,.65rem);
+ text-align:center;
+ min-width:0;
+}
+.game-ui__pvp-result-meta{
+ font-size:clamp(.75rem,2.1cqmin,1rem);
+ color:#d4e0f0;
+ letter-spacing:.08em;
+ font-weight:800;
+}
+.game-ui__pvp-result-score{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) minmax(4.2rem,.85fr) minmax(0,1fr);
+ align-items:center;
+ gap:.35rem;
+}
+.game-ui__pvp-result-player{
+ display:block;
+ white-space:pre-line;
+ overflow-wrap:anywhere;
+ padding:.45rem .25rem;
+ border:1px solid #849dbc;
+ border-radius:.65rem;
+ background:#17283f;
+ color:#fff;
+ font-variant-numeric:tabular-nums;
+ font-weight:900;
+ line-height:1.45;
+}
+.game-ui__pvp-result-center{
+ font-size:clamp(.75rem,2.1cqmin,1.05rem);
+ font-weight:950;
+ color:#ffdf84;
+ line-height:1.15;
+}
+.game-ui__pvp-result-title{
+ display:block;
+ font-size:clamp(1rem,3cqmin,1.4rem);
+ font-weight:950;
+ color:#fff;
+ overflow-wrap:anywhere;
+}
+.game-ui.game-over[data-players="2"] .game-ui__controls .game-ui__pvp-next-round,
+.game-ui.game-over[data-players="2"] .game-ui__controls .game-ui__pvp-loadout{
+ border-color:#f6d67a;
+ background:#203e60;
+ color:#fff;
+ font-weight:900;
+}
