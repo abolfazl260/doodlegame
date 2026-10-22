@@ -124,9 +124,11 @@ test("P2 confirmed loadout, Pause/Resume and match result work on mobile",async(
  await page.evaluate(()=>window.__runFixture.finishPvP("opponent"));
  expect(await page.evaluate(()=>window.__runFixture.state())).toBe("GAME_OVER");
  await expect(page.locator(".game-ui__menu-result")).toContainText(/بازیکن ۲|PLAYER 2/);
- await page.locator('button[data-action="restart"]').tap();
+ await expect(page.locator('button[data-action="next-pvp-round"]')).toBeVisible();
+ await page.locator('button[data-action="next-pvp-round"]').tap();
  expect(await page.evaluate(()=>window.__runFixture.state())).toBe("PLAYING");
  expect((await snapshot(page)).opponent.health).toBe(100);
+ expect((await page.evaluate(()=>window.__runFixture.view())).pvpSeries.opponentWins).toBe(1);
 });
 
 test("simultaneous elimination renders an explicit draw without awarding Run progress",async({page})=>{
@@ -217,4 +219,40 @@ test("two independent mobile Down joysticks + ATTACK simultaneously initiate the
   expect(after.p1Input.moveY).toBe(0);
   expect(after.p2Input.moveY).toBe(0);
  }finally{await client.detach();}
+});
+
+test("Best of 3 shows a 2-1 winner, alternates spawn sides, and offers rematch and equipment",async({page})=>{
+ await page.evaluate(()=>window.__runFixture.startPvP("hammer"));
+ const initial=await snapshot(page);
+ expect(initial.player.x).toBeLessThan(initial.opponent.x);
+
+ await page.evaluate(()=>window.__runFixture.finishPvP("player"));
+ await expect(page.locator(".game-ui__pvp-result-score")).toContainText("1");
+ await expect(page.locator('button[data-action="next-pvp-round"]')).toBeVisible();
+ await page.locator('button[data-action="next-pvp-round"]').tap();
+ expect((await snapshot(page)).player.x).toBeGreaterThan((await snapshot(page)).opponent.x);
+ await expect(page.locator(".game-ui__pvp-countdown")).toBeVisible();
+
+ await page.evaluate(()=>window.__runFixture.finishPvP("opponent"));
+ expect((await page.evaluate(()=>window.__runFixture.view())).pvpSeries.opponentWins).toBe(1);
+ await page.locator('button[data-action="next-pvp-round"]').tap();
+ expect((await snapshot(page)).player.x).toBeLessThan((await snapshot(page)).opponent.x);
+ await page.evaluate(()=>window.__runFixture.finishPvP("player"));
+ const result=await page.evaluate(()=>window.__runFixture.view());
+ expect(result.pvpSeries).toMatchObject({round:3,playerWins:2,opponentWins:1,complete:true});
+ await expect(page.locator(".game-ui__pvp-result-score")).toContainText("2");
+ await expect(page.locator('button[data-action="next-pvp-round"]')).toBeHidden();
+ await expect(page.locator('button[data-action="restart"]')).toBeVisible();
+ await expect(page.locator('button[data-action="change-pvp-loadout"]')).toBeVisible();
+
+ await page.locator('button[data-action="restart"]').tap();
+ expect(await page.evaluate(()=>window.__runFixture.state())).toBe("PLAYING");
+ expect((await page.evaluate(()=>window.__runFixture.view())).pvpSeries).toMatchObject({round:1,playerWins:0,opponentWins:0});
+ await page.evaluate(()=>window.__runFixture.finishPvP("player"));
+ await page.locator('button[data-action="next-pvp-round"]').tap();
+ await page.evaluate(()=>window.__runFixture.finishPvP("player"));
+ await page.locator('button[data-action="change-pvp-loadout"]').tap();
+ expect(await page.evaluate(()=>window.__runFixture.state())).toBe("MENU");
+ await expect(page.locator(".game-ui__menu-loadout-panel")).toBeVisible();
+ await expect(page.locator('button[data-action="start"]')).toBeDisabled();
 });
