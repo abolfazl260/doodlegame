@@ -1588,10 +1588,42 @@ export class GameUI{
    }
    this.setHidden(this.status,!s.winner&&s.mode!=="king-of-hill");
    this.setText(this.status,(s.localPvP??s.mode==="local-pvp")&&s.winner?pvpResult:status);
-   if(state===GameState.GAME_OVER)this.setText(this.menuResult,(s.localPvP??s.mode==="local-pvp")?pvpResult:status);
+   if(state===GameState.GAME_OVER){
+    const series=s.pvpSeries;
+    if((s.localPvP??s.mode==="local-pvp")&&series){
+     if(this.menuResult.firstChild!==this.pvpResultPanel)this.menuResult.replaceChildren(this.pvpResultPanel);
+     const copy=messages.pvp.series;
+     this.setText(this.pvpResultMeta,(series.complete?copy.champion:copy.roundComplete)+" · "+copy.round+" "+series.round);
+     this.setText(this.pvpResultP1,(s.playerName||messages.pvp.p1)+"\n"+series.playerWins);
+     this.setText(this.pvpResultCenter,copy.bestOfThree);
+     this.setText(this.pvpResultP2,(s.secondPlayerName||messages.pvp.p2)+"\n"+series.opponentWins);
+     this.setText(this.pvpResultTitle,pvpResult);
+    }else this.setText(this.menuResult,(s.localPvP??s.mode==="local-pvp")?pvpResult:status);
+   }
   }
   if(s.mode==="king-of-hill"&&hillChanged)
    this.lastHill={player:s.hill.player,opponent:s.hill.opponent,target:s.hill.target};
+
+  const series=s.pvpSeries,pvp=Boolean((s.localPvP??s.mode==="local-pvp")&&!s.lanPlayer&&series);
+  this.setHidden(this.pvpNextRoundButton,!(pvp&&state===GameState.GAME_OVER&&!series!.complete));
+  this.setHidden(this.pvpLoadoutButton,!(pvp&&state===GameState.GAME_OVER&&series!.complete));
+  this.setText(this.pvpNextRoundButton,messages.pvp.series.nextRound);
+  this.setText(this.pvpLoadoutButton,messages.pvp.series.changeLoadout);
+  for(const item of this.buttons.children){
+   const button=item as HTMLButtonElement;
+   if(button.dataset.action==="restart"){
+    this.setHidden(button,Boolean(pvp&&state===GameState.GAME_OVER&&!series!.complete));
+    this.setText(button,pvp&&state===GameState.GAME_OVER?messages.pvp.series.rematch:messages.buttons.restart);
+   }
+  }
+  this.setHidden(this.pvpScoreHud,!(pvp&&state===GameState.PLAYING));
+  this.setHidden(this.pvpCountdownLabel,!(pvp&&state===GameState.PLAYING&&series!.countdown>0));
+  if(pvp){
+   const copy=messages.pvp.series;
+   this.setText(this.pvpScoreHud,messages.pvp.p1+" "+series!.playerWins+
+    "  —  "+series!.opponentWins+" "+messages.pvp.p2+"  ·  "+copy.round+" "+series!.round+"  ·  "+copy.bestOfThree);
+   if(series!.countdown>0)this.setText(this.pvpCountdownLabel,copy.countdown+"  "+Math.ceil(series!.countdown));
+  }
 
   const bowPercent=Math.round(s.bowCharge*100),bowCharging=s.bowCharge>0;
   if(bowPercent!==this.lastBowPercent){
