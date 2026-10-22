@@ -16,12 +16,12 @@ type HudState={
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
  progression?:ProgressionView|null;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;
- characterId?:CharacterId;opponentCharacterId?:CharacterId;characterChosen?:boolean;weaponChosen?:boolean;secondCharacterChosen?:boolean;secondWeaponChosen?:boolean;weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;
+ characterId?:CharacterId;opponentCharacterId?:CharacterId;characterChosen?:boolean;weaponChosen?:boolean;secondCharacterChosen?:boolean;secondWeaponChosen?:boolean;weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;pvpSeries?:Readonly<{round:number;playerWins:number;opponentWins:number;complete:boolean;countdown:number;swapped:boolean}>;
 };
 type Actions={
  quickPlay?:()=>void;touchDash?:()=>void;
  newRun?:()=>void;continueRun?:()=>void;leaveRun?:()=>void;
- start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;stopToMenu?:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
+ start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;nextPvpRound?:()=>void;changePvpLoadout?:()=>void;stopToMenu?:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;player2StartingWeapon?:(id:WeaponId)=>void;randomStartingWeapon?:(player:1|2)=>void;player2CharacterSelect?:(id:CharacterId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
  playerCountSelect?:(count:1|2)=>void;setWeaponAim?:(player:1|2,x:number,y:number)=>void;player2WeaponSelect?:(id:WeaponId)=>void;
  setCharacterName?:(player:1|2,name:string)=>void;characterSelect?:(id:CharacterId)=>void;
@@ -229,6 +229,17 @@ export class GameUI{
  private updateButton=document.createElement("button");
  private combatSoundEnabled=true;private combatShakeEnabled=true;
  private menuResult=document.createElement("div");
+ private pvpResultPanel=document.createElement("div");
+ private pvpResultTitle=document.createElement("strong");
+ private pvpResultMeta=document.createElement("div");
+ private pvpResultScore=document.createElement("div");
+ private pvpResultP1=document.createElement("span");
+ private pvpResultCenter=document.createElement("span");
+ private pvpResultP2=document.createElement("span");
+ private pvpScoreHud=document.createElement("div");
+ private pvpCountdownLabel=document.createElement("div");
+ private pvpNextRoundButton=document.createElement("button");
+ private pvpLoadoutButton=document.createElement("button");
  private runPanel=document.createElement("div");
  private runHeading=document.createElement("strong");
  private runProgress=document.createElement("div");
@@ -537,6 +548,19 @@ export class GameUI{
   this.pvpHint.className="game-ui__pvp-hint";this.pvpHint.hidden=true;
   this.menuLinks.className="game-ui__menu-links";
   this.menuResult.className="game-ui__menu-result";this.menuResult.hidden=true;
+  this.pvpResultPanel.className="game-ui__pvp-result";
+  this.pvpResultTitle.className="game-ui__pvp-result-title";
+  this.pvpResultMeta.className="game-ui__pvp-result-meta";
+  this.pvpResultScore.className="game-ui__pvp-result-score";
+  this.pvpResultP1.className="game-ui__pvp-result-player";
+  this.pvpResultCenter.className="game-ui__pvp-result-center";
+  this.pvpResultP2.className="game-ui__pvp-result-player";
+  this.pvpResultScore.append(this.pvpResultP1,this.pvpResultCenter,this.pvpResultP2);
+  this.pvpResultPanel.append(this.pvpResultMeta,this.pvpResultScore,this.pvpResultTitle);
+  this.pvpScoreHud.className="game-ui__pvp-score-hud";this.pvpScoreHud.hidden=true;
+  this.pvpCountdownLabel.className="game-ui__pvp-countdown";this.pvpCountdownLabel.hidden=true;
+  this.pvpCountdownLabel.setAttribute("role","status");
+  this.pvpCountdownLabel.setAttribute("aria-live","polite");
   this.modeTitle.className="game-ui__section-title";
   this.arenaTitle.className="game-ui__section-title";
   this.arenaTitle.setAttribute("tabindex","-1");
@@ -727,6 +751,12 @@ export class GameUI{
   this.buttons.append(this.stepBackButton,this.stepNextButton);
   const uiActions:[UiAction,()=>void][]=[["start",actions.start],["pause",actions.pause],["resume",actions.resume],["restart",actions.restart]];
   if(actions.stopToMenu)uiActions.push(["menu",actions.stopToMenu]);
+  this.pvpNextRoundButton.type="button";this.pvpNextRoundButton.className="game-ui__pvp-next-round";
+  this.pvpNextRoundButton.dataset.action="next-pvp-round";this.pvpNextRoundButton.hidden=true;
+  this.pvpNextRoundButton.onclick=()=>actions.nextPvpRound?.();
+  this.pvpLoadoutButton.type="button";this.pvpLoadoutButton.className="game-ui__pvp-loadout";
+  this.pvpLoadoutButton.dataset.action="change-pvp-loadout";this.pvpLoadoutButton.hidden=true;
+  this.pvpLoadoutButton.onclick=()=>actions.changePvpLoadout?.();
   for(const [action,fn] of uiActions){
    const button=document.createElement("button");
    button.type="button";
@@ -735,6 +765,7 @@ export class GameUI{
    this.buttons.append(button);
   }
 
+  this.buttons.append(this.pvpNextRoundButton,this.pvpLoadoutButton);
   this.helpButton.type="button";
   this.helpButton.dataset.help="true";
   this.helpButton.onclick=()=>{
@@ -1020,7 +1051,7 @@ export class GameUI{
   this.menuSetupSection.append(this.menuProgress,this.menuLead,this.menuModePanel,this.menuArenaPanel,this.menuLoadoutPanel);
   this.menuHeader.append(this.menuHome);
   this.menu.append(this.menuHeader,this.pauseHeader,this.landing,this.menuResult,this.menuSetupSection,this.menuProgressDetails,this.menuExtras,this.pauseFooter,this.buttons);
-  this.topHud.append(this.playerHealth,this.status,this.opponentHealth);
+  this.topHud.append(this.playerHealth,this.status,this.opponentHealth,this.pvpScoreHud);
   for(const [index,pad] of this.aimPads.entries()){
    const player=index===0?1:2;
    pad.className="game-ui__aim-pad";pad.dataset.player=String(player);
@@ -1053,7 +1084,7 @@ export class GameUI{
   this.root.append(this.menu,this.help,this.privacy,this.topHud,this.mobilePauseButton,this.weaponList,this.bowPanel,this.mobileControls);
   this.lanDash.type="button";this.lanDash.className="game-ui__lan-dash";this.lanDash.hidden=true;
   this.lanDash.onclick=()=>{if(this.readHud?.().lanPlayer)actions.touchDash?.();};
-  this.root.append(this.coach,this.lanDash);
+  this.root.append(this.coach,this.lanDash,this.pvpCountdownLabel);
   container.append(this.pauseScrim,this.root);
   this.root.addEventListener("keydown",event=>{
    if(event.key!=="Escape")return;
@@ -1076,6 +1107,12 @@ export class GameUI{
  }
  consumeRunStart(){const action=this.pendingRunStart;this.pendingRunStart=null;return action;}
  showRunIntermission(){this.menuStepIndex=0;this.openMenuRoute("progression");this.menuProgressDetails.open=true;}
+ showPvPLoadout(){
+  if(this.currentState!==GameState.MENU)return;
+  this.menuView="setup";this.menuStepIndex=MENU_STEPS.length-1;this.loadoutPlayer=1;
+  this.menu.scrollTop=0;this.syncWizard(this.currentState,this.readHud?.()??null);
+  this.characterPickerTitle.focus?.();
+ }
  private openMenuRoute(route:"home"|"custom"|"local"|"arenas"|"progression"|"settings"){
   if(this.currentState!==GameState.MENU)return;
   this.pendingRunStart=null;
