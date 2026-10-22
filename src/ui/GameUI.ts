@@ -1372,8 +1372,8 @@ export class GameUI{
      this.secondNameInput.value=s.secondPlayerName??"";
    }
    if(localeChanged||modeChanged||stateChanged){
-    // UI captions refer to world positions, not RTL reading order.
-    // The existing name-to-fighter and health-to-fighter mapping is unchanged.
+    // Captions identify player identities, not starting positions; sides swap each round.
+    // Name-to-fighter and health-to-fighter mapping is unchanged.
     this.setText(this.playerNameCaption,(s.localPvP??s.mode==="local-pvp")?
      messages.characterNames.leftPlayer:messages.characterNames.playerOne);
     this.setText(this.secondNameCaption,(s.localPvP??s.mode==="local-pvp")?
