@@ -171,7 +171,7 @@ try{
   player2Grab:()=>input.triggerTouchGrab(2),
   player2AttackStart:()=>input.player2TouchAttackStart(),
   player2AttackEnd:()=>input.player2TouchAttackRelease(),
-  player2AttackCancel:()=>input.player2TouchAttackCancel(),
+  player2AttackCancel:()=>{input.player2TouchAttackCancel();if(!lan?.active)game.cancelTouchAttack(2);},
   player2WeaponPrevious:()=>game.selectPlayer2Weapon(-1),
   player2WeaponNext:()=>game.selectPlayer2Weapon(1),
   updateData:async()=>{
