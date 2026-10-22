@@ -176,3 +176,68 @@ test("all sixteen arenas can be selected and played in local two-player mode",()
  }
  session.dispose();
 });
+
+function twoChargedBows(){
+ const {input,session}=setup();
+ assert.equal(session.setStartingWeapon("bow"),true);
+ assert.equal(session.setPlayer2StartingWeapon("bow"),true);
+ session.reset(false);
+ input.touchAttack(true);
+ input.player2TouchAttackStart();
+ for(let i=0;i<12;i++)session.update(1/60);
+ assert.ok(session.player.bowCharging&&session.player.bowCharge>0);
+ assert.ok(session.opponent.bowCharging&&session.opponent.bowCharge>0);
+ return {input,session};
+}
+test("P1 interrupted touch attack leaves P2 Bow charge and release intact",()=>{
+ const {input,session}=twoChargedBows();
+ const secondCharge=session.opponent.bowCharge;
+ session.cancelTouchAttack(1);
+ input.touchAttackCancel();
+ assert.equal(session.player.bowCharging,false);
+ assert.equal(session.player.bowCharge,0);
+ assert.equal(session.opponent.bowCharging,true);
+ assert.equal(session.opponent.bowCharge,secondCharge);
+ input.player2TouchAttackRelease();
+ session.update(1/60);
+ assert.equal(session.projectiles.filter(p=>p.owner==="player"&&p.weapon==="bow").length,0);
+ assert.equal(session.projectiles.filter(p=>p.owner==="opponent"&&p.weapon==="bow").length,1);
+ session.dispose();
+});
+test("P2 interrupted touch attack leaves P1 Bow charge and release intact",()=>{
+ const {input,session}=twoChargedBows();
+ const firstCharge=session.player.bowCharge;
+ session.cancelTouchAttack(2);
+ input.player2TouchAttackCancel();
+ assert.equal(session.opponent.bowCharging,false);
+ assert.equal(session.opponent.bowCharge,0);
+ assert.equal(session.player.bowCharging,true);
+ assert.equal(session.player.bowCharge,firstCharge);
+ input.touchAttackRelease();
+ session.update(1/60);
+ assert.equal(session.projectiles.filter(p=>p.owner==="opponent"&&p.weapon==="bow").length,0);
+ assert.equal(session.projectiles.filter(p=>p.owner==="player"&&p.weapon==="bow").length,1);
+ session.dispose();
+});
+test("global pause cancellation still clears both players' pending attacks",()=>{
+ const {input,session}=twoChargedBows();
+ session.cancelTransientActions();
+ input.touchAttackCancel();
+ input.player2TouchAttackCancel();
+ assert.equal(session.player.bowCharging,false);
+ assert.equal(session.opponent.bowCharging,false);
+ assert.equal(session.player.bowCharge,0);
+ assert.equal(session.opponent.bowCharge,0);
+ session.update(1/60);
+ assert.equal(session.projectiles.length,0);
+ session.dispose();
+});
+test("P1 touch cancellation does not interrupt a grab owned by P2",()=>{
+ const {session}=setup();
+ session.player.grabPhase="held";
+ session.opponent.grabPhase="hold";
+ session.cancelTouchAttack(1);
+ assert.equal(session.player.grabPhase,"held");
+ assert.equal(session.opponent.grabPhase,"hold");
+ session.dispose();
+});
