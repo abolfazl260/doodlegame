@@ -1,5 +1,13 @@
 import {ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl,type ArenaCategory} from "./ArenaPreviews";
-import {MUMMY_STYLE_IDS,MUMMY_STYLE_NAMES,type MummyStyleId} from "../gameplay/MummyStyles.js";
+import type {MummyStyleId} from "../gameplay/MummyStyles.js";
+// UI-only labels are repeated here so standalone GameUI test harnesses can
+// evaluate compiled UI without requiring an additional runtime module.
+const MUMMY_STYLE_IDS:readonly MummyStyleId[]=["classic","royal","cursed","scarab","desert"];
+const MUMMY_STYLE_NAMES:Readonly<Record<MummyStyleId,{en:string;fa:string}>>={
+ classic:{en:"CLASSIC",fa:"کلاسیک"},royal:{en:"ROYAL",fa:"سلطنتی"},
+ cursed:{en:"CURSED",fa:"نفرین‌شده"},scarab:{en:"SCARAB",fa:"سوسک مقدس"},
+ desert:{en:"DESERT",fa:"کویر"}
+};
 import {MobileOnboarding,type TutorialSignals} from "./MobileOnboarding";
 import type {Storage} from "../storage/Storage";
 import {GameState} from "../core/GameState";
@@ -652,7 +660,7 @@ export class GameUI{
    this.mummyStyleCards.append(choice);
   }
   this.mummyStylePicker.append(this.mummyStyleTitle,this.mummyStyleCards);
-  this.characterPicker.append(this.characterPickerTitle,this.characterCards,this.mummyStylePicker);
+  this.characterPicker.append(this.characterPickerTitle,this.characterCards);
   this.weaponCards.className="game-ui__weapon-grid";
   this.weaponDetails.className="game-ui__weapon-details";
   this.weaponDetailsTitle.className="game-ui__weapon-details-title";
@@ -716,7 +724,7 @@ export class GameUI{
    // Name inputs belong to player setup, not the map selection screen.
   this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.characterNames,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
   this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaFilters,this.arenaEmpty,this.arenaCards,this.extraArenaSection);
-   this.menuLoadoutPanel.append(this.loadoutPlayerTabs,this.characterPicker,this.weaponDetails,this.loadoutStatus,this.matchSummary);
+   this.menuLoadoutPanel.append(this.loadoutPlayerTabs,this.characterPicker,this.mummyStylePicker,this.weaponDetails,this.loadoutStatus,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
 
   this.upgradePanel.className="game-ui__upgrade-panel game-ui__upgrade-panel--compact";
@@ -1820,7 +1828,7 @@ export class GameUI{
   for(const item of this.mummyStyleCards.children){
    const button=item as HTMLButtonElement,style=button.dataset.mummyStyle as MummyStyleId;
    const name=MUMMY_STYLE_NAMES[style][this.i18n.locale];
-   this.setText(button.lastElementChild as HTMLElement,name);
+   this.setText(button.children[button.children.length-1] as HTMLElement,name);
    button.setAttribute("aria-label",(this.i18n.locale==="fa"?"مومیایی ":"MUMMY ")+name);
   }
   this.characterCards.setAttribute("aria-label",this.characterPickerTitle.textContent);
