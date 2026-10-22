@@ -1051,7 +1051,7 @@ export class GameUI{
   this.menuSetupSection.append(this.menuProgress,this.menuLead,this.menuModePanel,this.menuArenaPanel,this.menuLoadoutPanel);
   this.menuHeader.append(this.menuHome);
   this.menu.append(this.menuHeader,this.pauseHeader,this.landing,this.menuResult,this.menuSetupSection,this.menuProgressDetails,this.menuExtras,this.pauseFooter,this.buttons);
-  this.topHud.append(this.playerHealth,this.status,this.opponentHealth,this.pvpScoreHud);
+  this.topHud.append(this.playerHealth,this.status,this.opponentHealth);
   for(const [index,pad] of this.aimPads.entries()){
    const player=index===0?1:2;
    pad.className="game-ui__aim-pad";pad.dataset.player=String(player);
@@ -1084,7 +1084,7 @@ export class GameUI{
   this.root.append(this.menu,this.help,this.privacy,this.topHud,this.mobilePauseButton,this.weaponList,this.bowPanel,this.mobileControls);
   this.lanDash.type="button";this.lanDash.className="game-ui__lan-dash";this.lanDash.hidden=true;
   this.lanDash.onclick=()=>{if(this.readHud?.().lanPlayer)actions.touchDash?.();};
-  this.root.append(this.coach,this.lanDash,this.pvpCountdownLabel);
+  this.root.append(this.coach,this.lanDash,this.pvpScoreHud,this.pvpCountdownLabel);
   container.append(this.pauseScrim,this.root);
   this.root.addEventListener("keydown",event=>{
    if(event.key!=="Escape")return;
