@@ -525,51 +525,127 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
    layer("#fff8e9",.049,[...legBand,...head([[-.16,.28],[.04,.34]])])
   ];
   if(style==="classic")return base;
-  // Each visual style keeps the same 14 reusable WebGL layer meshes. All
-  // ornaments are attached to head/body pose coordinates rather than sprites.
+  // Keep the existing fourteen pose-space layers used by both Canvas and WebGL.
+  // Unlike palette swaps, each variant has its own head silhouette, shoulder
+  // equipment, belt/tabard, bandage geometry and insignia. No physics changes.
   const colors={
-   royal:{linen:"#f4e3c7",fold:"#c6aa81",trim:"#f3c15c",eye:"#3be3fc",ink:"#2f567a"},
-   cursed:{linen:"#c9c0cd",fold:"#806a8f",trim:"#b485f4",eye:"#d66aff",ink:"#503d66"},
-   scarab:{linen:"#dce5cf",fold:"#90aa92",trim:"#b9ce55",eye:"#6bffe5",ink:"#226f67"},
-   desert:{linen:"#edd3b3",fold:"#c69c78",trim:"#d7834e",eye:"#ffc169",ink:"#864737"}
+   royal:{linen:"#f3e5cf",fold:"#bb9f83",trim:"#f3c15c",eye:"#3be3fc",cloth:"#2862a5"},
+   cursed:{linen:"#ddd0e3",fold:"#947baa",trim:"#b485f4",eye:"#dc7aff",cloth:"#4b315e"},
+   scarab:{linen:"#e1e8d2",fold:"#93b09c",trim:"#e3c355",eye:"#5cf8eb",cloth:"#20776e"},
+   desert:{linen:"#f0dec5",fold:"#c79f7d",trim:"#e59b5b",eye:"#42e7f4",cloth:"#ba623e"},
+   sentinel:{linen:"#f2e9da",fold:"#b6bdc0",trim:"#f4c459",eye:"#46ecff",cloth:"#225c9a"}
   }[style];
-  let outer:Segment[]=[],inner:Segment[]=[],embroidery:Segment[]=[];
+  const details:Segment[][]=Array.from({length:14},()=>[]);
+  const add=(slot:number,segments:Segment[])=>{details[slot].push(...segments);};
+  const pair=(left:readonly Point[],right:readonly Point[])=>head(left).concat(head(right));
+  // New linen seams on the animated limbs, shared by every new outfit.
+  add(2,arm.flatMap(part=>[strip(part,.22,.10),strip(part,.44,.09)]));
+  add(3,leg.flatMap(part=>[strip(part,.24,.085),strip(part,.57,.09)]));
   if(style==="royal"){
-   // Narrow pharaoh headdress and cobra crown, scaled for a stick fighter.
-   outer=head([[-.27,.20],[-.41,.39],[-.48,.22],[-.43,-.23]]).concat(
-    head([[.27,.20],[.40,.39],[.48,.22],[.43,-.23]]));
-   inner=head([[-.30,.25],[-.40,.34],[-.41,-.19]]).concat(
-    head([[.30,.25],[.39,.34],[.40,-.19]]));
-   embroidery=head([[-.32,.19],[-.42,.10]]).concat(
-    head([[.32,.19],[.42,.10]]),head([[0,.33],[0,.52],[-.07,.42],[.07,.42],[0,.52]]));
+   // Blue/gold nemes, cobra crest, striped sides and collar.
+   const crown=head([[-.29,.22],[-.36,.40],[-.22,.48],[0,.52],[.22,.48],[.36,.40],[.29,.22]]);
+   const flaps=pair([[-.30,.27],[-.46,.22],[-.46,-.18],[-.34,-.34]],
+                    [[.30,.27],[.46,.22],[.46,-.18],[.34,-.34]]);
+   add(0,[...crown,...flaps]);
+   add(1,[...crown,...flaps]);
+   add(3,pair([[-.40,.20],[-.43,.02]],[ [.40,.20],[.43,.02]]));
+   add(10,head([[0,.46],[0,.64],[-.075,.54],[.075,.54],[0,.64]]).concat(
+    head([[-.43,.13],[-.34,.09]]),head([[.43,.13],[.34,.09]]),
+    head([[-.44,-.06],[-.34,-.10]]),head([[.44,-.06],[.34,-.10]]),
+    path([[-.31,.20],[-.23,.10],[0,.045],[.23,.10],[.31,.20]]),
+    path([[-.16,-.27],[-.13,-.57],[0,-.69],[.13,-.57],[.16,-.27]])));
+   add(11,head([[-.25,.35],[.25,.35]]).concat(
+    path([[-.28,.12],[0,-.035],[.28,.12]]),
+    path([[0,-.32],[0,-.63]])));
+   add(12,head([[-.035,.405],[0,.435],[.035,.405],[0,.375],[-.035,.405]]).concat(
+    path([[0,.095],[0,.045]])));
+   add(9,arm.map(part=>strip(part,.3,.125)));
   }else if(style==="cursed"){
-   // Dark torn shroud and jagged crown of fabric, not a bulky mage robe.
-   outer=head([[-.27,.18],[-.38,.45],[-.49,.32],[-.40,-.29]]).concat(
-    head([[.27,.18],[.38,.43],[.50,.25],[.37,-.26]]));
-   inner=head([[-.38,.38],[-.23,.28],[.0,.42],[.23,.29],[.38,.37]]);
-   embroidery=head([[-.32,-.24],[-.44,-.37],[-.39,-.48]]).concat(
-    head([[.33,-.22],[.44,-.35],[.39,-.46]]));
+   // Broken hood, torn bandage streamers and an amethyst eye / fractured charm.
+   add(0,head([[-.30,.20],[-.46,.43],[-.54,.28],[-.43,.11],[-.55,-.12]]).concat(
+    head([[.29,.23],[.47,.40],[.52,.18],[.41,-.05],[.55,-.21]]),
+    path([[-.23,.15],[-.42,.07],[-.48,-.16],[-.59,-.26]]),
+    path([[.26,.12],[.45,.01],[.50,-.18],[.60,-.32]])));
+   add(1,head([[-.27,.22],[-.41,.36],[-.48,.22],[-.38,-.06]]).concat(
+    head([[.28,.23],[.43,.33],[.47,.14],[.38,-.08]])));
+   add(3,head([[-.45,.28],[-.25,.29],[.02,.34],[.29,.25],[.47,.15]]).concat(
+    path([[-.25,-.26],[-.42,-.37],[-.34,-.48]]),
+    path([[.26,-.24],[.47,-.39],[.37,-.52]])));
+   add(10,path([[-.24,-.22],[-.37,-.38],[-.26,-.47],[-.42,-.59]]).concat(
+    path([[.21,-.22],[.38,-.36],[.28,-.51],[.46,-.62]]),
+    path([[-.19,.11],[.15,-.08],[.28,-.18]])));
+   add(11,path([[-.09,-.20],[.10,-.20]]).concat(
+    head([[-.35,.42],[-.44,.49]]),head([[.41,.41],[.49,.50]])));
+   add(12,path([[0,-.14],[-.045,-.23],[.018,-.26],[.055,-.21],[0,-.14]]).concat(
+    path([[-.03,-.20],[.035,-.25]])));
+   add(9,arm.flatMap(part=>[strip(part,.34,.13),strip(part,.53,.085)]));
   }else if(style==="scarab"){
-   // Small scarab wing crest and symmetrical temples.
-   outer=head([[-.31,.20],[-.41,.29],[-.42,.11]]).concat(
-    head([[.31,.20],[.41,.29],[.42,.11]]),head([[-.11,.33],[0,.53],[.11,.33]]));
-   inner=head([[-.08,.36],[0,.47],[.08,.36]]);
-   embroidery=head([[-.22,.25],[.22,.25]]).concat(
-    head([[-.04,.45],[.04,.45]]));
-  }else{
-   // Desert scout: windblown wrapped scarf over a slender face.
-   outer=head([[-.30,.19],[-.47,.24],[-.52,.06],[-.61,-.04]]).concat(
-    head([[-.36,.09],[-.52,-.10],[-.56,-.22]]));
-   inner=head([[-.28,.18],[-.43,.13],[-.54,-.04]]);
-   embroidery=head([[-.17,.31],[.14,.35]]).concat(
-    path([[-.18,.19],[-.36,.24],[-.49,.14]]));
+   // Winged beetle crown, oval carapace, paired wing collar and gem.
+   add(0,head([[-.21,.30],[-.39,.51],[-.49,.49],[-.42,.27]]).concat(
+    head([[.21,.30],[.39,.51],[.49,.49],[.42,.27]]),
+    head([[-.12,.36],[0,.56],[.12,.36]])));
+   add(1,head([[-.21,.31],[-.38,.47],[-.44,.43],[-.39,.30]]).concat(
+    head([[.21,.31],[.38,.47],[.44,.43],[.39,.30]])));
+   add(10,head([[-.39,.45],[-.30,.39]]).concat(
+    head([[.39,.45],[.30,.39]]),
+    path([[-.29,.17],[-.40,.08],[-.27,-.025],[0,.045],[.27,-.025],[.40,.08],[.29,.17]]),
+    path([[-.18,.04],[-.085,-.11],[0,-.18],[.085,-.11],[.18,.04]]),
+    path([[-.13,-.33],[-.17,-.56]]),path([[.13,-.33],[.17,-.56]])));
+   add(11,path([[-.27,.08],[-.34,-.02],[-.20,-.09],[-.08,-.035]]).concat(
+    path([[.27,.08],[.34,-.02],[.20,-.09],[.08,-.035]]),
+    path([[-.15,-.19],[0,-.30],[.15,-.19]])));
+   add(12,head([[-.065,.43],[0,.53],[.065,.43],[0,.37],[-.065,.43]]).concat(
+    path([[0,-.06],[-.065,-.11],[0,-.19],[.065,-.11],[0,-.06]])));
+   add(9,arm.map(part=>strip(part,.19,.15)));
+  }else if(style==="desert"){
+   // Sirocco hood and scarf: two layered windblown tails and a cloth belt.
+   add(0,head([[-.27,.22],[-.42,.27],[-.59,.16],[-.48,.03],[-.65,-.07]]).concat(
+    head([[.29,.15],[.45,.06],[.50,-.10]]),
+    path([[-.26,.16],[-.49,.13],[-.58,-.025]]),
+    path([[.25,.11],[.43,-.02],[.56,-.15],[.50,-.28]])));
+   add(1,head([[-.25,.23],[-.44,.23],[-.56,.13],[-.45,.035]]).concat(
+    head([[.28,.17],[.42,.045],[.47,-.07]])));
+   add(2,head([[-.28,-.06],[0,-.15],[.28,-.055]]).concat(
+    head([[-.24,.06],[.25,-.015]])));
+   add(3,head([[-.40,.23],[-.28,.31],[-.04,.33]]).concat(
+    path([[-.28,.15],[-.43,-.01],[-.61,-.07]])));
+   add(10,path([[-.24,.13],[0,.025],[.25,.13]]).concat(
+    path([[.20,.02],[.44,-.11],[.56,-.25]]),
+    path([[.20,-.26],[.37,-.41],[.52,-.44]]),
+    path([[-.10,-.28],[-.12,-.58],[0,-.67],[.12,-.58],[.10,-.28]])));
+   add(11,path([[-.23,-.18],[.24,-.18]]).concat(
+    path([[-.26,-.24],[-.08,-.31],[.11,-.30]])));
+   add(12,path([[0,-.45],[-.042,-.50],[0,-.55],[.042,-.50],[0,-.45]]));
+   add(9,arm.map(part=>strip(part,.62,.11)));
+  }else if(style==="sentinel"){
+   // Tall ankh stela, angular gold side panels and armored temple tabard.
+   const stela=head([[-.10,.30],[-.12,.67],[-.055,.76],[.055,.76],[.12,.67],[.10,.30]]);
+   const walls=pair([[-.25,.26],[-.43,.42],[-.47,.03],[-.34,-.19]],
+                    [[.25,.26],[.43,.42],[.47,.03],[.34,-.19]]);
+   add(0,[...stela,...walls]);
+   add(1,[...stela,...walls]);
+   add(3,head([[-.33,.29],[-.40,.12],[-.34,-.075]]).concat(
+    head([[.33,.29],[.40,.12],[.34,-.075]])));
+   add(10,head([[-.45,.25],[-.34,.18]]).concat(
+    head([[.45,.25],[.34,.18]]),
+    path([[-.24,.14],[-.38,.025],[-.29,-.08]]),
+    path([[.24,.14],[.38,.025],[.29,-.08]]),
+    path([[-.17,-.27],[-.17,-.61],[0,-.72],[.17,-.61],[.17,-.27]])));
+   add(11,head([[-.09,.68],[.09,.68]]).concat(
+    head([[-.11,.34],[.11,.34]]),
+    path([[-.30,.115],[-.15,-.01]]),
+    path([[.30,.115],[.15,-.01]]),
+    path([[-.13,-.54],[.13,-.54]])));
+   add(12,head([[0,.57],[-.05,.62],[0,.68],[.05,.62],[0,.57],[0,.49],[-.07,.49],[.07,.49]]).concat(
+    path([[0,-.39],[-.05,-.33],[0,-.29],[.05,-.33],[0,-.39],[0,-.58]]),
+    path([[-.07,-.46],[.07,-.46]])));
+   add(9,arm.flatMap(part=>[strip(part,.22,.17),strip(part,.43,.12)]));
   }
   return base.map((item,index)=>{
    const linen=[1,2,6,7,8,13].includes(index),fold=[3,9].includes(index);
-   const color=index===5?colors.eye:index===12?colors.eye:index===10||index===11?colors.trim:
+   const color=index===5||index===12?colors.eye:index===10||index===11?colors.trim:
     index===0?"#090d14":linen?colors.linen:fold?colors.fold:item.color;
-   const ornaments=index===0?outer:index===1?inner:index===11?embroidery:[];
-   return {color,width:item.width,segments:[...item.segments,...ornaments]};
+   return {color,width:item.width,segments:[...item.segments,...details[index]]};
   });
  }
  if(s.characterId==="archer"){
@@ -892,7 +968,8 @@ export function fighterInkPalette(enemy:boolean,characterId:DuelistRenderState["
    royal:{halo:"#f1d7a6",accent:"#3be3fc",trim:"#eabd58",suit:"#222c3c"},
    cursed:{halo:"#d1badc",accent:"#d66aff",trim:"#966fc2",suit:"#252033"},
    scarab:{halo:"#c7e8c9",accent:"#6bffe5",trim:"#b9ce55",suit:"#1c3434"},
-   desert:{halo:"#f2ccab",accent:"#ffc169",trim:"#c8784f",suit:"#37261f"}
+   desert:{halo:"#f2ccab",accent:"#42e7f4",trim:"#c8784f",suit:"#37261f"},
+   sentinel:{halo:"#f5e2b7",accent:"#46ecff",trim:"#f4c459",suit:"#1d304b"}
   };
  const themed=characterId==="mummy"&&mummyStyle&&mummyStyle!=="classic"?variants[mummyStyle]:null;
  return {...style,...themed,outline:"#050a12",eye:"#0b0d15",hair:style.face,metal:"#dfe8f0"};
