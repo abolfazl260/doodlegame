@@ -126,7 +126,12 @@ export class SessionController {
  }
  /** Also called on foreground: never secretly resume after WebView suspension. */
  interrupt(){if(this.active)this.pause();}
- setAim(x:number,y:number){if(this.view.lobby.phase==='playing'&&Number.isFinite(x)&&Number.isFinite(y))this.aim=[Math.max(-1,Math.min(1,x)),Math.max(-1,Math.min(1,y))];}
+ setAim(x:number,y:number){
+  if(this.view.lobby.phase!=='playing'||!Number.isFinite(x)||!Number.isFinite(y))return;
+  // A common scale bounds pixel offsets for the wire without changing their angle.
+  const scale=Math.max(1,Math.abs(x),Math.abs(y));
+  this.aim=[x/scale,y/scale];
+ }
  selectWeapon(id:WeaponId){if(this.view.lobby.phase==='playing')this.weapon=id;}
  cycleWeapon(direction:1|-1){const order:WeaponId[]=['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile','spear','grapple'];const frame=this.frame;if(!frame)return;const current=this.view.role==='host'?frame.player.weapon:frame.opponent.weapon;this.selectWeapon(order[(order.indexOf(current)+direction+order.length)%order.length]);}
  private apply(sample:InputSample,player:1|2){

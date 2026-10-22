@@ -78,6 +78,31 @@ test('host is sole physics authority; guest movement, dash, aim, weapon and held
  assert.equal(r.guest.frame.arena,r.host.frame.arena);assert.equal(r.guest.frame.opponent.enemyType,null);assert.equal(r.guest.session,null);
  const hud=lanHud(r.host.frame,true,'You','Opponent');assert.equal(hud.weapon,r.host.frame.opponent.weapon);assert.equal(hud.localPvP,false);assert.equal(hud.lanPlayer,2);
 });
+test('raw touch aim keeps its direction for both LAN players and replicated poses',async t=>{
+ const r=await room(t);await r.play();
+ const cases=[[40,10],[-40,10],[-10,-40],[10,-40],[0,40],[40,0],[Number.MAX_VALUE,Number.MAX_VALUE/4]];
+ for(const [x,y] of cases){
+  r.host.setAim(x,y);r.guest.setAim(x,y);await r.step(8);
+  const expected=Math.atan2(y,x);
+  for(const frame of [r.host.frame,r.guest.frame])for(const fighter of [frame.player,frame.opponent])
+   assert.ok(Math.abs(fighter.aimAngle-expected)<1e-12,`aim (${x}, ${y}) must retain its angle`);
+  const sent=r.gt.sent.filter(m=>m.type==='INPUT').at(-1).held.aim;
+  assert.ok(sent.every(value=>Number.isFinite(value)&&Math.abs(value)<=1));
+  assert.ok(Math.abs(Math.atan2(sent[1],sent[0])-expected)<1e-12);
+ }
+});
+test('LAN projectile launch follows raw touch aim for both players',async t=>{
+ const r=await room(t);await r.play();
+ r.host.selectWeapon('blaster');r.guest.selectWeapon('blaster');
+ r.host.setAim(40,10);r.guest.setAim(-40,10);await r.step(8);
+ r.hi.state={...IDLE,attackPressed:true};r.gi.state={...IDLE,attackPressed:true};await r.step(6);
+ const shots=r.host.frame.projectiles.filter(p=>p.weapon==='blaster');
+ assert.equal(shots.length,2);
+ for(const [direction,expected] of [[1,Math.atan2(10,40)],[-1,Math.atan2(10,-40)]]){
+  const shot=shots.find(p=>Math.sign(p.vx)===direction);assert.ok(shot);
+  assert.ok(Math.abs(Math.atan2(shot.vy,shot.vx)-expected)<1e-12);
+ }
+});
 test('snapshot projection strips simulation internals, validates all built-in arenas and interpolates poses only',()=>{
  const input=local(),session=new GameSession(new HostInput(input));session.setLocalPvP(true);
  for(const arena of ['classic','towers','pit','steps','zigzag','sky','moving','fortress','bridge','crater','vertical','ruins','conveyor','collapse','storm','reactor']){
