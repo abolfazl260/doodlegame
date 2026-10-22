@@ -17,7 +17,11 @@ for(const role of ['host','guest'])for(const locale of ['fa','en'])test(`LAN ${r
  }
  await expect(panel.getByRole('status')).toContainText('2/2');
  const arena=panel.locator('#lan-arena');await expect(arena).toBeEnabled({enabled:role==='host'});
- if(role==='host')await arena.selectOption('moving');
+ await expect(arena.locator('option')).toHaveCount(20);
+ if(role==='host'){
+  await arena.selectOption('alpine-lake');
+  await expect(arena).toHaveValue('alpine-lake');
+ }
  await panel.locator('#lan-weapon').selectOption('bow');
  const ready=panel.getByRole('button',{name:locale==='fa'?'آماده‌ام':'Ready',exact:true});await ready.click();await page.evaluate(()=>window.__lanFixture.peerReady());
  if(role==='host')await panel.getByRole('button',{name:locale==='fa'?'شروع مسابقه':'Start match',exact:true}).click();else await page.evaluate(()=>window.__lanFixture.startHost());
