@@ -49,7 +49,7 @@ test("GitHub catalog exposes 26 optional arenas while 16 bundled arenas remain",
  const list=await loadArenaCatalog(mockFetch);
  assert.equal(list.length,26);
  assert.deepEqual(list.slice(0,5).map(x=>x.id),["extra-forest","extra-desert","extra-glacier","extra-volcano","extra-neon-city"]);
- assert.deepEqual(list.slice(0,5).map(x=>x.version),[3,3,3,3,3]);
+ assert.deepEqual(list.slice(0,5).map(x=>x.version),[4,3,3,3,3]);
  assert.ok(list.slice(5).every(x=>x.version===1));
  const session=new GameSession(input);
  assert.equal(session.getRenderState().arena,"classic");
@@ -170,7 +170,7 @@ test("neon doodles map downloads a safe vector image and remains playable offlin
  }finally{removeDownloadedArena("extra-neon-doodles",storage);}
 });
 
-test("version-2 WebP maps remain usable offline and can upgrade to version-3 SVG",async()=>{
+test("version-2 WebP maps remain usable offline and can upgrade to version-4 SVG",async()=>{
  const storage=memory();
  const former=JSON.parse(asset("forest/arena.json"));
  const cached=parseDownloadedArena({...former,version:2,backgroundWebp:binaryAsset("forest/background.webp").toString("base64")});
@@ -180,11 +180,23 @@ test("version-2 WebP maps remain usable offline and can upgrade to version-3 SVG
  assert.equal(getDownloadedArena("extra-forest").backgroundWebp,cached.backgroundWebp);
  const listing=(await loadArenaCatalog(mockFetch))[0];
  const next=await installDownloadedArena(listing,storage,mockFetch);
- assert.equal(next.version,3);
+ assert.equal(next.version,4);
  assert.equal(next.backgroundWebp,undefined);
  assert.equal(validArenaSvg(next.backgroundSvg),true);
- assert.equal(storage.get(DOWNLOADED_ARENAS_KEY)[0].version,3);
+ assert.equal(storage.get(DOWNLOADED_ARENAS_KEY)[0].version,4);
  removeDownloadedArena("extra-forest",storage);
+});
+
+test("Misty Forest v4 uses standalone traced SVG vector paths and a compatible theme",()=>{
+ const descriptor=JSON.parse(asset("forest/arena.json"));
+ const svg=asset("forest/background.svg");
+ assert.equal(descriptor.version,4);
+ assert.ok(Buffer.byteLength(svg,"utf8")<=60000);
+ assert.equal(validArenaSvg(svg),true);
+ assert.match(svg,/<path /);
+ assert.doesNotMatch(svg,/<image\b|\bhref\s*=|data:image\//i);
+ assert.equal(descriptor.theme.platform,"#342c58");
+ assert.ok(parseDownloadedArena({...descriptor,backgroundSvg:svg}));
 });
 
 test("reject invalid layout, SVG script, external references and unsafe paths",()=>{
