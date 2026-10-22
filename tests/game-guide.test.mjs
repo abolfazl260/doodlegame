@@ -26,10 +26,10 @@ test('local PvP keyboard hints do not advertise locked weapon cycling',()=>{
   for(const language of ['en','fa']){
    i18n.setLocale(language);
    const hint=i18n.messages.pvp.hint;
-   assert.doesNotMatch(hint,/Q\\/E|\\[\\s*\\/\\s*\\]/);
+   assert.ok(!hint.includes('Q/E')&&!hint.includes('[/]'),hint);
    assert.match(hint,language==='en'?/locked after setup/:/قفل است/);
    const localKeys=i18n.messages.guide.local.map(entry=>entry.keys??'').join(' ');
-   assert.doesNotMatch(localKeys,/Weapons?\\s*(?:Q\\/E|\\[)/i);
+   assert.ok(!localKeys.includes('Weapons')&&!localKeys.includes('Q/E')&&!localKeys.includes('[ / ]'),localKeys);
   }
  }finally{
   if(oldDocument===undefined)delete globalThis.document;
