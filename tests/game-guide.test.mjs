@@ -1,3 +1,4 @@
+import {I18n} from '../.test-build/i18n/I18n.js';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {GUIDE_EN,GUIDE_FA,GUIDE_SECTION_IDS} from '../.test-build/i18n/GameGuide.js';
 const weapons=['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile','spear','grapple'];
@@ -15,4 +16,23 @@ test('guide reflects fixed Missile, start-only random assignment and distinct sl
  assert.match(GUIDE_EN.modes['random-weapons'],/never cycles/);assert.match(GUIDE_FA.modes['random-weapons'],/خودکار تغییر نمی‌کند/);
  assert.match(GUIDE_EN.weapons.hammer,/not the airborne/);assert.match(GUIDE_EN.controls.find(x=>x.title==='Pause / Resume').body,/two seconds/);
  assert.match(GUIDE_EN.modes['king-of-hill'],/8 seconds/);assert.match(GUIDE_EN.progression.find(x=>x.title==='Career vs Run').body,/do not become permanent/);
+});
+
+test('local PvP keyboard hints do not advertise locked weapon cycling',()=>{
+ const oldDocument=globalThis.document;
+ globalThis.document={documentElement:{lang:'',dir:''}};
+ try{
+  const i18n=new I18n({get(){return 'en';},set(){}});
+  for(const language of ['en','fa']){
+   i18n.setLocale(language);
+   const hint=i18n.messages.pvp.hint;
+   assert.ok(!hint.includes('Q/E')&&!hint.includes('[/]'),hint);
+   assert.match(hint,language==='en'?/locked after setup/:/قفل است/);
+   const localKeys=i18n.messages.guide.local.map(entry=>entry.keys??'').join(' ');
+   assert.ok(!localKeys.includes('Weapons')&&!localKeys.includes('Q/E')&&!localKeys.includes('[ / ]'),localKeys);
+  }
+ }finally{
+  if(oldDocument===undefined)delete globalThis.document;
+  else globalThis.document=oldDocument;
+ }
 });
