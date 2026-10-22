@@ -602,7 +602,7 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
     path([[0,-.06],[-.065,-.11],[0,-.19],[.065,-.11],[0,-.06]])));
    add(9,arm.map(part=>strip(part,.19,.15)).concat(
     path([[-.27,.16],[-.15,.045],[0,-.02],[.15,.045],[.27,.16]]),
-    path([[-.23,-.25],[-.15,-.44]],[[.23,-.25],[.15,-.44]])));
+    path([[-.23,-.25],[-.15,-.44]]),path([[.23,-.25],[.15,-.44]])));
   }else if(style==="desert"){
    // Sirocco hood and scarf: two layered windblown tails and a cloth belt.
    add(0,head([[-.27,.22],[-.42,.27],[-.59,.16],[-.48,.03],[-.65,-.07]]).concat(
