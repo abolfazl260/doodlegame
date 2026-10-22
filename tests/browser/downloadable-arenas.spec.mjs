@@ -27,7 +27,7 @@ async function visitArenaStep(page){
 test("players can download new GitHub arenas, choose them, and replay them offline after reload",async({page})=>{
  await mockGithub(page);
  await visitArenaStep(page);
- await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
+ await expect(page.locator(".game-ui__arena-card")).toHaveCount(20);
  const extras=page.locator(".game-ui__downloadable-arenas");
  await expect(extras).toBeVisible();
  await extras.locator(".game-ui__download-refresh").tap();
@@ -47,7 +47,7 @@ test("players can download new GitHub arenas, choose them, and replay them offli
  await expect(page.locator(".game-ui__download-play")).toHaveCount(1);
  await page.locator(".game-ui__download-play").tap();
  expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe("extra-forest");
- await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
+ await expect(page.locator(".game-ui__arena-card")).toHaveCount(20);
  await page.locator(".game-ui__download-delete").tap();
  await expect(page.locator(".game-ui__download-play")).toHaveCount(0);
 });
@@ -81,7 +81,7 @@ test("three new landscapes can each be downloaded, selected and reused offline",
  await offlineCard.locator(".game-ui__download-play").tap();
  await startMatch(page);
  expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe("extra-neon-city");
- await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
+ await expect(page.locator(".game-ui__arena-card")).toHaveCount(20);
 });
 
 test("short landscape gallery keeps all downloadable cards independently reachable above sticky menu actions",async({page})=>{
@@ -163,15 +163,15 @@ test("WebP arena downloads as binary, displays its thumbnail and plays again off
  await saved.locator(".game-ui__download-play").tap();
  await startMatch(page);
  expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe("extra-webp-demo");
- await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
+ await expect(page.locator(".game-ui__arena-card")).toHaveCount(20);
 });
 
-test("failed catalog request never blocks the original sixteen offline arenas",async({page})=>{
+test("failed catalog request never blocks the original twenty offline arenas",async({page})=>{
  await page.route(raw+"**",route=>route.abort());
  await visitArenaStep(page);
  await page.locator(".game-ui__download-refresh").tap();
  await expect(page.locator(".game-ui__download-feedback")).toContainText(/گیت‌هاب|GitHub/);
- await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
+ await expect(page.locator(".game-ui__arena-card")).toHaveCount(20);
  await page.locator('.game-ui__arena-card[data-arena="sky"]').tap();
  await startMatch(page);
  expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe("sky");

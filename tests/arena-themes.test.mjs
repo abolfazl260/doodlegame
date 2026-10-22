@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import {ARENA_THEMES,getArenaTheme,platformColors,paintArenaBackdrop} from "../.test-build/themes/ArenaThemes.js";
 import {stageLandmarks,paintArenaLandmarks} from "../.test-build/themes/ArenaStageArt.js";
 
-const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
+const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor","alpine-lake","dusk-valley","autumn-valley","ember-river"];
 
-test("all 16 gameplay arenas have complete, distinct visual palettes",()=>{
+test("all 20 gameplay arenas have complete, distinct visual palettes",()=>{
  assert.deepEqual(Object.keys(ARENA_THEMES).sort(),[...arenas].sort());
  for(const id of arenas){
   const t=getArenaTheme(id);
@@ -74,7 +74,7 @@ test("premium environment art is deterministic, balanced and bounded for every a
   capture(id,320,180);
  }
  assert.equal(new Set(arenas.map(id=>capture(id,640,360))).size,arenas.length,
-  "all sixteen arenas should have distinguishable procedural geometry");
+  "all twenty arenas should have distinguishable procedural geometry");
 });
 
 test("distinct stage landmarks paint deterministically on Canvas and stay within finite normalized geometry",()=>{
@@ -97,5 +97,5 @@ test("distinct stage landmarks paint deterministically on Canvas and stay within
    assert.ok(numbers.every(Number.isFinite),"finite stage landmark geometry: "+id);
   }
  }
- assert.equal(new Set(eventCounts).size,16,"each arena renders a different composition");
+ assert.equal(new Set(eventCounts).size,20,"each arena renders a different composition");
 });

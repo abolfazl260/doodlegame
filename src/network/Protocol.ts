@@ -5,7 +5,7 @@ import {object,num,integer,bool,str,choice,list} from './Validation.js';
 import {MAX_PACKET_BYTES} from './LanTransport.js';
 import {decodeFrame,type MatchFrame} from './StateCodec.js';
 export const PROTOCOL=2;
-export const ARENAS:readonly BuiltInArenaId[]=['classic','towers','pit','steps','zigzag','sky','moving','fortress','bridge','crater','vertical','ruins','conveyor','collapse','storm','reactor'];
+export const ARENAS:readonly BuiltInArenaId[]=['classic','towers','pit','steps','zigzag','sky','moving','fortress','bridge','crater','vertical','ruins','conveyor','collapse','storm','reactor','alpine-lake','dusk-valley','autumn-valley','ember-river'];
 export const WEAPONS:readonly WeaponId[]=['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile','spear','grapple'];
 export const CHARACTERS:readonly CharacterId[]=['soldier','ninja','viking','ranger','pharaoh','knight','mummy','archer'];
 export type Phase='lobby'|'countdown'|'playing'|'paused'|'result'|'lost';

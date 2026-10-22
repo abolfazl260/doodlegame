@@ -17,7 +17,7 @@ const runnable=compiled.replace(/^import .*ArenaPreviews.*$/m,"").replace(/^impo
 assert.equal(runnable.includes("export class GameUI"),false);
 const {GameUI}=new Function("states","getArenaTheme","getDownloadedArena","installedArenas","arenaImageDataUrl","MobileOnboarding","ARENA_CATEGORY_IDS","arenaCategories","arenaPreviewUrl",runnable+";return {GameUI};")(states,getArenaTheme,getDownloadedArena,installedArenas,arenaImageDataUrl,MobileOnboarding,ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl);
 
-const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
+const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor","alpine-lake","dusk-valley","autumn-valley","ember-river"];
 const modes=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill","local-pvp"];
 const weapons=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear"];
 
@@ -163,7 +163,7 @@ function i18nCleanup(_ui){} // No extra description/tooltip nodes to clean up.
 test("wizard requires character and weapon selection after mode and arena",()=>{
  const {ui,calls,hud}=setup();
  assert.equal(ui.menuSettings.children.length,8);
- assert.equal(ui.arenaCards.children.length,16);
+ assert.equal(ui.arenaCards.children.length,20);
  assert.equal(ui.weaponCards.children.length,11);
  assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"true");
  assert.equal(ui.menuModePanel.hidden,false);
@@ -591,17 +591,17 @@ test("the progress drawer switches between Run and upgrades instead of stacking 
 });
 
 
-test("all sixteen maps remain selectable through a visible main-menu shortcut",()=>{
+test("all twenty maps remain selectable through a visible main-menu shortcut",()=>{
  const {ui,calls,hud}=setup();
  const expected=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge",
-  "crater","vertical","ruins","conveyor","collapse","storm","reactor"];
+  "crater","vertical","ruins","conveyor","collapse","storm","reactor","alpine-lake","dusk-valley","autumn-valley","ember-river"];
  assert.deepEqual(ui.arenaCards.children.map(card=>card.dataset.arena),expected);
  assert.equal(ui.arenaShortcut.hidden,false);
  assert.match(ui.arenaShortcut.textContent,/classic/i);
  ui.arenaShortcut.click();
  assert.equal(ui.menuStepIndex,1);
  assert.equal(ui.menuArenaPanel.hidden,false);
- assert.equal(ui.arenaCards.children.length,16);
+ assert.equal(ui.arenaCards.children.length,20);
  for(const id of expected){
   const card=ui.arenaCards.children.find(c=>c.dataset.arena===id);
   assert.ok(card,`arena ${id} must remain available`);
@@ -613,13 +613,13 @@ test("all sixteen maps remain selectable through a visible main-menu shortcut",(
  }
  ui.stepBackButton.click();
  assert.equal(ui.menuStepIndex,0);
- assert.match(ui.arenaShortcut.textContent,/reactor/i);
+ assert.match(ui.arenaShortcut.textContent,/ember-river/i);
  ui.arenaShortcut.click();
  assert.equal(ui.menuStepIndex,1);
- assert.equal(ui.arenaCards.children.find(c=>c.dataset.arena==="reactor").getAttribute("aria-pressed"),"true");
+ assert.equal(ui.arenaCards.children.find(c=>c.dataset.arena==="ember-river").getAttribute("aria-pressed"),"true");
  ui.quickPvpButton.click();
  hud.mode="local-pvp";ui.render(states.MENU,hud);
- assert.equal(ui.arenaCards.children.length,16,"2P must retain all arena choices");
+ assert.equal(ui.arenaCards.children.length,20,"2P must retain all arena choices");
 });
 
 test("character names are editable in player setup and shown in the HUD",()=>{

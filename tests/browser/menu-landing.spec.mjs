@@ -13,7 +13,7 @@ for(const [width,height] of [[568,280],[568,320],[640,320],[844,390]])for(const 
  for(const route of ['custom','local','arenas','progression','settings']){
   await page.locator(`[data-route="${route}"]`).click();await expect(page.locator('[data-menu-home]')).toBeVisible();
   if(route==='local')expect((await page.evaluate(()=>window.__runFixture.view())).localPvP).toBe(true);
-  if(route==='arenas')await expect(page.locator('.game-ui__arena-card')).toHaveCount(16);
+  if(route==='arenas')await expect(page.locator('.game-ui__arena-card')).toHaveCount(20);
   if(route==='settings'){await page.locator('[data-help="true"]').click();await expect(page.locator('.game-ui__help')).toBeVisible();await page.keyboard.press('Escape');}
   await page.locator('[data-menu-home]').click();await expect(page.locator('[data-route="quick"]')).toBeVisible();
  }

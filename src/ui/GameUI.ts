@@ -64,7 +64,7 @@ type MenuStep="mode"|"arena"|"loadout";
 // Append another step here and give it a page in syncWizard to extend the setup.
 const MENU_STEPS:readonly MenuStep[]=["mode","arena","loadout"];
 
-const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
+const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor","alpine-lake","dusk-valley","autumn-valley","ember-river"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear","grapple"];
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
 const CHARACTER_IDS:readonly CharacterId[]=["soldier","ninja","viking","ranger","pharaoh","knight","mummy","archer"];

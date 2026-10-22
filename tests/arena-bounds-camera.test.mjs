@@ -4,7 +4,7 @@ import {readFileSync} from "node:fs";
 import {GameSession} from "../.test-build/gameplay/GameSession.js";
 import {combatCameraFrame} from "../.test-build/rendering/CombatCamera.js";
 
-const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
+const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor","alpine-lake","dusk-valley","autumn-valley","ember-river"];
 const neutral={moveX:0,moveY:0,pointerX:0,pointerY:0,pointerDown:false,pointerPressed:false,pointerReleased:false,attackHeld:false,jumpPressed:false,dashPressed:false,attackPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};
 function setup(id){
  const input={state:{...neutral},getState(){return this.state},endFrame(){this.state={...this.state,attackPressed:false,jumpPressed:false,dashPressed:false}}};
@@ -21,7 +21,7 @@ function cameraContains(frame,state,aspect){
   assert.ok(fighter.y-1>=frame.y-halfH-1e-6&&fighter.y+1<=frame.y+halfH+1e-6,"fighter clipped vertically");
  }
 }
-test("all sixteen arenas keep a freshly spawned, idle fighter on its original X through the first substep",()=>{
+test("all twenty arenas keep a freshly spawned, idle fighter on its original X through the first substep",()=>{
  for(const id of arenas){
   const game=setup(id);
   const initial=game.getRenderState();

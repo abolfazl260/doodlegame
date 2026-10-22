@@ -93,7 +93,7 @@ test("player-count cards preserve all mode choices and arena is selected on the 
  await page.locator('button[data-action="next"]').tap();
  await expect(page.locator(".game-ui__menu-arena-panel")).toBeVisible();
  await expect(page.locator(".game-ui__menu-mode-panel")).toBeHidden();
- await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
+ await expect(page.locator(".game-ui__arena-card")).toHaveCount(20);
  await page.locator('.game-ui__arena-card[data-arena="ruins"]').tap();
  await expect(page.locator('.game-ui__arena-card[data-arena="ruins"]')).toHaveAttribute("aria-pressed","true");
  await page.locator('[data-action="next"]').tap();
@@ -330,14 +330,14 @@ test("Run intermission exposes reward tiles and next fight together without show
  await expect(page.locator(".game-ui__run-continue")).toBeEnabled();
 });
 
-test("direct map shortcut exposes all sixteen selectable maps and the chosen arena starts the match",async({page})=>{
+test("direct map shortcut exposes all twenty selectable maps and the chosen arena starts the match",async({page})=>{
  const shortcut=page.locator(".game-ui__arena-shortcut");
  await expect(shortcut).toBeVisible();
  await expect(shortcut).toContainText("کلاسیک");
  await shortcut.tap();
  const maps=page.locator(".game-ui__arena-card");
  const ids=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge",
- "crater","vertical","ruins","conveyor","collapse","storm","reactor"];
+ "crater","vertical","ruins","conveyor","collapse","storm","reactor","alpine-lake","dusk-valley","autumn-valley","ember-river"];
  await expect(maps).toHaveCount(ids.length);
  for(const id of ids){
   const card=page.locator(`.game-ui__arena-card[data-arena="${id}"]`);
@@ -345,12 +345,12 @@ test("direct map shortcut exposes all sixteen selectable maps and the chosen are
   await expect(card).toHaveAttribute("aria-pressed","true");
   expect((await page.evaluate(()=>window.__runFixture.view())).arena).toBe(id);
  }
- await expect(page.locator(".game-ui__arena-selection-summary")).toContainText("راکتور");
+ await expect(page.locator(".game-ui__arena-selection-summary")).toContainText("رودخانه آتشین");
  await page.locator('button[data-action="back"]').tap();
- await expect(shortcut).toContainText("راکتور");
+ await expect(shortcut).toContainText("رودخانه آتشین");
  await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
  await shortcut.tap();
- await expect(maps).toHaveCount(16);
+ await expect(maps).toHaveCount(20);
  await page.locator('.game-ui__arena-card[data-arena="sky"]').tap();
  await expect(page.locator('.game-ui__arena-card[data-arena="sky"]')).toHaveAttribute("aria-pressed","true");
  expect((await page.evaluate(()=>window.__runFixture.view())).arena).toBe("sky");
@@ -377,7 +377,7 @@ test("character names persist across launches and are used for both local fighte
  await expect(second).toBeVisible();
  await second.fill("سام");
  await page.locator('button[data-action="next"]').tap();
- await expect(page.locator(".game-ui__arena-card")).toHaveCount(16);
+ await expect(page.locator(".game-ui__arena-card")).toHaveCount(20);
  await startMatch(page);
  await expect(page.locator(".health-bar--opponent .health-label__name")).toHaveText("سام");
 });
@@ -398,10 +398,10 @@ test("real keyboard typing works for both local players and every arena is selec
  expect(before.p2Input.moveX).toBe(0);
  expect(before.p1Input.attackPressed).toBe(false);
  expect(before.p2Input.attackPressed).toBe(false);
- await expect(page.locator('button[data-action="next"]')).toContainText("۱۶");
+ await expect(page.locator('button[data-action="next"]')).toContainText("۲۰");
  await page.locator('button[data-action="next"]').tap();
  const ids=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge",
-  "crater","vertical","ruins","conveyor","collapse","storm","reactor"];
+  "crater","vertical","ruins","conveyor","collapse","storm","reactor","alpine-lake","dusk-valley","autumn-valley","ember-river"];
  await expect(page.locator(".game-ui__arena-card")).toHaveCount(ids.length);
  for(const id of ids){
   const card=page.locator(`.game-ui__arena-card[data-arena="${id}"]`);
@@ -412,7 +412,7 @@ test("real keyboard typing works for both local players and every arena is selec
  }
  await startMatch(page);
  const match=await page.evaluate(()=>window.__runFixture.pvpSnapshot());
- expect(match.arena).toBe("reactor");
+ expect(match.arena).toBe("ember-river");
  expect(match.localPvP).toBe(true);
  await expect(page.locator(".health-bar--player .health-label__name")).toHaveText("Arman");
  await expect(page.locator(".health-bar--opponent .health-label__name")).toHaveText("Sina");

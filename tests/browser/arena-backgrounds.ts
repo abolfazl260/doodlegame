@@ -1,7 +1,9 @@
 import {getArenaTheme,paintArenaBackdrop} from "../../src/themes/ArenaThemes";
 import type {ArenaId} from "../../src/gameplay/GameSession";
+import {paintSimpleSvgBackdrop} from "../../src/themes/SimplifiedSvgBackdrops";
+import {SCENIC_ARENA_IDS} from "../../src/themes/ScenicArenaArt";
 const canvas=document.querySelector<HTMLCanvasElement>("#scene")!;
-const ids:ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor"];
+const ids:ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor","alpine-lake","dusk-valley","autumn-valley","ember-river"];
 function render(id:ArenaId,width=640,height=360){
  canvas.width=width;canvas.height=height;
  // Pixel hashes require one consistent readback backend from the first frame.
@@ -18,6 +20,18 @@ function render(id:ArenaId,width=640,height=360){
  const centerLuma=(center[0]*.2126+center[1]*.7152+center[2]*.0722);
  return {id,width,height,hash,opaque,centerLuma};
 }
+// The four mountain illustrations are decoded asynchronously on first use.
+ // Wait for the actual image rather than comparing fallback geometry with
+ // a later decoded frame. The runner makes no network requests.
+const warmScenery=async()=>{
+ const c=canvas.getContext("2d",{willReadFrequently:true})!;
+ for(const id of SCENIC_ARENA_IDS)paintSimpleSvgBackdrop(c,640,360,id);
+ for(let attempts=0;attempts<120;attempts++){
+  if(SCENIC_ARENA_IDS.every(id=>paintSimpleSvgBackdrop(c,640,360,id)))return;
+  await new Promise(resolve=>setTimeout(resolve,25));
+ }
+ throw new Error("Scenic SVG decode timed out");
+};
 Object.assign(window,{__arenaArt:{
- ids,render,all:()=>ids.map(id=>render(id))
+ ids,render,all:async()=>{await warmScenery();return ids.map(id=>render(id));}
 }});
