@@ -14,6 +14,7 @@ const createSession=()=>{
  return {input,session};
 };
 const win=(session,winner)=>{
+ for(let i=0;i<31;i++)session.update(.1);
  session.damage(winner==="player"?session.opponent:session.player,200,0);
  session.update(1/60);
  assert.equal(session.getHudState().winner,winner);
@@ -116,6 +117,7 @@ test("Game lifecycle offers next round before final and restarts a clean series"
  game.dispose();
 
  function winWithoutRecording(winner){
+  for(let i=0;i<31;i++)session.update(.1);
   session.damage(winner==="player"?session.opponent:session.player,200,0);
   session.update(1/60);
   game.endGame();
