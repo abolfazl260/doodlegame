@@ -5,7 +5,7 @@ import type {Storage} from "../storage/Storage.js";
 export const ARENA_CATALOG_URL="https://raw.githubusercontent.com/abolfazl260/doodlegame/main/public/downloadable-arenas/catalog.json";
 const ASSETS_BASE="https://raw.githubusercontent.com/abolfazl260/doodlegame/main/public/downloadable-arenas/";
 export const DOWNLOADED_ARENAS_KEY="doodlegame.downloadableArenas.v1";
-export const MAX_PACKS=25,MAX_CATALOG_BYTES=16000,MAX_ARENA_BYTES=14000,MAX_IMAGE_BYTES=60000;
+export const MAX_PACKS=26,MAX_CATALOG_BYTES=16000,MAX_ARENA_BYTES=14000,MAX_IMAGE_BYTES=60000;
 // WebP is kept in local device storage as base64; cap raw files to 384 KiB.
 export const MAX_WEBP_BYTES=384*1024;
 export type DownloadedArenaId=`extra-${string}`;
