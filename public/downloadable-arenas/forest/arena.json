@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "extra-forest",
-  "version": 3,
+  "version": 4,
   "names": {
     "fa": "جنگل مه‌آلود",
     "en": "MISTY FOREST"
@@ -50,13 +50,13 @@
   "theme": {
     "skin": "fantasy",
     "backdrop": "mountains",
-    "skyTop": "#0c2834",
-    "skyBottom": "#1f4737",
-    "silhouette": "#102b27",
-    "platform": "#487c5f",
-    "platformEdge": "#a6ebae",
-    "accent": "#92f2af",
-    "secondary": "#c7e9ff",
-    "hudBackground": "#071d20"
+    "skyTop": "#14112f",
+    "skyBottom": "#637cc3",
+    "silhouette": "#221a3f",
+    "platform": "#342c58",
+    "platformEdge": "#a1b6f9",
+    "accent": "#ba8bec",
+    "secondary": "#81dcf5",
+    "hudBackground": "#111026"
   }
 }
