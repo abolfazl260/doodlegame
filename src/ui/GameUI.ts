@@ -1289,6 +1289,9 @@ export class GameUI{
   if(s.lanPlayer)this.root.dataset.lanPlayer=String(s.lanPlayer);else delete this.root.dataset.lanPlayer;
   this.renderTutorial(state,s);
   const messages=this.i18n.messages,locale=this.i18n.locale,old=this.lastView;
+  // Standalone UI tests and older integrations may supply a legacy pvp copy.
+  const pvpCopy=messages.pvp?.series??{bestOfThree:"BEST OF 3",round:"ROUND",roundComplete:"ROUND COMPLETE",
+   champion:"MATCH WINNER",nextRound:"NEXT ROUND",rematch:"REMATCH",changeLoadout:"CHANGE EQUIPMENT",countdown:"STARTING IN"};
   const arenaName=(id:ArenaId)=>getDownloadedArena(id)?.names[locale]??messages.arenas[id as BuiltInArenaId]??id;
   const stateChanged=!old||old.state!==state;
   const localeChanged=!old||old.locale!==locale;
@@ -1592,7 +1595,7 @@ export class GameUI{
     const series=s.pvpSeries;
     if((s.localPvP??s.mode==="local-pvp")&&series){
      if(this.menuResult.firstChild!==this.pvpResultPanel)this.menuResult.replaceChildren(this.pvpResultPanel);
-     const copy=messages.pvp.series;
+     const copy=pvpCopy;
      this.setText(this.pvpResultMeta,(series.complete?copy.champion:copy.roundComplete)+" · "+copy.round+" "+series.round);
      this.setText(this.pvpResultP1,(s.playerName||messages.pvp.p1)+"\n"+series.playerWins);
      this.setText(this.pvpResultCenter,copy.bestOfThree);
@@ -1605,21 +1608,23 @@ export class GameUI{
    this.lastHill={player:s.hill.player,opponent:s.hill.opponent,target:s.hill.target};
 
   const series=s.pvpSeries,pvp=Boolean((s.localPvP??s.mode==="local-pvp")&&!s.lanPlayer&&series);
-  this.setHidden(this.pvpNextRoundButton,!(pvp&&state===GameState.GAME_OVER&&!series!.complete));
-  this.setHidden(this.pvpLoadoutButton,!(pvp&&state===GameState.GAME_OVER&&series!.complete));
-  this.setText(this.pvpNextRoundButton,messages.pvp.series.nextRound);
-  this.setText(this.pvpLoadoutButton,messages.pvp.series.changeLoadout);
-  for(const item of this.buttons.children){
+  if(staticChanged){
+   this.setHidden(this.pvpNextRoundButton,!(pvp&&state===GameState.GAME_OVER&&!series!.complete));
+   this.setHidden(this.pvpLoadoutButton,!(pvp&&state===GameState.GAME_OVER&&series!.complete));
+   this.setText(this.pvpNextRoundButton,pvpCopy.nextRound);
+   this.setText(this.pvpLoadoutButton,pvpCopy.changeLoadout);
+   for(const item of this.buttons.children){
    const button=item as HTMLButtonElement;
    if(button.dataset.action==="restart"){
     if(pvp&&state===GameState.GAME_OVER)this.setHidden(button,!series!.complete);
-    this.setText(button,pvp&&state===GameState.GAME_OVER?messages.pvp.series.rematch:messages.buttons.restart);
+    this.setText(button,pvp&&state===GameState.GAME_OVER?pvpCopy.rematch:messages.buttons.restart);
+   }
    }
   }
   this.setHidden(this.pvpScoreHud,!(pvp&&state===GameState.PLAYING));
   this.setHidden(this.pvpCountdownLabel,!(pvp&&state===GameState.PLAYING&&series!.countdown>0));
   if(pvp){
-   const copy=messages.pvp.series;
+   const copy=pvpCopy;
    this.setText(this.pvpScoreHud,messages.pvp.p1+" "+series!.playerWins+
     "  —  "+series!.opponentWins+" "+messages.pvp.p2+"  ·  "+copy.round+" "+series!.round+"  ·  "+copy.bestOfThree);
    if(series!.countdown>0)this.setText(this.pvpCountdownLabel,copy.countdown+"  "+Math.ceil(series!.countdown));
