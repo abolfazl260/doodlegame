@@ -14,6 +14,11 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Pin Playwright's official image to the same version as @playwright/test.
+    # It already contains Chromium and the Linux libraries/fonts Playwright needs,
+    # so CI doesn't need a slow apt install or a browser download on each run.
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,8 +34,9 @@ jobs:
       - name: Physics and motion regressions
         run: npm test
 
-      - name: Install Chromium for desktop interaction regressions
-        run: npx playwright install --with-deps chromium
+      - name: Verify preinstalled Playwright Chromium
+        run: |
+          node --input-type=module -e 'import { chromium } from "@playwright/test"; const browser = await chromium.launch(); await browser.close();'
 
       - name: Desktop mouse and weapon selection regressions
         run: npm run test:browser
