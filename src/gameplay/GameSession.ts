@@ -318,7 +318,18 @@ export class GameSession{
   this.opponent.bowCharging=false;this.opponent.bowCharge=0;
   if(this.opponent.weapon==="bow")this.opponent.attackTime=0;
  }
- cancelTouchAttack(){this.cancelTransientActions();}
+ /**
+  * Cancel only the fighter whose touch ATTACK gesture was interrupted.
+  * Global pause/stop still calls cancelTransientActions() for both fighters.
+  */
+ cancelTouchAttack(player:1|2=1){
+  const fighter=player===1?this.player:this.opponent;
+  this.cancelKick(fighter);
+  this.cancelSlam(fighter);
+  fighter.bowCharging=false;
+  fighter.bowCharge=0;
+  if(fighter.weapon==="bow")fighter.attackTime=0;
+ }
  upgradeWeapon(id:WeaponId){if(this.upgradePoints<=0||this.upgradedWeapons.has(id))return false;this.upgradedWeapons.add(id);this.upgradePoints--;return true;}
  reset(advanceEnemy=true){this.combatCues=[];this.visualFreezeUntil=0;this.elapsed=0;this.hillPlayer=0;this.hillOpponent=0;this.explosions=[];this.debris=[];if(advanceEnemy&&!this.localPvP)this.enemyRound++;const types:EnemyType[]=["runner","tank","shooter","jumper","bomber","ninja","boss"];const enemyIndex=Math.max(0,this.enemyRound-1)%types.length;this.player=this.create(this.arena.spawnX[0],1,null);this.opponent=this.create(this.arena.spawnX[1],-1,this.localPvP?null:this.runStage?this.runEncounters[this.runStage-1].enemy:types[enemyIndex]);this.opponent.characterId=this.localPvP?this.selectedSecondCharacter:CHARACTER_IDS[(CHARACTER_IDS.indexOf(this.selectedCharacter)+1)%CHARACTER_IDS.length];if(this.runStage){const hp=this.runEncounters[this.runStage-1].health;this.opponent.health=hp;this.opponent.maxHealth=hp;}if(this.modeId==="melee-only"){this.player.weapon="blade";this.opponent.weapon=this.opponent.enemyType==="tank"||this.opponent.enemyType==="boss"?"hammer":"blade";}else if(this.modeId==="random-weapons"&&!this.localPvP){const pool=ORDER;this.opponent.weapon=pool[Math.floor(Math.random()*pool.length)];}if(!this.missileRules&&this.availableWeapons().includes(this.startingWeapon))this.player.weapon=this.startingWeapon;if(this.localPvP)this.opponent.weapon=this.missileRules?"missile":this.availableWeapons().includes(this.secondStartingWeapon)?this.secondStartingWeapon:this.availableWeapons()[0];this.projectiles=[];this.resetEnvironment();this.enemyBrain=this.freshEnemyBrain();this.enemyBrain.lastX=this.opponent.x;this.winner=null;}
  private availableWeapons():WeaponId[]{if(this.missileRules)return["missile"];if(this.modeId==="melee-only")return["blade","hammer"];if(this.modeId==="random-weapons")return [...ORDER];return [...ORDER];}
