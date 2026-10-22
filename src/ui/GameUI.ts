@@ -1,4 +1,13 @@
 import {ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl,type ArenaCategory} from "./ArenaPreviews";
+import type {MummyStyleId} from "../gameplay/MummyStyles.js";
+// UI-only labels are repeated here so standalone GameUI test harnesses can
+// evaluate compiled UI without requiring an additional runtime module.
+const MUMMY_STYLE_IDS:readonly MummyStyleId[]=["classic","royal","cursed","scarab","desert"];
+const MUMMY_STYLE_NAMES:Readonly<Record<MummyStyleId,{en:string;fa:string}>>={
+ classic:{en:"CLASSIC",fa:"کلاسیک"},royal:{en:"ROYAL",fa:"سلطنتی"},
+ cursed:{en:"CURSED",fa:"نفرین‌شده"},scarab:{en:"SCARAB",fa:"سوسک مقدس"},
+ desert:{en:"DESERT",fa:"کویر"}
+};
 import {MobileOnboarding,type TutorialSignals} from "./MobileOnboarding";
 import type {Storage} from "../storage/Storage";
 import {GameState} from "../core/GameState";
@@ -15,7 +24,7 @@ type HudState={
  tutorial?:TutorialSignals;lanPlayer?:1|2;
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
- progression?:ProgressionView|null;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;
+ progression?:ProgressionView|null;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;mummyStyle?:MummyStyleId;secondMummyStyle?:MummyStyleId;
  characterId?:CharacterId;opponentCharacterId?:CharacterId;characterChosen?:boolean;weaponChosen?:boolean;secondCharacterChosen?:boolean;secondWeaponChosen?:boolean;weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;pvpSeries?:Readonly<{round:number;playerWins:number;opponentWins:number;complete:boolean;countdown:number;swapped:boolean}>;
 };
 type Actions={
@@ -23,6 +32,7 @@ type Actions={
  newRun?:()=>void;continueRun?:()=>void;leaveRun?:()=>void;
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;nextPvpRound?:()=>void;changePvpLoadout?:()=>void;stopToMenu?:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;player2StartingWeapon?:(id:WeaponId)=>void;randomStartingWeapon?:(player:1|2)=>void;player2CharacterSelect?:(id:CharacterId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
+ mummyStyleSelect?:(player:1|2,style:MummyStyleId)=>void;
  playerCountSelect?:(count:1|2)=>void;setWeaponAim?:(player:1|2,x:number,y:number)=>void;player2WeaponSelect?:(id:WeaponId)=>void;
  setCharacterName?:(player:1|2,name:string)=>void;characterSelect?:(id:CharacterId)=>void;
  setTouchMove:(x:number,y:number)=>void;touchGrab:()=>void;touchAttackStart:()=>void;touchAttackEnd:()=>void;touchAttackCancel:()=>void;
@@ -73,6 +83,30 @@ const CHARACTER_PORTRAITS:Record<CharacterId,string>={
  mummy:"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 112\" aria-hidden=\"true\">\n<ellipse cx=\"48\" cy=\"107\" rx=\"33\" ry=\"4\" fill=\"#140e25\" opacity=\".45\"/>\n<path d=\"M29 71 19 96 32 106 47 84 59 106 78 104 65 73Z\" fill=\"#121923\" stroke=\"#0a0c12\" stroke-width=\"5\"/>\n<path d=\"M22 96 31 104 40 94m19-1 10 11 7-8\" fill=\"none\" stroke=\"#f0e6d1\" stroke-width=\"9\" stroke-linejoin=\"round\"/>\n<path d=\"M26 92 37 97m-8 2 8 3m24-5 12 0m-10-7 10 3\" stroke=\"#a6a09b\" stroke-width=\"3\"/>\n<path d=\"M28 46 19 61 25 81 70 81 78 61 64 47Z\" fill=\"#eee5d5\" stroke=\"#10111a\" stroke-width=\"5\" stroke-linejoin=\"round\"/>\n<path d=\"M27 53 42 62 33 72 57 78m10-23-32 22m26-29-23 14\" stroke=\"#c8beae\" stroke-width=\"7\" fill=\"none\"/>\n<path d=\"M25 51 12 64 9 81 20 88 33 68m38-17 14 13 4 17-11 7-14-20\" stroke=\"#141923\" stroke-width=\"9\" fill=\"none\" stroke-linecap=\"round\"/>\n<path d=\"M14 63 30 72m52-9-15 9m-53 5 9 4m59-4-9 4\" fill=\"none\" stroke=\"#f0e6d1\" stroke-width=\"8\"/>\n<path d=\"M10 72 24 77m56-5-12 5m-38-10 14 6\" stroke=\"#c3b6a5\" stroke-width=\"3\"/>\n<path d=\"M27 76H69\" stroke=\"#b78b40\" stroke-width=\"9\"/><circle cx=\"48\" cy=\"76\" r=\"7\" fill=\"#eabb57\" stroke=\"#0b0c15\" stroke-width=\"3\"/>\n<circle cx=\"48\" cy=\"76\" r=\"3.5\" fill=\"#23d9f0\"/><path d=\"m45 82-5 16 8 9 8-9-5-16\" fill=\"#f1e9db\" stroke=\"#11131a\" stroke-width=\"3\"/>\n<path d=\"M19 35Q16 14 38 10L60 10Q84 15 78 38L70 51 28 51Z\" fill=\"#ebe1cb\" stroke=\"#0c0f14\" stroke-width=\"5\"/>\n<path d=\"M25 25 57 11 71 19 34 40M25 38 56 25 74 34M36 48 64 38\" stroke=\"#c8bbab\" stroke-width=\"7\" fill=\"none\" stroke-linecap=\"round\"/>\n<path d=\"M29 22 48 13m-23 23 37-19m-32 29 36-20\" stroke=\"#fff8e7\" stroke-width=\"4\" fill=\"none\"/>\n<path d=\"M31 27 20 42 11 51 10 62 21 58 27 47\" fill=\"#f4ebd9\" stroke=\"#10121a\" stroke-width=\"4\"/>\n<path d=\"M30 35 40 39 65 33 70 38 56 46 36 45Z\" fill=\"#060c14\" stroke=\"#0b0e16\" stroke-width=\"3\"/>\n<path d=\"M48 40 59 39 64 41 55 44 46 43Z\" fill=\"#2beeff\" stroke=\"#0a1820\" stroke-width=\"2\"/>\n<path d=\"M26 46 66 29\" stroke=\"#f3e7d0\" stroke-width=\"5\"/>\n<path d=\"M10 62 21 57m18 42-13-5m33 5 13-5\" stroke=\"#e2d7c6\" stroke-width=\"3\"/>\n</svg>",
  archer:"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 112\" aria-hidden=\"true\">\n<ellipse cx=\"48\" cy=\"107\" rx=\"33\" ry=\"4\" fill=\"#071a16\" opacity=\".5\"/>\n<path d=\"M31 51 17 67 9 98 36 86 48 78 62 91 83 99 78 65 67 50Z\" fill=\"#2a5f37\" stroke=\"#08140e\" stroke-width=\"4\" stroke-linejoin=\"round\"/>\n<path d=\"M28 75 22 101 39 106 48 87 57 104 76 104 68 75Z\" fill=\"#172a24\" stroke=\"#07100e\" stroke-width=\"5\" stroke-linejoin=\"round\"/>\n<path d=\"M25 96 21 106 39 106 43 98m16 0 2 8 18 0-6-10\" fill=\"#84502b\" stroke=\"#080f0d\" stroke-width=\"4\"/>\n<path d=\"M31 82 43 83m13 0 14-1\" stroke=\"#61933d\" stroke-width=\"8\"/>\n<path d=\"M27 48 19 65 27 82 68 82 76 65 66 50Z\" fill=\"#183b28\" stroke=\"#0c1511\" stroke-width=\"5\"/>\n<path d=\"M28 52 11 64 8 83 20 89 35 67m35-15 17 12 4 19-12 6-18-22\" fill=\"#1b2821\" stroke=\"#0a1410\" stroke-width=\"8\" stroke-linejoin=\"round\"/>\n<path d=\"M13 70 24 78m71-8-17 8\" stroke=\"#a77845\" stroke-width=\"9\"/><path d=\"M11 75 23 83m68-8-13 8\" stroke=\"#644023\" stroke-width=\"4\"/>\n<path d=\"M16 50 21 24 34 18 46 25 38 56Z\" fill=\"#634128\" stroke=\"#111810\" stroke-width=\"3\"/>\n<path d=\"M17 27 12 11m10 16-1-20m7 19 7-17\" stroke=\"#92c83e\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n<path d=\"m8 12 4-9 4 9m1-4 4-8 4 8m2 3 8-7\" stroke=\"#c8eb64\" stroke-width=\"3\" fill=\"none\"/>\n<path d=\"M29 53 68 77\" fill=\"none\" stroke=\"#8d5932\" stroke-width=\"9\"/><path d=\"M65 54 30 82\" fill=\"none\" stroke=\"#b68142\" stroke-width=\"5\"/>\n<path d=\"M25 79H71\" stroke=\"#6b4324\" stroke-width=\"8\"/><circle cx=\"48\" cy=\"79\" r=\"7\" fill=\"#dcae54\" stroke=\"#0b1310\" stroke-width=\"3\"/>\n<circle cx=\"48\" cy=\"79\" r=\"3\" fill=\"#5a3d22\"/>\n<path d=\"M21 38Q20 23 48 8L73 25 85 47 68 59 28 58 13 49Z\" fill=\"#365d39\" stroke=\"#0a140d\" stroke-width=\"5\" stroke-linejoin=\"round\"/>\n<path d=\"M27 44 46 19 63 18 76 38 68 52 30 52Z\" fill=\"#07130e\" stroke=\"#070e0b\" stroke-width=\"3\"/>\n<path d=\"M20 44Q30 25 48 15 66 23 76 40\" stroke=\"#d8b450\" stroke-width=\"5\" fill=\"none\"/>\n<path d=\"M32 45 44 42 60 43 69 47 53 50 38 50Z\" fill=\"#fffdf1\" stroke=\"#06120e\" stroke-width=\"3\"/>\n<path d=\"M23 58 33 54 43 65 29 71m41-13-12-4-7 11 13 6\" fill=\"#668e3f\" stroke=\"#0c170f\" stroke-width=\"3\"/>\n<path d=\"m19 92 11-8m47 8-11-8\" stroke=\"#6ca34d\" stroke-width=\"4\"/>\n<path d=\"M18 91 10 99 32 91\" fill=\"#3c7e42\" stroke=\"#111b12\" stroke-width=\"3\"/>\n</svg>"
 };
+
+/** Weapon-free miniature versions of the actual five in-game Mummy outfits. */
+const MUMMY_PREVIEWS:Readonly<Record<MummyStyleId,string>>=Object.fromEntries(MUMMY_STYLE_IDS.map(style=>{
+ const base=CHARACTER_PORTRAITS.mummy;
+ if(style==="classic")return [style,base];
+ const palette={
+  royal:{linen:"#f5dfbf",fold:"#bb9a71",trim:"#f8cc65",eye:"#3be3fc"},
+  cursed:{linen:"#c7b9cc",fold:"#84628d",trim:"#ad81da",eye:"#d66aff"},
+  scarab:{linen:"#d8e5c8",fold:"#91a794",trim:"#b9ce55",eye:"#6bffe5"},
+  desert:{linen:"#efd0ab",fold:"#bc8d68",trim:"#da9150",eye:"#ffc169"}
+ }[style];
+ const ornaments={
+  royal:'<path d="M22 29 14 21 8 51 21 53M74 29 82 21 88 51 75 53" fill="#30465e" stroke="#0b0d14" stroke-width="3"/><path d="M47 13 48 2 43 8 53 8 48 2" stroke="#f8cc65" stroke-width="4" fill="none"/>',
+  cursed:'<path d="M20 29 10 18 5 54 17 52M76 29 86 18 91 54 79 52" fill="#514162" stroke="#0b0d14" stroke-width="3"/><path d="M16 53 7 61 13 68m67-15 9 8-6 7" stroke="#ad81da" stroke-width="4" fill="none"/>',
+  scarab:'<path d="m32 16-10-8-6 13M64 16l10-8 6 13" fill="none" stroke="#b9ce55" stroke-width="5"/><path d="M43 11 48 2 53 11 48 16Z" fill="#6bffe5" stroke="#101b1e" stroke-width="2"/>',
+  desert:'<path d="M25 28 14 23 4 32 14 40 2 48" fill="none" stroke="#da9150" stroke-width="6" stroke-linecap="round"/><path d="M22 30 8 40 5 58" fill="none" stroke="#efd0ab" stroke-width="5"/>'
+ }[style];
+ return [style,base.replaceAll("#eee5d5",palette.linen).replaceAll("#ebe1cb",palette.linen)
+  .replaceAll("#f0e6d1",palette.linen).replaceAll("#c8bbab",palette.fold)
+  .replaceAll("#c8beae",palette.fold).replaceAll("#b78b40",palette.trim)
+  .replaceAll("#eabb57",palette.trim).replaceAll("#23d9f0",palette.eye)
+  .replaceAll("#2beeff",palette.eye).replace("</svg>",ornaments+"</svg>")];
+})) as Record<MummyStyleId,string>;
+
 const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";
 
 const LANDING_ROUTE_ICONS={
@@ -210,6 +244,9 @@ export class GameUI{
  private characterPicker=document.createElement("section");
  private characterPickerTitle=document.createElement("h3");
  private characterCards=document.createElement("div");
+ private mummyStylePicker=document.createElement("section");
+ private mummyStyleTitle=document.createElement("h4");
+ private mummyStyleCards=document.createElement("div");
  private characterLabels=new Map<CharacterId,HTMLElement>();
  private playerNameLabel=document.createElement("label");
  private secondNameLabel=document.createElement("label");
@@ -293,7 +330,7 @@ export class GameUI{
  private readHud:(()=>HudState)|null=null;
  private hudFrame:number|null=null;
  private currentState=GameState.MENU;
- private lastView:{selectionKey:string;state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId;playerName?:string;secondPlayerName?:string;localPvP?:boolean;characterId?:CharacterId;opponentCharacterId?:CharacterId}|null=null;
+ private lastView:{selectionKey:string;state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId;mummyStyle?:MummyStyleId;secondMummyStyle?:MummyStyleId;playerName?:string;secondPlayerName?:string;localPvP?:boolean;characterId?:CharacterId;opponentCharacterId?:CharacterId}|null=null;
  private lastHealth:{playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;locale:string}|null=null;
  private lastBowPercent=NaN;
  private lastBowCharging=false;
@@ -634,6 +671,19 @@ export class GameUI{
    card.onclick=()=>{if(this.loadoutPlayer===2)actions.player2CharacterSelect?.(id);else actions.characterSelect?.(id);};
    this.characterCards.append(card);
   }
+  this.mummyStylePicker.className="game-ui__mummy-picker";this.mummyStylePicker.hidden=true;
+  this.mummyStyleCards.className="game-ui__mummy-options";
+  this.mummyStyleCards.setAttribute("role","group");
+  for(const style of MUMMY_STYLE_IDS){
+   const choice=document.createElement("button");choice.type="button";choice.className="game-ui__mummy-option";
+   choice.dataset.mummyStyle=style;choice.setAttribute("aria-pressed","false");
+   const drawing=document.createElement("span");drawing.className="game-ui__mummy-option-art";
+   drawing.setAttribute("aria-hidden","true");drawing.innerHTML=MUMMY_PREVIEWS[style];
+   const title=document.createElement("span");title.className="game-ui__mummy-option-name";
+   choice.append(drawing,title);choice.onclick=()=>actions.mummyStyleSelect?.(this.loadoutPlayer,style);
+   this.mummyStyleCards.append(choice);
+  }
+  this.mummyStylePicker.append(this.mummyStyleTitle,this.mummyStyleCards);
   this.characterPicker.append(this.characterPickerTitle,this.characterCards);
   this.weaponCards.className="game-ui__weapon-grid";
   this.weaponDetails.className="game-ui__weapon-details";
@@ -698,7 +748,7 @@ export class GameUI{
    // Name inputs belong to player setup, not the map selection screen.
   this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.characterNames,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
   this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaFilters,this.arenaEmpty,this.arenaCards,this.extraArenaSection);
-   this.menuLoadoutPanel.append(this.loadoutPlayerTabs,this.characterPicker,this.weaponDetails,this.loadoutStatus,this.matchSummary);
+   this.menuLoadoutPanel.append(this.loadoutPlayerTabs,this.characterPicker,this.mummyStylePicker,this.weaponDetails,this.loadoutStatus,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
 
   this.upgradePanel.className="game-ui__upgrade-panel game-ui__upgrade-panel--compact";
@@ -1205,6 +1255,20 @@ export class GameUI{
     this.setHidden(this.loadoutP2Button,!twoPlayers);
     const player=this.loadoutPlayer,chosenCharacter=player===1?s.characterChosen:s.secondCharacterChosen;
     const chosenWeapon=player===1?s.weaponChosen:s.secondWeaponChosen;
+    const character=player===1?s.characterId:s.opponentCharacterId;
+    const mummyStyle=player===1?s.mummyStyle:s.secondMummyStyle;
+    this.setHidden(this.mummyStylePicker,character!=="mummy");
+    if(character==="mummy"){
+     for(const item of this.mummyStyleCards.children){
+      const button=item as HTMLButtonElement;
+      button.setAttribute("aria-pressed",String(button.dataset.mummyStyle===(mummyStyle??"classic")));
+     }
+     const card=Array.from(this.characterCards.children).find(element=>
+      (element as HTMLElement).dataset.character==="mummy") as HTMLElement|undefined;
+    const portrait=card?.firstElementChild as HTMLElement|undefined;
+    if(portrait&&portrait.innerHTML!==MUMMY_PREVIEWS[mummyStyle??"classic"])
+     portrait.innerHTML=MUMMY_PREVIEWS[mummyStyle??"classic"];
+    }
     this.weaponDetails.open=true;
     for(const item of this.characterCards.children){
      const card=item as HTMLButtonElement;
@@ -1300,6 +1364,7 @@ export class GameUI{
   const secondWeaponChanged=!old||old.secondWeapon!==s.secondWeapon;
   const nameChanged=!old||old.playerName!==s.playerName||old.secondPlayerName!==s.secondPlayerName;
   const characterChanged=!old||old.characterId!==s.characterId||old.opponentCharacterId!==s.opponentCharacterId;
+  const mummyChanged=!old||old.mummyStyle!==s.mummyStyle||old.secondMummyStyle!==s.secondMummyStyle;
   const progressKey=s.progression?JSON.stringify(s.progression):"";
   const progressChanged=!old||old.progressKey!==progressKey||old.inRun!==Boolean(s.inRun);
   const pointsChanged=!old||old.upgradePoints!==s.upgradePoints;
@@ -1307,7 +1372,7 @@ export class GameUI{
    s.upgradedWeapons.some((id,index)=>id!==old.upgradedWeapons[index]);
   const selectionKey=[s.characterChosen,s.weaponChosen,s.secondCharacterChosen,s.secondWeaponChosen].join(":");
    const selectionChanged=!old||old.selectionKey!==selectionKey;
-   const staticChanged=selectionChanged||stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged||secondWeaponChanged||nameChanged||characterChanged;
+   const staticChanged=selectionChanged||stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged||secondWeaponChanged||nameChanged||characterChanged||mummyChanged;
   const missileRules=s.mode==="missile-duel";
 
   if(staticChanged){
@@ -1547,6 +1612,7 @@ export class GameUI{
    this.syncWizard(state,s);
    this.lastView={selectionKey,state,locale,arena:s.arena,mode:s.mode,weapon:s.weapon,winner:s.winner,
     upgradePoints:s.upgradePoints,upgradedWeapons:[...s.upgradedWeapons],progressKey,inRun:Boolean(s.inRun),secondWeapon:s.secondWeapon,
+    mummyStyle:s.mummyStyle,secondMummyStyle:s.secondMummyStyle,
     playerName:s.playerName,secondPlayerName:s.secondPlayerName,localPvP:s.localPvP,
      characterId:s.characterId,opponentCharacterId:s.opponentCharacterId};
   }
@@ -1831,6 +1897,14 @@ export class GameUI{
   this.playerNameCaption.textContent=messages.characterNames.playerOne;
   this.secondNameCaption.textContent=messages.characterNames.playerTwo;
   this.characterPickerTitle.textContent=this.i18n.locale==="fa"?"انتخاب شخصیت · اجباری":"CHOOSE CHARACTER · REQUIRED";
+  this.mummyStyleTitle.textContent=this.i18n.locale==="fa"?"مدل مومیایی · ظاهری":"MUMMY OUTFIT · COSMETIC";
+  this.mummyStyleCards.setAttribute("aria-label",this.mummyStyleTitle.textContent);
+  for(const item of this.mummyStyleCards.children){
+   const button=item as HTMLButtonElement,style=button.dataset.mummyStyle as MummyStyleId;
+   const name=MUMMY_STYLE_NAMES[style][this.i18n.locale];
+   this.setText(button.children[button.children.length-1] as HTMLElement,name);
+   button.setAttribute("aria-label",(this.i18n.locale==="fa"?"مومیایی ":"MUMMY ")+name);
+  }
   this.characterCards.setAttribute("aria-label",this.characterPickerTitle.textContent);
   for(const item of this.characterCards.children){
    const card=item as HTMLButtonElement,id=card.dataset.character as CharacterId;
