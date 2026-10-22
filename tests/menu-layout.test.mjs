@@ -613,13 +613,13 @@ test("all twenty maps remain selectable through a visible main-menu shortcut",()
  }
  ui.stepBackButton.click();
  assert.equal(ui.menuStepIndex,0);
- assert.match(ui.arenaShortcut.textContent,/reactor/i);
+ assert.match(ui.arenaShortcut.textContent,/ember-river/i);
  ui.arenaShortcut.click();
  assert.equal(ui.menuStepIndex,1);
- assert.equal(ui.arenaCards.children.find(c=>c.dataset.arena==="reactor").getAttribute("aria-pressed"),"true");
+ assert.equal(ui.arenaCards.children.find(c=>c.dataset.arena==="ember-river").getAttribute("aria-pressed"),"true");
  ui.quickPvpButton.click();
  hud.mode="local-pvp";ui.render(states.MENU,hud);
- assert.equal(ui.arenaCards.children.length,16,"2P must retain all arena choices");
+ assert.equal(ui.arenaCards.children.length,20,"2P must retain all arena choices");
 });
 
 test("character names are editable in player setup and shown in the HUD",()=>{
