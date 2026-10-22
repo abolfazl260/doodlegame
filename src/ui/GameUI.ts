@@ -2,11 +2,11 @@ import {ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl,type ArenaCategory} f
 import type {MummyStyleId} from "../gameplay/MummyStyles.js";
 // UI-only labels are repeated here so standalone GameUI test harnesses can
 // evaluate compiled UI without requiring an additional runtime module.
-const MUMMY_STYLE_IDS:readonly MummyStyleId[]=["classic","royal","cursed","scarab","desert"];
+const MUMMY_STYLE_IDS:readonly MummyStyleId[]=["classic","royal","cursed","scarab","desert","sentinel"];
 const MUMMY_STYLE_NAMES:Readonly<Record<MummyStyleId,{en:string;fa:string}>>={
  classic:{en:"CLASSIC",fa:"کلاسیک"},royal:{en:"ROYAL",fa:"سلطنتی"},
  cursed:{en:"CURSED",fa:"نفرین‌شده"},scarab:{en:"SCARAB",fa:"سوسک مقدس"},
- desert:{en:"DESERT",fa:"کویر"}
+ desert:{en:"DESERT",fa:"کویری"},sentinel:{en:"SENTINEL",fa:"نگهبان معبد"}
 };
 import {MobileOnboarding,type TutorialSignals} from "./MobileOnboarding";
 import type {Storage} from "../storage/Storage";
@@ -84,27 +84,52 @@ const CHARACTER_PORTRAITS:Record<CharacterId,string>={
  archer:"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 112\" aria-hidden=\"true\">\n<ellipse cx=\"48\" cy=\"107\" rx=\"33\" ry=\"4\" fill=\"#071a16\" opacity=\".5\"/>\n<path d=\"M31 51 17 67 9 98 36 86 48 78 62 91 83 99 78 65 67 50Z\" fill=\"#2a5f37\" stroke=\"#08140e\" stroke-width=\"4\" stroke-linejoin=\"round\"/>\n<path d=\"M28 75 22 101 39 106 48 87 57 104 76 104 68 75Z\" fill=\"#172a24\" stroke=\"#07100e\" stroke-width=\"5\" stroke-linejoin=\"round\"/>\n<path d=\"M25 96 21 106 39 106 43 98m16 0 2 8 18 0-6-10\" fill=\"#84502b\" stroke=\"#080f0d\" stroke-width=\"4\"/>\n<path d=\"M31 82 43 83m13 0 14-1\" stroke=\"#61933d\" stroke-width=\"8\"/>\n<path d=\"M27 48 19 65 27 82 68 82 76 65 66 50Z\" fill=\"#183b28\" stroke=\"#0c1511\" stroke-width=\"5\"/>\n<path d=\"M28 52 11 64 8 83 20 89 35 67m35-15 17 12 4 19-12 6-18-22\" fill=\"#1b2821\" stroke=\"#0a1410\" stroke-width=\"8\" stroke-linejoin=\"round\"/>\n<path d=\"M13 70 24 78m71-8-17 8\" stroke=\"#a77845\" stroke-width=\"9\"/><path d=\"M11 75 23 83m68-8-13 8\" stroke=\"#644023\" stroke-width=\"4\"/>\n<path d=\"M16 50 21 24 34 18 46 25 38 56Z\" fill=\"#634128\" stroke=\"#111810\" stroke-width=\"3\"/>\n<path d=\"M17 27 12 11m10 16-1-20m7 19 7-17\" stroke=\"#92c83e\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n<path d=\"m8 12 4-9 4 9m1-4 4-8 4 8m2 3 8-7\" stroke=\"#c8eb64\" stroke-width=\"3\" fill=\"none\"/>\n<path d=\"M29 53 68 77\" fill=\"none\" stroke=\"#8d5932\" stroke-width=\"9\"/><path d=\"M65 54 30 82\" fill=\"none\" stroke=\"#b68142\" stroke-width=\"5\"/>\n<path d=\"M25 79H71\" stroke=\"#6b4324\" stroke-width=\"8\"/><circle cx=\"48\" cy=\"79\" r=\"7\" fill=\"#dcae54\" stroke=\"#0b1310\" stroke-width=\"3\"/>\n<circle cx=\"48\" cy=\"79\" r=\"3\" fill=\"#5a3d22\"/>\n<path d=\"M21 38Q20 23 48 8L73 25 85 47 68 59 28 58 13 49Z\" fill=\"#365d39\" stroke=\"#0a140d\" stroke-width=\"5\" stroke-linejoin=\"round\"/>\n<path d=\"M27 44 46 19 63 18 76 38 68 52 30 52Z\" fill=\"#07130e\" stroke=\"#070e0b\" stroke-width=\"3\"/>\n<path d=\"M20 44Q30 25 48 15 66 23 76 40\" stroke=\"#d8b450\" stroke-width=\"5\" fill=\"none\"/>\n<path d=\"M32 45 44 42 60 43 69 47 53 50 38 50Z\" fill=\"#fffdf1\" stroke=\"#06120e\" stroke-width=\"3\"/>\n<path d=\"M23 58 33 54 43 65 29 71m41-13-12-4-7 11 13 6\" fill=\"#668e3f\" stroke=\"#0c170f\" stroke-width=\"3\"/>\n<path d=\"m19 92 11-8m47 8-11-8\" stroke=\"#6ca34d\" stroke-width=\"4\"/>\n<path d=\"M18 91 10 99 32 91\" fill=\"#3c7e42\" stroke=\"#111b12\" stroke-width=\"3\"/>\n</svg>"
 };
 
-/** Weapon-free miniature versions of the actual five in-game Mummy outfits. */
+/** Small in-game roster portraits, drawn as layered SVGs rather than color filters.
+ * Art mirrors the same headpieces, bandages, collars and amulets as the live rig.
+ * The eight-character roster stays intact; these are six cosmetics for Mummy.
+ */
 const MUMMY_PREVIEWS:Readonly<Record<MummyStyleId,string>>=Object.fromEntries(MUMMY_STYLE_IDS.map(style=>{
  const base=CHARACTER_PORTRAITS.mummy;
  if(style==="classic")return [style,base];
  const palette={
-  royal:{linen:"#f5dfbf",fold:"#bb9a71",trim:"#f8cc65",eye:"#3be3fc"},
-  cursed:{linen:"#c7b9cc",fold:"#84628d",trim:"#ad81da",eye:"#d66aff"},
-  scarab:{linen:"#d8e5c8",fold:"#91a794",trim:"#b9ce55",eye:"#6bffe5"},
-  desert:{linen:"#efd0ab",fold:"#bc8d68",trim:"#da9150",eye:"#ffc169"}
+  royal:{linen:"#f5e5cc",fold:"#bfa98a",metal:"#f6c254",gem:"#3be3fc"},
+  cursed:{linen:"#d9ccdf",fold:"#9072a6",metal:"#b485f4",gem:"#dc7aff"},
+  scarab:{linen:"#e1e8d2",fold:"#a5b7a1",metal:"#e3c355",gem:"#5cf8eb"},
+  desert:{linen:"#f1dbc0",fold:"#c8a080",metal:"#e59b5b",gem:"#42e7f4"},
+  sentinel:{linen:"#f2e9da",fold:"#b6bdc0",metal:"#f4c459",gem:"#46ecff"}
  }[style];
- const ornaments={
-  royal:'<path d="M22 29 14 21 8 51 21 53M74 29 82 21 88 51 75 53" fill="#30465e" stroke="#0b0d14" stroke-width="3"/><path d="M47 13 48 2 43 8 53 8 48 2" stroke="#f8cc65" stroke-width="4" fill="none"/>',
-  cursed:'<path d="M20 29 10 18 5 54 17 52M76 29 86 18 91 54 79 52" fill="#514162" stroke="#0b0d14" stroke-width="3"/><path d="M16 53 7 61 13 68m67-15 9 8-6 7" stroke="#ad81da" stroke-width="4" fill="none"/>',
-  scarab:'<path d="m32 16-10-8-6 13M64 16l10-8 6 13" fill="none" stroke="#b9ce55" stroke-width="5"/><path d="M43 11 48 2 53 11 48 16Z" fill="#6bffe5" stroke="#101b1e" stroke-width="2"/>',
-  desert:'<path d="M25 28 14 23 4 32 14 40 2 48" fill="none" stroke="#da9150" stroke-width="6" stroke-linecap="round"/><path d="M22 30 8 40 5 58" fill="none" stroke="#efd0ab" stroke-width="5"/>'
- }[style];
- return [style,base.replaceAll("#eee5d5",palette.linen).replaceAll("#ebe1cb",palette.linen)
+ const shapes:{
+  [K in Exclude<MummyStyleId,"classic">]:{behind:string;front:string}
+ }={
+  royal:{
+   behind:'<path d="M28 18 18 25 12 58 29 64 39 48 58 48 67 64 84 58 78 25 66 16Z" fill="#1957a1" stroke="#070d17" stroke-width="5"/><path d="m16 36 15 8m-17 5 14 7m51-20-15 8m16 5-14 7" stroke="#f4c459" stroke-width="6"/>',
+   front:'<path d="M26 45 35 55 48 58 61 55 72 45" fill="none" stroke="#f4c459" stroke-width="6"/><path d="M35 52 48 58 61 52" fill="none" stroke="#1462b6" stroke-width="3"/><path d="M41 77 40 98 48 105 56 98 55 77" fill="#1962b3" stroke="#f4c459" stroke-width="3"/><path d="M47 14 48 2 54 12 54 28 42 28 42 12Z" fill="#f8ca54" stroke="#07131e" stroke-width="3"/><circle cx="48" cy="20" r="5" fill="#3be3fc" stroke="#0d1720" stroke-width="2"/><path d="m13 69 14 6m57-6-14 6" stroke="#f4c459" stroke-width="5"/><path d="M46 86h4l-2 9z" fill="#f4c459"/>'
+  },
+  cursed:{
+   behind:'<path d="M25 35 13 22 4 44 18 51 10 68 24 61 31 49m40-14 12-13 9 22-14 7 8 17-15-7-9-12" fill="#49365f" stroke="#080c13" stroke-width="4"/><path d="M23 61 9 73 15 85 7 98 28 90m43-29 16 11-7 13 9 13-22-8" fill="#3b2b58" stroke="#0a0c18" stroke-width="4"/>',
+   front:'<path d="M25 24 18 14 8 29 18 33 11 43m58-19 9-10 11 15-11 5 8 9" fill="#66517e" stroke="#090b15" stroke-width="3"/><path d="M24 26 40 17 60 21 74 30" stroke="#987caa" stroke-width="5" fill="none"/><path d="M28 51 48 56 69 50" stroke="#865ba2" stroke-width="7" fill="none"/><path d="m30 68 10 6m17-1 10-7" stroke="#a37ebb" stroke-width="5"/><circle cx="48" cy="76" r="6" fill="#b485f4" stroke="#160d20" stroke-width="3"/><path d="M47 70 51 76 45 79 49 85" fill="none" stroke="#f2c4ff" stroke-width="2"/><path d="m75 47 8-8 4 12-8 5" fill="#a55ce2" opacity=".85"/>'
+  },
+  scarab:{
+   behind:'<path d="M29 23 17 8 7 16 13 35 26 39m41-16L79 8l10 8-6 19-13 4" fill="#d5b547" stroke="#071319" stroke-width="4"/><path d="M21 46 8 63 18 91 37 81m38-35 13 17-10 28-19-10" fill="#20584e" stroke="#071319" stroke-width="4"/>',
+   front:'<path d="M24 45 14 54 19 66 32 58 48 62 64 58 77 66 82 54 72 45" fill="#2c8a77" stroke="#071b1a" stroke-width="3"/><path d="M21 50 31 59 48 63 65 59 76 50" fill="none" stroke="#e3c355" stroke-width="5"/><path d="M38 60 30 72 40 76 48 68 56 76 66 72 58 60" fill="#dab956" stroke="#0a151a" stroke-width="2"/><ellipse cx="48" cy="71" rx="7" ry="10" fill="#249f8d" stroke="#e3c355" stroke-width="4"/><path d="m44 69 4-5 4 5m-4-5v12m-8-26 8-4 8 4" fill="none" stroke="#7effe7" stroke-width="2"/><path d="M41 12 48 3 55 12 48 20Z" fill="#5cf8eb" stroke="#081720" stroke-width="3"/><path d="m13 75 12 4m58-4-12 4" stroke="#d0bc49" stroke-width="5"/>'
+  },
+  desert:{
+   behind:'<path d="M22 25 8 21 2 29 12 39 1 46 23 43m65 15 8 12-15 7 12 10-14 6-17-16" fill="#d86f44" stroke="#111018" stroke-width="4"/><path d="M67 49 86 51 95 62 77 72 92 85 80 91 58 72" fill="#b85f3d" stroke="#101019" stroke-width="3"/>',
+   front:'<path d="M18 22 29 11 57 12 78 26 69 33 52 25 28 34Z" fill="#dc7c4d" stroke="#10121a" stroke-width="4"/><path d="M17 39 32 31 48 40 67 35" fill="none" stroke="#eaa778" stroke-width="4"/><path d="M28 50 47 58 67 52 76 60 63 68 43 64 29 62Z" fill="#bd6844" stroke="#0a1119" stroke-width="3"/><path d="M25 60 11 74 20 83 33 65" fill="#d67b4b" stroke="#0b141b" stroke-width="3"/><path d="M45 81 41 99 48 106 55 99 52 81" fill="#d67a48" stroke="#271b18" stroke-width="3"/><path d="m48 87-3 6 3 6 3-6z" fill="#f8d078"/><path d="m14 77 11 6m59-6-11 6" stroke="#d99a67" stroke-width="4"/>'
+  },
+  sentinel:{
+   behind:'<path d="M24 39 12 48 6 80 20 89 37 62m35-23 12 9 6 32-14 9-17-27" fill="#1e477b" stroke="#080d18" stroke-width="4"/><path d="M27 13 18 22 11 49 27 55 36 43m33-30 9 9 7 27-16 6-9-12" fill="#20569a" stroke="#090d16" stroke-width="4"/>',
+   front:'<path d="M36 8 41 1 55 1 60 8 60 37 36 37Z" fill="#1c5e9b" stroke="#f4c459" stroke-width="4"/><path d="M48 13q-8 4 0 10 8-6 0-10v15m-6-8h12" stroke="#46ecff" stroke-width="3" fill="none"/><path d="M25 53 12 58 16 70 30 69 34 59m37-6 13 5-4 12-14-1-4-10" fill="#f4c459" stroke="#0d1724" stroke-width="3"/><path d="m14 73 15 3m53-3-15 3" stroke="#1c62b6" stroke-width="5"/><path d="M36 79 36 98 48 106 60 98 60 79Z" fill="#1e5796" stroke="#f4c459" stroke-width="4"/><path d="M48 85q-7 4 0 10 7-6 0-10v16m-8-11h16" stroke="#46ecff" stroke-width="3" fill="none"/><path d="M21 44 31 51m44-7-10 7" stroke="#f4c459" stroke-width="5"/>'
+  }
+ };
+ const parts=shapes[style];
+ const shaded=base.replaceAll("#eee5d5",palette.linen).replaceAll("#ebe1cb",palette.linen)
   .replaceAll("#f0e6d1",palette.linen).replaceAll("#c8bbab",palette.fold)
-  .replaceAll("#c8beae",palette.fold).replaceAll("#b78b40",palette.trim)
-  .replaceAll("#eabb57",palette.trim).replaceAll("#23d9f0",palette.eye)
-  .replaceAll("#2beeff",palette.eye).replace("</svg>",ornaments+"</svg>")];
+  .replaceAll("#c8beae",palette.fold).replaceAll("#b78b40",palette.metal)
+  .replaceAll("#eabb57",palette.metal).replaceAll("#23d9f0",palette.gem)
+  .replaceAll("#2beeff",palette.gem);
+ // Background cloth is inserted behind the anatomy; insignia above the bandages.
+ return [style,shaded.replace('<ellipse ',parts.behind+'<ellipse ').replace("</svg>",parts.front+"</svg>")];
 })) as Record<MummyStyleId,string>;
 
 const PRIVACY_POLICY_URL="https://abolfazl260.github.io/doodlegame/privacy.html";

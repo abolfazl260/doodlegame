@@ -2899,3 +2899,16 @@ html.software-landscape .game-ui.playing .game-ui__bow-panel{
  color:#fff;
  font-weight:900;
 }
+
+/* Individual character-card palettes, consistent with each Mummy concept. */
+.game-ui .game-ui__mummy-option[data-mummy-style="classic"]{background:linear-gradient(155deg,#383643,#182033)}
+.game-ui .game-ui__mummy-option[data-mummy-style="royal"]{background:linear-gradient(155deg,#70502a,#233957)}
+.game-ui .game-ui__mummy-option[data-mummy-style="cursed"]{background:linear-gradient(155deg,#583b73,#201730)}
+.game-ui .game-ui__mummy-option[data-mummy-style="scarab"]{background:linear-gradient(155deg,#216956,#152c39)}
+.game-ui .game-ui__mummy-option[data-mummy-style="desert"]{background:linear-gradient(155deg,#805337,#2c252b)}
+.game-ui .game-ui__mummy-option[data-mummy-style="sentinel"]{background:linear-gradient(155deg,#294d78,#182741)}
+.game-ui .game-ui__mummy-option[aria-pressed="true"]{border-color:#ffe19a;box-shadow:inset 0 0 0 1px #ffe19a,0 0 0 1px #d9ae55}
+.game-ui .game-ui__mummy-option:focus-visible{outline:3px solid #ffe19a;outline-offset:2px}
+@media(orientation:landscape) and (max-height:360px){
+ .game-ui__mummy-options{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
