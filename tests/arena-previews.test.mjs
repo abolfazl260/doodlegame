@@ -4,9 +4,9 @@ import {getBuiltInArenaPreviewDefinition} from '../.test-build/gameplay/GameSess
 import {ARENA_THEMES} from "../.test-build/themes/ArenaThemes.js";
 import {stageLandmarks,stageLandmarksSvg} from "../.test-build/themes/ArenaStageArt.js";
 import {svgBackdropInnerMarkup} from "../.test-build/themes/SimplifiedSvgBackdrops.js";
-test('exactly sixteen distinct previews derive from every real arena definition',()=>{
- const defs=getBuiltInArenaPreviewDefinition();assert.equal(BUILT_IN_PREVIEW_IDS.length,16);assert.deepEqual(new Set(BUILT_IN_PREVIEW_IDS),new Set(Object.keys(defs)));
- const images=BUILT_IN_PREVIEW_IDS.map(arenaPreviewSvg);assert.equal(new Set(images).size,16);
+test('exactly twenty distinct previews derive from every real arena definition',()=>{
+ const defs=getBuiltInArenaPreviewDefinition();assert.equal(BUILT_IN_PREVIEW_IDS.length,20);assert.deepEqual(new Set(BUILT_IN_PREVIEW_IDS),new Set(Object.keys(defs)));
+ const images=BUILT_IN_PREVIEW_IDS.map(arenaPreviewSvg);assert.equal(new Set(images).size,20);
  for(const id of BUILT_IN_PREVIEW_IDS){assert.ok(arenaPreviewUrl(id).startsWith('data:image/svg+xml'));assert.equal(arenaPreviewSvg(id),arenaPreviewSvg(id));assert.ok(arenaCategories(id).length);for(const c of arenaCategories(id))assert.ok(ARENA_CATEGORY_IDS.includes(c));}
 });
 test('mechanics determine category membership rather than color or name',()=>{
@@ -17,7 +17,7 @@ test('mechanics determine category membership rather than color or name',()=>{
  assert.ok(arenaCategories('classic').includes('balanced'));assert.match(arenaPreviewSvg('conveyor'),/#fbc56e/);assert.match(arenaPreviewSvg('reactor'),/<circle/);
 });
 
-test("sixteen illustrated thumbnails use corresponding in-game landmarks, never generic silhouettes",()=>{
+test("twenty illustrated thumbnails use corresponding in-game landmarks, never generic silhouettes",()=>{
  const ids=BUILT_IN_PREVIEW_IDS;
  const shapes=new Set();
  for(const id of ids){
@@ -35,7 +35,7 @@ test("sixteen illustrated thumbnails use corresponding in-game landmarks, never 
   assert.match(svg,/clipPath/,"preview stays clipped to rounded image bounds");
   shapes.add(JSON.stringify(landmarks));
  }
- assert.equal(shapes.size,16,"every stage must have a truly unique illustrated layout");
+ assert.equal(shapes.size,20,"every stage must have a truly unique illustrated layout");
  assert.ok(stageLandmarks("sky").some(shape=>shape.kind==="polygon"));
  assert.ok(stageLandmarks("crater").some(shape=>shape.paint==="accent"));
 });
