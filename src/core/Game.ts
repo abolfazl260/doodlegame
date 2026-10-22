@@ -1,4 +1,4 @@
-import {GameLoop} from "./GameLoop.js";import {GameState,GameStateManager} from "./GameState.js";import type {FrameScheduler} from "./FrameScheduler";import type {Renderer} from "../rendering/Renderer";import type {GameSession,ArenaId,GameModeId,CharacterId} from "../gameplay/GameSession";import type {UpgradeSnapshot,Progression} from "../progression/Progression";
+import {GameLoop} from "./GameLoop.js";import type {MummyStyleId} from "../gameplay/MummyStyles.js";import {GameState,GameStateManager} from "./GameState.js";import type {FrameScheduler} from "./FrameScheduler";import type {Renderer} from "../rendering/Renderer";import type {GameSession,ArenaId,GameModeId,CharacterId} from "../gameplay/GameSession";import type {UpgradeSnapshot,Progression} from "../progression/Progression";
 export class Game{
  private state=new GameStateManager();private loop:GameLoop;private initialized=false;private disposed=false;
  private inRun=false;
@@ -41,6 +41,7 @@ export class Game{
  selectPlayer2Weapon(direction:1|-1){this.ready();if(this.state.getState()===GameState.MENU)this.session.selectPlayer2Weapon(direction);}
  selectCharacter(id:CharacterId){this.ready();const state=this.state.getState();if(state!==GameState.MENU&&state!==GameState.GAME_OVER)return;this.session.setCharacterId(id);this.state.notify();}
  selectPlayer2Character(id:CharacterId){this.ready();if(this.state.getState()!==GameState.MENU)return;this.session.setPlayer2CharacterId(id);this.state.notify();}
+ selectMummyStyle(player:1|2,id:MummyStyleId){this.ready();if(this.state.getState()!==GameState.MENU)return false;const ok=this.session.setMummyStyle(player,id);if(ok)this.state.notify();return ok;}
  selectPlayer2StartingWeapon(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()!==GameState.MENU)return false;const selected=this.session.setPlayer2StartingWeapon(id);if(selected)this.state.notify();return selected;}
  chooseRandomStartingWeapon(player:1|2){this.ready();if(this.state.getState()!==GameState.MENU)return false;const selected=this.session.chooseRandomStartingWeapon(player);if(selected)this.state.notify();return selected;}
  selectStartingWeapon(id:import("../input/Input").WeaponId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return false;const selected=this.session.setStartingWeapon(id);if(selected)this.state.notify();return selected;}
