@@ -59,6 +59,7 @@ test("best-of-three counts decisive rounds, swaps spawn sides and preserves equi
 test("draws award no points; next round remains available",()=>{
  const {session}=createSession();
  session.startPvpSeries();
+ for(let i=0;i<31;i++)session.update(.1);
  session.damage(session.player,200,0);
  session.damage(session.opponent,200,0);
  session.update(1/60);
