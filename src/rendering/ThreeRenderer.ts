@@ -338,7 +338,7 @@ export class ThreeRenderer implements Renderer{
   }
  }
  private draw(view:ReturnType<ThreeRenderer['fighter']>,s:DuelistRenderState){
-  const pose=fighterVisual(s),width=FIGHTER_INK_WIDTH,ink=fighterInkPalette(view.enemy,s.characterId);
+  const pose=fighterVisual(s),width=FIGHTER_INK_WIDTH,ink=fighterInkPalette(view.enemy,s.characterId,s.mummyStyle);
   view.grappleGun.visible=weaponDrawPose(s).weapon==="grapple"&&s.grabPhase===null;
   view.grappleGun.position.set(pose.hand[0]+.205,pose.hand[1]-.045,.084);
   view.grappleGun.rotation.z=pose.toolAngle;
