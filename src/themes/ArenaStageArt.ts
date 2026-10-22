@@ -130,6 +130,31 @@ export function stageLandmarks(id:BuiltInArenaId):readonly StageShape[]{
   for(const x of [.14,.84]){tower(x,.3,.055,.56);l([[x+.029,.48],[.36,.52]],"accent",.42,.004);}
   for(const x of [.24,.75])e(x,.85,.042,.035,"accent",.45);
   break;
+ // Procedural landmarks remain available as fallback while SVGs are decoding.
+ case "alpine-lake":
+  for(const [x,h] of [[.07,.49],[.23,.37],[.43,.59],[.64,.46],[.83,.66]])p([[x-.12,.7],[x,.7-h],[x+.12,.7]],"silhouette",.5);
+  for(const x of [.05,.12,.25,.31,.65,.73,.86,.92])p([[x-.024,.76],[x,.58],[x+.024,.76]],"silhouette",.8);
+  p([[.35,1],[.44,.79],[.7,.68],[.63,.78],[.51,.87],[.56,1]],"secondary",.53);
+  break;
+ case "dusk-valley":
+  e(.68,.42,.17,.18,"accent",.21);
+  for(const [x,h] of [[.17,.46],[.37,.58],[.54,.35],[.76,.5],[.92,.62]])p([[x-.16,.8],[x,.8-h],[x+.16,.8]],"silhouette",.4);
+  for(const x of [.04,.13,.23,.34,.74,.86,.93])p([[x-.03,.9],[x,.7],[x+.03,.9]],"silhouette",.7);
+  p([[.51,1],[.58,.82],[.78,.76],[.69,.85],[.59,.94],[.7,1]],"secondary",.6);
+  break;
+ case "autumn-valley":
+  for(const [x,h] of [[.09,.4],[.29,.56],[.49,.45],[.68,.66],[.9,.45]])p([[x-.13,.63],[x,.63-h],[x+.14,.63]],"silhouette",.4);
+  for(const [x,y] of [[.12,.75],[.3,.78],[.45,.73],[.62,.81],[.75,.78],[.87,.72]]){
+   e(x,y,.027,.055,"accent",.64);l([[x,y+.06],[x,y+.15]],"silhouette",.6,.004);
+  }
+  p([[0,1],[.16,.84],[.33,.94],[.53,.79],[.72,.93],[.87,.82],[1,1]],"platform",.45);
+  break;
+ case "ember-river":
+  e(.68,.19,.096,.1,"accent",.52);
+  for(const [x,h] of [[.1,.43],[.31,.56],[.49,.67],[.69,.49],[.9,.51]])p([[x-.14,.7],[x,.7-h],[x+.14,.7]],"silhouette",.62);
+  for(const x of [.06,.13,.19,.28,.8,.86,.93,.98])p([[x-.025,.85],[x,.62],[x+.025,.85]],"silhouette",.85);
+  p([[.25,1],[.42,.84],[.68,.77],[.6,.86],[.51,.93],[.55,1]],"secondary",.63);
+  break;
  }
  const value=Object.freeze(s);cache.set(id,value);return value;
 }
