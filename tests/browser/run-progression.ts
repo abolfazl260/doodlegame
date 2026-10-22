@@ -35,6 +35,8 @@ const ui=new GameUI(root,{
   else if(pending==="continue"){if(game.continueRun()&&game.getState()===GameState.MENU)ui.showRunIntermission();}
   else game.start();
  },pause:()=>game.pause(),resume:()=>game.resume(),restart:()=>game.restart(),
+ nextPvpRound:()=>{input.resetTransientState();game.nextPvpRound();},
+ changePvpLoadout:()=>{input.resetTransientState();game.stop();ui.showPvPLoadout();},
  stopToMenu:()=>{input.resetTransientState();game.stop();},
  newRun:()=>{game.newRun();},continueRun:()=>{game.continueRun();},leaveRun:()=>{game.leaveRun();},
  weaponNext:()=>game.selectWeapon(1),weaponPrevious:()=>game.selectWeapon(-1),
@@ -74,6 +76,8 @@ const fixture={
   game.selectStartingWeapon("blade");game.selectPlayer2StartingWeapon(secondWeapon);
   input.resetTransientState();
   game.start();
+  // Existing interaction fixtures start after the visual three-second countdown.
+  for(let i=0;i<182;i++)session.update(1/60);
  },
  pvpSnapshot:()=>{
   const state=session.getRenderState();
@@ -84,6 +88,8 @@ const fixture={
   for(let i=0;i<frames;i++)session.update(1/60);
  },
  finishPvP:(winner:"player"|"opponent"|"draw")=>{
+  // Forced outcomes in fixtures occur after the round becomes playable.
+  for(let i=0;i<32&&(session.getPvpSeries()?.countdown??0)>0;i++)session.update(.1);
   const player=Reflect.get(session,"player") as {health:number};
   const opponent=Reflect.get(session,"opponent") as {health:number};
   if(winner==="player"||winner==="draw")opponent.health=0;
