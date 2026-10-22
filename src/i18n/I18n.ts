@@ -20,7 +20,7 @@ export type Messages={
  menu:{kickoff:string;setup:string;players:string;progressOptions:string;selectMode:string;chooseArena:string;mapShortcut:string;selectedArena:string;step:string;nextArena:string;nextAllArenas:string;allArenas:string;back:string;loadout:string;quickDuel:string;quickPvp:string;onlineMode:string;comingSoon:string;ready:string;options:string;modeDescriptions:Readonly<Record<GameModeId,string>>};
  panels:{weaponUpgrades:string;missileControl:string;bowDraw:string;releaseToFire:string};
  upgrade:{points:string;choose:string;earn:string;upgraded:string;upgrade:string;locked:string};
- pvp:{p1:string;p2:string;winner1:string;winner2:string;draw:string;hint:string};
+ pvp:{p1:string;p2:string;winner1:string;winner2:string;draw:string;hint:string;series:{bestOfThree:string;round:string;roundComplete:string;champion:string;nextRound:string;rematch:string;changeLoadout:string;countdown:string}};
  run:{title:string;newRun:string;continueRun:string;next:string;retry:string;leave:string;wave:string;boss:string;ready:string;victory:string;defeat:string;complete:string;choose:string;career:string;points:string;medals:Record<"rookie"|"veteran"|"champion",string>;requirements:Record<"rookie"|"veteran"|"champion",string>};
  tutorial:{move:string;jump:string;attack:string;missile:string;double:string;grab:string;kick:string;ready:string;skip:string;replay:string};
  arenaCategories:Readonly<Record<import("../ui/ArenaPreviews").ArenaCategory,string>>;
@@ -48,7 +48,7 @@ const EN:Messages={
  status:{win:"YOU WIN",lose:"YOU LOSE",duel:"DUEL",hill:"HILL"},
  details:{equipped:"EQUIPPED",angle:"ANGLE",power:"POWER"},
  sections:{gameMode:"GAME MODE",arena:"ARENA",weapon:"START WEAPON"},
- characterNames:{playerOne:"CHARACTER NAME",playerTwo:"SECOND PLAYER NAME",leftPlayer:"LEFT CHARACTER · P1",rightPlayer:"RIGHT CHARACTER · P2",opponent:"OPPONENT",optional:"Enter name (optional)",wins:"WINS"},
+ characterNames:{playerOne:"CHARACTER NAME",playerTwo:"SECOND PLAYER NAME",leftPlayer:"PLAYER 1 · CHARACTER",rightPlayer:"PLAYER 2 · CHARACTER",opponent:"OPPONENT",optional:"Enter name (optional)",wins:"WINS"},
  menu:{
   kickoff:"CHOOSE YOUR FIGHT",setup:"MATCH SETUP",players:"NUMBER OF PLAYERS",progressOptions:"RUN & WEAPON UPGRADES",selectMode:"CHOOSE GAME MODE",chooseArena:"CHOOSE YOUR ARENA",mapShortcut:"CHOOSE ARENA",selectedArena:"SELECTED ARENA",step:"STEP",nextArena:"NEXT · ARENA",nextAllArenas:"NEXT · ALL 16 ARENAS",allArenas:"ALL 16 ARENAS",back:"BACK",loadout:"STARTING WEAPON · OPTIONAL",quickDuel:"SOLO PLAYER",quickPvp:"TWO PLAYERS · LOCAL",onlineMode:"ONLINE",comingSoon:"COMING SOON",
   ready:"YOUR MATCH",options:"SETTINGS & HELP",
@@ -65,7 +65,7 @@ const EN:Messages={
  },
  panels:{weaponUpgrades:"WEAPON UPGRADES",missileControl:"MISSILE CONTROL",bowDraw:"BOW DRAW",releaseToFire:"RELEASE TO FIRE"},
  upgrade:{points:"UPGRADE POINTS",choose:"Choose a weapon upgrade before the next fight.",earn:"Win a duel to earn another point.",upgraded:"UPGRADED",upgrade:"UPGRADE",locked:"LOCKED"},
- pvp:{p1:"P1",p2:"P2",winner1:"PLAYER 1 WINS",winner2:"PLAYER 2 WINS",draw:"DRAW — BOTH PLAYERS DOWN",hint:"LOCAL 2P · P1: A/D, W, Z/X · P2: ←/→, ↑, Enter · Weapons locked after setup · Mobile: two touch control sets"},
+ pvp:{p1:"P1",p2:"P2",winner1:"PLAYER 1 WINS",winner2:"PLAYER 2 WINS",draw:"DRAW — BOTH PLAYERS DOWN",hint:"LOCAL 2P · P1: A/D, W, Z/X · P2: ←/→, ↑, Enter · Weapons locked after setup · Mobile: two touch control sets",series:{bestOfThree:"BEST OF 3",round:"ROUND",roundComplete:"ROUND COMPLETE",champion:"MATCH WINNER",nextRound:"NEXT ROUND",rematch:"REMATCH",changeLoadout:"CHANGE EQUIPMENT",countdown:"STARTING IN"}},
  run:{title:"FOUR-FIGHT RUN",newRun:"NEW RUN",continueRun:"CONTINUE RUN",next:"NEXT FIGHT",retry:"RETRY FIGHT",leave:"BACK TO DUEL",wave:"WAVE",boss:"BOSS",ready:"Your next encounter is ready.",victory:"Victory! +1 upgrade point.",defeat:"Defeat. Retry this encounter with your saved upgrades.",complete:"RUN COMPLETE! Boss defeated.",choose:"Choose one of three upgrades before the next fight.",career:"RUN WINS",points:"UPGRADE POINTS",medals:{rookie:"ROOKIE",veteran:"VETERAN",champion:"CHAMPION"},requirements:{rookie:"1 Run win",veteran:"3 Run wins",champion:"1 completed Run"}},
  arenas:{classic:"CLASSIC",towers:"TOWERS",pit:"PIT",steps:"STEPS",zigzag:"ZIGZAG",sky:"SKY",moving:"MOVING",fortress:"FORTRESS",bridge:"BRIDGE",crater:"CRATER",vertical:"VERTICAL",ruins:"RUINS",conveyor:"CONVEYOR",collapse:"COLLAPSE",storm:"STORM",reactor:"REACTOR"},
  modes:{duel:"DUEL","missile-duel":"MISSILE DUEL","melee-only":"MELEE ONLY","random-weapons":"RANDOM WEAPONS","sudden-death":"SUDDEN DEATH","low-gravity":"LOW GRAVITY","king-of-hill":"KING OF THE HILL","local-pvp":"TWO PLAYERS (LOCAL)"},
@@ -98,7 +98,7 @@ const FA:Messages={
  status:{win:"بردی",lose:"باختی",duel:"دوئل",hill:"تپه"},
  details:{equipped:"سلاح",angle:"زاویه",power:"قدرت"},
  sections:{gameMode:"حالت بازی",arena:"میدان",weapon:"سلاح شروع"},
- characterNames:{playerOne:"نام کاراکتر",playerTwo:"نام بازیکن دوم",leftPlayer:"نام کاراکتر سمت چپ · بازیکن ۱",rightPlayer:"نام کاراکتر سمت راست · بازیکن ۲",opponent:"حریف",optional:"نام دلخواه (اختیاری)",wins:"برنده شد"},
+ characterNames:{playerOne:"نام کاراکتر",playerTwo:"نام بازیکن دوم",leftPlayer:"شخصیت بازیکن ۱",rightPlayer:"شخصیت بازیکن ۲",opponent:"حریف",optional:"نام دلخواه (اختیاری)",wins:"برنده شد"},
  menu:{
   kickoff:"نوع بازی را انتخاب کن",setup:"تنظیم مسابقه",players:"تعداد بازیکنان",progressOptions:"مسیر چهار مبارزه‌ای و ارتقاها",selectMode:"انتخاب حالت بازی",chooseArena:"زمین بازی را انتخاب کن",mapShortcut:"انتخاب زمین",selectedArena:"زمین انتخاب‌شده",step:"مرحله",nextArena:"بعدی · زمین",nextAllArenas:"بعدی · ۱۶ زمین",allArenas:"انتخاب از ۱۶ نقشه",back:"بازگشت",loadout:"سلاح شروع · اختیاری",quickDuel:"یک نفره",quickPvp:"دو نفره · محلی",onlineMode:"بازی آنلاین",comingSoon:"به‌زودی",
   ready:"مسابقه شما",options:"تنظیمات و راهنما",
@@ -115,7 +115,7 @@ const FA:Messages={
  },
  panels:{weaponUpgrades:"ارتقای سلاح‌ها",missileControl:"کنترل موشک",bowDraw:"کشش کمان",releaseToFire:"برای شلیک رها کن"},
  upgrade:{points:"امتیاز ارتقا",choose:"قبل از مبارزه بعدی یک ارتقای سلاح انتخاب کن.",earn:"برای گرفتن یک امتیاز دیگر، دوئل را ببر.",upgraded:"ارتقا یافته",upgrade:"ارتقا",locked:"قفل"},
- pvp:{p1:"بازیکن ۱",p2:"بازیکن ۲",winner1:"بازیکن ۱ برنده شد",winner2:"بازیکن ۲ برنده شد",draw:"مساوی — هر دو بازیکن شکست خوردند",hint:"دو نفره محلی · نفر ۱: A/D، W، Z/X · نفر ۲: ←/→، ↑، Enter · سلاح پس از شروع قفل است · موبایل: دو دسته کنترل لمسی"},
+ pvp:{p1:"بازیکن ۱",p2:"بازیکن ۲",winner1:"بازیکن ۱ برنده شد",winner2:"بازیکن ۲ برنده شد",draw:"مساوی — هر دو بازیکن شکست خوردند",hint:"دو نفره محلی · نفر ۱: A/D، W، Z/X · نفر ۲: ←/→، ↑، Enter · سلاح پس از شروع قفل است · موبایل: دو دسته کنترل لمسی",series:{bestOfThree:"بهترین از ۳",round:"راند",roundComplete:"پایان راند",champion:"برنده نهایی",nextRound:"راند بعد",rematch:"مسابقه مجدد",changeLoadout:"تغییر تجهیزات",countdown:"شروع تا"}},
  run:{title:"مسیر چهار مبارزه‌ای",newRun:"مسیر جدید",continueRun:"ادامه مسیر",next:"مبارزه بعدی",retry:"تلاش دوباره",leave:"بازگشت به دوئل",wave:"مرحله",boss:"رئیس نهایی",ready:"مبارزه بعدی آماده است.",victory:"پیروزی! ۱ امتیاز ارتقا گرفتی.",defeat:"شکست؛ این مرحله را با ارتقاهای ذخیره‌شده دوباره بازی کن.",complete:"مسیر کامل شد! رئیس نهایی شکست خورد.",choose:"برای ادامه یکی از سه ارتقای پیشنهادی را انتخاب کن.",career:"بردهای مسیر",points:"امتیاز ارتقا",medals:{rookie:"تازه‌کار",veteran:"کهنه‌کار",champion:"قهرمان"},requirements:{rookie:"۱ برد در مسیر",veteran:"۳ برد در مسیر",champion:"۱ مسیر کامل"}},
  arenas:{classic:"کلاسیک",towers:"برج‌ها",pit:"گودال",steps:"پله‌ها",zigzag:"زیگزاگ",sky:"آسمان",moving:"متحرک",fortress:"دژ",bridge:"پل",crater:"دهانه",vertical:"عمودی",ruins:"ویرانه‌ها",conveyor:"نوار نقاله",collapse:"فروریزش",storm:"طوفان",reactor:"راکتور"},
  modes:{duel:"دوئل","missile-duel":"دوئل موشکی","melee-only":"فقط تن‌به‌تن","random-weapons":"سلاح تصادفی","sudden-death":"مرگ ناگهانی","low-gravity":"جاذبه کم","king-of-hill":"پادشاه تپه","local-pvp":"دو نفره (محلی)"},

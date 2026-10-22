@@ -132,6 +132,8 @@ try{
   pause:pauseGame,
   resume:resumeGame,
   restart:restartGame,
+  nextPvpRound:()=>{input.resetTransientState();game.nextPvpRound();},
+  changePvpLoadout:()=>{stopToMenu();ui.showPvPLoadout();},
   stopToMenu,
   newRun:()=>{input.resetTransientState();game.newRun();},
   continueRun:()=>{input.resetTransientState();game.continueRun();},
