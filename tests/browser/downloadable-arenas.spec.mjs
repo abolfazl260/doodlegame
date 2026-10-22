@@ -109,7 +109,10 @@ test("short landscape gallery keeps all downloadable cards independently reachab
  await last.locator(".game-ui__download-install").tap();
  await expect(last.locator(".game-ui__download-play")).toBeVisible();
  await last.locator(".game-ui__download-play").tap();
- await expect(page.locator(".game-ui__arena-selection-summary")).toContainText("باغ شکوفه‌های گیلاس");
+ // Last card follows the catalog order, which can grow as new maps are added.
+ const lastEntry=fixtureCatalog.arenas.at(-1);
+ await expect(page.locator(".game-ui__arena-selection-summary")).toContainText(lastEntry.names.fa);
+ expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe(lastEntry.id);
  await expect(page.locator('button[data-action="next"]')).toBeInViewport();
 });
 
