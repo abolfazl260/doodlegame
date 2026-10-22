@@ -145,6 +145,7 @@ try{
   player2StartingWeapon:(id)=>game.selectPlayer2StartingWeapon(id),
   randomStartingWeapon:(player)=>game.chooseRandomStartingWeapon(player),
   player2CharacterSelect:(id)=>game.selectPlayer2Character(id),
+  mummyStyleSelect:(player,style)=>{game.selectMummyStyle(player,style);},
   characterSelect:(id:CharacterId)=>{game.selectCharacter(id);try{storage.set("doodlegame.selectedCharacter",id);}catch(error){console.warn("Could not save selected character.",error);}},
   upgradeWeapon:(id)=>game.upgradeWeapon(id),
   arenaSelect:(id:ArenaId)=>game.selectArena(id),
