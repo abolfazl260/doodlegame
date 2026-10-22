@@ -53,7 +53,7 @@ export const GUIDE_EN:GuideCopy={
  local:[
   {title:"Same device, two humans",body:"Choose Local 2 Players, then a mode and arena. Enter independent optional names. Before starting, each player must select a character and weapon; in combat each uses an independent movement stick and ATTACK. Win two rounds to take a Best of 3 match; draws award no point. Next Round has a three-second countdown and swaps the fighters’ starting sides. Rematch starts a fresh match; Change Equipment returns to loadout selection. Physical left/right controls do not swap in Persian."},
   {title:"Player 1 keyboard",body:"Player 1 uses these bindings (the fighter changes starting side between rounds). Solo arrow-key aliases belong to Player 2 when local play is enabled.",keys:"Move A/D · Down S · Jump W/Space · Attack Z/X · Grab C · Dash Shift · Aim R/F"},
-  {title:"Player 2 keyboard",body:"The right fighter has independent actions and ranged aiming. Missile uses facing only.",keys:"Move ←/→ or Numpad4/6 · Down ↓ · Jump ↑/Numpad8 · Attack Enter/Numpad0 · Grab Numpad1 · Dash Numpad5 · Aim PageUp/PageDown"}
+  {title:"Player 2 keyboard",body:"Player 2 has independent actions and ranged aiming. Missile uses facing only.",keys:"Move ←/→ or Numpad4/6 · Down ↓ · Jump ↑/Numpad8 · Attack Enter/Numpad0 · Grab Numpad1 · Dash Numpad5 · Aim PageUp/PageDown"}
  ]
 };
 export const GUIDE_FA:GuideCopy={
@@ -103,8 +103,8 @@ export const GUIDE_FA:GuideCopy={
   {title:"ویژگی زمین‌ها",body:"کارت زمین، طرح واقعی سکو و پوشش را همراه فیلتر ویژگی نشان می‌دهد. خط‌چین نشانهٔ حرکت است؛ شکاف، پل شکستنی، سطح فروریزشی، نوار نقاله، باد، دریچه و میدان جاذبه بر تاکتیک اثر دارند. یخ و سطح لغزنده اصطکاک را تغییر می‌دهند. زمین دانلودی ابتدا باید نصب شود و پس از نصب آفلاین قابل بازی است."}
  ],
  local:[
-  {title:"دو انسان، یک دستگاه",body:"دو نفرهٔ محلی، سپس حالت و زمین را انتخاب کن. نام‌های اختیاری مستقل بنویس. قبل از شروع هر بازیکن باید شخصیت و سلاح خود را انتخاب کند؛ در بازی هر نفر گوی حرکت و حملهٔ مستقل دارد. جای فیزیکی چپ و راست در زبان فارسی عوض نمی‌شود."},
-  {title:"کیبورد بازیکن اول",body:"مبارز چپ از این کلیدها استفاده می‌کند. در بازی محلی کلیدهای جهتِ تک‌نفره به بازیکن دوم اختصاص دارند. جای شروع دو بازیکن در هر راند عوض می‌شود.",keys:"Move A/D · Down S · Jump W/Space · Attack Z/X · Grab C · Dash Shift · Aim R/F"},
-  {title:"کیبورد بازیکن دوم",body:"مبارز راست کنترل مستقل دارد. برای موشک فقط جهت شخصیت اعمال می‌شود.",keys:"Move ←/→ or Numpad4/6 · Down ↓ · Jump ↑/Numpad8 · Attack Enter/Numpad0 · Grab Numpad1 · Dash Numpad5 · Aim PageUp/PageDown"}
+  {title:"دو انسان، یک دستگاه",body:"دو نفرهٔ محلی، سپس حالت و زمین را انتخاب کن. نام‌های اختیاری مستقل بنویس. قبل از شروع هر بازیکن باید شخصیت و سلاح خود را انتخاب کند؛ در بازی هر نفر گوی حرکت و حملهٔ مستقل دارد. مسابقه بهترین از ۳ راند است: نخستین بازیکن با دو برد پیروز می‌شود و مساوی امتیاز ندارد. راند بعد با شمارش معکوس ۳ ثانیه‌ای و جابه‌جایی جای شروع انجام می‌شود. مسابقه مجدد امتیازها را صفر می‌کند و تغییر تجهیزات به انتخاب شخصیت و سلاح برمی‌گردد. جای فیزیکی دکمه‌ها در زبان فارسی عوض نمی‌شود."},
+  {title:"کیبورد بازیکن اول",body:"بازیکن اول از این کلیدها استفاده می‌کند. در بازی محلی کلیدهای جهتِ تک‌نفره به بازیکن دوم اختصاص دارند. جای شروع دو بازیکن در هر راند عوض می‌شود.",keys:"Move A/D · Down S · Jump W/Space · Attack Z/X · Grab C · Dash Shift · Aim R/F"},
+  {title:"کیبورد بازیکن دوم",body:"بازیکن دوم کنترل مستقل دارد. برای موشک فقط جهت شخصیت اعمال می‌شود.",keys:"Move ←/→ or Numpad4/6 · Down ↓ · Jump ↑/Numpad8 · Attack Enter/Numpad0 · Grab Numpad1 · Dash Numpad5 · Aim PageUp/PageDown"}
  ]
 };
