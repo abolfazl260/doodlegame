@@ -104,7 +104,7 @@ export const GUIDE_FA:GuideCopy={
  ],
  local:[
   {title:"دو انسان، یک دستگاه",body:"دو نفرهٔ محلی، سپس حالت و زمین را انتخاب کن. نام‌های اختیاری مستقل بنویس. قبل از شروع هر بازیکن باید شخصیت و سلاح خود را انتخاب کند؛ در بازی هر نفر گوی حرکت و حملهٔ مستقل دارد. جای فیزیکی چپ و راست در زبان فارسی عوض نمی‌شود."},
-  {title:"کیبورد بازیکن اول",body:"مبارز چپ از این کلیدها استفاده می‌کند. در بازی محلی کلیدهای جهتِ تک‌نفره به بازیکن دوم اختصاص دارند.",keys:"Move A/D · Down S · Jump W/Space · Attack Z/X · Grab C · Dash Shift · Weapons Q/E · Aim R/F"},
-  {title:"کیبورد بازیکن دوم",body:"مبارز راست کنترل مستقل دارد. برای موشک فقط جهت شخصیت اعمال می‌شود.",keys:"Move ←/→ or Numpad4/6 · Down ↓ · Jump ↑/Numpad8 · Attack Enter/Numpad0 · Grab Numpad1 · Dash Numpad5 · Weapons [ / ] · Aim PageUp/PageDown"}
+  {title:"کیبورد بازیکن اول",body:"مبارز چپ از این کلیدها استفاده می‌کند. در بازی محلی کلیدهای جهتِ تک‌نفره به بازیکن دوم اختصاص دارند.",keys:"Move A/D · Down S · Jump W/Space · Attack Z/X · Grab C · Dash Shift · Aim R/F"},
+  {title:"کیبورد بازیکن دوم",body:"مبارز راست کنترل مستقل دارد. برای موشک فقط جهت شخصیت اعمال می‌شود.",keys:"Move ←/→ or Numpad4/6 · Down ↓ · Jump ↑/Numpad8 · Attack Enter/Numpad0 · Grab Numpad1 · Dash Numpad5 · Aim PageUp/PageDown"}
  ]
 };
