@@ -45,9 +45,9 @@ const memory=()=>{
 };
 const input={getState:()=>({moveX:0,moveY:0,jumpPressed:false,attackHeld:false,attackPressed:false,attackReleased:false,aimUpHeld:false,aimDownHeld:false,weaponNext:false,weaponPrevious:false}),resetTransientState(){},setLocalPvPEnabled(){}};
 
-test("GitHub catalog exposes 25 optional arenas while 16 bundled arenas remain",async()=>{
+test("GitHub catalog exposes 26 optional arenas while 16 bundled arenas remain",async()=>{
  const list=await loadArenaCatalog(mockFetch);
- assert.equal(list.length,25);
+ assert.equal(list.length,26);
  assert.deepEqual(list.slice(0,5).map(x=>x.id),["extra-forest","extra-desert","extra-glacier","extra-volcano","extra-neon-city"]);
  assert.deepEqual(list.slice(0,5).map(x=>x.version),[4,3,3,3,3]);
  assert.ok(list.slice(5).every(x=>x.version===1));
@@ -115,9 +115,9 @@ test("three additional themed maps install from GitHub, play and persist offline
  for(const id of newIds)removeDownloadedArena(id,storage);
 });
 
-test("all 20 new GitHub arenas install, play, and restore offline alongside the original five",async()=>{
+test("all 21 new GitHub arenas install, play, and restore offline alongside the original five",async()=>{
  const list=await loadArenaCatalog(mockFetch),newEntries=list.slice(5);
- assert.equal(newEntries.length,20);
+ assert.equal(newEntries.length,21);
  const storage=memory(),installed=[],images=new Set(),layouts=new Set();
  try{
   for(const entry of list){
@@ -138,16 +138,38 @@ test("all 20 new GitHub arenas install, play, and restore offline alongside the 
    assert.equal(game.getRenderState().arena,pack.id);
    assert.equal(game.getArena().platforms.length,descriptor.arena.platforms.length);
   }
-  assert.equal(images.size,20,"unique artwork for every new location");
-  assert.equal(layouts.size,20,"unique platform layout for every new location");
-  assert.equal(installedArenas().length,25);
-  assert.equal(storage.get(DOWNLOADED_ARENAS_KEY).length,25);
+  assert.equal(images.size,21,"unique artwork for every new location");
+  assert.equal(layouts.size,21,"unique platform layout for every new location");
+  assert.equal(installedArenas().length,26);
+  assert.equal(storage.get(DOWNLOADED_ARENAS_KEY).length,26);
   restoreDownloadedArenas(storage);
-  assert.equal(installedArenas().length,25);
+  assert.equal(installedArenas().length,26);
  }finally{
   for(const id of installed)removeDownloadedArena(id,storage);
  }
 });
+test("neon doodles map downloads a safe vector image and remains playable offline",async()=>{
+ const listing=(await loadArenaCatalog(mockFetch)).find(x=>x.id==="extra-neon-doodles");
+ assert.ok(listing);
+ const svg=asset("neon-doodles/background.svg");
+ assert.match(svg,/viewBox="0 0 1200 675"/);
+ assert.match(svg,/<path /);
+ assert.match(svg,/<circle /);
+ assert.ok(Buffer.byteLength(svg,"utf8")<=60000);
+ assert.equal(validArenaSvg(svg),true);
+ const storage=memory();
+ try{
+  const pack=await installDownloadedArena(listing,storage,mockFetch);
+  assert.equal(pack.names.en,"NEON DOODLES");
+  assert.equal(pack.arena.platforms.length,6);
+  const game=new GameSession(input);
+  game.setArena("extra-neon-doodles");
+  assert.equal(game.getRenderState().arena,"extra-neon-doodles");
+  restoreDownloadedArenas(storage);
+  assert.equal(getDownloadedArena("extra-neon-doodles")?.backgroundSvg,svg);
+ }finally{removeDownloadedArena("extra-neon-doodles",storage);}
+});
+
 test("version-2 WebP maps remain usable offline and can upgrade to version-4 SVG",async()=>{
  const storage=memory();
  const former=JSON.parse(asset("forest/arena.json"));

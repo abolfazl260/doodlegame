@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-neon-doodles",
+  "version": 1,
+  "names": {
+    "fa": "دودل‌های نئونی",
+    "en": "NEON DOODLES"
+  },
+  "background": "background.svg",
+  "arena": {
+    "speedMultiplier": 1.08,
+    "jumpMultiplier": 1.1,
+    "gravity": -21,
+    "fallLimit": null,
+    "movingPlatforms": false,
+    "spawnX": [
+      -8,
+      8
+    ],
+    "platforms": [
+      {
+        "x": -12,
+        "y": -0.25,
+        "width": 24,
+        "height": 0.5
+      },
+      {
+        "x": -9.2,
+        "y": 1.55,
+        "width": 3.7,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": 5.5,
+        "y": 1.55,
+        "width": 3.7,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": -3.2,
+        "y": 2.85,
+        "width": 6.4,
+        "height": 0.32,
+        "surface": "slippery"
+      },
+      {
+        "x": -8.7,
+        "y": 4.3,
+        "width": 3.2,
+        "height": 0.3,
+        "surface": "oneWay"
+      },
+      {
+        "x": 5.5,
+        "y": 4.3,
+        "width": 3.2,
+        "height": 0.3,
+        "surface": "oneWay"
+      }
+    ]
+  },
+  "theme": {
+    "skin": "neon",
+    "backdrop": "sketch",
+    "skyTop": "#050509",
+    "skyBottom": "#07070c",
+    "silhouette": "#10101a",
+    "platform": "#191b28",
+    "platformEdge": "#fdec3e",
+    "accent": "#ff3990",
+    "secondary": "#2bd6f8",
+    "hudBackground": "#090915"
+  }
+}

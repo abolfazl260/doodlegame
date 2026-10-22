@@ -32,7 +32,7 @@ test("players can download new GitHub arenas, choose them, and replay them offli
  await expect(extras).toBeVisible();
  await extras.locator(".game-ui__download-refresh").tap();
  const cards=extras.locator(".game-ui__download-card");
- await expect(cards).toHaveCount(25);
+ await expect(cards).toHaveCount(fixtureCatalog.arenas.length);
  await cards.first().locator(".game-ui__download-install").tap();
  await expect(cards.first().locator(".game-ui__download-play")).toBeVisible();
  await cards.first().locator(".game-ui__download-play").tap();
@@ -56,7 +56,7 @@ test("three new landscapes can each be downloaded, selected and reused offline",
  await mockGithub(page);
  await visitArenaStep(page);
  await page.locator(".game-ui__download-refresh").tap();
- await expect(page.locator(".game-ui__download-card")).toHaveCount(25);
+ await expect(page.locator(".game-ui__download-card")).toHaveCount(fixtureCatalog.arenas.length);
  const newlyAdded=[
   {id:"extra-glacier",fa:"قله یخی"},
   {id:"extra-volcano",fa:"آتشفشان سوزان"},
@@ -90,7 +90,7 @@ test("short landscape gallery keeps all downloadable cards independently reachab
  await visitArenaStep(page);
  await page.locator(".game-ui__download-refresh").tap();
  const grid=page.locator(".game-ui__download-grid");
- await expect(grid.locator(".game-ui__download-card")).toHaveCount(25);
+ await expect(grid.locator(".game-ui__download-card")).toHaveCount(fixtureCatalog.arenas.length);
  // Previously the full gallery expanded under the sticky Start/Back footer.
  const before=await grid.evaluate(node=>{
   const css=getComputedStyle(node);
@@ -109,7 +109,10 @@ test("short landscape gallery keeps all downloadable cards independently reachab
  await last.locator(".game-ui__download-install").tap();
  await expect(last.locator(".game-ui__download-play")).toBeVisible();
  await last.locator(".game-ui__download-play").tap();
- await expect(page.locator(".game-ui__arena-selection-summary")).toContainText("باغ شکوفه‌های گیلاس");
+ // Last card follows the catalog order, which can grow as new maps are added.
+ const lastEntry=fixtureCatalog.arenas.at(-1);
+ await expect(page.locator(".game-ui__arena-selection-summary")).toContainText(lastEntry.names.fa);
+ expect(await page.evaluate(()=>window.__runFixture.view().arena)).toBe(lastEntry.id);
  await expect(page.locator('button[data-action="next"]')).toBeInViewport();
 });
 
@@ -138,7 +141,7 @@ test("WebP arena downloads as binary, displays its thumbnail and plays again off
  });
  await visitArenaStep(page);
  await page.locator(".game-ui__download-refresh").tap();
- await expect(page.locator(".game-ui__download-card")).toHaveCount(26);
+ await expect(page.locator(".game-ui__download-card")).toHaveCount(fixtureCatalog.arenas.length+1);
  const card=page.locator(".game-ui__download-card").filter({hasText:"نمای آزمایشی WebP"});
  await card.locator(".game-ui__download-install").tap();
  await expect(card.locator(".game-ui__download-play")).toBeVisible();

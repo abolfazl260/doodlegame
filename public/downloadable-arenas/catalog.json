@@ -225,6 +225,15 @@
         "en": "CHERRY BLOSSOM"
       },
       "path": "cherry-blossom/arena.json"
+    },
+    {
+      "id": "extra-neon-doodles",
+      "version": 1,
+      "names": {
+        "fa": "دودل‌های نئونی",
+        "en": "NEON DOODLES"
+      },
+      "path": "neon-doodles/arena.json"
     }
   ]
 }
