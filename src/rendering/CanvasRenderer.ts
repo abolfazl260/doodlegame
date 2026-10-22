@@ -218,7 +218,7 @@ export class CanvasRenderer implements Renderer{
   c.restore();
  }
  private draw(c:CanvasRenderingContext2D,s:DuelistRenderState,toX:(x:number)=>number,toY:(y:number)=>number,scale:number,enemy:boolean){
-  const pose=fighterVisual(s),ink=fighterInkPalette(enemy,s.characterId),width=FIGHTER_INK_WIDTH;
+  const pose=fighterVisual(s),ink=fighterInkPalette(enemy,s.characterId,s.mummyStyle),width=FIGHTER_INK_WIDTH;
   // A subtle ground marker helps track fighters against detailed arena art.
   if(s.grounded){
    c.save();c.globalAlpha=.25;c.fillStyle=ink.halo;
