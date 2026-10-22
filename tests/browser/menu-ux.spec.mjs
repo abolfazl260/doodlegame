@@ -418,7 +418,7 @@ test("real keyboard typing works for both local players and every arena is selec
  await expect(page.locator(".health-bar--opponent .health-label__name")).toHaveText("Sina");
 });
 
-test("local PvP names follow the physical left and right characters in Persian and English",async({page})=>{
+test("local PvP keeps P1/P2 names attached to fighter identities in Persian and English",async({page})=>{
  await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
  const fields=page.locator(".game-ui__character-name-input");
  const left=fields.nth(0),right=fields.nth(1);
@@ -429,14 +429,14 @@ test("local PvP names follow the physical left and right characters in Persian a
   expect(l.x+l.width/2).toBeLessThan(r.x+r.width/2);
  };
  await expect(page.locator("html")).toHaveAttribute("dir","rtl");
- await expect(labels.first()).toContainText("سمت چپ");
- await expect(labels.nth(1)).toContainText("سمت راست");
+ await expect(labels.first()).toContainText("بازیکن ۱");
+ await expect(labels.nth(1)).toContainText("بازیکن ۲");
  await positions();
  // Switching the language must not swap the physical fields.
  await page.locator(".game-ui__language button").tap();
  await expect(page.locator("html")).toHaveAttribute("dir","ltr");
- await expect(labels.first()).toContainText("LEFT");
- await expect(labels.nth(1)).toContainText("RIGHT");
+ await expect(labels.first()).toContainText("PLAYER 1");
+ await expect(labels.nth(1)).toContainText("PLAYER 2");
  await positions();
  await left.fill("Left Hero");
  await right.fill("Right Hero");
@@ -463,8 +463,8 @@ test("compact landscape names stay assigned to the correct side despite stacked 
  await page.setViewportSize({width:568,height:260});
  await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
  const names=page.locator(".game-ui__character-name-input");
- await expect(page.locator(".game-ui__character-name-caption").first()).toContainText("چپ");
- await expect(page.locator(".game-ui__character-name-caption").nth(1)).toContainText("راست");
+ await expect(page.locator(".game-ui__character-name-caption").first()).toContainText("بازیکن ۱");
+ await expect(page.locator(".game-ui__character-name-caption").nth(1)).toContainText("بازیکن ۲");
  await names.nth(0).fill("بازیکن چپ");
  await names.nth(1).fill("بازیکن راست");
  await page.locator('button[data-action="next"]').tap();
