@@ -311,7 +311,7 @@ export class GameUI{
  private readHud:(()=>HudState)|null=null;
  private hudFrame:number|null=null;
  private currentState=GameState.MENU;
- private lastView:{selectionKey:string;state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId;playerName?:string;secondPlayerName?:string;localPvP?:boolean;characterId?:CharacterId;opponentCharacterId?:CharacterId}|null=null;
+ private lastView:{selectionKey:string;state:GameState;locale:string;arena:ArenaId;mode:GameModeId;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;upgradePoints:number;upgradedWeapons:readonly WeaponId[];progressKey:string;inRun:boolean;secondWeapon?:WeaponId;mummyStyle?:MummyStyleId;secondMummyStyle?:MummyStyleId;playerName?:string;secondPlayerName?:string;localPvP?:boolean;characterId?:CharacterId;opponentCharacterId?:CharacterId}|null=null;
  private lastHealth:{playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;locale:string}|null=null;
  private lastBowPercent=NaN;
  private lastBowCharging=false;
@@ -1218,8 +1218,11 @@ export class GameUI{
       const button=item as HTMLButtonElement;
       button.setAttribute("aria-pressed",String(button.dataset.mummyStyle===(mummyStyle??"classic")));
      }
-     const card=this.characterCards.querySelector('[data-character="mummy"] .game-ui__character-portrait');
-     if(card&&card.innerHTML!==MUMMY_PREVIEWS[mummyStyle??"classic"])card.innerHTML=MUMMY_PREVIEWS[mummyStyle??"classic"];
+     const card=Array.from(this.characterCards.children).find(element=>
+      (element as HTMLElement).dataset.character==="mummy") as HTMLElement|undefined;
+    const portrait=card?.firstElementChild as HTMLElement|undefined;
+    if(portrait&&portrait.innerHTML!==MUMMY_PREVIEWS[mummyStyle??"classic"])
+     portrait.innerHTML=MUMMY_PREVIEWS[mummyStyle??"classic"];
     }
     this.weaponDetails.open=true;
     for(const item of this.characterCards.children){
@@ -1313,6 +1316,7 @@ export class GameUI{
   const secondWeaponChanged=!old||old.secondWeapon!==s.secondWeapon;
   const nameChanged=!old||old.playerName!==s.playerName||old.secondPlayerName!==s.secondPlayerName;
   const characterChanged=!old||old.characterId!==s.characterId||old.opponentCharacterId!==s.opponentCharacterId;
+  const mummyChanged=!old||old.mummyStyle!==s.mummyStyle||old.secondMummyStyle!==s.secondMummyStyle;
   const progressKey=s.progression?JSON.stringify(s.progression):"";
   const progressChanged=!old||old.progressKey!==progressKey||old.inRun!==Boolean(s.inRun);
   const pointsChanged=!old||old.upgradePoints!==s.upgradePoints;
@@ -1320,7 +1324,7 @@ export class GameUI{
    s.upgradedWeapons.some((id,index)=>id!==old.upgradedWeapons[index]);
   const selectionKey=[s.characterChosen,s.weaponChosen,s.secondCharacterChosen,s.secondWeaponChosen].join(":");
    const selectionChanged=!old||old.selectionKey!==selectionKey;
-   const staticChanged=selectionChanged||stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged||secondWeaponChanged||nameChanged||characterChanged;
+   const staticChanged=selectionChanged||stateChanged||localeChanged||arenaChanged||modeChanged||weaponChanged||winnerChanged||pointsChanged||upgradesChanged||progressChanged||secondWeaponChanged||nameChanged||characterChanged||mummyChanged;
   const missileRules=s.mode==="missile-duel";
 
   if(staticChanged){
@@ -1560,6 +1564,7 @@ export class GameUI{
    this.syncWizard(state,s);
    this.lastView={selectionKey,state,locale,arena:s.arena,mode:s.mode,weapon:s.weapon,winner:s.winner,
     upgradePoints:s.upgradePoints,upgradedWeapons:[...s.upgradedWeapons],progressKey,inRun:Boolean(s.inRun),secondWeapon:s.secondWeapon,
+    mummyStyle:s.mummyStyle,secondMummyStyle:s.secondMummyStyle,
     playerName:s.playerName,secondPlayerName:s.secondPlayerName,localPvP:s.localPvP,
      characterId:s.characterId,opponentCharacterId:s.opponentCharacterId};
   }
