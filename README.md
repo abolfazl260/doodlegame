@@ -160,7 +160,7 @@ Current live deployment:
 
 **https://abolfazl260.github.io/doodlegame/**
 
-The current game is frontend-only. Persistent online presence, authentication, matchmaking, and real-time multiplayer would require a separate backend or hosted realtime service.
+The browser game remains frontend-only. Android LAN duels use the native phone-to-phone transport described below; public online presence, accounts and internet matchmaking are not implemented.
 
 ## Motion and physics
 
@@ -256,3 +256,9 @@ ANDROID_VERSION_CODE=1002000 npm run android:bundle:release
 The example value must be replaced with a code greater than the largest one
 previously uploaded. Signed bundles are produced by the configured release
 workflow when the Android signing secrets are present.
+
+## Android local Wi-Fi multiplayer
+
+The Android APK has a separate native LAN 1v1 implementation: host a room, join by local IP/port/session token, and ready on both phones. The host owns combat state; each phone has one control set. Duel and bundled arenas are supported initially. No backend, internet matchmaking or account is used; Online remains disabled. Native build and physical two-phone acceptance are pending; see [validation status](docs/lan-validation.md).
+
+[How to play and troubleshoot LAN](docs/lan-multiplayer.md) · [Architecture](docs/adr/001-android-lan.md)

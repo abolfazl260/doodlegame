@@ -8,6 +8,7 @@
     "three": "0.186.1"
   },
   "releasePermissions": [
+    "android.permission.ACCESS_NETWORK_STATE",
     "android.permission.INTERNET",
     "com.abolfazl.doodlegame.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
   ],

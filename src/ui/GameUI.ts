@@ -12,14 +12,14 @@ import type {WeaponId} from "../input/Input";
 import type {ProgressionView} from "../progression/Progression";
 
 type HudState={
- tutorial?:TutorialSignals;
+ tutorial?:TutorialSignals;lanPlayer?:1|2;
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
  progression?:ProgressionView|null;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;
  characterId?:CharacterId;opponentCharacterId?:CharacterId;characterChosen?:boolean;weaponChosen?:boolean;secondCharacterChosen?:boolean;secondWeaponChosen?:boolean;weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;
 };
 type Actions={
- quickPlay?:()=>void;
+ quickPlay?:()=>void;touchDash?:()=>void;
  newRun?:()=>void;continueRun?:()=>void;leaveRun?:()=>void;
  start:()=>void;pause:()=>void;resume:()=>void;restart:()=>void;stopToMenu?:()=>void;weaponNext:()=>void;weaponPrevious:()=>void;
  weaponSelect:(id:WeaponId)=>void;selectStartingWeapon:(id:WeaponId)=>void;player2StartingWeapon?:(id:WeaponId)=>void;randomStartingWeapon?:(player:1|2)=>void;player2CharacterSelect?:(id:CharacterId)=>void;upgradeWeapon:(id:WeaponId)=>void;arenaSelect:(id:ArenaId)=>void;modeSelect:(id:GameModeId)=>void;
@@ -100,6 +100,7 @@ export class GameUI{
  private tutorialView="";
  private root=document.createElement("section");
  private mobileControls=document.createElement("div");
+ private lanDash=document.createElement("button");
  private p2Controls=document.createElement("div");
  private p2Joystick=document.createElement("div");
  private p2Thumb=document.createElement("div");
@@ -784,7 +785,7 @@ export class GameUI{
   this.joystick.addEventListener("pointerup",releaseJoystick);
   this.joystick.addEventListener("pointercancel",releaseJoystick);
   this.joystick.addEventListener("lostpointercapture",releaseJoystick);
-  this.nextWeaponButton.disabled=true;this.nextWeaponButton.onclick=()=>{};
+  this.nextWeaponButton.disabled=true;this.nextWeaponButton.onclick=()=>{if(this.readHud?.().lanPlayer)actions.weaponNext();};
   // A captured pointer owns ATTACK independently of the movement joystick.
   // Missile gestures fire only on pointerup; cancellation never launches a missile.
   let attackPointer=-1;
@@ -1050,7 +1051,9 @@ export class GameUI{
   }
   this.root.append(this.mobileWeaponSwitcher,this.p2WeaponControls,...this.aimPads);
   this.root.append(this.menu,this.help,this.privacy,this.topHud,this.mobilePauseButton,this.weaponList,this.bowPanel,this.mobileControls);
-  this.root.append(this.coach);
+  this.lanDash.type="button";this.lanDash.className="game-ui__lan-dash";this.lanDash.hidden=true;
+  this.lanDash.onclick=()=>{if(this.readHud?.().lanPlayer)actions.touchDash?.();};
+  this.root.append(this.coach,this.lanDash);
   container.append(this.pauseScrim,this.root);
   this.root.addEventListener("keydown",event=>{
    if(event.key!=="Escape")return;
@@ -1072,7 +1075,7 @@ export class GameUI{
   this.pendingRunStart=kind;
  }
  consumeRunStart(){const action=this.pendingRunStart;this.pendingRunStart=null;return action;}
- showRunIntermission(){this.openMenuRoute("progression");}
+ showRunIntermission(){this.menuStepIndex=0;this.openMenuRoute("progression");this.menuProgressDetails.open=true;}
  private openMenuRoute(route:"home"|"custom"|"local"|"arenas"|"progression"|"settings"){
   if(this.currentState!==GameState.MENU)return;
   this.pendingRunStart=null;
@@ -1246,6 +1249,7 @@ export class GameUI{
 
  render(state:GameState,s:HudState){
   this.currentState=state;
+  if(s.lanPlayer)this.root.dataset.lanPlayer=String(s.lanPlayer);else delete this.root.dataset.lanPlayer;
   this.renderTutorial(state,s);
   const messages=this.i18n.messages,locale=this.i18n.locale,old=this.lastView;
   const arenaName=(id:ArenaId)=>getDownloadedArena(id)?.names[locale]??messages.arenas[id as BuiltInArenaId]??id;
@@ -1340,7 +1344,7 @@ export class GameUI{
    }
    if(nameChanged||localeChanged||modeChanged||stateChanged||characterChanged){
     this.setText(this.playerHealthName,s.playerName||CHARACTER_TEXT[locale][s.characterId??"soldier"].name);
-    this.setText(this.opponentHealthName,(s.localPvP??s.mode==="local-pvp")?
+    this.setText(this.opponentHealthName,s.lanPlayer?s.secondPlayerName??"":(s.localPvP??s.mode==="local-pvp")?
      (s.secondPlayerName||messages.characterNames.playerTwo):
      CHARACTER_TEXT[locale][s.opponentCharacterId??"soldier"].name);
     this.playerHealthName.title=this.playerHealthName.textContent??"";
@@ -1489,7 +1493,10 @@ export class GameUI{
     // Missile uses the same directional pad as the other ranged weapons.
     this.setHidden(this.aimPads[0],!playing);
     this.setHidden(this.aimPads[1],!playing||!(s.localPvP??s.mode==="local-pvp"));
-    this.setHidden(this.mobileWeaponSwitcher,true);
+    this.setHidden(this.mobileWeaponSwitcher,!playing||!s.lanPlayer);
+    this.nextWeaponButton.disabled=!playing||!s.lanPlayer;
+    this.setHidden(this.lanDash,!playing||!s.lanPlayer);
+    this.setText(this.lanDash,locale==="fa"?"جهش سریع":"DASH");
     this.setHidden(this.bowPanel,!playing||s.weapon!=="bow");
     this.setHidden(this.mobileControls,!playing);
     this.setHidden(this.mobilePauseButton,!playing);
@@ -1666,7 +1673,7 @@ export class GameUI{
   if(!s.tutorial)return;
   const mobile=typeof window.matchMedia==="function"&&window.matchMedia("(pointer: coarse)").matches;
   if(state===GameState.MENU||state===GameState.GAME_OVER){this.onboarding.dismiss();}
-  const eligible=mobile&&state===GameState.PLAYING&&!s.localPvP&&!s.winner&&!document.hidden;
+  const eligible=mobile&&state===GameState.PLAYING&&!s.lanPlayer&&!s.localPvP&&!s.winner&&!document.hidden;
   const step=s.tutorial?this.onboarding.update(s.tutorial,eligible,s.weapon==="missile"):null;
   if(step==="ready")this.coachReadyUntil=performance.now()+1800;
   const ready=eligible&&this.coachReadyUntil>performance.now();

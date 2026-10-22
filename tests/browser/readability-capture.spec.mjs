@@ -1,3 +1,4 @@
+import {chooseLoadout} from "./setup.mjs";
 import {test,expect} from '@playwright/test';
 import {mkdirSync} from 'node:fs';
 for(const [width,height] of [[568,280],[568,320],[640,320],[844,390]])for(const locale of ['en','fa']){
@@ -13,13 +14,13 @@ for(const [width,height] of [[568,280],[568,320],[640,320],[844,390]])for(const 
    }
    await page.locator('.game-ui__character-name-input').first().fill(locale==='fa'?'نام بلند بازیکن برای بررسی چیدمان و خوانایی':'A long player name for layout checks');
    expect(await page.locator('.game-ui__menu').evaluate(n=>n.scrollWidth<=n.clientWidth+1)).toBe(true);
-   await page.locator('[data-action="next"]').click();await expect(page.locator('[data-action="start"]')).toBeVisible();
+   await chooseLoadout(page);await expect(page.locator('[data-action="start"]')).toBeVisible();
    const b=await page.locator('[data-action="start"]').boundingBox();expect(b.height).toBeGreaterThanOrEqual(44);
    expect(await page.evaluate(({x,y})=>document.elementFromPoint(x,y)?.closest('button')?.dataset.action,{x:b.x+b.width/2,y:b.y+b.height/2})).toBe('start');
    expect(await page.locator('.game-ui__menu').evaluate(n=>n.scrollWidth<=n.clientWidth+1)).toBe(true);
   }
   if(stage!=='before'){
-   await page.locator('[data-action="back"]').click();
+   await page.locator('[data-action="back"]').click();await page.locator('[data-action="back"]').click();
    await page.locator('.game-ui__menu-extras').evaluate(n=>n.open=true);
    await page.locator('[data-help="true"]').click();
    await page.evaluate(()=>document.documentElement.style.fontSize='20px');

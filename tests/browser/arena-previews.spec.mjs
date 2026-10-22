@@ -17,7 +17,7 @@ for(const locale of ['en','fa'])test(`arena thumbnails and filters ${locale}`,as
  await page.locator('[data-arena-category="all"]').click();await expect(page.locator('.game-ui__arena-card:visible')).toHaveCount(16);
  for(const card of await cards.all()){await card.click();await expect(card).toHaveAttribute('aria-pressed','true');}
  await page.locator('[data-action="back"]').click();await page.locator('[data-quick-mode="local-pvp"]').click();await page.locator('[data-action="next"]').click();
- await expect(page.locator('.game-ui__arena-card:visible')).toHaveCount(16);await expect(page.locator('[data-action="start"]')).toBeVisible();
+ await expect(page.locator('.game-ui__arena-card:visible')).toHaveCount(16);await expect(page.locator('[data-action="next"]')).toBeVisible();
  expect(await page.locator('.game-ui__menu').evaluate(n=>n.scrollWidth<=n.clientWidth+1)).toBe(true);
  const first=cards.first();await first.locator('img').evaluate(n=>n.dispatchEvent(new Event('error')));await expect(first.locator('img')).toBeHidden();await expect(first.locator('.game-ui__arena-name')).toBeVisible();
 });

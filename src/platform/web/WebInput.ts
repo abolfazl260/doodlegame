@@ -44,6 +44,7 @@ export class WebInput implements InputSource {
   }
   this.movement();
  }
+ triggerTouchDash(){this.state.dashPressed=true;}
  triggerTouchGrab(player:1|2=1){if(player===2){if(this.pvp)this.p2.grabPressed=true;}else {this.state.grabPressed=true;this.state.mobileGrab=true;}}
  player2TouchAttackStart(){this.p2.attackCancelled=false;this.p2.attackPressed=true;this.p2TouchAttackHeld=true;this.p2.attackHeld=true;}
  player2TouchAttackRelease(){this.p2TouchAttackHeld=false;this.p2.pointerReleased=true;this.p2.attackHeld=Array.from(this.keys).some(code=>P2_ATTACK.has(code));}

@@ -105,4 +105,5 @@ test("shake is deterministic, finite, limited, and can be disabled",()=>{
  assert.ok(Number.isFinite(result.x)&&Math.abs(result.x)<=.2);
  assert.ok(Number.isFinite(result.y)&&Math.abs(result.y)<=.15);
  assert.deepEqual(combatShake([cue],false),{x:0,y:0});
+ assert.deepEqual(combatShake([{...cue,age:0,life:0}],true),{x:0,y:0},"zero-duration cues cannot produce nonfinite camera offsets");
 });

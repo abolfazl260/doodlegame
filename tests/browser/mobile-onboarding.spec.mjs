@@ -1,7 +1,8 @@
+import {startMatch} from "./setup.mjs";
 import {test,expect} from '@playwright/test';
 test.use({viewport:{width:568,height:320},hasTouch:true,isMobile:true});
 const path='tests/browser/run-progression.html';
-const start=async page=>{await page.locator('[data-action="next"]').click();await page.locator('[data-action="start"]').click();};
+const start=async page=>{await page.locator('[data-action="next"]').click();await startMatch(page);};
 test('touch coaching accepts real actions, stays nonblocking and persists skip/replay',async({page})=>{
  await page.goto(path);await start(page);
  const coach=page.locator('.game-ui__coach');await expect(coach).toBeVisible();await expect(coach).toContainText(/Move|حرکت/);

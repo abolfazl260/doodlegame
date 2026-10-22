@@ -7,7 +7,7 @@ dist
 .test-build/
 
 # Generated Android project and local signing material
-android/
+/android/
 *.jks
 *.keystore
 keystore.properties

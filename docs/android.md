@@ -353,3 +353,11 @@ docs/play/reviewer-access.md
 ```
 
 The emulator smoke test runs offline and covers cold start, starting gameplay, match background/foreground behavior, Android Back state transitions, a second phone resolution, process force-stop/recreation, screenshots and logcat evidence.
+
+## Native LAN duels
+
+See [local Wi-Fi multiplayer](lan-multiplayer.md) and [validation status](lan-validation.md). `configure.mjs` copies `scripts/android/native/DoodleLanPlugin.java` into the generated app and registers it before `super.onCreate`. Use `npm run android:reset && npm run android:sync` to verify regeneration. No manual changes under `android/` are required. Only the generated root `/android/` is ignored in git.
+
+LAN adds the normal `ACCESS_NETWORK_STATE` permission to select the attached Wi-Fi link, alongside the existing `INTERNET` permission. It requests no location/discovery permission and runs no foreground/background service. Target SDK remains 36. Review Android local network permission requirements before changing target SDK. HTTPS, cleartext=false, empty navigation allowlist and release hardening remain in force. Raw local TCP is unencrypted; the room token is an admission check, not TLS.
+
+The Android Actions workflow remains manual; native build, release privacy/production gates and actual API 24/36 devices must be checked before considering #163 complete.

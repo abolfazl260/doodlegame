@@ -8,9 +8,9 @@ https://abolfazl260.github.io/doodlegame/privacy.html
 
 ## Current Play Data Safety position
 
-For the current codebase, DoodleGame does **not collect or share Google Play user-data types**.
+The LAN implementation introduces explicit, user-requested device-to-device transmission of match choices, inputs and render snapshots. It adds no backend collection, personal identifiers or telemetry. Review the Play Console disclosure against this inventory before releasing LAN; do not reuse an older declaration that says all match data stays on one phone.
 
-Google Play defines collection as transmitting user data off the user's device. Data that stays only on the device does not count as collected for the Data Safety form. The current game has no account system, analytics, advertising, crash-reporting SDK, cloud save, telemetry endpoint, push notifications, location feature, contacts access, camera access, or microphone access.
+Google Play defines collection as transmitting user data off the user's device. Data that stays only on the device does not count as collected for the Data Safety form. The Android game has no account system, analytics, advertising, crash-reporting SDK, cloud save, telemetry endpoint, push notifications, location feature, contacts access, camera access, or microphone access.
 
 The Play Console Data Safety form must still be completed, and the public Privacy Policy URL must still be supplied even when no user data is collected or shared.
 
@@ -20,7 +20,7 @@ The Play Console Data Safety form must still be completed, and the public Privac
 | --- | --- | --- | --- | --- |
 | Language preference (`doodlegame.locale`) | browser/WebView `localStorage` | No | Remember English/Persian UI choice | Until app/site data is cleared or the app is uninstalled |
 | Optional character names (`doodlegame.characterNames`) | browser/WebView `localStorage` | No | Display each player’s chosen name in local match setup and HUD | Until app/site data is cleared or the app is uninstalled |
-| Current match state | JavaScript memory | No | Gameplay | Discarded when the session/app process ends |
+| Current match state | JavaScript memory | Only to the selected Wi-Fi peer during LAN | Gameplay | Discarded when the session/app process ends |
 | Weapon upgrade state for the current run | JavaScript memory | No | Gameplay progression during the run | Discarded when the session/app process ends |
 
 The **Google Play Android application** has no Telegram login, DoodleGame backend account, cloud save, or remote user database. Character names stay on the device. The separately launched **Telegram Mini App**, if the owner activates its optional Cloudflare Worker, verifies Telegram identity and stores player display names and single-player results in D1. That Telegram-only feature is not invoked from the Play APK; its data behavior is disclosed separately in the public Privacy Policy. Re-review the Play Data Safety declaration before shipping any Android functionality that calls the leaderboard API.
@@ -29,8 +29,11 @@ The **Google Play Android application** has no Telegram login, DoodleGame backen
 
 Expected merged release permissions:
 
+- `android.permission.ACCESS_NETWORK_STATE`
 - `android.permission.INTERNET`
 - `com.abolfazl.doodlegame.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`
+
+`ACCESS_NETWORK_STATE` is a normal permission used to find the Wi-Fi Network and its private IPv4/subnet; it does not request location or identify nearby devices. LAN sockets carry only session metadata and match/input/snapshot data directly between the two selected phones; no character names or personal identifiers are sent and no session log is stored. Raw LAN TCP is unencrypted; use trusted Wi-Fi.
 
 `INTERNET` is included by the Capacitor Android WebView runtime. The current DoodleGame code does not send gameplay, identity, advertising, analytics, location, contacts, camera, microphone, or other user data to a DoodleGame backend.
 
@@ -67,7 +70,7 @@ Current data behavior: no DoodleGame data collection or sharing is configured th
 
 Purpose: Capacitor bridge plus the System Bars API used for immersive Android UI and safe-area handling.
 
-Current data behavior: no user data is transmitted off-device by DoodleGame through these APIs.
+Current data behavior: Capacitor bridges LAN match data to the native socket plugin for direct communication with the selected Wi-Fi peer; no external service is involved.
 
 ### `@capacitor/app` — `^8.0.0`
 

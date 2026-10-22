@@ -1,4 +1,5 @@
 import type {WeaponId} from "../input/Input";
+import type {GameRenderState} from "./GameSession";
 
 /** Presentation events. Never use these to apply damage or change simulation timing. */
 export type CombatCueKind="attack"|"hit"|"block"|"deflect"|"explosion"|"slam"|"defeat"|"throw";
@@ -21,6 +22,7 @@ export function combatShake(cues:readonly CombatCue[],enabled:boolean){
  if(!enabled)return{x:0,y:0};
  let x=0,y=0;
  for(const cue of cues){
+  if(cue.life<=0)continue;
   if(cue.kind!=="hit"&&cue.kind!=="explosion"&&cue.kind!=="slam")continue;
   const t=Math.min(1,Math.max(0,cue.age/cue.life));
   const strength=(cue.kind==="slam"?.12:cue.kind==="explosion"?.13:.055)*cue.intensity*(1-t)*(1-t);
@@ -28,4 +30,9 @@ export function combatShake(cues:readonly CombatCue[],enabled:boolean){
   y+=Math.cos(cue.id*7.13+cue.age*93)*strength*.75;
  }
  return{x:Math.max(-.2,Math.min(.2,x)),y:Math.max(-.15,Math.min(.15,y))};
+}
+
+/** Each phone applies its own motion preference without modifying the shared match snapshot. */
+export function withCameraShakePreference(state:GameRenderState,enabled:boolean):GameRenderState{
+ return{...state,cameraShake:combatShake(state.combatCues,enabled)};
 }

@@ -1,5 +1,9 @@
 import "./styles.css";
 import "./platform/web/TelegramLeaderboard.css";
+import {NativeLanTransport,lanSupported} from "./network/NativeLanTransport";
+import {SessionController} from "./network/SessionController";
+import {LanUI} from "./network/LanUI";
+import {lanHud} from "./network/LanHud";
 import {Game} from "./core/Game";
 import {GameState} from "./core/GameState";
 import {GameSession,CHARACTER_IDS} from "./gameplay/GameSession";
@@ -8,6 +12,7 @@ import {Progression} from "./progression/Progression";
 import {PlayerNames} from "./profile/PlayerNames";
 import type {GameRenderState} from "./gameplay/GameSession";
 import {CombatAudio} from "./audio/CombatAudio";
+import {withCameraShakePreference} from "./gameplay/CombatFeedback";
 import {Capacitor} from "@capacitor/core";
 import {downloadLatestGameData,GAME_DATA_STORAGE_KEY,parseLiveGameData} from "./gameplay/LiveGameData";
 import {I18n} from "./i18n/I18n";
@@ -85,17 +90,22 @@ try{
  session.setShakeEnabled(shakeEnabled);
  const presentationRenderer={
   resize:()=>renderer.resize(),
-  render:(state:GameRenderState)=>{renderer.render(state);combatAudio.render(state.combatCues);},
+  render:(state:GameRenderState)=>{renderer.render(withCameraShakePreference(state,shakeEnabled));combatAudio.render(state.combatCues);},
   dispose:()=>{combatAudio.dispose();renderer.dispose();}
  };
  const game=new Game(presentationRenderer,session,new WebFrameScheduler(),error=>console.error("DoodleGame error:",error),progression);
  let landscape:ReturnType<typeof installLandscapeOrientation>|null=null;
  let telegram:ReturnType<typeof installTelegramMiniApp>|null=null;
  const rankings=new TelegramLeaderboard(root,()=>telegram?.retryInitialization());
- const pauseGame=()=>{input.resetTransientState();game.pause();};
- const resumeGame=()=>{input.resetTransientState();game.resume();};
- const stopToMenu=()=>{input.resetTransientState();game.stop();};
+ let lan:SessionController|null=null;
+ let lanUI:LanUI|null=null;
+ let lanAudioScope="";
+ const currentState=()=>lanUI?.opened?(lan?.active&&lan.getState()!==GameState.MENU?lan.getState():GameState.PAUSED):game.getState();
+ const pauseGame=()=>{input.resetTransientState();if(lanUI?.opened){lan?.interrupt();return;}game.pause();};
+ const resumeGame=()=>{input.resetTransientState();if(lan?.active){lan.ready();return;}game.resume();};
+ const stopToMenu=()=>{input.resetTransientState();if(lanUI?.opened){void lanUI.close();return;}game.stop();};
  const startGame=()=>{
+  if(lanUI?.opened)return;
   if(game.getState()===GameState.MENU&&!ui.canStartMatch())return;
   telegram?.requestFullscreen();
   input.resetTransientState();
@@ -104,14 +114,18 @@ try{
   else if(runStart==="continue"){if(game.continueRun()&&game.getState()===GameState.MENU)ui.showRunIntermission();}
   else game.start();
  };
- const restartGame=()=>{input.resetTransientState();game.restart();};
+ const restartGame=()=>{input.resetTransientState();if(lan?.active){lan.ready();return;}game.restart();};
  const disposeWebVisibility=installWebVisibilityLifecycle(document,()=>{
-  if(game.getState()===GameState.PLAYING)pauseGame();
+  if(currentState()===GameState.PLAYING)pauseGame();
  });
 
- landscape=installLandscapeOrientation({onResize:()=>game.resize()});
+ landscape=installLandscapeOrientation({onResize:()=>{if(lan?.active)lan.interrupt();game.resize();}});
 
- const readHud=()=>({...game.getHudState(),playerName:playerNames.get(1),secondPlayerName:playerNames.get(2)});
+ const readHud=()=>{
+  const frame=lan?.active?lan.frame:null;
+  if(frame&&lanUI)return {...lanHud(frame,lan!.view.role==="guest",lanUI.labels.you,lanUI.labels.opponent),progression:null,inRun:false};
+  return {...game.getHudState(),playerName:playerNames.get(1),secondPlayerName:playerNames.get(2)};
+ };
  const ui=new GameUI(root,{
   start:startGame,
   quickPlay:()=>{telegram?.requestFullscreen();input.resetTransientState();game.quickPlay();},
@@ -122,9 +136,9 @@ try{
   newRun:()=>{input.resetTransientState();game.newRun();},
   continueRun:()=>{input.resetTransientState();game.continueRun();},
   leaveRun:()=>{input.resetTransientState();game.leaveRun();},
-  weaponNext:()=>game.selectWeapon(1),
-  weaponPrevious:()=>game.selectWeapon(-1),
-  weaponSelect:(id)=>game.selectWeaponById(id),
+  weaponNext:()=>{if(lan?.active)lan.cycleWeapon(1);else game.selectWeapon(1);},
+  weaponPrevious:()=>{if(lan?.active)lan.cycleWeapon(-1);else game.selectWeapon(-1);},
+  weaponSelect:(id)=>{if(lan?.active)lan.selectWeapon(id);else game.selectWeaponById(id);},
   selectStartingWeapon:(id)=>game.selectStartingWeapon(id),
   player2StartingWeapon:(id)=>game.selectPlayer2StartingWeapon(id),
   randomStartingWeapon:(player)=>game.chooseRandomStartingWeapon(player),
@@ -145,13 +159,14 @@ try{
   modeSelect:(id:GameModeId)=>game.selectMode(id),
   playerCountSelect:count=>game.selectPlayerCount(count),
   player2WeaponSelect:id=>game.selectPlayer2WeaponById(id),
-  setWeaponAim:(player,x,y)=>game.setWeaponAim(player,x,y),
+  setWeaponAim:(player,x,y)=>{if(lan?.active)lan.setAim(x,y);else game.setWeaponAim(player,x,y);},
   setCharacterName:(player,name)=>{playerNames.set(player,name);ui.render(game.getState(),readHud());},
   setTouchMove:(x,y)=>input.setTouchMove(x,y),
   touchGrab:()=>input.triggerTouchGrab(),
+  touchDash:()=>input.triggerTouchDash(),
   touchAttackStart:()=>input.touchAttack(true),
   touchAttackEnd:()=>input.touchAttackRelease(),
-  touchAttackCancel:()=>{input.touchAttackCancel();game.cancelTouchAttack();},
+  touchAttackCancel:()=>{input.touchAttackCancel();if(!lan?.active)game.cancelTouchAttack();},
   setPlayer2TouchMove:(x,y)=>input.setPlayer2TouchMove(x,y),
   player2Grab:()=>input.triggerTouchGrab(2),
   player2AttackStart:()=>input.player2TouchAttackStart(),
@@ -181,6 +196,20 @@ try{
   }
  },i18n,storage);
 
+ if(lanSupported()){
+  lan=new SessionController(new NativeLanTransport(),input,new WebFrameScheduler(),{
+   render:(frame,state)=>{
+    combatAudio.setAmbientActive(false);
+    const scope=String(lan?.view.lobby.match);if(scope!==lanAudioScope){lanAudioScope=scope;combatAudio.resetCueHistory();}
+    presentationRenderer.render(frame);
+    ui.render(state,readHud());
+   },
+   change:()=>{lanUI?.render();}
+  });
+  lanUI=new LanUI(root,lan,i18n,()=>{input.resetTransientState();game.stop();input.setLocalPvPEnabled(false);intro.dispose();combatAudio.resetCueHistory();},()=>{
+   input.setLocalPvPEnabled(session.isLocalPvP());combatAudio.resetCueHistory();ui.render(game.getState(),readHud());combatAudio.setAmbientActive(true);intro.restoreAmbient();
+  });
+ }
  ui.setCombatPreferences(soundEnabled,shakeEnabled);
  ui.setUpdateVisible(Capacitor.getPlatform()==="android");
  ui.bind(listener=>game.subscribe(listener),readHud);
@@ -221,7 +250,8 @@ try{
 
  window.addEventListener("keydown",event=>{
   if(event.repeat)return;
-  const state=game.getState();
+  const state=currentState();
+  if(lanUI?.opened&&event.code==="Enter")return;
   if(event.code==="Enter"&&state===GameState.MENU){
    // Native Enter should activate the focused choice, not bypass setup.
    const target=event.target as HTMLElement|null;
@@ -248,7 +278,7 @@ try{
 
  let disposeNativeLifecycle=()=>{};
  void installNativeAppLifecycle({
-  getState:()=>game.getState(),
+  getState:currentState,
   pause:pauseGame,
   stopToMenu,
   resize:()=>game.resize()
@@ -272,6 +302,8 @@ try{
   landscape?.dispose();
   intro.dispose();
   disposeNativeLifecycle();
+  lan?.dispose();
+  lanUI?.dispose();
   input.dispose();
   game.dispose();
   ui.dispose();

@@ -20,7 +20,11 @@ test("Two Players option launches an AI-free duel and exposes both touch control
  await expect(page.locator(".game-ui__pvp-hint")).toBeVisible();
  await expect(page.locator(".game-ui__pvp-hint")).toContainText(/P1|نفر ۱|بازیکن ۱/);
  await page.locator('button[data-action="next"]').tap();
-await page.locator('button[data-action="start"]').tap();
+await page.locator('button[data-action="next"]').tap();
+ await page.locator('[data-starting-weapon="blade"]').tap();
+ await page.locator('.game-ui__loadout-player-tab').nth(1).tap();
+ await page.locator('[data-starting-weapon="blade"]').tap();
+ await page.locator('button[data-action="start"]').tap();
  expect(await page.evaluate(()=>window.__runFixture.state())).toBe("PLAYING");
  const game=await snapshot(page);
  expect(game.localPvP).toBe(true);
@@ -62,7 +66,7 @@ test("desktop-style keyboard controls remain independent for both fighters",asyn
  await page.keyboard.down("]");
  await page.evaluate(()=>window.__runFixture.tickPvP(1));
  s=await snapshot(page);
- expect(s.opponent.weapon).toBe("hammer");
+ expect(s.opponent.weapon).toBe("blade");
  expect(s.player.weapon).toBe("blade");
  await page.keyboard.up("]");
 });
@@ -106,11 +110,9 @@ test("P1 and P2 movement and held ATTACK respond to four concurrent real touches
  }finally{await client.detach();}
 });
 
-test("P2 weapon selector, Pause/Resume and match result work on mobile",async({page})=>{
- await page.evaluate(()=>window.__runFixture.startPvP());
- const next=page.locator(".game-ui__p2-weapons button").last();
- await next.tap();
- await page.locator('.game-ui__weapon-list button[data-weapon="hammer"]').tap();
+test("P2 confirmed loadout, Pause/Resume and match result work on mobile",async({page})=>{
+ await page.evaluate(()=>window.__runFixture.startPvP("hammer"));
+ await expect(page.locator(".game-ui__p2-weapons")).toBeHidden();
  await page.evaluate(()=>window.__runFixture.tickPvP(1));
  expect((await snapshot(page)).opponent.weapon).toBe("hammer");
  expect((await snapshot(page)).player.weapon).toBe("blade");

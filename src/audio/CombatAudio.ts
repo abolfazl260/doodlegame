@@ -7,6 +7,7 @@ export class CombatAudio{
  private disposed=false;
  private lastCueId=0;
  private lastPlayTime=-1;
+ resetCueHistory(){this.lastCueId=0;this.lastPlayTime=-1;}
  private ambientWanted=false;
  private ambientGain:GainNode|null=null;
  private ambientOscillators:OscillatorNode[]=[];
