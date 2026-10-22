@@ -559,7 +559,9 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
     path([[0,-.32],[0,-.63]])));
    add(12,head([[-.035,.405],[0,.435],[.035,.405],[0,.375],[-.035,.405]]).concat(
     path([[0,.095],[0,.045]])));
-   add(9,arm.map(part=>strip(part,.3,.125)));
+   add(9,arm.map(part=>strip(part,.3,.125)).concat(
+    head([[-.40,.31],[-.41,-.16]]),head([[.40,.31],[.41,-.16]]),
+    path([[0,-.30],[0,-.59]])));
   }else if(style==="cursed"){
    // Broken hood, torn bandage streamers and an amethyst eye / fractured charm.
    add(0,head([[-.30,.20],[-.46,.43],[-.54,.28],[-.43,.11],[-.55,-.12]]).concat(
@@ -578,7 +580,9 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
     head([[-.35,.42],[-.44,.49]]),head([[.41,.41],[.49,.50]])));
    add(12,path([[0,-.14],[-.045,-.23],[.018,-.26],[.055,-.21],[0,-.14]]).concat(
     path([[-.03,-.20],[.035,-.25]])));
-   add(9,arm.flatMap(part=>[strip(part,.34,.13),strip(part,.53,.085)]));
+   add(9,arm.flatMap(part=>[strip(part,.34,.13),strip(part,.53,.085)]).concat(
+    path([[-.22,.14],[-.30,-.01],[-.19,-.23]]),
+    path([[.22,.14],[.30,-.01],[.19,-.23]])));
   }else if(style==="scarab"){
    // Winged beetle crown, oval carapace, paired wing collar and gem.
    add(0,head([[-.21,.30],[-.39,.51],[-.49,.49],[-.42,.27]]).concat(
@@ -596,7 +600,9 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
     path([[-.15,-.19],[0,-.30],[.15,-.19]])));
    add(12,head([[-.065,.43],[0,.53],[.065,.43],[0,.37],[-.065,.43]]).concat(
     path([[0,-.06],[-.065,-.11],[0,-.19],[.065,-.11],[0,-.06]])));
-   add(9,arm.map(part=>strip(part,.19,.15)));
+   add(9,arm.map(part=>strip(part,.19,.15)).concat(
+    path([[-.27,.16],[-.15,.045],[0,-.02],[.15,.045],[.27,.16]]),
+    path([[-.23,-.25],[-.15,-.44]],[[.23,-.25],[.15,-.44]])));
   }else if(style==="desert"){
    // Sirocco hood and scarf: two layered windblown tails and a cloth belt.
    add(0,head([[-.27,.22],[-.42,.27],[-.59,.16],[-.48,.03],[-.65,-.07]]).concat(
@@ -616,7 +622,9 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
    add(11,path([[-.23,-.18],[.24,-.18]]).concat(
     path([[-.26,-.24],[-.08,-.31],[.11,-.30]])));
    add(12,path([[0,-.45],[-.042,-.50],[0,-.55],[.042,-.50],[0,-.45]]));
-   add(9,arm.map(part=>strip(part,.62,.11)));
+   add(9,arm.map(part=>strip(part,.62,.11)).concat(
+    head([[-.45,.19],[-.61,.01],[-.52,-.20]]),
+    path([[-.26,.10],[-.04,.01],[.26,.10]])));
   }else if(style==="sentinel"){
    // Tall ankh stela, angular gold side panels and armored temple tabard.
    const stela=head([[-.10,.30],[-.12,.67],[-.055,.76],[.055,.76],[.12,.67],[.10,.30]]);
@@ -639,12 +647,15 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
    add(12,head([[0,.57],[-.05,.62],[0,.68],[.05,.62],[0,.57],[0,.49],[-.07,.49],[.07,.49]]).concat(
     path([[0,-.39],[-.05,-.33],[0,-.29],[.05,-.33],[0,-.39],[0,-.58]]),
     path([[-.07,-.46],[.07,-.46]])));
-   add(9,arm.flatMap(part=>[strip(part,.22,.17),strip(part,.43,.12)]));
+   add(9,arm.flatMap(part=>[strip(part,.22,.17),strip(part,.43,.12)]).concat(
+    head([[0,.66],[0,.38]]),
+    head([[-.40,.31],[-.42,-.10]]),head([[.40,.31],[.42,-.10]]),
+    path([[-.11,-.33],[-.11,-.58],[0,-.68],[.11,-.58],[.11,-.33]])));
   }
   return base.map((item,index)=>{
    const linen=[1,2,6,7,8,13].includes(index),fold=[3,9].includes(index);
    const color=index===5||index===12?colors.eye:index===10||index===11?colors.trim:
-    index===0?"#090d14":linen?colors.linen:fold?colors.fold:item.color;
+    index===0?"#090d14":index===9?colors.cloth:linen?colors.linen:fold?colors.fold:item.color;
    return {color,width:item.width,segments:[...item.segments,...details[index]]};
   });
  }
