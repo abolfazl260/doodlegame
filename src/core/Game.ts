@@ -16,10 +16,11 @@ export class Game{
  }
  initialize(){this.assertNotDisposed();if(this.initialized)return;this.initialized=true;this.renderer.resize();this.renderer.render(this.session.getRenderState());}
  quickPlay(){this.ready();return false;} // Bypass removed: players must complete the setup wizard.
- start(){this.ready();this.session.cancelTransientActions();if(this.inRun)this.leaveRun();const s=this.state.getState();if(s===GameState.MENU||s===GameState.GAME_OVER){if(!this.session.lockLoadout())return false;this.session.reset();this.state.transitionTo(GameState.PLAYING);}else if(s===GameState.PAUSED)this.state.transitionTo(GameState.PLAYING);this.loop.start();return true;}
+ start(){this.ready();this.session.cancelTransientActions();if(this.inRun)this.leaveRun();const s=this.state.getState();if(s===GameState.MENU||s===GameState.GAME_OVER){if(!this.session.lockLoadout())return false;if(this.session.isLocalPvP())this.session.startPvpSeries();else this.session.reset();this.state.transitionTo(GameState.PLAYING);}else if(s===GameState.PAUSED)this.state.transitionTo(GameState.PLAYING);this.loop.start();return true;}
  pause(){this.ready();if(this.state.getState()===GameState.PLAYING){this.loop.stop();this.session.cancelTransientActions();this.state.transitionTo(GameState.PAUSED);}}
  resume(){this.ready();if(this.state.getState()===GameState.PAUSED){this.session.cancelTransientActions();this.state.transitionTo(GameState.PLAYING);this.loop.start();}}
  endGame(){this.ready();if(this.state.getState()===GameState.PLAYING){
+  this.session.recordPvpRound();
   if(this.inRun&&this.progression){
    const winner=this.session.getHudState().winner;
    if(winner==="player"||winner==="opponent")this.progression.result(winner,this.session.getUpgradeSnapshot());
@@ -28,6 +29,14 @@ export class Game{
  }}
  stop(){if(this.disposed)return;this.loop.stop();this.session.cancelTransientActions();if(this.inRun){this.progression?.suspend(this.session.getUpgradeSnapshot());this.leaveRun();return;}if(this.quickPlaySnapshot){this.session.restoreMatchSetup(this.quickPlaySnapshot);this.quickPlaySnapshot=null;}this.session.clearLoadoutSelections();if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);else this.state.notify();}
  restart(){this.ready();this.loop.stop();this.session.cancelTransientActions();this.state.reset();this.start();}
+ /** A rematch round preserves confirmed equipment and score, but swaps starting sides. */
+ nextPvpRound(){
+  this.ready();
+  if(this.state.getState()!==GameState.GAME_OVER||!this.session.nextPvpRound())return false;
+  this.state.transitionTo(GameState.PLAYING);
+  this.loop.start();
+  return true;
+ }
  selectWeapon(direction:1|-1){this.ready();if(this.state.getState()===GameState.MENU)this.session.selectWeapon(direction);}
  selectPlayer2Weapon(direction:1|-1){this.ready();if(this.state.getState()===GameState.MENU)this.session.selectPlayer2Weapon(direction);}
  selectCharacter(id:CharacterId){this.ready();const state=this.state.getState();if(state!==GameState.MENU&&state!==GameState.GAME_OVER)return;this.session.setCharacterId(id);this.state.notify();}
