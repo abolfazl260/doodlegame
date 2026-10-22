@@ -12,8 +12,8 @@ const session=()=>{
  return new GameSession(input);
 };
 
-test("five Mummy variants are available without adding fighter classes or weapons",()=>{
- assert.deepEqual(MUMMY_STYLE_IDS,["classic","royal","cursed","scarab","desert"]);
+test("all six illustrated Mummy variants are available without adding fighter classes or weapons",()=>{
+ assert.deepEqual(MUMMY_STYLE_IDS,["classic","royal","cursed","scarab","desert","sentinel"]);
  for(const id of MUMMY_STYLE_IDS){
   assert.ok(MUMMY_STYLE_NAMES[id].en);
   assert.ok(MUMMY_STYLE_NAMES[id].fa);
@@ -31,24 +31,24 @@ test("Mummy styles affect only cosmetics and survive reset/rematch",()=>{
  assert.equal(s.setMummyStyle(2,"cursed"),false,"P2 is only selectable in local PvP");
  s.setLocalPvP(true);
  s.setPlayer2CharacterId("mummy");
- assert.equal(s.setMummyStyle(2,"cursed"),true);
+ assert.equal(s.setMummyStyle(2,"sentinel"),true);
  s.reset(false);
  let state=s.getRenderState();
  assert.equal(state.player.mummyStyle,"royal");
- assert.equal(state.opponent.mummyStyle,"cursed");
+ assert.equal(state.opponent.mummyStyle,"sentinel");
  assert.equal(state.player.maxHealth,100);
  assert.equal(state.opponent.maxHealth,100);
  assert.equal(state.player.weapon,"blade");
  assert.equal(state.opponent.weapon,"blade");
  assert.equal(s.getHudState().mummyStyle,"royal");
- assert.equal(s.getHudState().secondMummyStyle,"cursed");
+ assert.equal(s.getHudState().secondMummyStyle,"sentinel");
  s.setStartingWeapon("bow");s.setPlayer2StartingWeapon("hammer");
  assert.equal(s.lockLoadout(),true);
  assert.equal(s.setMummyStyle(1,"desert"),false,"loadout stays locked in matches");
  s.reset(false);
  state=s.getRenderState();
  assert.equal(state.player.mummyStyle,"royal");
- assert.equal(state.opponent.mummyStyle,"cursed");
+ assert.equal(state.opponent.mummyStyle,"sentinel");
  assert.equal(state.player.weapon,"bow");
  assert.equal(state.opponent.weapon,"hammer");
  s.dispose();
@@ -68,6 +68,16 @@ test("shared Canvas/WebGL pose layers are distinct for every skin, stable while 
   assert.equal(layers.length,14,"never exceed the 14 preallocated GPU skin layers");
   assert.ok(layers.every(layer=>layer.segments.length>0));
   const ink=fighterInkPalette(false,"mummy",id);
+  const coords=layers.flatMap(layer=>layer.segments.flatMap(segment=>segment.flat()));
+  assert.ok(coords.every(Number.isFinite),"ornaments must never create invalid GPU geometry");
+  if(id==="sentinel"){
+   assert.ok(layers.some(layer=>layer.segments.some(segment=>
+    segment.some(point=>point[1]>pose.head[1]+.6))),"Sentinel's obelisk must rise above the Mummy's head");
+  }
+  if(id==="scarab"){
+   assert.ok(layers.some(layer=>layer.segments.some(segment=>
+    segment.some(point=>point[1]>pose.head[1]+.49))),"Scarab's winged crown must have its own silhouette");
+  }
   signatures.add(layers.map(layer=>layer.color+":"+layer.segments.length).join("|"));
   eyes.add(ink.accent);
   for(let i=0;i<5;i++)s.update(1/60);
@@ -88,4 +98,16 @@ test("UI offers per-player outfits only in Mummy loadout and reuses existing eig
  const canvas=readFileSync(new URL("../src/rendering/CanvasRenderer.ts",import.meta.url),"utf8");
  const three=readFileSync(new URL("../src/rendering/ThreeRenderer.ts",import.meta.url),"utf8");
  for(const code of [canvas,three])assert.match(code,/fighterInkPalette\([^;]+s\.mummyStyle\)/);
+});
+
+test("six previews include distinct thematic SVG shapes and never introduce external sprites",()=>{
+ const ui=readFileSync(new URL("../src/ui/GameUI.ts",import.meta.url),"utf8");
+ for(const name of ["royal","cursed","scarab","desert","sentinel"]){
+  assert.match(ui,new RegExp('^  '+name+':\\\\{','m'),name+" must have its own SVG ornament layer");
+ }
+ assert.match(ui,/replace\('<ellipse ',parts\.behind/);
+ assert.match(ui,/parts\.front\+"<\/svg>"/);
+ assert.doesNotMatch(ui,/fetch\([^\)]*mummy/i);
+ const styles=readFileSync(new URL("../src/styles.css",import.meta.url),"utf8");
+ for(const id of MUMMY_STYLE_IDS)assert.ok(styles.includes('data-mummy-style="'+id+'"'));
 });
