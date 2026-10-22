@@ -314,7 +314,7 @@ export class GameSession{
   return true;
  }
  fireWeapon(mobile=false){
-  if(this.winner||this.pvpCountdown>0||this.player.kickKind||this.player.slamPhase||this.player.slamAttackLatch)return;
+  if(this.winner||(this.localPvP&&this.pvpCountdown>0)||this.player.kickKind||this.player.slamPhase||this.player.slamAttackLatch)return;
   const input=this.input.getState();
   if(input.moveY>=KICK_DOWN_THRESHOLD&&!this.player.grounded){
    this.startSlam(this.player);return;
