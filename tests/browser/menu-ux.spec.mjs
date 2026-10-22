@@ -345,9 +345,9 @@ test("direct map shortcut exposes all twenty selectable maps and the chosen aren
   await expect(card).toHaveAttribute("aria-pressed","true");
   expect((await page.evaluate(()=>window.__runFixture.view())).arena).toBe(id);
  }
- await expect(page.locator(".game-ui__arena-selection-summary")).toContainText("راکتور");
+ await expect(page.locator(".game-ui__arena-selection-summary")).toContainText("رودخانه آتشین");
  await page.locator('button[data-action="back"]').tap();
- await expect(shortcut).toContainText("راکتور");
+ await expect(shortcut).toContainText("رودخانه آتشین");
  await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
  await shortcut.tap();
  await expect(maps).toHaveCount(20);
@@ -398,7 +398,7 @@ test("real keyboard typing works for both local players and every arena is selec
  expect(before.p2Input.moveX).toBe(0);
  expect(before.p1Input.attackPressed).toBe(false);
  expect(before.p2Input.attackPressed).toBe(false);
- await expect(page.locator('button[data-action="next"]')).toContainText("۱۶");
+ await expect(page.locator('button[data-action="next"]')).toContainText("۲۰");
  await page.locator('button[data-action="next"]').tap();
  const ids=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge",
   "crater","vertical","ruins","conveyor","collapse","storm","reactor","alpine-lake","dusk-valley","autumn-valley","ember-river"];
@@ -412,7 +412,7 @@ test("real keyboard typing works for both local players and every arena is selec
  }
  await startMatch(page);
  const match=await page.evaluate(()=>window.__runFixture.pvpSnapshot());
- expect(match.arena).toBe("reactor");
+ expect(match.arena).toBe("ember-river");
  expect(match.localPvP).toBe(true);
  await expect(page.locator(".health-bar--player .health-label__name")).toHaveText("Arman");
  await expect(page.locator(".health-bar--opponent .health-label__name")).toHaveText("Sina");
