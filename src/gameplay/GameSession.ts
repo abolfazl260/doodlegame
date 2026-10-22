@@ -19,7 +19,7 @@ export interface GrappleRenderState{readonly phase:"flying"|"latched";readonly x
 export interface DuelistRenderState{readonly grapple?:GrappleRenderState|null;readonly characterId:CharacterId;readonly mummyStyle?:MummyStyleId;readonly slamPhase:SlamPhase;readonly slamElapsed:number;readonly visualFacing:number;readonly turnPoseTime:number;readonly jumpStage:0|1|2;readonly doubleJumpPoseTime:number;readonly wallJumpPoseTime:number;readonly weaponDrawTime:number;readonly weaponHolsterFrom:WeaponId|null;readonly x:number;readonly enemyType:EnemyType|null;readonly bowCharge:number;readonly aimAngle?:number|null;readonly missileAngle:number;readonly missilePower:number;readonly y:number;readonly velocityX:number;readonly velocityY:number;readonly grounded:boolean;readonly facing:number;readonly health:number;readonly maxHealth:number;readonly weapon:WeaponId;readonly attackTime:number;readonly attackVariant:number;readonly animationTime:number;readonly gaitPhase:number;readonly landingTime:number;readonly hitTime:number;readonly bossPhase:number;readonly attackTelegraph:number;readonly kickKind:KickKind|null;readonly kickElapsed:number;readonly grabPhase:GrabPhase;readonly grabElapsed:number;}
 export interface ProjectileRenderState{readonly x:number;readonly y:number;readonly vx:number;readonly vy:number;readonly life:number;readonly weapon:WeaponId;readonly rotation:number;readonly age:number;}
 export interface ExplosionRenderState{readonly x:number;readonly y:number;age:number;readonly life:number;readonly radius:number;}
-export type BuiltInArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fortress"|"bridge"|"crater"|"vertical"|"ruins"|"conveyor"|"collapse"|"storm"|"reactor";
+export type BuiltInArenaId="classic"|"towers"|"pit"|"steps"|"zigzag"|"sky"|"moving"|"fortress"|"bridge"|"crater"|"vertical"|"ruins"|"conveyor"|"collapse"|"storm"|"reactor"|"alpine-lake"|"dusk-valley"|"autumn-valley"|"ember-river";
 export type ArenaId=BuiltInArenaId|`extra-${string}`;
 export type GameModeId="duel"|"missile-duel"|"melee-only"|"random-weapons"|"sudden-death"|"low-gravity"|"king-of-hill"|"local-pvp";
 export interface HillState{readonly player:number;readonly opponent:number;readonly target:number;readonly halfWidth:number;}
@@ -56,7 +56,12 @@ const ARENAS:Readonly<Record<BuiltInArenaId,ArenaDefinition>>={
  conveyor:{id:"conveyor",name:"CONVEYOR",speedMultiplier:1.03,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-5,5],platforms:[{x:-12,y:-.25,width:8,height:.5,surface:"conveyorRight"},{x:-4,y:-.25,width:8,height:.5,surface:"conveyorLeft"},{x:4,y:-.25,width:8,height:.5,surface:"conveyorRight"},{x:-2.4,y:2.15,width:4.8,height:.35,surface:"oneWay"}]},
  collapse:{id:"collapse",name:"COLLAPSE",speedMultiplier:1,jumpMultiplier:1.08,gravity:G,fallLimit:-4.5,movingPlatforms:false,spawnX:[-5.6,5.6],platforms:[{x:-12,y:-.25,width:6.8,height:.5},{x:5.2,y:-.25,width:6.8,height:.5},{x:-1.8,y:3.35,width:3.6,height:.35,surface:"oneWay"}]},
  storm:{id:"storm",name:"STORM",speedMultiplier:1.05,jumpMultiplier:1.05,gravity:-20,fallLimit:null,movingPlatforms:false,windStrength:8.5,spawnX:[-5,5],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.65,width:4,height:.35},{x:-2.1,y:3,width:4.2,height:.35,surface:"oneWay"},{x:5,y:1.65,width:4,height:.35},{x:-1.7,y:4.55,width:3.4,height:.3,surface:"ice"}]},
- reactor:{id:"reactor",name:"REACTOR",speedMultiplier:1,jumpMultiplier:1.05,gravity:G,fallLimit:null,movingPlatforms:false,gravityWell:{x:0,y:2.35,radius:4.7,strength:13},spawnX:[-5.3,5.3],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.75,width:3.8,height:.35},{x:5.2,y:1.75,width:3.8,height:.35},{x:-4.2,y:3.55,width:3.2,height:.35,surface:"oneWay"},{x:1,y:3.55,width:3.2,height:.35,surface:"oneWay"}]}
+ reactor:{id:"reactor",name:"REACTOR",speedMultiplier:1,jumpMultiplier:1.05,gravity:G,fallLimit:null,movingPlatforms:false,gravityWell:{x:0,y:2.35,radius:4.7,strength:13},spawnX:[-5.3,5.3],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.75,width:3.8,height:.35},{x:5.2,y:1.75,width:3.8,height:.35},{x:-4.2,y:3.55,width:3.2,height:.35,surface:"oneWay"},{x:1,y:3.55,width:3.2,height:.35,surface:"oneWay"}]},
+ // Four scenic reference arenas: symmetric spawns and balanced walkable combat geometry.
+ "alpine-lake":{id:"alpine-lake",name:"ALPINE LAKE",speedMultiplier:1,jumpMultiplier:1.02,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-8.3,y:1.75,width:4,height:.35,surface:"ice"},{x:-2,y:3.25,width:4,height:.35,surface:"oneWay"},{x:5,y:1.75,width:4,height:.35,surface:"ice"}]},
+ "dusk-valley":{id:"dusk-valley",name:"TWILIGHT VALLEY",speedMultiplier:1,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-8.5,y:1.7,width:4.2,height:.35},{x:-2.1,y:2.95,width:4.2,height:.35,surface:"oneWay"},{x:4.3,y:1.7,width:4.2,height:.35}]},
+ "autumn-valley":{id:"autumn-valley",name:"AUTUMN VALLEY",speedMultiplier:1.04,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-7.2,7.2],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.2,width:4.2,height:.35},{x:-3,y:2.65,width:4.4,height:.35},{x:4.8,y:1.2,width:4.2,height:.35},{x:-1.8,y:4.2,width:3.6,height:.35,surface:"oneWay"}]},
+ "ember-river":{id:"ember-river",name:"EMBER RIVER",speedMultiplier:1,jumpMultiplier:1,gravity:G,fallLimit:null,movingPlatforms:false,spawnX:[-7,7],platforms:[{x:-12,y:-.25,width:24,height:.5},{x:-9,y:1.5,width:4,height:.35},{x:-2.2,y:3.05,width:4.4,height:.35,surface:"oneWay"},{x:5,y:1.5,width:4,height:.35}]}
 };
 interface EnvironmentTemplate{readonly kind:EnvironmentKind;readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly hp:number;}
 const ENVIRONMENT_TEMPLATES:Readonly<Record<BuiltInArenaId,readonly EnvironmentTemplate[]>>={
@@ -142,7 +147,11 @@ const ENVIRONMENT_TEMPLATES:Readonly<Record<BuiltInArenaId,readonly EnvironmentT
   {kind:"rock",x:-3.8,y:.78,width:1.05,height:1.05,hp:28},
   {kind:"box",x:2.7,y:.8,width:.9,height:.9,hp:18},
   {kind:"rock",x:4.2,y:.78,width:1.05,height:1.05,hp:28}
- ]
+ ],
+ "alpine-lake":[],
+ "dusk-valley":[],
+ "autumn-valley":[],
+ "ember-river":[]
 };
 const WEAPONS:Readonly<Record<WeaponId,{damage:number;range:number;cooldown:number;knockback:number;projectileSpeed?:number;radius?:number;automatic?:boolean}>>={
  blade:{damage:8,range:1.35,cooldown:.32,knockback:4},
