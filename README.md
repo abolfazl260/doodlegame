@@ -63,7 +63,7 @@ The gameplay layer is kept separate from browser APIs where practical so the gam
 
 ### Arenas
 
-The game currently includes 16 selectable arenas:
+The game includes 20 selectable built-in arenas, including four illustrated mountain/river stages inspired by the supplied landscape references (Alpine Lake, Twilight Valley, Autumn Valley and Ember River):
 
 - **Classic** — standard platforms with ice and slippery surfaces.
 - **Towers** — elevated vertical combat with one-way platforms.
