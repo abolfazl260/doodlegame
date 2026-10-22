@@ -1612,7 +1612,7 @@ export class GameUI{
   for(const item of this.buttons.children){
    const button=item as HTMLButtonElement;
    if(button.dataset.action==="restart"){
-    this.setHidden(button,Boolean(pvp&&state===GameState.GAME_OVER&&!series!.complete));
+    if(pvp&&state===GameState.GAME_OVER)this.setHidden(button,!series!.complete);
     this.setText(button,pvp&&state===GameState.GAME_OVER?messages.pvp.series.rematch:messages.buttons.restart);
    }
   }
