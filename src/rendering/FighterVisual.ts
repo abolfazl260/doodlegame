@@ -487,6 +487,7 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
  if(s.characterId==="mummy"){
   // Reference: wrapped ivory head, one cyan eye, asymmetrical trailing bandage,
   // crossing linen torso, golden cuffs and turquoise-gold central belt gem.
+  const style=s.mummyStyle??"classic";
   const wrapContour=head([[-.29,-.13],[-.32,.13],[-.20,.30],[.03,.35],[.25,.22],[.31,.05],[.28,-.20]]);
   const forehead=head([[-.27,.23],[-.09,.32],[.16,.28],[.29,.18]]);
   const wraps=head([[-.31,.085],[-.09,.23],[.24,.12]]).concat(
@@ -507,7 +508,7 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
   const limbOutline=[...feet,...cuffs];
   const legBand=leg.map(part=>strip(part,.79,.085));
   const gem=line([-.017,-.205],[.017,-.205]);
-  return [
+  const base=[
    layer("#070d13",.18,[...wrapContour,...loose,...chest,...loin]),
    layer("#e8dfc8",.155,[...wrapContour,...forehead,...loose]),
    layer("#f9f2e2",.083,[...wraps,...crossover,...shirtFolds]),
@@ -523,6 +524,53 @@ export function characterSkinLayers(s:DuelistRenderState,pose:ReturnType<typeof 
    layer("#23d7f1",.06,gem),
    layer("#fff8e9",.049,[...legBand,...head([[-.16,.28],[.04,.34]])])
   ];
+  if(style==="classic")return base;
+  // Each visual style keeps the same 14 reusable WebGL layer meshes. All
+  // ornaments are attached to head/body pose coordinates rather than sprites.
+  const colors={
+   royal:{linen:"#f4e3c7",fold:"#c6aa81",trim:"#f3c15c",eye:"#3be3fc",ink:"#2f567a"},
+   cursed:{linen:"#c9c0cd",fold:"#806a8f",trim:"#b485f4",eye:"#d66aff",ink:"#503d66"},
+   scarab:{linen:"#dce5cf",fold:"#90aa92",trim:"#b9ce55",eye:"#6bffe5",ink:"#226f67"},
+   desert:{linen:"#edd3b3",fold:"#c69c78",trim:"#d7834e",eye:"#ffc169",ink:"#864737"}
+  }[style];
+  let outer:Segment[]=[],inner:Segment[]=[],embroidery:Segment[]=[];
+  if(style==="royal"){
+   // Narrow pharaoh headdress and cobra crown, scaled for a stick fighter.
+   outer=head([[-.27,.20],[-.41,.39],[-.48,.22],[-.43,-.23]]).concat(
+    head([[.27,.20],[.40,.39],[.48,.22],[.43,-.23]]));
+   inner=head([[-.30,.25],[-.40,.34],[-.41,-.19]]).concat(
+    head([[.30,.25],[.39,.34],[.40,-.19]]));
+   embroidery=head([[-.32,.19],[-.42,.10]]).concat(
+    head([[.32,.19],[.42,.10]]),head([[0,.33],[0,.52],[-.07,.42],[.07,.42],[0,.52]]));
+  }else if(style==="cursed"){
+   // Dark torn shroud and jagged crown of fabric, not a bulky mage robe.
+   outer=head([[-.27,.18],[-.38,.45],[-.49,.32],[-.40,-.29]]).concat(
+    head([[.27,.18],[.38,.43],[.50,.25],[.37,-.26]]));
+   inner=head([[-.38,.38],[-.23,.28],[.0,.42],[.23,.29],[.38,.37]]);
+   embroidery=head([[-.32,-.24],[-.44,-.37],[-.39,-.48]]).concat(
+    head([[.33,-.22],[.44,-.35],[.39,-.46]]));
+  }else if(style==="scarab"){
+   // Small scarab wing crest and symmetrical temples.
+   outer=head([[-.31,.20],[-.41,.29],[-.42,.11]]).concat(
+    head([[.31,.20],[.41,.29],[.42,.11]]),head([[-.11,.33],[0,.53],[.11,.33]]));
+   inner=head([[-.08,.36],[0,.47],[.08,.36]]);
+   embroidery=head([[-.22,.25],[.22,.25]]).concat(
+    head([[-.04,.45],[.04,.45]]));
+  }else{
+   // Desert scout: windblown wrapped scarf over a slender face.
+   outer=head([[-.30,.19],[-.47,.24],[-.52,.06],[-.61,-.04]]).concat(
+    head([[-.36,.09],[-.52,-.10],[-.56,-.22]]));
+   inner=head([[-.28,.18],[-.43,.13],[-.54,-.04]]);
+   embroidery=head([[-.17,.31],[.14,.35]]).concat(
+    path([[-.18,.19],[-.36,.24],[-.49,.14]]));
+  }
+  return base.map((item,index)=>{
+   const linen=[1,2,6,7,8,13].includes(index),fold=[3,9].includes(index);
+   const color=index===5?colors.eye:index===12?colors.eye:index===10||index===11?colors.trim:
+    index===0?"#090d14":linen?colors.linen:fold?colors.fold:item.color;
+   const ornaments=index===0?outer:index===1?inner:index===11?embroidery:[];
+   return {color,width:item.width,segments:[...item.segments,...ornaments]};
+  });
  }
  if(s.characterId==="archer"){
   // Reference: olive hood with gold piping, white narrow eye, deep-green
@@ -828,7 +876,7 @@ export function weaponBaseInk(s:DuelistRenderState){
  }
  return {outline:FIGHTER_INK_WIDTH.weapon.outline,core:FIGHTER_INK_WIDTH.weapon.core,metal:"#b0bdc9"} as const;
 }
-export function fighterInkPalette(enemy:boolean,characterId:DuelistRenderState["characterId"]="soldier"){
+export function fighterInkPalette(enemy:boolean,characterId:DuelistRenderState["characterId"]="soldier",mummyStyle:DuelistRenderState["mummyStyle"]="classic"){
  const palettes={
   soldier:{core:enemy?"#182333":"#0c1827",halo:"#9bdafc",face:"#f9fcff",accent:"#198fe8",suit:"#111a29",armor:"#162131",trim:"#1768af"},
   ninja:{core:enemy?"#171921":"#0b0e15",halo:"#f18088",face:"#12141b",accent:"#e72640",suit:"#12141c",armor:"#14161f",trim:"#9b1c2c"},
@@ -840,7 +888,14 @@ export function fighterInkPalette(enemy:boolean,characterId:DuelistRenderState["
   archer:{core:enemy?"#263129":"#151f18",halo:"#9dc277",face:"#0b1510",accent:"#b5e657",suit:"#14251a",armor:"#325a32",trim:"#d6ad50"}
  } as const;
  const style=palettes[characterId];
- return {...style,outline:"#050a12",eye:"#0b0d15",hair:style.face,metal:"#dfe8f0"};
+  const variants={
+   royal:{halo:"#f1d7a6",accent:"#3be3fc",trim:"#eabd58",suit:"#222c3c"},
+   cursed:{halo:"#d1badc",accent:"#d66aff",trim:"#966fc2",suit:"#252033"},
+   scarab:{halo:"#c7e8c9",accent:"#6bffe5",trim:"#b9ce55",suit:"#1c3434"},
+   desert:{halo:"#f2ccab",accent:"#ffc169",trim:"#c8784f",suit:"#37261f"}
+  };
+ const themed=characterId==="mummy"&&mummyStyle&&mummyStyle!=="classic"?variants[mummyStyle]:null;
+ return {...style,...themed,outline:"#050a12",eye:"#0b0d15",hair:style.face,metal:"#dfe8f0"};
 }
 
 /**
