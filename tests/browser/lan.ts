@@ -46,6 +46,7 @@ const fixture={
  startHost:()=>host.start(),
  pause:()=>visible.interrupt(),
  drop:()=>gt.dropPeer(),
+ lifecycle:()=>{const transport=guestView?gt:ht;transport.emit({type:'background'});transport.emit({type:'foreground'});},
  state:()=>({host:host.view.lobby.phase,guest:guest.view.lobby.phase,frame:host.frame,localInput:{...input.getState()}}),
  locale:(locale:'fa'|'en')=>i18n.setLocale(locale)
 };

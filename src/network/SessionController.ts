@@ -201,7 +201,7 @@ export class SessionController {
   catch{this.fail('packet');}
  }
  private clearInputs(){this.remote.clear();this.journal.clear();this.step.reset();this.input.resetTransientState();this.hostInput.second=this.remote.next().input;this.aim=null;this.weapon=null;this.lastInputSeq=0;this.seq=0;this.inputClock=this.snapshotClock=0;}
- private freeze(){this.clearInputs();this.session?.cancelTransientActions();this.view.lobby.hostReady=this.view.lobby.guestReady=false;if(this.view.lobby.phase!=='result'&&this.view.lobby.phase!=='lobby')this.view.lobby.phase='paused';this.notify();}
+ private freeze(){this.clearInputs();this.session?.cancelTransientActions();this.view.lobby.hostReady=this.view.lobby.guestReady=false;if(!['result','lobby','lost'].includes(this.view.lobby.phase))this.view.lobby.phase='paused';this.notify();}
  private publishLobby(){if(this.authorized)this.send({type:'LOBBY',lobby:{...this.view.lobby}});}
  private onTransport(event:TransportEvent){
   if(!this.active)return;

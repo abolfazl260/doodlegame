@@ -36,6 +36,14 @@ for(const role of ['host','guest'])for(const locale of ['fa','en'])test(`LAN ${r
  await page.evaluate(()=>window.__lanFixture.peerReady());await expect(panel).toBeHidden({timeout:12000});
  await page.evaluate(()=>window.__lanFixture.drop());await expect(panel).toBeVisible();await expect.poll(()=>page.evaluate(()=>window.__lanFixture.state().host)).toBe('lost');
  await expect(panel.getByRole('alert')).toBeVisible();
+ if(role==='guest'){
+  await page.evaluate(()=>window.__lanFixture.lifecycle());
+  await expect.poll(()=>page.evaluate(()=>window.__lanFixture.state().guest)).toBe('lost');
+  const retry=panel.getByRole('button',{name:locale==='fa'?'تلاش مجدد برای اتصال (۳۰ ثانیه)':'Retry connection (30 seconds)',exact:true});
+  await expect(retry).toBeVisible();await expect(retry).toBeEnabled();await retry.click();
+  await expect.poll(()=>page.evaluate(()=>window.__lanFixture.state().host)).toBe('paused');
+  await expect(panel.getByRole('alert')).toBeHidden();
+ }
  await panel.getByRole('button',{name:locale==='fa'?'خروج / بستن اتاق':'Leave / Close room',exact:true}).click();await expect(page.locator('[data-route="lan"]')).toBeVisible();
  await expect(page.locator('[data-mode="online"]')).toBeDisabled();
 });

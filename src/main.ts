@@ -12,6 +12,7 @@ import {Progression} from "./progression/Progression";
 import {PlayerNames} from "./profile/PlayerNames";
 import type {GameRenderState} from "./gameplay/GameSession";
 import {CombatAudio} from "./audio/CombatAudio";
+import {withCameraShakePreference} from "./gameplay/CombatFeedback";
 import {Capacitor} from "@capacitor/core";
 import {downloadLatestGameData,GAME_DATA_STORAGE_KEY,parseLiveGameData} from "./gameplay/LiveGameData";
 import {I18n} from "./i18n/I18n";
@@ -89,7 +90,7 @@ try{
  session.setShakeEnabled(shakeEnabled);
  const presentationRenderer={
   resize:()=>renderer.resize(),
-  render:(state:GameRenderState)=>{renderer.render(state);combatAudio.render(state.combatCues);},
+  render:(state:GameRenderState)=>{renderer.render(withCameraShakePreference(state,shakeEnabled));combatAudio.render(state.combatCues);},
   dispose:()=>{combatAudio.dispose();renderer.dispose();}
  };
  const game=new Game(presentationRenderer,session,new WebFrameScheduler(),error=>console.error("DoodleGame error:",error),progression);

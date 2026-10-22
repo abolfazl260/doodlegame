@@ -10,6 +10,7 @@ import {BUILD_FINGERPRINT} from '../.test-build/network/BuildFingerprint.js';
 import {encodeFrame,decodeFrame,SnapshotBuffer} from '../.test-build/network/StateCodec.js';
 import {isLanAddress,MAX_PACKET_BYTES} from '../.test-build/network/LanTransport.js';
 import {GameSession} from '../.test-build/gameplay/GameSession.js';
+import {withCameraShakePreference} from '../.test-build/gameplay/CombatFeedback.js';
 import {lanHud} from '../.test-build/network/LanHud.js';
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 function local(){return{state:{...IDLE},getState(){return this.state;},endFrame(){this.state={...this.state,pointerPressed:false,pointerReleased:false,attackCancelled:false,jumpPressed:false,dashPressed:false,grabPressed:false,attackPressed:false,weaponNextPressed:false,weaponPreviousPressed:false};},resetTransientState(){this.state={...IDLE};},start(){},stop(){},dispose(){}};}
@@ -37,8 +38,9 @@ async function room(t){
 }
 
 test('LAN address validation rejects DNS, WAN, loopback, alternate encodings and invalid ports in join',async t=>{
- for(const ip of ['8.8.8.8','127.0.0.1','localhost','[::1]','10.0.0.256','010.1.2.3','192.168.1.255','192.168.1.0','172.32.0.1'])assert.equal(isLanAddress(ip),false,ip);
- for(const ip of ['10.1.2.3','192.168.4.2','172.16.8.9','172.31.1.1'])assert.equal(isLanAddress(ip),true,ip);
+ for(const ip of ['8.8.8.8','127.0.0.1','localhost','[::1]','10.0.0.256','010.1.2.3','172.32.0.1'])assert.equal(isLanAddress(ip),false,ip);
+ // A .0/.255 suffix may be a usable host on a wider subnet; native checks the actual prefix.
+ for(const ip of ['10.1.2.3','192.168.4.2','172.16.8.9','172.31.1.1','192.168.1.0','192.168.0.255'])assert.equal(isLanAddress(ip),true,ip);
  const r=await room(t);await assert.rejects(()=>r.guest.join('8.8.8.8',23000,r.host.view.token),/address/);await assert.rejects(()=>r.guest.join('192.168.4.2',80,r.host.view.token),/address/);
 });
 test('fixed 60 Hz LAN step is independent of 30/60/120 FPS, capped and resets at pause',()=>{
@@ -126,6 +128,38 @@ test('disconnect freezes without winner, same room rejoin pauses, stale epoch in
  assert.equal(r.host.lastInputSeq,previousSeq);
  const before=r.host.frame.player.health;r.ht.emit({type:'message',data:JSON.stringify({type:'SNAPSHOT',frame:encodeFrame(999,epoch,1,0,r.host.frame)})});await flush();assert.equal(r.host.frame.player.health,before);assert.equal(r.host.view.error,'packet');
 });
+test('lifecycle events after disconnect preserve rejoin and require both players to resume',async t=>{
+ const r=await room(t);await r.play();await r.gt.dropPeer();await flush();
+ const lostAt=r.guest.lostAt;
+ for(const type of ['background','foreground']){
+  r.gt.emit({type});r.ht.emit({type});await flush();
+  assert.equal(r.guest.view.lobby.phase,'lost');assert.equal(r.host.view.lobby.phase,'lost');
+  assert.equal(r.guest.view.connected,false);assert.equal(r.guest.lostAt,lostAt);
+ }
+ await r.guest.retry();await flush();assert.equal(r.guest.view.connected,true);
+ assert.equal(r.host.view.lobby.phase,'paused');assert.equal(r.guest.view.lobby.phase,'paused');
+ r.guest.ready();await flush();assert.equal(r.host.view.lobby.phase,'paused');
+ r.host.ready();await flush();await r.step(185);
+ assert.equal(r.host.view.lobby.phase,'playing');assert.equal(r.guest.view.lobby.phase,'playing');
+});
+test('foreground after disconnect cannot hide or extend the rejoin deadline',async t=>{
+ const r=await room(t);await r.play();await r.gt.dropPeer();await flush();
+ r.advanceClock(20000);r.gt.emit({type:'foreground'});r.advanceClock(10001);r.guest.maintain();
+ assert.equal(r.guest.view.lobby.phase,'lost');assert.equal(r.guest.view.error,'expired');
+ await r.guest.retry();assert.equal(r.guest.view.connected,false);
+});
+test('each LAN phone applies its own shake preference without mutating shared combat state',async t=>{
+ const r=await room(t);await r.play();
+ r.host.session.emitCue('explosion','bomb',0,0,1,2);await r.step(4);
+ for(const state of [r.host.frame,r.guest.frame]){
+  const original=structuredClone(state);
+  const disabled=withCameraShakePreference(state,false);
+  const enabled=withCameraShakePreference({...state,cameraShake:{x:0,y:0}},true);
+  assert.deepEqual(disabled.cameraShake,{x:0,y:0});assert.notDeepEqual(enabled.cameraShake,{x:0,y:0});
+  assert.deepEqual({...disabled,cameraShake:state.cameraShake},original);
+  assert.deepEqual(state,original,'presentation preference must not alter host or guest snapshots');
+ }
+});
 test('authoritative result and consented rematch reset both phones; no progression is attached',async t=>{
  const r=await room(t);await r.play();
  // Inject lethal state into host simulation only to exercise real winner/result orchestration.
@@ -194,6 +228,15 @@ test('closing during native listener registration cannot reopen an orphan room',
  await assert.rejects(pending,/cancelled/);assert.equal(opened,0);assert.equal(removed,1);
 });
 
+test('ambiguous host suffixes reach native subnet validation and propagate its rejection',async()=>{
+ const addresses=[];
+ const native={addListener:async()=>({remove:async()=>{}}),connect:async({address})=>{addresses.push(address);throw new Error('address');},close:async()=>{}};
+ const transport=new NativeLanTransport(native,()=>true);
+ try{
+  for(const address of ['192.168.1.0','192.168.0.255'])await assert.rejects(()=>transport.connect(address,23000),/address/);
+  assert.deepEqual(addresses,['192.168.1.0','192.168.0.255']);
+ }finally{await transport.close();}
+});
 test('native listeners are released even if socket cleanup rejects',async()=>{
  let removed=0;
  const native={addListener:async()=>({remove:async()=>{removed++;}}),listen:async()=>({address:'192.168.4.2',port:23000}),close:async()=>{throw new Error('cleanup');}};
