@@ -1026,12 +1026,12 @@ export class GameSession{
  }
  /** Tap ATTACK = Pulse Punch; uninterrupted hold triggers exactly one Mag Pull. */
  private handleGauntletAttack(a:Fighter,t:Fighter,input:Readonly<InputState>,dt:number){
-  if(input.attackCancelled||!input.attackHeld){
-   a.gauntletHold=0;a.gauntletPullSpent=false;
-   if(input.attackCancelled)a.gauntletPullTime=0;
+  if(input.attackCancelled){
+   a.gauntletHold=0;a.gauntletPullSpent=false;a.gauntletPullTime=0;
    return;
   }
   if(input.attackPressed)this.attack(a,t,true);
+  if(!input.attackHeld){a.gauntletHold=0;a.gauntletPullSpent=false;return;}
   a.gauntletHold=Math.min(2,a.gauntletHold+dt);
   if(a.gauntletHold>=GRAVITY_GAUNTLET.pullHold&&!a.gauntletPullSpent){
    a.gauntletPullSpent=true;
