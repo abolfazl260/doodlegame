@@ -12,7 +12,7 @@ function fighter(value:unknown):DuelistRenderState{
  const p=object(value);
  return{
   characterId:choice(p.characterId,CHARACTERS),weapon:choice(p.weapon,WEAPONS),weaponHolsterFrom:choice(p.weaponHolsterFrom,[null,...WEAPONS]),
-  enemyType:choice(p.enemyType,[null]),grapple:grapple(p.grapple),slamPhase:choice(p.slamPhase,[null,'startup','descent','impact','recovery']),
+  enemyType:choice(p.enemyType,[null]),grapple:grapple(p.grapple),gauntletPullTime:p.gauntletPullTime==null?0:num(p.gauntletPullTime,0,2),gauntletParryTime:p.gauntletParryTime==null?0:num(p.gauntletParryTime,0,2),slamPhase:choice(p.slamPhase,[null,'startup','descent','impact','recovery']),
   kickKind:choice(p.kickKind,[null,'straight','spin']),grabPhase:choice(p.grabPhase,[null,'attempt','hold','windup','recovery','held']),
   jumpStage:choice(p.jumpStage,[0,1,2]),grounded:bool(p.grounded),health:num(p.health,0,10000),maxHealth:num(p.maxHealth,1,10000),
   aimAngle:nullableNum(p.aimAngle),x:num(p.x),y:num(p.y),velocityX:num(p.velocityX),velocityY:num(p.velocityY),
