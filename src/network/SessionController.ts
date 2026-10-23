@@ -133,7 +133,7 @@ export class SessionController {
   this.aim=[x/scale,y/scale];
  }
  selectWeapon(id:WeaponId){if(this.view.lobby.phase==='playing')this.weapon=id;}
- cycleWeapon(direction:1|-1){const order:WeaponId[]=['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile','spear','grapple'];const frame=this.frame;if(!frame)return;const current=this.view.role==='host'?frame.player.weapon:frame.opponent.weapon;this.selectWeapon(order[(order.indexOf(current)+direction+order.length)%order.length]);}
+ cycleWeapon(direction:1|-1){const order:WeaponId[]=['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile','spear','grapple','gravity-gauntlet'];const frame=this.frame;if(!frame)return;const current=this.view.role==='host'?frame.player.weapon:frame.opponent.weapon;this.selectWeapon(order[(order.indexOf(current)+direction+order.length)%order.length]);}
  private apply(sample:InputSample,player:1|2){
   if(!this.session)return;
   if(sample.aim)this.session.setWeaponAim(player,...sample.aim);
