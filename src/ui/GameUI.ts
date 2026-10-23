@@ -1,6 +1,6 @@
 import {ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl,type ArenaCategory} from "./ArenaPreviews";
 import type {MummyStyleId} from "../gameplay/MummyStyles.js";
-import {mummySkinProgress,type SkinUnlockView} from "../progression/SkinUnlocks.js";
+import type {SkinUnlockView} from "../progression/SkinUnlocks.js";
 // UI-only labels are repeated here so standalone GameUI test harnesses can
 // evaluate compiled UI without requiring an additional runtime module.
 const MUMMY_STYLE_IDS:readonly MummyStyleId[]=["classic","royal","cursed","scarab","desert","sentinel"];
@@ -1288,7 +1288,7 @@ export class GameUI{
     if(character==="mummy"){
      for(const item of this.mummyStyleCards.children){
       const button=item as HTMLButtonElement,style=button.dataset.mummyStyle as MummyStyleId;
-      const challenge=s.skinUnlocks?mummySkinProgress(s.skinUnlocks,style):null;
+      const challenge=s.skinUnlocks?.challenges[style]??null;
       const locked=Boolean(challenge&&!challenge.unlocked);
       button.disabled=locked;
       button.dataset.locked=String(locked);
