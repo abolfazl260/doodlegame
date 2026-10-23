@@ -17,7 +17,37 @@ function walk(root,files=[]){
  }
  return files;
 }
-export function scanSourceForNetworkApi(text){return NETWORK_API.test(text);}
+function stripComments(source){
+ let output="";
+ let state="code";
+ let quote="";
+ for(let i=0;i<source.length;i++){
+  const char=source[i];
+  const next=source[i+1];
+  if(state==="line"){
+   if(char==="\n"||char==="\r"){output+=char;state="code";}
+   else output+=" ";
+   continue;
+  }
+  if(state==="block"){
+   if(char==="*"&&next==="/"){output+="  ";i++;state="code";}
+   else output+=char==="\n"||char==="\r"?char:" ";
+   continue;
+  }
+  if(state==="string"){
+   output+=char;
+   if(char==="\\"){if(i+1<source.length)output+=source[++i];continue;}
+   if(char===quote)state="code";
+   continue;
+  }
+  if(char==="/"&&next==="/"){output+="  ";i++;state="line";continue;}
+  if(char==="/"&&next==="*"){output+="  ";i++;state="block";continue;}
+  if(char==="\""||char==="'"||char.charCodeAt(0)===96){quote=char;state="string";}
+  output+=char;
+ }
+ return output;
+}
+export function scanSourceForNetworkApi(text){return NETWORK_API.test(stripComments(text));}
 // The Telegram leaderboard is optional on the WEB platform and explicitly
 // gated in main.ts. Its fetch calls must not fail native/offline Play review.
 // Every other source file remains subject to the network API audit.

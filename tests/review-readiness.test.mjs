@@ -2,9 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {blockedDependencies,hasRemoteRuntimeResource,scanSourceForNetworkApi,hasWebOnlyTelegramGate,violatesOfflineNetworkPolicy} from "../scripts/android/verify-review-readiness.mjs";
 
-test("review verifier detects runtime network APIs",()=>{
+test("review verifier detects runtime network APIs without matching comments",()=>{
  assert.equal(scanSourceForNetworkApi("fetch('/api')"),true);
  assert.equal(scanSourceForNetworkApi("const privacy='https://example.com/privacy'"),false);
+ assert.equal(scanSourceForNetworkApi("/** No WebSocket/web fallback: native socket transport only. */"),false);
+ assert.equal(scanSourceForNetworkApi("const transport = {}; // XMLHttpRequest is not used here"),false);
 });
 test("review verifier detects CDN-backed resources but not ordinary links",()=>{
  assert.equal(hasRemoteRuntimeResource('<script src="https://cdn.example.com/a.js"></script>',".html"),true);
