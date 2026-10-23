@@ -1,4 +1,4 @@
-import {weaponDrawPose,fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,characterMarkings,characterSkinLayers,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
+import {weaponDrawPose,fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,characterMarkings,characterSkinLayers,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,gauntletEffectSegments,type Segment} from './FighterVisual';
 import type {Renderer} from "./Renderer";
 // Public SVGs work under GitHub Pages, Android's relative base and test data URLs.
 const GRAPPLE_ASSET_BASE=(import.meta as ImportMeta & {env?:{BASE_URL?:string}}).env?.BASE_URL??"/";
@@ -284,6 +284,7 @@ export class CanvasRenderer implements Renderer{
   lines(kickEffectSegments(s),ink.halo,.06);
   lines(slamEffectSegments(s),ink.halo,.055);
   lines(grabEffectSegments(s),ink.halo,.055);
+  lines(gauntletEffectSegments(s),s.gauntletParryTime>0?"#47f7fa":"#bd65ff",.075);
   c.restore();
  }
  dispose(){this.platformInk.clear();this.backdropCanvas=null;this.backdropArena=null;}
