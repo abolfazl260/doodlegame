@@ -1294,7 +1294,7 @@ export class GameUI{
       button.dataset.locked=String(locked);
       button.setAttribute("aria-disabled",String(locked));
       button.setAttribute("aria-pressed",String(!locked&&style===(mummyStyle??"classic")));
-      const copy=button.querySelector<HTMLElement>(".game-ui__mummy-option-progress");
+      const copy=button.children[2] as HTMLElement|undefined;
       if(copy){
        const fa=this.i18n.locale==="fa";
        this.setText(copy,locked&&challenge?
