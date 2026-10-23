@@ -38,7 +38,7 @@ test("tap produces one Pulse Punch hit in front, no hits behind or through cover
 });
 test("Mag Pull needs an uninterrupted hold, consumes one activation, and pulls nearby enemies",()=>{
  const {s,input,player,opponent}=fixture();
- opponent.x=player.x+3.2;
+ player.x=5;opponent.x=player.x+3.2;
  input.state.attackHeld=true;
  for(let i=0;i<25;i++)s.update(1/60);
  assert.equal(s.getHudState().gauntlet.pulling,true);
@@ -53,7 +53,8 @@ test("Mag Pull needs an uninterrupted hold, consumes one activation, and pulls n
  assert.ok(direct.x>0&&direct.x<1);
 });
 test("Perfect Parry reflects one incoming missile via the existing GRAB key, with cooldown",()=>{
- const {s,input,player}=fixture();
+ const {s,input,player,opponent}=fixture();
+ opponent.x=8; // Keep the returned missile away from its distant owner during this frame.
  const shots=Reflect.get(s,"projectiles");
  shots.push({x:player.x+1.3,y:player.y+.25,vx:-12,vy:0,life:3,weapon:"missile",
   owner:"opponent",originX:player.x+5,returning:false,spin:0,age:0,bounce:0,ricochets:0});
@@ -68,7 +69,7 @@ test("Perfect Parry reflects one incoming missile via the existing GRAB key, wit
 });
 test("Air Slam uses the committed landing pipeline with larger Gravity burst",()=>{
  const {s,input,player,opponent}=fixture();
- player.y+=3;player.grounded=false;player.velocityY=-5;
+ player.x=6;opponent.x=6.85;player.y+=3;player.grounded=false;player.velocityY=-5;
  opponent.x=player.x+.85;
  const before=opponent.health;
  input.state.moveY=1;input.state.attackPressed=true;input.state.attackHeld=true;
