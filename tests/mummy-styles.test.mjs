@@ -95,7 +95,7 @@ test("UI offers per-player outfits only in Mummy loadout and reuses existing eig
  assert.match(ui,/this\.setHidden\(this\.mummyStylePicker,character!=="mummy"\)/);
  assert.match(ui,/const mummyChanged=/);
  assert.match(ui,/this\.mummyStyleCards\.setAttribute\("role","group"\)/);
- assert.match(ui,/this\\.setText\\(button\\.children\\[1\\] as HTMLElement,name\\)/,"localized outfit name must not overwrite challenge progress");
+ assert.ok(ui.includes("this.setText(button.children[1] as HTMLElement,name)"),"localized outfit name must not overwrite challenge progress");
  const canvas=readFileSync(new URL("../src/rendering/CanvasRenderer.ts",import.meta.url),"utf8");
  const three=readFileSync(new URL("../src/rendering/ThreeRenderer.ts",import.meta.url),"utf8");
  for(const code of [canvas,three])assert.match(code,/fighterInkPalette\([^;]+s\.mummyStyle\)/);
