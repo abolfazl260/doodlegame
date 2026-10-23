@@ -1,7 +1,7 @@
 /** Tunable, deterministic Gravity Gauntlet abilities; no network, rendering or input side effects. */
 export const GRAVITY_GAUNTLET={
  pulseDamage:12,pulseRange:1.8,pulseKnockback:7,pulseCooldown:.52,
- pullHold:.32,pullDuration:.48,pullCooldown:1.45,pullRadius:4.15,pullAcceleration:19,
+ pullHold:.32,pullDuration:.48,pullCooldown:1.45,pullRadius:4.15,pullAcceleration:65,
  parryWindow:.20,parryCooldown:1.35,parryRadius:.74,
  slamDamage:17,slamRadius:2.35,slamKnockback:8.6
 } as const;
