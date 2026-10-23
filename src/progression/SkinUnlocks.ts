@@ -1,4 +1,4 @@
-import type {MummyStyleId} from "../gameplay/MummyStyles.js";
+import {isMummyStyle,type MummyStyleId} from "../gameplay/MummyStyles.js";
 import type {WeaponId} from "../input/Input";
 import type {Storage} from "../storage/Storage";
 
@@ -60,7 +60,7 @@ export class SkinUnlocks{
    desert:mummySkinProgress(counters,"desert"),sentinel:mummySkinProgress(counters,"sentinel")
   }};
  }
- isUnlocked(style:MummyStyleId){return this.getView().challenges[style].unlocked;}
+ isUnlocked(style:MummyStyleId){return isMummyStyle(style)&&this.getView().challenges[style].unlocked;}
  recordSoloVictory(event:{arena:string;weapon:WeaponId;completedRun:boolean}){
   const before=this.getView();
   this.data.wins=Math.min(1000000,this.data.wins+1);
