@@ -6,7 +6,45 @@ test.beforeEach(async({page})=>{
  await page.waitForFunction(()=>Boolean(window.__runFixture));
 });
 
+async function seedCompletedSkinChallenges(page){
+ await page.evaluate(()=>localStorage.setItem("doodlegame.skinUnlocks.v1",JSON.stringify({
+  version:1,wins:6,bowWins:2,arenasWon:["classic","bridge","crater"],completedRuns:1
+ })));
+ await page.reload();
+ await page.waitForFunction(()=>Boolean(window.__runFixture));
+}
+
+test("locked Mummy variants show progress and persist their unlock across reloads",async({page})=>{
+ await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
+ await page.locator('button[data-action="next"]').tap();
+ await page.locator('button[data-action="next"]').tap();
+ await page.locator('.game-ui__character-card[data-character="mummy"]').tap();
+ const royal=page.locator('.game-ui__mummy-option[data-mummy-style="royal"]');
+ const sentinel=page.locator('.game-ui__mummy-option[data-mummy-style="sentinel"]');
+ const classic=page.locator('.game-ui__mummy-option[data-mummy-style="classic"]');
+ await expect(classic).toBeEnabled();
+ await expect(royal).toBeDisabled();
+ await expect(royal).toHaveAttribute("data-locked","true");
+ await expect(royal).toContainText("0/1");
+ await expect(sentinel).toBeDisabled();
+ await page.evaluate(()=>localStorage.setItem("doodlegame.skinUnlocks.v1",JSON.stringify({
+  version:1,wins:1,bowWins:0,arenasWon:["classic"],completedRuns:0
+ })));
+ await page.reload();
+ await page.waitForFunction(()=>Boolean(window.__runFixture));
+ await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
+ await page.locator('button[data-action="next"]').tap();
+ await page.locator('button[data-action="next"]').tap();
+ await page.locator('.game-ui__character-card[data-character="mummy"]').tap();
+ await expect(royal).toBeEnabled();
+ await expect(royal).toContainText(/آزاد شده|UNLOCKED/);
+ await expect(sentinel).toBeDisabled();
+ await royal.tap();
+ await expect(royal).toHaveAttribute("aria-pressed","true");
+});
+
 test("six Mummy outfits integrate with P1/P2 character selection and live rendering",async({page})=>{
+ await seedCompletedSkinChallenges(page);
  await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
  await page.locator('button[data-action="next"]').tap();
  await page.locator('button[data-action="next"]').tap();
@@ -51,6 +89,7 @@ test("Mummy options are cosmetic and hidden when choosing another fighter",async
 });
 
 test("each Mummy outfit has a weapon-free, unique mini portrait and translated label",async({page})=>{
+ await seedCompletedSkinChallenges(page);
  await page.locator('.game-ui__quick-mode[data-quick-mode="local-pvp"]').tap();
  await page.locator('button[data-action="next"]').tap();
  await page.locator('button[data-action="next"]').tap();
