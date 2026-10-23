@@ -1,10 +1,10 @@
-import {GameLoop} from "./GameLoop.js";import type {MummyStyleId} from "../gameplay/MummyStyles.js";import {GameState,GameStateManager} from "./GameState.js";import type {FrameScheduler} from "./FrameScheduler";import type {Renderer} from "../rendering/Renderer";import type {GameSession,ArenaId,GameModeId,CharacterId} from "../gameplay/GameSession";import type {UpgradeSnapshot,Progression} from "../progression/Progression";
+import {GameLoop} from "./GameLoop.js";import type {SkinUnlocks} from "../progression/SkinUnlocks.js";import type {MummyStyleId} from "../gameplay/MummyStyles.js";import {GameState,GameStateManager} from "./GameState.js";import type {FrameScheduler} from "./FrameScheduler";import type {Renderer} from "../rendering/Renderer";import type {GameSession,ArenaId,GameModeId,CharacterId} from "../gameplay/GameSession";import type {UpgradeSnapshot,Progression} from "../progression/Progression";
 export class Game{
  private state=new GameStateManager();private loop:GameLoop;private initialized=false;private disposed=false;
  private inRun=false;
  private quickPlaySnapshot:import("../gameplay/GameSession").MatchSetupSnapshot|null=null;
  private normalSnapshot:({arena:ArenaId;mode:GameModeId;localPvP:boolean;upgrades:UpgradeSnapshot})|null=null;
- constructor(private readonly renderer:Renderer,private readonly session:GameSession,scheduler:FrameScheduler,onError:(error:unknown)=>void,private readonly progression?:Progression){
+ constructor(private readonly renderer:Renderer,private readonly session:GameSession,scheduler:FrameScheduler,onError:(error:unknown)=>void,private readonly progression?:Progression,private readonly skinUnlocks?:SkinUnlocks){
   this.loop=new GameLoop(scheduler,dt=>this.update(dt),()=>this.renderer.render(this.session.getRenderState()),onError);
   const run=progression?.getView().run;
   if(run?.status==="victory"){
@@ -21,10 +21,16 @@ export class Game{
  resume(){this.ready();if(this.state.getState()===GameState.PAUSED){this.session.cancelTransientActions();this.state.transitionTo(GameState.PLAYING);this.loop.start();}}
  endGame(){this.ready();if(this.state.getState()===GameState.PLAYING){
   this.session.recordPvpRound();
+  const hud=this.session.getHudState();
   if(this.inRun&&this.progression){
-   const winner=this.session.getHudState().winner;
-   if(winner==="player"||winner==="opponent")this.progression.result(winner,this.session.getUpgradeSnapshot());
+   if(hud.winner==="player"||hud.winner==="opponent")
+    this.progression.result(hud.winner,this.session.getUpgradeSnapshot());
   }
+  // Only completed solo victories can earn cosmetics; draws and local PvP never count.
+  // This branch runs once when PLAYING transitions to GAME_OVER.
+  if(hud.winner==="player"&&!this.session.isLocalPvP())
+   this.skinUnlocks?.recordSoloVictory({arena:hud.arena,weapon:hud.weapon,
+    completedRun:Boolean(this.inRun&&this.progression?.getView().run?.status==="complete")});
   this.state.transitionTo(GameState.GAME_OVER);
  }}
  stop(){if(this.disposed)return;this.loop.stop();this.session.cancelTransientActions();if(this.inRun){this.progression?.suspend(this.session.getUpgradeSnapshot());this.leaveRun();return;}if(this.quickPlaySnapshot){this.session.restoreMatchSetup(this.quickPlaySnapshot);this.quickPlaySnapshot=null;}this.session.clearLoadoutSelections();if(this.state.getState()!==GameState.MENU)this.state.transitionTo(GameState.MENU);else this.state.notify();}
@@ -41,7 +47,7 @@ export class Game{
  selectPlayer2Weapon(direction:1|-1){this.ready();if(this.state.getState()===GameState.MENU)this.session.selectPlayer2Weapon(direction);}
  selectCharacter(id:CharacterId){this.ready();const state=this.state.getState();if(state!==GameState.MENU&&state!==GameState.GAME_OVER)return;this.session.setCharacterId(id);this.state.notify();}
  selectPlayer2Character(id:CharacterId){this.ready();if(this.state.getState()!==GameState.MENU)return;this.session.setPlayer2CharacterId(id);this.state.notify();}
- selectMummyStyle(player:1|2,id:MummyStyleId){this.ready();if(this.state.getState()!==GameState.MENU)return false;const ok=this.session.setMummyStyle(player,id);if(ok)this.state.notify();return ok;}
+ selectMummyStyle(player:1|2,id:MummyStyleId){this.ready();if(this.state.getState()!==GameState.MENU||this.skinUnlocks&&!this.skinUnlocks.isUnlocked(id))return false;const ok=this.session.setMummyStyle(player,id);if(ok)this.state.notify();return ok;}
  selectPlayer2StartingWeapon(id:import("../input/Input").WeaponId){this.ready();if(this.state.getState()!==GameState.MENU)return false;const selected=this.session.setPlayer2StartingWeapon(id);if(selected)this.state.notify();return selected;}
  chooseRandomStartingWeapon(player:1|2){this.ready();if(this.state.getState()!==GameState.MENU)return false;const selected=this.session.chooseRandomStartingWeapon(player);if(selected)this.state.notify();return selected;}
  selectStartingWeapon(id:import("../input/Input").WeaponId){this.ready();const current=this.state.getState();if(current!==GameState.MENU&&current!==GameState.GAME_OVER)return false;const selected=this.session.setStartingWeapon(id);if(selected)this.state.notify();return selected;}
@@ -122,7 +128,7 @@ export class Game{
   return true;
  }
  getArena(){return this.session.getArena();}
- getHudState(){return{...this.session.getHudState(),progression:this.progression?.getView()??null,inRun:this.inRun};}
+ getHudState(){return{...this.session.getHudState(),progression:this.progression?.getView()??null,inRun:this.inRun,skinUnlocks:this.skinUnlocks?.getView()};}
  subscribe(listener:(state:GameState)=>void){return this.state.subscribe(listener);}getState(){return this.state.getState();}
  resize(){this.assertNotDisposed();if(this.initialized)this.renderer.resize();}
  dispose(){if(this.disposed)return;this.loop.dispose();this.session.dispose();this.renderer.dispose();this.state.dispose();this.disposed=true;}

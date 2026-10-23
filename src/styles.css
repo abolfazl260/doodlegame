@@ -2790,6 +2790,23 @@ html.software-landscape .game-ui.playing .game-ui__bow-panel{
  flex:none;
 }
 .game-ui__mummy-option-art svg{width:100%;height:100%;display:block}
+.game-ui .game-ui__mummy-option[data-locked="true"]{
+ opacity:.7;
+ cursor:not-allowed;
+ border-style:dashed;
+ filter:saturate(.6);
+}
+.game-ui .game-ui__mummy-option[data-locked="true"]:hover{background-color:transparent}
+.game-ui__mummy-option-progress{
+ display:block;
+ max-width:100%;
+ color:#efe0b7;
+ font-size:.56rem;
+ line-height:1.25;
+ text-align:center;
+ overflow-wrap:anywhere;
+}
+.game-ui .game-ui__mummy-option[data-locked="true"] .game-ui__mummy-option-progress{color:#e5d9c9}
 .game-ui__mummy-option-name{
  max-width:100%;
  color:inherit;
