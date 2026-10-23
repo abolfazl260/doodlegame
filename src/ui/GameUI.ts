@@ -24,7 +24,7 @@ import type {ProgressionView} from "../progression/Progression";
 type HudState={
  tutorial?:TutorialSignals;lanPlayer?:1|2;
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
- bowCharge:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
+ bowCharge:number;gauntlet?:Readonly<{pullCooldown:number;parryCooldown:number;pulling:boolean;parrying:boolean}>;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
  progression?:ProgressionView|null;skinUnlocks?:SkinUnlockView;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;mummyStyle?:MummyStyleId;secondMummyStyle?:MummyStyleId;
  characterId?:CharacterId;opponentCharacterId?:CharacterId;characterChosen?:boolean;weaponChosen?:boolean;secondCharacterChosen?:boolean;secondWeaponChosen?:boolean;weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;pvpSeries?:Readonly<{round:number;playerWins:number;opponentWins:number;complete:boolean;countdown:number;swapped:boolean}>;
 };
