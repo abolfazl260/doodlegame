@@ -1942,7 +1942,7 @@ export class GameUI{
   for(const item of this.mummyStyleCards.children){
    const button=item as HTMLButtonElement,style=button.dataset.mummyStyle as MummyStyleId;
    const name=MUMMY_STYLE_NAMES[style][this.i18n.locale];
-   this.setText(button.children[button.children.length-1] as HTMLElement,name);
+   this.setText(button.children[1] as HTMLElement,name);
    button.setAttribute("aria-label",(this.i18n.locale==="fa"?"مومیایی ":"MUMMY ")+name);
   }
   this.characterCards.setAttribute("aria-label",this.characterPickerTitle.textContent);
