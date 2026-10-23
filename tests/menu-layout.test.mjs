@@ -164,7 +164,7 @@ test("wizard requires character and weapon selection after mode and arena",()=>{
  const {ui,calls,hud}=setup();
  assert.equal(ui.menuSettings.children.length,8);
  assert.equal(ui.arenaCards.children.length,20);
- assert.equal(ui.weaponCards.children.length,11);
+ assert.equal(ui.weaponCards.children.length,12);
  assert.equal(ui.quickDuelButton.getAttribute("aria-pressed"),"true");
  assert.equal(ui.menuModePanel.hidden,false);
  assert.equal(ui.menuArenaPanel.hidden,true);
@@ -271,7 +271,7 @@ test("clicking the language button immediately switches both directions without 
 test("compact upgrade selector preserves purchase and availability rules",()=>{
  const {ui,calls,hud}=setup({upgradePoints:1,upgradedWeapons:["blade"]});
  assert.equal(ui.upgradePanel.hidden,false);
- assert.equal(ui.upgradeCardGrid.children.length,10);
+ assert.equal(ui.upgradeCardGrid.children.length,11);
  assert.equal(ui.upgradeCardGrid.children[0].disabled,true);
  assert.equal(ui.upgradeCardGrid.children.find(b=>b.dataset.upgradeWeapon==="hammer").getAttribute("aria-pressed"),"true");
  assert.equal(ui.upgradeButton.disabled,false);
