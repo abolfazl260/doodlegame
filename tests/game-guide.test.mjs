@@ -1,7 +1,7 @@
 import {I18n} from '../.test-build/i18n/I18n.js';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {GUIDE_EN,GUIDE_FA,GUIDE_SECTION_IDS} from '../.test-build/i18n/GameGuide.js';
-const weapons=['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile','spear','grapple'];
+const weapons=['blade','hammer','blaster','uzi','boomerang','bow','bomb','missile','spear','grapple','gravity-gauntlet'];
 const modes=['duel','missile-duel','melee-only','random-weapons','sudden-death','low-gravity','king-of-hill','local-pvp'];
 test('both guides completely cover every weapon, mode and required section',()=>{
  for(const guide of [GUIDE_EN,GUIDE_FA]){

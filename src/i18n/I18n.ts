@@ -69,7 +69,7 @@ const EN:Messages={
  run:{title:"FOUR-FIGHT RUN",newRun:"NEW RUN",continueRun:"CONTINUE RUN",next:"NEXT FIGHT",retry:"RETRY FIGHT",leave:"BACK TO DUEL",wave:"WAVE",boss:"BOSS",ready:"Your next encounter is ready.",victory:"Victory! +1 upgrade point.",defeat:"Defeat. Retry this encounter with your saved upgrades.",complete:"RUN COMPLETE! Boss defeated.",choose:"Choose one of three upgrades before the next fight.",career:"RUN WINS",points:"UPGRADE POINTS",medals:{rookie:"ROOKIE",veteran:"VETERAN",champion:"CHAMPION"},requirements:{rookie:"1 Run win",veteran:"3 Run wins",champion:"1 completed Run"}},
  arenas:{classic:"CLASSIC",towers:"TOWERS",pit:"PIT",steps:"STEPS",zigzag:"ZIGZAG",sky:"SKY",moving:"MOVING",fortress:"FORTRESS",bridge:"BRIDGE",crater:"CRATER",vertical:"VERTICAL",ruins:"RUINS",conveyor:"CONVEYOR",collapse:"COLLAPSE",storm:"STORM",reactor:"REACTOR","alpine-lake":"ALPINE LAKE","dusk-valley":"TWILIGHT VALLEY","autumn-valley":"AUTUMN VALLEY","ember-river":"EMBER RIVER"},
  modes:{duel:"DUEL","missile-duel":"MISSILE DUEL","melee-only":"MELEE ONLY","random-weapons":"RANDOM WEAPONS","sudden-death":"SUDDEN DEATH","low-gravity":"LOW GRAVITY","king-of-hill":"KING OF THE HILL","local-pvp":"TWO PLAYERS (LOCAL)"},
- weapons:{blade:"BLADE",hammer:"HAMMER",blaster:"BLASTER",uzi:"UZI",boomerang:"BOOMERANG",bow:"BOW",bomb:"BOMB",missile:"MISSILE",spear:"SPEAR",grapple:"GRAPPLE GUN"},
+ weapons:{blade:"BLADE",hammer:"HAMMER",blaster:"BLASTER",uzi:"UZI",boomerang:"BOOMERANG",bow:"BOW",bomb:"BOMB",missile:"MISSILE",spear:"SPEAR",grapple:"GRAPPLE GUN","gravity-gauntlet":"GRAVITY GAUNTLET"},
  upgrades:{
   blade:{name:"TWIN SLASH",description:"Wider strike with heavier follow-through damage."},
   hammer:{name:"GROUND SLAM",description:"Grounded hits create a short-range shockwave."},
@@ -80,7 +80,8 @@ const EN:Messages={
   bomb:{name:"STICKY BOMB",description:"Bombs stick to the first platform they land on."},
   missile:{name:"CLUSTER MISSILE",description:"The main blast releases four mini missiles."},
   spear:{name:"TWIN SPEAR",description:"Throw two spears in a narrow spread instead of one."},
-  grapple:{name:"LONG CABLE",description:"Longer hook reach and faster rope retraction."}
+  grapple:{name:"LONG CABLE",description:"Longer hook reach and faster rope retraction."},
+  "gravity-gauntlet":{name:"ORBIT CORE",description:"Mag Pull reaches farther, Perfect Parry lasts longer, and Pulse Punch deals extra damage."}
  }
 };
 
@@ -119,7 +120,7 @@ const FA:Messages={
  run:{title:"مسیر چهار مبارزه‌ای",newRun:"مسیر جدید",continueRun:"ادامه مسیر",next:"مبارزه بعدی",retry:"تلاش دوباره",leave:"بازگشت به دوئل",wave:"مرحله",boss:"رئیس نهایی",ready:"مبارزه بعدی آماده است.",victory:"پیروزی! ۱ امتیاز ارتقا گرفتی.",defeat:"شکست؛ این مرحله را با ارتقاهای ذخیره‌شده دوباره بازی کن.",complete:"مسیر کامل شد! رئیس نهایی شکست خورد.",choose:"برای ادامه یکی از سه ارتقای پیشنهادی را انتخاب کن.",career:"بردهای مسیر",points:"امتیاز ارتقا",medals:{rookie:"تازه‌کار",veteran:"کهنه‌کار",champion:"قهرمان"},requirements:{rookie:"۱ برد در مسیر",veteran:"۳ برد در مسیر",champion:"۱ مسیر کامل"}},
  arenas:{classic:"کلاسیک",towers:"برج‌ها",pit:"گودال",steps:"پله‌ها",zigzag:"زیگزاگ",sky:"آسمان",moving:"متحرک",fortress:"دژ",bridge:"پل",crater:"دهانه",vertical:"عمودی",ruins:"ویرانه‌ها",conveyor:"نوار نقاله",collapse:"فروریزش",storm:"طوفان",reactor:"راکتور","alpine-lake":"دریاچه یخی","dusk-valley":"دره گرگ‌ومیش","autumn-valley":"دره پاییزی","ember-river":"رودخانه آتشین"},
  modes:{duel:"دوئل","missile-duel":"دوئل موشکی","melee-only":"فقط تن‌به‌تن","random-weapons":"سلاح تصادفی","sudden-death":"مرگ ناگهانی","low-gravity":"جاذبه کم","king-of-hill":"پادشاه تپه","local-pvp":"دو نفره (محلی)"},
- weapons:{blade:"تیغه",hammer:"چکش",blaster:"بلستر",uzi:"یوزی",boomerang:"بومرنگ",bow:"کمان",bomb:"بمب",missile:"موشک",spear:"نیزه",grapple:"تفنگ قلاب‌دار"},
+ weapons:{blade:"تیغه",hammer:"چکش",blaster:"بلستر",uzi:"یوزی",boomerang:"بومرنگ",bow:"کمان",bomb:"بمب",missile:"موشک",spear:"نیزه",grapple:"تفنگ قلاب‌دار","gravity-gauntlet":"دستکش گرانشی"},
  upgrades:{
   blade:{name:"ضربه دوقلو",description:"ضربه‌ای عریض‌تر با آسیب بیشتر در ادامه حرکت."},
   hammer:{name:"کوبش زمین",description:"ضربه‌های زمینی یک موج کوتاه‌برد ایجاد می‌کنند."},
@@ -130,7 +131,8 @@ const FA:Messages={
   bomb:{name:"بمب چسبنده",description:"بمب به اولین سکویی که روی آن فرود بیاید می‌چسبد."},
   missile:{name:"موشک خوشه‌ای",description:"انفجار اصلی چهار موشک کوچک آزاد می‌کند."},
   spear:{name:"نیزهٔ دوتایی",description:"به‌جای یک نیزه، دو نیزه با زاویهٔ کمی متفاوت پرتاب می‌شود."},
-  grapple:{name:"طناب بلند",description:"برد بیشتر قلاب و جمع‌شدن سریع‌تر طناب."}
+  grapple:{name:"طناب بلند",description:"برد بیشتر قلاب و جمع‌شدن سریع‌تر طناب."},
+  "gravity-gauntlet":{name:"هسته مداری",description:"برد کشش مغناطیسی بیشتر، پنجره دفع بلندتر و ضربه مشت قوی‌تر می‌شود."}
  }
 };
 

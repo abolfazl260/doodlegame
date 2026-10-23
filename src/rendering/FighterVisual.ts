@@ -5,7 +5,7 @@ export type Point = readonly [number, number];
 export type Segment = readonly [Point, Point];
 const clamp=(v:number)=>Math.max(0,Math.min(1,v));
 export function attackDuration(weapon:DuelistRenderState['weapon']) {
- return weapon==='hammer'?.24:weapon==='blade'||weapon==='bow'||weapon==='missile'||weapon==='spear'?.22:.14;
+ return weapon==='hammer'||weapon==='gravity-gauntlet'?.24:weapon==='blade'||weapon==='bow'||weapon==='missile'||weapon==='spear'?.22:.14;
 }
 /** Shared, legible overhead tell for committed attacks and boss phase changes. */
 export function telegraphSegments(s:DuelistRenderState):Segment[]{
@@ -150,8 +150,8 @@ export function fighterVisual(s:DuelistRenderState) {
  let hand:Point=[.46,.03];
  let back:Point=[-.45-stride*(.16+fastRun*.29),.05+stride*(.1+fastRun*.19)+breathe*.45];
  let toolAngle=Math.sin(phase)*speed*.06;
- if(weapon==='blade'||weapon==='hammer') {
-  const angles=weapon==='hammer'?(s.attackVariant===2?[.9,-1.2]:[-1.1,1.25]):(s.attackVariant===0?[.9,-1.2]:[-1.15,1.1]);
+ if(weapon==='blade'||weapon==='hammer'||weapon==='gravity-gauntlet') {
+  const angles=weapon==='hammer'||weapon==='gravity-gauntlet'?(s.attackVariant===2?[.9,-1.2]:[-1.1,1.25]):(s.attackVariant===0?[.9,-1.2]:[-1.15,1.1]);
   toolAngle=s.attackTime>0?angles[0]+swing*(angles[1]-angles[0]):-.35;
   if(weapon==='blade'&&s.attackVariant===2)toolAngle=-toolAngle;
   if(weapon==='blade'&&s.attackVariant===3)toolAngle=.08;
@@ -300,6 +300,26 @@ export function grabEffectSegments(s:DuelistRenderState):Segment[]{
   [[.68+r,.03],[.75+r,.2]]
  ];
 }
+/** Shared gravity effects for both GPU and Canvas renderers; visual only. */
+export function gauntletEffectSegments(s:DuelistRenderState):Segment[]{
+ if(s.weapon!=="gravity-gauntlet"||((s.gauntletPullTime??0)<=0&&(s.gauntletParryTime??0)<=0))return[];
+ const segments:Segment[]=[];
+ const activeParry=(s.gauntletParryTime??0)>0;
+ const radius=activeParry?.87:.53;
+ const cx=.45,cy=.23;
+ for(let i=0;i<24;i++){
+  const t=i*Math.PI/12+s.animationTime*2,u=(i+1)*Math.PI/12+s.animationTime*2;
+  segments.push([[cx+radius*Math.cos(t),cy+radius*Math.sin(t)],
+   [cx+radius*Math.cos(u),cy+radius*Math.sin(u)]]);
+ }
+ for(let i=0;i<8;i++){
+  const a=i*Math.PI/4-s.animationTime*2;
+  segments.push([[cx+radius*.72*Math.cos(a),cy+radius*.72*Math.sin(a)],
+   [cx+radius*1.23*Math.cos(a),cy+radius*1.23*Math.sin(a)]]);
+ }
+ return segments;
+}
+
 /** Each segment is a real pair of 3D vertices; buffers are sized from these arrays. */
 export function toolSegments(s:DuelistRenderState):Segment[] {
  if(s.grabPhase!==null&&s.grabPhase!==undefined)return [];
@@ -325,6 +345,18 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
    path([[.53,-.30],[.62,-.38],[.89,-.38],[.99,-.28],[.99,.28],[.89,.38],[.62,.38],[.53,.30],[.53,-.30]]);
    path([[.62,-.38],[.68,-.29],[.88,-.29],[.99,-.28]]);
    line([.66,-.23],[.66,.23]);line([.66,.23],[.84,.27]);break;
+  case 'gravity-gauntlet': {
+   // Thick segmented mech glove with an orbit-core ring; all geometry is procedural
+   // and shared by Canvas and WebGL (no sprite, texture or added load time).
+   path([[-.24,-.21],[.37,-.22],[.49,-.14],[.49,.25],[.37,.33],[-.24,.29],[-.24,-.21]]);
+   rect(-.18,-.26,.16,.60);
+   path([[.36,-.20],[.66,-.28],[.95,-.21],[1.04,-.09],[1.01,.19],[.9,.30],[.63,.30],[.36,.25]]);
+   for(const x of [.53,.67,.81,.95])line([x,-.2],[x,.29]);
+   for(let i=0;i<16;i++){const a=i*Math.PI/8,b=(i+1)*Math.PI/8;
+    line([.08+Math.cos(a)*.17,.04+Math.sin(a)*.17],[.08+Math.cos(b)*.17,.04+Math.sin(b)*.17]);}
+   path([[-.04,.06],[.06,.17],[.2,.06],[.08,-.02],[-.04,.06]]);
+   break;
+  }
   case 'blaster': {
    // Compact dark graphite sidearm with a glowing red status window.
    path([[-.21,-.065],[.51,-.065],[.57,.00],[.68,.00],[.68,.18],[.52,.18],[.48,.23],[-.17,.23],[-.21,.16],[-.21,-.065]]);
@@ -829,6 +861,7 @@ export function weaponAccentColor(s:DuelistRenderState):string {
   case "missile":return "#ef4040";
   case "spear":return "#f6bf35";
   case "grapple":return "#f3c967";
+  case "gravity-gauntlet":return "#35f3e7";
  }
 }
 export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
@@ -836,6 +869,10 @@ export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
  switch(weaponDrawPose(s).weapon){
   case "blade":return [
    [[.14,-.18],[.14,.18]],[[-.24,-.08],[-.24,.08]]
+  ];
+  case "gravity-gauntlet":return [
+   [[-.17,-.23],[-.17,.30]],[[.45,-.12],[.95,-.12]],
+   [[.45,.21],[.95,.21]],[[.08,-.09],[.08,.16]]
   ];
   case "hammer":return [
    [[.53,-.12],[.53,.12]],[[-.30,-.115],[-.30,.115]],[[.68,.25],[.87,.25]]
@@ -884,6 +921,12 @@ export function weaponStyleLayers(s:DuelistRenderState):readonly WeaponStyleLaye
    {color:"#795032",width:.072,segments:[[[-.25,0],[.51,0]]]},
    {color:"#eab637",width:.055,segments:[[[.51,-.10],[.51,.10]],[[-.30,-.11],[-.30,.11]]]},
    {color:"#dce7f0",width:.028,segments:[[[.65,.24],[.87,.24]]]}
+  ];
+  case "gravity-gauntlet":return [
+   {color:"#252b45",width:.30,segments:[[[-.19,.03],[.34,.03]],[[.66,.03],[.93,.03]]]},
+   {color:"#33e9e4",width:.079,segments:[[[-.18,-.20],[-.18,.27]],[[.48,-.14],[.94,-.14]]]},
+   {color:"#b958fa",width:.082,segments:[[[.48,.25],[.93,.25]],[[.08,-.10],[.08,.15]]]},
+   {color:"#d6e4ff",width:.034,segments:[[[.53,.31],[.90,.31]],[[.23,-.19],[.37,-.19]]]}
   ];
   case "blaster":return [
    {color:"#303a49",width:.126,segments:[[[-.15,.085],[.53,.085]]]},

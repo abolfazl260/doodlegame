@@ -1,4 +1,4 @@
-import {weaponDrawPose,fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,capsulePositions,characterMarkings,characterSkinLayers,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,type Segment} from './FighterVisual';
+import {weaponDrawPose,fighterVisual,fighterInkPalette,FIGHTER_INK_WIDTH,capsulePositions,characterMarkings,characterSkinLayers,fighterOutfit,weaponAccentColor,weaponAccentSegments,weaponStyleLayers,weaponBaseInk,toolSegments,segmentPositions,telegraphSegments,kickEffectSegments,slamEffectSegments,grabEffectSegments,gauntletEffectSegments,type Segment} from './FighterVisual';
 import * as THREE from "three";
 // Public SVGs work under GitHub Pages, Android's relative base and test data URLs.
 const GRAPPLE_ASSET_BASE=(import.meta as ImportMeta & {env?:{BASE_URL?:string}}).env?.BASE_URL??"/";
@@ -407,7 +407,7 @@ export class ThreeRenderer implements Renderer{
    part.position.x=pose.hand[0];part.position.y=pose.hand[1];
    part.rotation.z=pose.toolAngle;
   }
-  const effect=[...telegraphSegments(s),...kickEffectSegments(s),...slamEffectSegments(s),...grabEffectSegments(s)] as Segment[];
+  const effect=[...telegraphSegments(s),...kickEffectSegments(s),...slamEffectSegments(s),...grabEffectSegments(s),...gauntletEffectSegments(s)] as Segment[];
   if(s.attackTime>0&&(s.weapon==="blaster"||s.weapon==="uzi")){
    const x=pose.hand[0]+(s.weapon==="uzi"?.54:.66),y=pose.hand[1];
    effect.push([[x,y],[x+.22,y+.1]],[[x,y],[x+.22,y-.1]],[[x,y],[x+.3,y]]);
@@ -415,6 +415,8 @@ export class ThreeRenderer implements Renderer{
   if(Math.abs(s.velocityX)>9)for(const y of [-.3,0,.3])effect.push([[-.45,y],[-1.1,y]]);
   if(pose.land>0)effect.push([[-.3,-.88],[-.6-pose.land*.2,-.82]],[[.3,-.88],[.6+pose.land*.2,-.82]]);
   this.setLines(view.effect,segmentPositions(effect));
+  (view.effect.material as THREE.LineBasicMaterial).color.set(s.weapon==="gravity-gauntlet"&&
+   ((s.gauntletParryTime??0)>0||(s.gauntletPullTime??0)>0)?(s.gauntletParryTime??0)>0?"#42f9f4":"#b76fff":"#ffffff");
   (view.effect.material as THREE.LineBasicMaterial).opacity=effect.length?(s.attackTelegraph>0?.95:.6):0;
  }
  dispose(){for(const line of this.grappleLines){line.geometry.dispose();(line.material as THREE.Material).dispose();}for(const texture of Object.values(this.grappleTextures))texture.dispose();this.platformInk.clear();this.contextLifecycle.dispose();this.themeTexture?.dispose();this.themeTexture=null;for(const m of this.missileTrails)this.scene.remove(m);for(const m of this.missileFlashes)this.scene.remove(m);for(const m of this.bowProjectiles)this.scene.remove(m);this.renderer.dispose();this.renderer.forceContextLoss();this.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});this.scene.clear();this.projectileGeometry.dispose();this.platformMaterial.dispose();this.icePlatformMaterial.dispose();this.slipperyPlatformMaterial.dispose();this.oneWayPlatformMaterial.dispose();this.conveyorLeftPlatformMaterial.dispose();this.conveyorRightPlatformMaterial.dispose();this.environmentVisuals.forEach(g=>g.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}}));}

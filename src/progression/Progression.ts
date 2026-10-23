@@ -12,7 +12,7 @@ export type ProgressionView={
  run:RunCheckpoint|null;choices:readonly WeaponId[];
 };
 type SavedData={version:1;totalWins:number;completedRuns:number;bestStage:number;run:RunCheckpoint|null};
-const ALL_WEAPONS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear","grapple"];
+const ALL_WEAPONS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear","grapple","gravity-gauntlet"];
 const DEFAULTS:SavedData={version:1,totalWins:0,completedRuns:0,bestStage:0,run:null};
 
 function count(value:unknown,max=1000000){

@@ -24,7 +24,7 @@ import type {ProgressionView} from "../progression/Progression";
 type HudState={
  tutorial?:TutorialSignals;lanPlayer?:1|2;
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
- bowCharge:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
+ bowCharge:number;gauntlet?:Readonly<{pullCooldown:number;parryCooldown:number;pulling:boolean;parrying:boolean}>;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
  progression?:ProgressionView|null;skinUnlocks?:SkinUnlockView;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;mummyStyle?:MummyStyleId;secondMummyStyle?:MummyStyleId;
  characterId?:CharacterId;opponentCharacterId?:CharacterId;characterChosen?:boolean;weaponChosen?:boolean;secondCharacterChosen?:boolean;secondWeaponChosen?:boolean;weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;pvpSeries?:Readonly<{round:number;playerWins:number;opponentWins:number;complete:boolean;countdown:number;swapped:boolean}>;
 };
@@ -66,7 +66,7 @@ type MenuStep="mode"|"arena"|"loadout";
 const MENU_STEPS:readonly MenuStep[]=["mode","arena","loadout"];
 
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor","alpine-lake","dusk-valley","autumn-valley","ember-river"];
-const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear","grapple"];
+const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear","grapple","gravity-gauntlet"];
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
 const CHARACTER_IDS:readonly CharacterId[]=["soldier","ninja","viking","ranger","pharaoh","knight","mummy","archer"];
 const CHARACTER_TEXT={
@@ -314,6 +314,8 @@ export class GameUI{
  private runLeaveButton=document.createElement("button");
  private selectedUpgrade:WeaponId|null=null;
  private startingWeaponTitle=document.createElement("div");
+ private gauntletGuide=document.createElement("p");
+ private gauntletStatus=document.createElement("div");
  private title=document.createElement("h1");
  private topHud=document.createElement("div");
  private status=document.createElement("p");
@@ -715,7 +717,10 @@ export class GameUI{
   this.weaponCards.className="game-ui__weapon-grid";
   this.weaponDetails.className="game-ui__weapon-details";
   this.weaponDetailsTitle.className="game-ui__weapon-details-title";
-  this.weaponDetails.append(this.weaponDetailsTitle,this.startingWeaponTitle,this.weaponCards);
+  this.gauntletGuide.className="game-ui__gauntlet-guide";this.gauntletGuide.hidden=true;
+  this.gauntletStatus.className="game-ui__gauntlet-status";this.gauntletStatus.hidden=true;
+  this.gauntletStatus.setAttribute("role","status");this.gauntletStatus.setAttribute("aria-live","off");
+  this.weaponDetails.append(this.weaponDetailsTitle,this.startingWeaponTitle,this.weaponCards,this.gauntletGuide);
   for(const id of MODE_IDS){
    const card=document.createElement("button");
    card.type="button";card.className="game-ui__mode-card";
@@ -1161,7 +1166,7 @@ export class GameUI{
   this.root.append(this.menu,this.help,this.privacy,this.topHud,this.mobilePauseButton,this.weaponList,this.bowPanel,this.mobileControls);
   this.lanDash.type="button";this.lanDash.className="game-ui__lan-dash";this.lanDash.hidden=true;
   this.lanDash.onclick=()=>{if(this.readHud?.().lanPlayer)actions.touchDash?.();};
-  this.root.append(this.coach,this.lanDash,this.pvpScoreHud,this.pvpCountdownLabel);
+  this.root.append(this.coach,this.lanDash,this.pvpScoreHud,this.pvpCountdownLabel,this.gauntletStatus);
   container.append(this.pauseScrim,this.root);
   this.root.addEventListener("keydown",event=>{
    if(event.key!=="Escape")return;
@@ -1282,6 +1287,11 @@ export class GameUI{
     this.setHidden(this.loadoutP2Button,!twoPlayers);
     const player=this.loadoutPlayer,chosenCharacter=player===1?s.characterChosen:s.secondCharacterChosen;
     const chosenWeapon=player===1?s.weaponChosen:s.secondWeaponChosen;
+    const gauntletChosen=(player===1?s.weapon:s.secondWeapon)==="gravity-gauntlet";
+    this.setHidden(this.gauntletGuide,!gauntletChosen);
+    if(gauntletChosen)this.setText(this.gauntletGuide,this.i18n.locale==="fa"?
+     "دستکش گرانشی · ضربه: لمس حمله | کشش: نگه‌داشتن حمله | کوبش: پایین + حمله در هوا | دفع پرتابه: فرمان گرفتن/کشیدن سریع دکمه حمله به بالا":
+     "GRAVITY GAUNTLET · Tap ATTACK: Pulse Punch | Hold ATTACK: Mag Pull | Airborne ↓ + ATTACK: Air Slam | GRAB/upward swipe: Perfect Parry");
     const character=player===1?s.characterId:s.opponentCharacterId;
     const mummyStyle=player===1?s.mummyStyle:s.secondMummyStyle;
     this.setHidden(this.mummyStylePicker,character!=="mummy");
@@ -1418,6 +1428,7 @@ export class GameUI{
   if(staticChanged){
    // A held UZI/Bow touch belongs to the originally selected weapon, not its replacement.
    if(weaponChanged&&state===GameState.PLAYING)this.cancelActiveTouchAttack();
+   this.setHidden(this.gauntletStatus,state!==GameState.PLAYING||s.weapon!=="gravity-gauntlet");
    if(secondWeaponChanged&&state===GameState.PLAYING)this.cancelP2Attack();
    if(stateChanged){
     if(state===GameState.MENU){
@@ -1657,6 +1668,14 @@ export class GameUI{
      characterId:s.characterId,opponentCharacterId:s.opponentCharacterId};
   }
 
+  if(state===GameState.PLAYING&&s.weapon==="gravity-gauntlet"){
+   const g=s.gauntlet,fa=locale==="fa";
+   const pull=g?.pulling?(fa?"کشش فعال":"PULLING"):g&&g.pullCooldown>0?
+    (fa?"کشش ":"PULL ")+g.pullCooldown.toFixed(1)+"s":fa?"کشش آماده":"PULL READY";
+   const parry=g?.parrying?(fa?"دفع فعال":"PARRYING"):g&&g.parryCooldown>0?
+    (fa?"دفع ":"PARRY ")+g.parryCooldown.toFixed(1)+"s":fa?"دفع آماده":"PARRY READY";
+   this.setText(this.gauntletStatus,(fa?"دستکش گرانشی":"GRAVITY GAUNTLET")+" · "+pull+" · "+parry);
+  }
   if(!this.hpFormatter||this.hpFormatterLocale!==locale){
    this.hpFormatter=new Intl.NumberFormat(locale==="fa"?"fa-IR":"en-US",{useGrouping:false,maximumFractionDigits:0});
    this.hpFormatterLocale=locale;
