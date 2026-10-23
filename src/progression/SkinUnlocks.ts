@@ -12,10 +12,13 @@ export const MUMMY_SKIN_TASKS:Readonly<Record<EarnableStyle,{counter:Counter;tar
  desert:{counter:"arenaWins",target:3,en:"Win on 3 different arenas",fa:"پیروزی در ۳ زمین متفاوت"},
  sentinel:{counter:"completedRuns",target:1,en:"Complete a four-fight Run",fa:"تکمیل یک مسیر چهارمبارزه‌ای"}
 };
-export type SkinUnlockView={
+export type SkinUnlockCounters={
  readonly wins:number;readonly bowWins:number;readonly arenasWon:readonly string[];readonly completedRuns:number;
 };
 export type SkinChallengeProgress={unlocked:boolean;current:number;target:number;en:string;fa:string};
+export type SkinUnlockView=SkinUnlockCounters&{
+ readonly challenges:Readonly<Record<MummyStyleId,SkinChallengeProgress>>;
+};
 type SavedData={version:1;wins:number;bowWins:number;arenasWon:string[];completedRuns:number};
 const DEFAULTS=():SavedData=>({version:1,wins:0,bowWins:0,arenasWon:[],completedRuns:0});
 const bounded=(value:unknown)=>typeof value==="number"&&Number.isSafeInteger(value)&&value>=0?
@@ -30,7 +33,7 @@ function parseSaved(raw:unknown):SavedData{
  ))].slice(0,64):[];
  return{version:1,wins,bowWins,arenasWon,completedRuns:Math.min(wins,bounded(data.completedRuns))};
 }
-export function mummySkinProgress(view:SkinUnlockView,style:MummyStyleId):SkinChallengeProgress{
+export function mummySkinProgress(view:SkinUnlockCounters,style:MummyStyleId):SkinChallengeProgress{
  if(style==="classic")return{unlocked:true,current:0,target:0,en:"Available from the start",fa:"از ابتدا آزاد است"};
  const task=MUMMY_SKIN_TASKS[style];
  const raw=task.counter==="arenaWins"?view.arenasWon.length:view[task.counter];
@@ -50,9 +53,14 @@ export class SkinUnlocks{
  }
  getView():SkinUnlockView{
   const {wins,bowWins,arenasWon,completedRuns}=this.data;
-  return{wins,bowWins,arenasWon:[...arenasWon],completedRuns};
+  const counters={wins,bowWins,arenasWon:[...arenasWon],completedRuns};
+  return{...counters,challenges:{
+   classic:mummySkinProgress(counters,"classic"),royal:mummySkinProgress(counters,"royal"),
+   cursed:mummySkinProgress(counters,"cursed"),scarab:mummySkinProgress(counters,"scarab"),
+   desert:mummySkinProgress(counters,"desert"),sentinel:mummySkinProgress(counters,"sentinel")
+  }};
  }
- isUnlocked(style:MummyStyleId){return mummySkinProgress(this.getView(),style).unlocked;}
+ isUnlocked(style:MummyStyleId){return this.getView().challenges[style].unlocked;}
  recordSoloVictory(event:{arena:string;weapon:WeaponId;completedRun:boolean}){
   const before=this.getView();
   this.data.wins=Math.min(1000000,this.data.wins+1);
