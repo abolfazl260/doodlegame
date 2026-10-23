@@ -1,4 +1,4 @@
-export type WeaponId="blade"|"hammer"|"blaster"|"uzi"|"boomerang"|"bow"|"bomb"|"missile"|"spear"|"grapple";
+export type WeaponId="blade"|"hammer"|"blaster"|"uzi"|"boomerang"|"bow"|"bomb"|"missile"|"spear"|"grapple"|"gravity-gauntlet";
 export interface InputState {
  readonly mobileMoveX?:number;readonly mobileJump?:boolean;readonly mobileAttack?:boolean;readonly mobileGrab?:boolean;
  readonly aimUpHeld?:boolean;readonly aimDownHeld?:boolean;readonly moveX:number; readonly moveY:number; readonly pointerX:number; readonly pointerY:number;
