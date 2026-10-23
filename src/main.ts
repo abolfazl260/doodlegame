@@ -9,6 +9,7 @@ import {GameState} from "./core/GameState";
 import {GameSession,CHARACTER_IDS} from "./gameplay/GameSession";
 import {restoreDownloadedArenas,loadArenaCatalog,installDownloadedArena,removeDownloadedArena} from "./gameplay/DownloadableArenas.js";
 import {Progression} from "./progression/Progression";
+import {SkinUnlocks} from "./progression/SkinUnlocks";
 import {PlayerNames} from "./profile/PlayerNames";
 import type {GameRenderState} from "./gameplay/GameSession";
 import {CombatAudio} from "./audio/CombatAudio";
@@ -62,6 +63,7 @@ try{
  const storage=new WebStorage();
  const i18n=new I18n(storage);
  const progression=new Progression(storage);
+ const skinUnlocks=new SkinUnlocks(storage);
  const playerNames=new PlayerNames(storage);
  const reducedMotion=typeof window.matchMedia==="function"&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
  const readSetting=(key:string,defaultValue:boolean)=>{
@@ -93,7 +95,7 @@ try{
   render:(state:GameRenderState)=>{renderer.render(withCameraShakePreference(state,shakeEnabled));combatAudio.render(state.combatCues);},
   dispose:()=>{combatAudio.dispose();renderer.dispose();}
  };
- const game=new Game(presentationRenderer,session,new WebFrameScheduler(),error=>console.error("DoodleGame error:",error),progression);
+ const game=new Game(presentationRenderer,session,new WebFrameScheduler(),error=>console.error("DoodleGame error:",error),progression,skinUnlocks);
  let landscape:ReturnType<typeof installLandscapeOrientation>|null=null;
  let telegram:ReturnType<typeof installTelegramMiniApp>|null=null;
  const rankings=new TelegramLeaderboard(root,()=>telegram?.retryInitialization());
