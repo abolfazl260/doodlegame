@@ -302,9 +302,9 @@ export function grabEffectSegments(s:DuelistRenderState):Segment[]{
 }
 /** Shared gravity effects for both GPU and Canvas renderers; visual only. */
 export function gauntletEffectSegments(s:DuelistRenderState):Segment[]{
- if(s.weapon!=="gravity-gauntlet"||(s.gauntletPullTime<=0&&s.gauntletParryTime<=0))return[];
+ if(s.weapon!=="gravity-gauntlet"||((s.gauntletPullTime??0)<=0&&(s.gauntletParryTime??0)<=0))return[];
  const segments:Segment[]=[];
- const activeParry=s.gauntletParryTime>0;
+ const activeParry=(s.gauntletParryTime??0)>0;
  const radius=activeParry?.87:.53;
  const cx=.45,cy=.23;
  for(let i=0;i<24;i++){
