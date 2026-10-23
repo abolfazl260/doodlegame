@@ -1,5 +1,6 @@
 import {ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl,type ArenaCategory} from "./ArenaPreviews";
 import type {MummyStyleId} from "../gameplay/MummyStyles.js";
+import {mummySkinProgress,type SkinUnlockView} from "../progression/SkinUnlocks.js";
 // UI-only labels are repeated here so standalone GameUI test harnesses can
 // evaluate compiled UI without requiring an additional runtime module.
 const MUMMY_STYLE_IDS:readonly MummyStyleId[]=["classic","royal","cursed","scarab","desert","sentinel"];
@@ -24,7 +25,7 @@ type HudState={
  tutorial?:TutorialSignals;lanPlayer?:1|2;
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
  bowCharge:number;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
- progression?:ProgressionView|null;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;mummyStyle?:MummyStyleId;secondMummyStyle?:MummyStyleId;
+ progression?:ProgressionView|null;skinUnlocks?:SkinUnlockView;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;mummyStyle?:MummyStyleId;secondMummyStyle?:MummyStyleId;
  characterId?:CharacterId;opponentCharacterId?:CharacterId;characterChosen?:boolean;weaponChosen?:boolean;secondCharacterChosen?:boolean;secondWeaponChosen?:boolean;weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;pvpSeries?:Readonly<{round:number;playerWins:number;opponentWins:number;complete:boolean;countdown:number;swapped:boolean}>;
 };
 type Actions={
@@ -705,7 +706,8 @@ export class GameUI{
    const drawing=document.createElement("span");drawing.className="game-ui__mummy-option-art";
    drawing.setAttribute("aria-hidden","true");drawing.innerHTML=MUMMY_PREVIEWS[style];
    const title=document.createElement("span");title.className="game-ui__mummy-option-name";
-   choice.append(drawing,title);choice.onclick=()=>actions.mummyStyleSelect?.(this.loadoutPlayer,style);
+   const progress=document.createElement("small");progress.className="game-ui__mummy-option-progress";
+   choice.append(drawing,title,progress);choice.onclick=()=>actions.mummyStyleSelect?.(this.loadoutPlayer,style);
    this.mummyStyleCards.append(choice);
   }
   this.mummyStylePicker.append(this.mummyStyleTitle,this.mummyStyleCards);
@@ -1285,8 +1287,21 @@ export class GameUI{
     this.setHidden(this.mummyStylePicker,character!=="mummy");
     if(character==="mummy"){
      for(const item of this.mummyStyleCards.children){
-      const button=item as HTMLButtonElement;
-      button.setAttribute("aria-pressed",String(button.dataset.mummyStyle===(mummyStyle??"classic")));
+      const button=item as HTMLButtonElement,style=button.dataset.mummyStyle as MummyStyleId;
+      const challenge=s.skinUnlocks?mummySkinProgress(s.skinUnlocks,style):null;
+      const locked=Boolean(challenge&&!challenge.unlocked);
+      button.disabled=locked;
+      button.dataset.locked=String(locked);
+      button.setAttribute("aria-disabled",String(locked));
+      button.setAttribute("aria-pressed",String(!locked&&style===(mummyStyle??"classic")));
+      const copy=button.querySelector<HTMLElement>(".game-ui__mummy-option-progress");
+      if(copy){
+       const fa=this.i18n.locale==="fa";
+       this.setText(copy,locked&&challenge?
+        (fa?"قفل · ":"LOCKED · ")+(fa?challenge.fa:challenge.en)+" · "+challenge.current+"/"+challenge.target:
+        style==="classic"?(fa?"رایگان":"FREE"):(fa?"آزاد شده":"UNLOCKED"));
+      }
+      button.title=locked&&challenge?(this.i18n.locale==="fa"?challenge.fa:challenge.en):"";
      }
      const card=Array.from(this.characterCards.children).find(element=>
       (element as HTMLElement).dataset.character==="mummy") as HTMLElement|undefined;
