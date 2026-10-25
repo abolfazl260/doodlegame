@@ -1,4 +1,4 @@
-/** No WebSocket/web fallback: only the Android Wi-Fi socket implementation. */
+/** No browser-networking fallback: only the Android Wi-Fi socket implementation. */
 export type TransportEvent = {type:'connected'|'disconnected'|'background'|'foreground'; reason?:string} | {type:'message'; data:string};
 export interface LanTransport {
   listen(): Promise<{address:string; port:number}>;
