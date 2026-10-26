@@ -715,7 +715,6 @@ export class GameUI{
   this.characterPickerTitle.className="game-ui__character-picker-title";
   this.characterCards.className="game-ui__character-cards";
   this.characterCards.setAttribute("role","group");
-  this.characterCards.tabIndex=0; // keyboard/assistive-tech access to overflowing character options
   for(const id of CHARACTER_IDS){
    const card=document.createElement("button");
    card.type="button";card.className="game-ui__character-card";
@@ -748,7 +747,6 @@ export class GameUI{
   this.mummyStylePicker.append(this.mummyStyleTitle,this.mummyStyleCards);
   this.characterPicker.append(this.characterPickerTitle,this.characterCards);
   this.weaponCards.className="game-ui__weapon-grid";
-  this.weaponCards.tabIndex=0; // scrollable list remains keyboard-focusable
   this.weaponDetails.className="game-ui__weapon-details";
   this.weaponDetailsTitle.className="game-ui__weapon-details-title";
   this.gauntletGuide.className="game-ui__gauntlet-guide";this.gauntletGuide.hidden=true;
