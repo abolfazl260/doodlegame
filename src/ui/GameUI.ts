@@ -578,7 +578,6 @@ export class GameUI{
   // when overflow:auto is set. Own the touch drag on the loadout scrollport;
   // this also works when a finger begins on a character or weapon button.
   let drag:{id:number;x:number;y:number;top:number;scrolled:boolean}|null=null;
-  let suppressClick=false,clickReset:number|undefined;
   const active=()=>this.currentState===GameState.MENU&&this.menuView==="setup"&&
    this.menuStepIndex===MENU_STEPS.length-1;
   this.menuSetupSection.addEventListener("touchstart",event=>{
@@ -600,23 +599,10 @@ export class GameUI{
    this.menuSetupSection.scrollTop=Math.min(maximum,Math.max(0,drag.top+delta));
   },{passive:false});
   const finish=(event:TouchEvent)=>{
-   if(!drag)return;
-   if(!Array.from(event.changedTouches).some(t=>t.identifier===drag!.id))return;
-   if(drag.scrolled){
-    suppressClick=true;
-    if(clickReset!==undefined)window.clearTimeout(clickReset);
-    clickReset=window.setTimeout(()=>{suppressClick=false;clickReset=undefined;},350);
-   }
-   drag=null;
+   if(drag&&Array.from(event.changedTouches).some(t=>t.identifier===drag!.id))drag=null;
   };
   this.menuSetupSection.addEventListener("touchend",finish,{passive:true});
   this.menuSetupSection.addEventListener("touchcancel",finish,{passive:true});
-  this.menuSetupSection.addEventListener("click",event=>{
-   if(!suppressClick)return;
-   suppressClick=false;
-   event.preventDefault();
-   event.stopImmediatePropagation();
-  },true);
   this.menuLead.className="game-ui__menu-lead";
   this.menuLead.setAttribute("tabindex","-1");
   this.menuSetupTitle.className="game-ui__menu-setup-title";
