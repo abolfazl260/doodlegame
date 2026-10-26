@@ -574,6 +574,49 @@ export class GameUI{
   this.menu.className="game-ui__menu";
   this.menuHeader.className="game-ui__menu-header";
   this.menuSetupSection.className="game-ui__menu-setup";
+  // Android WebView can refuse native scrolling inside a CSS-rotated app even
+  // when overflow:auto is set. Own the touch drag on the loadout scrollport;
+  // this also works when a finger begins on a character or weapon button.
+  let drag:{id:number;x:number;y:number;top:number;scrolled:boolean}|null=null;
+  let suppressClick=false,clickReset:number|undefined;
+  const active=()=>this.currentState===GameState.MENU&&this.menuView==="setup"&&
+   this.menuStepIndex===MENU_STEPS.length-1;
+  this.menuSetupSection.addEventListener("touchstart",event=>{
+   if(!active()||event.touches.length!==1){drag=null;return;}
+   const t=event.touches[0];
+   drag={id:t.identifier,x:t.clientX,y:t.clientY,top:this.menuSetupSection.scrollTop,scrolled:false};
+  },{passive:true});
+  this.menuSetupSection.addEventListener("touchmove",event=>{
+   if(!drag||!active())return;
+   const t=Array.from(event.touches).find(touch=>touch.identifier===drag!.id);
+   if(!t)return;
+   // The quarter-turn maps upward game-space swipes to rightward device swipes.
+   const delta=isRotatedGame()?t.clientX-drag.x:drag.y-t.clientY;
+   const cross=isRotatedGame()?Math.abs(t.clientY-drag.y):Math.abs(t.clientX-drag.x);
+   if(!drag.scrolled&&(Math.abs(delta)<7||Math.abs(delta)<cross*.65))return;
+   drag.scrolled=true;
+   if(event.cancelable)event.preventDefault();
+   const maximum=Math.max(0,this.menuSetupSection.scrollHeight-this.menuSetupSection.clientHeight);
+   this.menuSetupSection.scrollTop=Math.min(maximum,Math.max(0,drag.top+delta));
+  },{passive:false});
+  const finish=(event:TouchEvent)=>{
+   if(!drag)return;
+   if(!Array.from(event.changedTouches).some(t=>t.identifier===drag!.id))return;
+   if(drag.scrolled){
+    suppressClick=true;
+    if(clickReset!==undefined)window.clearTimeout(clickReset);
+    clickReset=window.setTimeout(()=>{suppressClick=false;clickReset=undefined;},350);
+   }
+   drag=null;
+  };
+  this.menuSetupSection.addEventListener("touchend",finish,{passive:true});
+  this.menuSetupSection.addEventListener("touchcancel",finish,{passive:true});
+  this.menuSetupSection.addEventListener("click",event=>{
+   if(!suppressClick)return;
+   suppressClick=false;
+   event.preventDefault();
+   event.stopImmediatePropagation();
+  },true);
   this.menuLead.className="game-ui__menu-lead";
   this.menuLead.setAttribute("tabindex","-1");
   this.menuSetupTitle.className="game-ui__menu-setup-title";
