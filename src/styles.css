@@ -747,8 +747,10 @@ html[dir="rtl"] .opening-intro__skip{
 @keyframes pause-hold-fill{to{transform:scaleX(1)}}
 
 /* Short-landscape menus must remain reachable without letting the battlefield
-   scroll. The dialog overlays remain siblings outside this scroll container. */
-body{touch-action:pan-y}
+   scroll. Rotated portrait Android maps vertical game swipes to physical horizontal
+   gestures, so keep document-level touch handling unrestricted; gameplay controls
+   and the arena canvas continue to opt out of browser gestures explicitly. */
+body{touch-action:auto}
 .game-ui:not(.playing) .game-ui__menu{
  max-height:calc(100cqh - var(--safe-top) - var(--safe-bottom) - 1rem);
  overflow-x:hidden;
@@ -2952,58 +2954,55 @@ html.software-landscape .game-ui.playing .game-ui__bow-panel{
 }
 
 
-/* Android review: explicit, independently pannable lists in the final loadout
-   wizard.  The outer menu continues to scroll to labels and the sticky START
-   button; character/weapon collections must not grow past a short viewport.
-   Keep battlefield touch-action:none scoped to gameplay controls only. */
-.game-ui.menu[data-menu-view="setup"] .game-ui__menu{
- min-height:0;
- overflow-y:auto;
- overscroll-behavior-y:contain;
- touch-action:pan-y;
- -webkit-overflow-scrolling:touch;
+/* App-store accessibility: keep every character and weapon reachable on short
+   Android screens. The setup body owns scrolling; the action row remains visible.
+   Manual touch handling in GameUI maps physical horizontal swipes in software-
+   rotated portrait mode to the game's logical vertical scroll axis. */
+.game-ui__loadout-scroll-hint{
+ margin:0;
+ padding:.32rem .55rem;
+ border:1px solid #5b85ad;
+ border-radius:.5rem;
+ color:#d5e9ff;
+ background:#13283bdc;
+ font-size:.7rem;
+ font-weight:700;
+ line-height:1.45;
+ text-align:start;
+ overflow-wrap:anywhere;
 }
-.game-ui.menu[data-menu-view="setup"] .game-ui__menu-setup,
-.game-ui.menu[data-menu-view="setup"] .game-ui__menu-loadout-panel,
-.game-ui.menu[data-menu-view="setup"] .game-ui__character-picker,
-.game-ui.menu[data-menu-view="setup"] .game-ui__weapon-details{
- min-height:0;
- min-width:0;
+.game-ui.menu[data-menu-view="setup"][data-setup-step="loadout"] .game-ui__menu{
+ display:flex;
+ flex-direction:column;
+ height:calc(100cqh - var(--safe-top) - var(--safe-bottom) - 1rem);
+ max-height:calc(100cqh - var(--safe-top) - var(--safe-bottom) - 1rem);
+ overflow:hidden;
+ touch-action:auto;
 }
-.game-ui.menu[data-menu-view="setup"] .game-ui__character-cards,
-.game-ui.menu[data-menu-view="setup"] .game-ui__weapon-grid{
- max-height:clamp(7.5rem,36cqh,17rem);
+.game-ui.menu[data-menu-view="setup"][data-setup-step="loadout"] .game-ui__menu-header{
+ flex:0 0 auto;
+}
+.game-ui.menu[data-menu-view="setup"][data-setup-step="loadout"] .game-ui__menu-setup{
+ flex:1 1 auto;
  min-height:0;
  overflow-x:hidden;
  overflow-y:auto;
- overscroll-behavior-y:contain;
- touch-action:pan-y;
+ overscroll-behavior:contain;
+ /* Native pan is disabled so GameUI can map rotated-device swipes reliably. */
+ touch-action:none;
  -webkit-overflow-scrolling:touch;
  scrollbar-width:thin;
- scrollbar-color:#8faacf #0e1b2e;
- scroll-padding-block:.4rem .9rem;
- align-content:start;
+ padding-block:.1rem .45rem;
 }
-.game-ui.menu[data-menu-view="setup"] .game-ui__character-cards{
- padding:.15rem .25rem .8rem .15rem;
-}
-.game-ui.menu[data-menu-view="setup"] .game-ui__weapon-grid{
- padding-bottom:.8rem;
-}
-.game-ui.menu[data-menu-view="setup"] .game-ui__character-card,
-.game-ui.menu[data-menu-view="setup"] .game-ui__loadout-card{
- touch-action:pan-y;
-}
-.game-ui.menu[data-menu-view="setup"] :is(.game-ui__character-cards,.game-ui__weapon-grid):focus-visible{
+.game-ui.menu[data-menu-view="setup"][data-setup-step="loadout"] .game-ui__menu-setup:focus-visible{
  outline:2px solid #ffe29b;
  outline-offset:2px;
 }
-/* The same logical landscape viewport is used when a phone is held upright.
-   Do not squeeze cards/buttons to make everything fit without scrolling. */
-@media (orientation:landscape) and (max-height:440px),
-       (orientation:portrait) and (max-width:440px){
- .game-ui.menu[data-menu-view="setup"] .game-ui__character-cards,
- .game-ui.menu[data-menu-view="setup"] .game-ui__weapon-grid{
-  max-height:clamp(7.5rem,34cqh,11.5rem);
- }
+.game-ui.menu[data-menu-view="setup"][data-setup-step="loadout"] .game-ui__controls{
+ flex:0 0 auto;
+ position:static;
+ margin-top:0;
+}
+@media(orientation:landscape) and (max-height:390px),(orientation:portrait) and (max-width:390px){
+ .game-ui__loadout-scroll-hint{font-size:.63rem;padding:.23rem .4rem}
 }

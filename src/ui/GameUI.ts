@@ -280,6 +280,7 @@ export class GameUI{
  private secondNameCaption=document.createElement("span");
  private playerNameInput=document.createElement("input");
  private secondNameInput=document.createElement("input");
+ private loadoutScrollHint=document.createElement("p");
  private weaponDetails=document.createElement("details");
  private weaponDetailsTitle=document.createElement("summary");
  private weaponCards=document.createElement("div");
@@ -573,6 +574,36 @@ export class GameUI{
   this.menu.className="game-ui__menu";
   this.menuHeader.className="game-ui__menu-header";
   this.menuSetupSection.className="game-ui__menu-setup";
+  this.menuSetupSection.tabIndex=0;
+  // Native overflow scrolling misses horizontal physical swipes when Android
+  // displays this landscape game through a 90-degree software rotation.
+  // Handle the loadout drag explicitly so the same panel works in both orientations.
+  let drag:{id:number;x:number;y:number;top:number;scrolled:boolean}|null=null;
+  const active=()=>this.currentState===GameState.MENU&&this.menuView==="setup"&&
+   this.menuStepIndex===MENU_STEPS.length-1;
+  this.menuSetupSection.addEventListener("touchstart",event=>{
+   if(!active()||event.touches.length!==1){drag=null;return;}
+   const t=event.touches[0];
+   drag={id:t.identifier,x:t.clientX,y:t.clientY,top:this.menuSetupSection.scrollTop,scrolled:false};
+  },{passive:true});
+  this.menuSetupSection.addEventListener("touchmove",event=>{
+   if(!drag||!active())return;
+   const t=Array.from(event.touches).find(touch=>touch.identifier===drag!.id);
+   if(!t)return;
+   // The quarter-turn maps upward game-space swipes to rightward device swipes.
+   const delta=isRotatedGame()?t.clientX-drag.x:drag.y-t.clientY;
+   const cross=isRotatedGame()?Math.abs(t.clientY-drag.y):Math.abs(t.clientX-drag.x);
+   if(!drag.scrolled&&(Math.abs(delta)<7||Math.abs(delta)<cross*.65))return;
+   drag.scrolled=true;
+   if(event.cancelable)event.preventDefault();
+   const maximum=Math.max(0,this.menuSetupSection.scrollHeight-this.menuSetupSection.clientHeight);
+   this.menuSetupSection.scrollTop=Math.min(maximum,Math.max(0,drag.top+delta));
+  },{passive:false});
+  const finish=(event:TouchEvent)=>{
+   if(drag&&Array.from(event.changedTouches).some(t=>t.identifier===drag!.id))drag=null;
+  };
+  this.menuSetupSection.addEventListener("touchend",finish,{passive:true});
+  this.menuSetupSection.addEventListener("touchcancel",finish,{passive:true});
   this.menuLead.className="game-ui__menu-lead";
   this.menuLead.setAttribute("tabindex","-1");
   this.menuSetupTitle.className="game-ui__menu-setup-title";
@@ -635,10 +666,11 @@ export class GameUI{
   this.menuModePanel.className="game-ui__menu-mode-panel";
   this.menuArenaPanel.className="game-ui__menu-arena-panel";this.menuArenaPanel.hidden=true;
   this.menuLoadoutPanel.className="game-ui__menu-loadout-panel";this.menuLoadoutPanel.hidden=true;
+  this.loadoutScrollHint.className="game-ui__loadout-scroll-hint";
   this.loadoutPlayerTabs.className="game-ui__loadout-player-tabs";this.loadoutPlayerTabs.setAttribute("role","group");
   for(const [button,player] of [[this.loadoutP1Button,1],[this.loadoutP2Button,2]] as const){
    button.type="button";button.className="game-ui__loadout-player-tab";
-   button.onclick=()=>{this.loadoutPlayer=player;this.syncWizard(this.currentState,this.readHud?.()??null);};
+   button.onclick=()=>{this.loadoutPlayer=player;this.menuSetupSection.scrollTop=0;this.syncWizard(this.currentState,this.readHud?.()??null);};
    this.loadoutPlayerTabs.append(button);
   }
   this.loadoutStatus.className="game-ui__loadout-status";this.loadoutStatus.setAttribute("role","status");
@@ -683,7 +715,6 @@ export class GameUI{
   this.characterPickerTitle.className="game-ui__character-picker-title";
   this.characterCards.className="game-ui__character-cards";
   this.characterCards.setAttribute("role","group");
-  this.characterCards.tabIndex=0; // keyboard/assistive-tech access to overflowing character options
   for(const id of CHARACTER_IDS){
    const card=document.createElement("button");
    card.type="button";card.className="game-ui__character-card";
@@ -716,7 +747,6 @@ export class GameUI{
   this.mummyStylePicker.append(this.mummyStyleTitle,this.mummyStyleCards);
   this.characterPicker.append(this.characterPickerTitle,this.characterCards);
   this.weaponCards.className="game-ui__weapon-grid";
-  this.weaponCards.tabIndex=0; // scrollable list remains keyboard-focusable
   this.weaponDetails.className="game-ui__weapon-details";
   this.weaponDetailsTitle.className="game-ui__weapon-details-title";
   this.gauntletGuide.className="game-ui__gauntlet-guide";this.gauntletGuide.hidden=true;
@@ -782,7 +812,7 @@ export class GameUI{
    // Name inputs belong to player setup, not the map selection screen.
   this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.characterNames,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
   this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaFilters,this.arenaEmpty,this.arenaCards,this.extraArenaSection);
-   this.menuLoadoutPanel.append(this.loadoutPlayerTabs,this.characterPicker,this.mummyStylePicker,this.weaponDetails,this.loadoutStatus,this.matchSummary);
+   this.menuLoadoutPanel.append(this.loadoutScrollHint,this.loadoutPlayerTabs,this.characterPicker,this.mummyStylePicker,this.weaponDetails,this.loadoutStatus,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
 
   this.upgradePanel.className="game-ui__upgrade-panel game-ui__upgrade-panel--compact";
@@ -1253,6 +1283,7 @@ export class GameUI{
  private syncWizard(state:GameState,s:HudState|null){
   const choosing=state===GameState.MENU,results=state===GameState.GAME_OVER;
   const step=MENU_STEPS[this.menuStepIndex],onMode=step==="mode",onArena=step==="arena",onLoadout=step==="loadout";
+  this.root.dataset.setupStep=step;
   const twoPlayers=Boolean(s?.localPvP??s?.mode==="local-pvp");
   if(s)this.setHidden(this.secondNameLabel,!twoPlayers);
   this.setHidden(this.menuSetupSection,!choosing);
@@ -1285,6 +1316,9 @@ export class GameUI{
    if(results&&rewardScreen&&this.lastView?.state!==state)this.menuProgressDetails.open=true;
    if(choosing&&s.inRun&&this.lastView?.state!==state)this.menuProgressDetails.open=true;
    if(onLoadout){
+    this.setText(this.loadoutScrollHint,this.i18n.locale==="fa"?
+     "برای دیدن همه شخصیت‌ها و سلاح‌ها، داخل فهرست انگشت بکشید.":
+     "Swipe inside the list to browse all characters and weapons.");
     if(!twoPlayers)this.loadoutPlayer=1;
     this.setHidden(this.loadoutP2Button,!twoPlayers);
     const player=this.loadoutPlayer,chosenCharacter=player===1?s.characterChosen:s.secondCharacterChosen;
