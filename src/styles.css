@@ -748,7 +748,9 @@ html[dir="rtl"] .opening-intro__skip{
 
 /* Short-landscape menus must remain reachable without letting the battlefield
    scroll. The dialog overlays remain siblings outside this scroll container. */
-body{touch-action:pan-y}
+/* Native rotated portrait maps the vertical game axis to the device horizontal axis.
+   Restricting body touch action to pan-y blocks the review swipe in that mode. */
+body{touch-action:auto}
 .game-ui:not(.playing) .game-ui__menu{
  max-height:calc(100cqh - var(--safe-top) - var(--safe-bottom) - 1rem);
  overflow-x:hidden;
@@ -2949,4 +2951,53 @@ html.software-landscape .game-ui.playing .game-ui__bow-panel{
 @media (orientation:landscape) and (max-height:390px){
  .game-ui__gauntlet-status{top:calc(var(--safe-top,0px) + 2.6rem);font-size:.57rem;padding:.22rem .4rem}
  .game-ui__gauntlet-guide{font-size:.64rem}
+}
+
+
+/* App store accessibility: full character/weapon list must be scrollable on
+   small Android screens and on portrait devices rotated via CSS. Keep START /
+   BACK outside the scrollport, so reviewing all equipment never loses the CTA.
+   Gameplay touch pads and the arena canvas retain touch-action:none. */
+.game-ui__loadout-scroll-hint{
+ margin:0;
+ padding:.32rem .55rem;
+ border:1px solid #5b85ad;
+ border-radius:.5rem;
+ color:#d5e9ff;
+ background:#13283bdc;
+ font-size:.7rem;
+ font-weight:700;
+ line-height:1.45;
+ text-align:start;
+ overflow-wrap:anywhere;
+}
+.game-ui.menu[data-menu-view="setup"][data-setup-step="loadout"] .game-ui__menu{
+ display:flex;
+ flex-direction:column;
+ height:calc(100cqh - var(--safe-top) - var(--safe-bottom) - 1rem);
+ max-height:calc(100cqh - var(--safe-top) - var(--safe-bottom) - 1rem);
+ overflow:hidden;
+ touch-action:auto;
+}
+.game-ui.menu[data-menu-view="setup"][data-setup-step="loadout"] .game-ui__menu-header{
+ flex:0 0 auto;
+}
+.game-ui.menu[data-menu-view="setup"][data-setup-step="loadout"] .game-ui__menu-setup{
+ flex:1 1 auto;
+ min-height:0;
+ overflow-x:hidden;
+ overflow-y:auto;
+ overscroll-behavior:contain;
+ touch-action:auto;
+ -webkit-overflow-scrolling:touch;
+ scrollbar-width:thin;
+ padding-block:.1rem .45rem;
+}
+.game-ui.menu[data-menu-view="setup"][data-setup-step="loadout"] .game-ui__controls{
+ flex:0 0 auto;
+ position:static;
+ margin-top:0;
+}
+@media(orientation:landscape) and (max-height:390px),(orientation:portrait) and (max-width:390px){
+ .game-ui__loadout-scroll-hint{font-size:.63rem;padding:.23rem .4rem}
 }
