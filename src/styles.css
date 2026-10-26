@@ -2950,3 +2950,60 @@ html.software-landscape .game-ui.playing .game-ui__bow-panel{
  .game-ui__gauntlet-status{top:calc(var(--safe-top,0px) + 2.6rem);font-size:.57rem;padding:.22rem .4rem}
  .game-ui__gauntlet-guide{font-size:.64rem}
 }
+
+
+/* Android review: explicit, independently pannable lists in the final loadout
+   wizard.  The outer menu continues to scroll to labels and the sticky START
+   button; character/weapon collections must not grow past a short viewport.
+   Keep battlefield touch-action:none scoped to gameplay controls only. */
+.game-ui.menu[data-menu-view="setup"] .game-ui__menu{
+ min-height:0;
+ overflow-y:auto;
+ overscroll-behavior-y:contain;
+ touch-action:pan-y;
+ -webkit-overflow-scrolling:touch;
+}
+.game-ui.menu[data-menu-view="setup"] .game-ui__menu-setup,
+.game-ui.menu[data-menu-view="setup"] .game-ui__menu-loadout-panel,
+.game-ui.menu[data-menu-view="setup"] .game-ui__character-picker,
+.game-ui.menu[data-menu-view="setup"] .game-ui__weapon-details{
+ min-height:0;
+ min-width:0;
+}
+.game-ui.menu[data-menu-view="setup"] .game-ui__character-cards,
+.game-ui.menu[data-menu-view="setup"] .game-ui__weapon-grid{
+ max-height:clamp(7.5rem,36cqh,17rem);
+ min-height:0;
+ overflow-x:hidden;
+ overflow-y:auto;
+ overscroll-behavior-y:contain;
+ touch-action:pan-y;
+ -webkit-overflow-scrolling:touch;
+ scrollbar-width:thin;
+ scrollbar-color:#8faacf #0e1b2e;
+ scroll-padding-block:.4rem .9rem;
+ align-content:start;
+}
+.game-ui.menu[data-menu-view="setup"] .game-ui__character-cards{
+ padding:.15rem .25rem .8rem .15rem;
+}
+.game-ui.menu[data-menu-view="setup"] .game-ui__weapon-grid{
+ padding-bottom:.8rem;
+}
+.game-ui.menu[data-menu-view="setup"] .game-ui__character-card,
+.game-ui.menu[data-menu-view="setup"] .game-ui__loadout-card{
+ touch-action:pan-y;
+}
+.game-ui.menu[data-menu-view="setup"] :is(.game-ui__character-cards,.game-ui__weapon-grid):focus-visible{
+ outline:2px solid #ffe29b;
+ outline-offset:2px;
+}
+/* The same logical landscape viewport is used when a phone is held upright.
+   Do not squeeze cards/buttons to make everything fit without scrolling. */
+@media (orientation:landscape) and (max-height:440px),
+       (orientation:portrait) and (max-width:440px){
+ .game-ui.menu[data-menu-view="setup"] .game-ui__character-cards,
+ .game-ui.menu[data-menu-view="setup"] .game-ui__weapon-grid{
+  max-height:clamp(7.5rem,34cqh,11.5rem);
+ }
+}
