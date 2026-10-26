@@ -16,6 +16,7 @@ async function reachLoadout(page,language){
 
 async function swipeUp(page,selector){
  const target=page.locator(selector);
+ await target.scrollIntoViewIfNeeded();
  const rect=await target.boundingBox();
  expect(rect).not.toBeNull();
  const x=rect.x+rect.width*.5,from=rect.y+rect.height*.82,to=rect.y+rect.height*.18;
