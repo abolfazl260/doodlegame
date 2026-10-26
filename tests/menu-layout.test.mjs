@@ -322,10 +322,16 @@ test("game over is a result screen with only replay/menu actions, not another se
 test("menu provides a safe-area-aware scroll region and sticky primary action",()=>{
  const css=readFileSync("src/styles.css","utf8");
  const menu=css.slice(css.indexOf("/* Issue #37: viewport-fitting menu."));
+ const loadoutScroll=css.slice(css.indexOf("/* App-store accessibility:"));
  assert.ok(menu.includes("max-height:calc(100cqh - var(--safe-top) - var(--safe-bottom)"));
  assert.match(menu,/\.game-ui:not\(\.playing\) \.game-ui__menu\s*\{[^}]*overflow-y:auto/s);
  assert.match(menu,/\.game-ui:not\(\.playing\) \.game-ui__controls\s*\{[^}]*position:sticky/s);
- assert.match(css,/body\{touch-action:pan-y\}/);
+ assert.match(css,/body\\{touch-action:auto\\}/);
+ assert.ok(loadoutScroll.includes('[data-setup-step="loadout"] .game-ui__menu-setup{'));
+ assert.ok(loadoutScroll.includes("overflow-y:auto;"));
+ assert.ok(loadoutScroll.includes("touch-action:none;"));
+ assert.ok(loadoutScroll.includes('[data-setup-step="loadout"] .game-ui__controls{'));
+ assert.ok(loadoutScroll.includes("position:static;"));
  assert.ok(menu.includes("grid-template-columns:repeat(2,minmax(0,1fr))"));
  assert.ok(menu.includes("(orientation: landscape) and (max-height:520px)"));
  assert.ok(menu.includes("(orientation: portrait) and (max-width:360px)"));
