@@ -361,3 +361,27 @@ See [local Wi-Fi multiplayer](lan-multiplayer.md) and [validation status](lan-va
 LAN adds the normal `ACCESS_NETWORK_STATE` permission to select the attached Wi-Fi link, alongside the existing `INTERNET` permission. It requests no location/discovery permission and runs no foreground/background service. Target SDK remains 36. Review Android local network permission requirements before changing target SDK. HTTPS, cleartext=false, empty navigation allowlist and release hardening remain in force. Raw local TCP is unencrypted; the room token is an admission check, not TLS.
 
 The Android Actions workflow remains manual; native build, release privacy/production gates and actual API 24/36 devices must be checked before considering #163 complete.
+
+
+## Character and weapon selection: store-review acceptance
+
+The Android store reviewer must be able to reach **every character and every weapon**
+before beginning a match. On the three-step setup wizard, open **Character & Weapon**
+after choosing a mode and an arena. The loadout contents are a separate scrolling
+surface: swipe within the portraits or the weapon list to reach the bottom,
+including Gravity Gauntlet, while **Back** and **Start** remain visible.
+
+Verify both physical-device orientations:
+- Landscape Android phone with a short screen: swipe through every character,
+  Mummy skin and weapon. Confirm the final weapon can be selected.
+- Portrait Android phone: the app rotates its landscape content by 90 degrees.
+  Scroll the visible loadout in its on-screen direction (a horizontal swipe in
+  the device's physical coordinates). Ensure all options remain reachable.
+- Repeat in Persian and English, and with two local players.
+- Verify that Pause/combat touch controls still work after leaving setup.
+
+Run `npm run test:browser` for automated touch-drag regression coverage.
+Tests do not replace acceptance on the physical Android WebView. **A signed
+AAB/APK built before the scroll fix is not acceptable evidence for store review.**
+After merging the fix, generate a *new* Android Release from `main`, validate
+the resulting signed APK on a phone, then upload the matching new AAB to the store.
