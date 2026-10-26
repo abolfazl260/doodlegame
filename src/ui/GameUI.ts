@@ -1283,6 +1283,7 @@ export class GameUI{
  private syncWizard(state:GameState,s:HudState|null){
   const choosing=state===GameState.MENU,results=state===GameState.GAME_OVER;
   const step=MENU_STEPS[this.menuStepIndex],onMode=step==="mode",onArena=step==="arena",onLoadout=step==="loadout";
+  this.root.dataset.setupStep=step;
   const twoPlayers=Boolean(s?.localPvP??s?.mode==="local-pvp");
   if(s)this.setHidden(this.secondNameLabel,!twoPlayers);
   this.setHidden(this.menuSetupSection,!choosing);
