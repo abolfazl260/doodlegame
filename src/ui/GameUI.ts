@@ -1318,8 +1318,8 @@ export class GameUI{
    if(choosing&&s.inRun&&this.lastView?.state!==state)this.menuProgressDetails.open=true;
    if(onLoadout){
     this.setText(this.loadoutScrollHint,this.i18n.locale==="fa"?
-     "برای مشاهده همه شخصیت‌ها و سلاح‌ها، فهرست را به بالا یا پایین بکشید.":
-     "Swipe up or down to browse all characters and weapons.");
+     "برای دیدن همه شخصیت‌ها و سلاح‌ها، داخل فهرست انگشت بکشید.":
+     "Swipe inside the list to browse all characters and weapons.");
     if(!twoPlayers)this.loadoutPlayer=1;
     this.setHidden(this.loadoutP2Button,!twoPlayers);
     const player=this.loadoutPlayer,chosenCharacter=player===1?s.characterChosen:s.secondCharacterChosen;
