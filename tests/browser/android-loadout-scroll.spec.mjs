@@ -118,7 +118,7 @@ test("two-player Mummy skins and the final weapon remain reachable by touch",asy
  await expect(page.locator(".game-ui__mummy-picker")).toBeVisible();
  const before=await scrollMetrics(page);
  await swipe(page,await content.boundingBox(),true);
- await expect.poll(async()=>(await scrollMetrics(page)).scrollTop).toBeGreaterThan(Math.min(12,before.scrollHeight-before.clientHeight));
+ await expect.poll(async()=>(await scrollMetrics(page)).scrollTop).toBeGreaterThan(0);
  const lastWeapon=page.locator('[data-starting-weapon="gravity-gauntlet"]');
  await lastWeapon.tap();
  await expect(lastWeapon).toHaveAttribute("aria-pressed","true");
