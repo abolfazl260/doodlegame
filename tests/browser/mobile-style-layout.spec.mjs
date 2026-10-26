@@ -79,7 +79,7 @@ test("compact pause dialog scrolls internally if needed and keeps Resume tappabl
  expect(measurements.scrollHeight).toBeGreaterThan(measurements.clientHeight);
  expect(measurements.after).toBeGreaterThan(measurements.before);
  expect(measurements.touchAction).toBe("pan-y");
- expect(measurements.bodyTouchAction).toBe("pan-y");
+ expect(measurements.bodyTouchAction).toBe("auto"); // Rotated Android setup needs both swipe axes.
  await expect(resume).toBeInViewport();
  await resume.tap();
  expect(await page.evaluate(()=>window.__weaponFixture.state())).toBe("PLAYING");
