@@ -280,6 +280,7 @@ export class GameUI{
  private secondNameCaption=document.createElement("span");
  private playerNameInput=document.createElement("input");
  private secondNameInput=document.createElement("input");
+ private loadoutScrollHint=document.createElement("p");
  private weaponDetails=document.createElement("details");
  private weaponDetailsTitle=document.createElement("summary");
  private weaponCards=document.createElement("div");
@@ -635,6 +636,7 @@ export class GameUI{
   this.menuModePanel.className="game-ui__menu-mode-panel";
   this.menuArenaPanel.className="game-ui__menu-arena-panel";this.menuArenaPanel.hidden=true;
   this.menuLoadoutPanel.className="game-ui__menu-loadout-panel";this.menuLoadoutPanel.hidden=true;
+  this.loadoutScrollHint.className="game-ui__loadout-scroll-hint";
   this.loadoutPlayerTabs.className="game-ui__loadout-player-tabs";this.loadoutPlayerTabs.setAttribute("role","group");
   for(const [button,player] of [[this.loadoutP1Button,1],[this.loadoutP2Button,2]] as const){
    button.type="button";button.className="game-ui__loadout-player-tab";
@@ -780,7 +782,7 @@ export class GameUI{
    // Name inputs belong to player setup, not the map selection screen.
   this.menuModePanel.append(this.menuSetupTitle,this.quickModes,this.characterNames,this.modeTitle,this.menuSettings,this.modeDescription,this.pvpHint,this.arenaShortcut);
   this.menuArenaPanel.append(this.arenaTitle,this.arenaSelectionSummary,this.arenaFilters,this.arenaEmpty,this.arenaCards,this.extraArenaSection);
-   this.menuLoadoutPanel.append(this.loadoutPlayerTabs,this.characterPicker,this.mummyStylePicker,this.weaponDetails,this.loadoutStatus,this.matchSummary);
+   this.menuLoadoutPanel.append(this.loadoutScrollHint,this.loadoutPlayerTabs,this.characterPicker,this.mummyStylePicker,this.weaponDetails,this.loadoutStatus,this.matchSummary);
   this.menuHeader.append(this.title,this.languageControl);
 
   this.upgradePanel.className="game-ui__upgrade-panel game-ui__upgrade-panel--compact";
@@ -1251,6 +1253,7 @@ export class GameUI{
  private syncWizard(state:GameState,s:HudState|null){
   const choosing=state===GameState.MENU,results=state===GameState.GAME_OVER;
   const step=MENU_STEPS[this.menuStepIndex],onMode=step==="mode",onArena=step==="arena",onLoadout=step==="loadout";
+  this.root.dataset.setupStep=step;
   const twoPlayers=Boolean(s?.localPvP??s?.mode==="local-pvp");
   if(s)this.setHidden(this.secondNameLabel,!twoPlayers);
   this.setHidden(this.menuSetupSection,!choosing);
@@ -1283,6 +1286,9 @@ export class GameUI{
    if(results&&rewardScreen&&this.lastView?.state!==state)this.menuProgressDetails.open=true;
    if(choosing&&s.inRun&&this.lastView?.state!==state)this.menuProgressDetails.open=true;
    if(onLoadout){
+    this.setText(this.loadoutScrollHint,this.i18n.locale==="fa"?
+     "برای مشاهده همه شخصیت‌ها و سلاح‌ها، فهرست را به بالا یا پایین بکشید.":
+     "Swipe up or down to browse all characters and weapons.");
     if(!twoPlayers)this.loadoutPlayer=1;
     this.setHidden(this.loadoutP2Button,!twoPlayers);
     const player=this.loadoutPlayer,chosenCharacter=player===1?s.characterChosen:s.secondCharacterChosen;
