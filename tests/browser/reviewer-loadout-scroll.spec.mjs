@@ -30,14 +30,21 @@ async function scrollMetrics(page){
 }
 
 async function swipe(page,box,vertical){
+ // Dispatch native touchstart/move/end; high-level compositor-only gestures can
+ // skip DOM touch events and cannot exercise Android's drag fallback.
  const session=await page.context().newCDPSession(page);
- const startX=Math.round(box.x+box.width*(vertical?.53:.22));
- const startY=Math.round(box.y+box.height*(vertical?.76:.48));
- await session.send("Input.synthesizeScrollGesture",{
-  x:startX,y:startY,gestureSourceType:"touch",speed:330,
-  xDistance:vertical?0:Math.min(180,Math.round(box.width*.5)),
-  yDistance:vertical?-Math.min(220,Math.round(box.height*.65)):0
- });
+ const x=Math.round(box.x+box.width*(vertical?.5:.2));
+ const y=Math.round(box.y+box.height*(vertical?.78:.5));
+ const distance=Math.min(vertical?170:155,Math.round((vertical?box.height:box.width)*.58));
+ await session.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[{x,y,id:1}]});
+ for(let i=1;i<=10;i++){
+  await session.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[{
+   x:x+(vertical?0:Math.round(distance*i/10)),
+   y:y-(vertical?Math.round(distance*i/10):0),id:1
+  }]});
+  await page.waitForTimeout(16);
+ }
+ await session.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
  await session.detach();
 }
 
@@ -49,7 +56,7 @@ test("store reviewer can swipe through the entire loadout on a short landscape A
  expect(metrics.clientHeight).toBeGreaterThan(60);
  expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight+160);
  expect(metrics.contentOverflow).toBe("auto");
- expect(metrics.contentTouchAction).toBe("auto");
+ expect(metrics.contentTouchAction).toBe("none");
  expect(metrics.menuTouchAction).toBe("auto");
  expect(metrics.bodyTouchAction).toBe("auto");
  await expect(page.locator(".game-ui__loadout-scroll-hint")).toContainText(/Swipe|بکشید/);
@@ -84,7 +91,7 @@ test("rotated portrait Android allows the physical sideways swipe needed for ver
  await expect.poll(()=>page.evaluate(()=>document.querySelector("#app")?.clientWidth)).toBe(844);
  const content=page.locator(".game-ui__menu-setup"),before=await scrollMetrics(page);
  expect(before.scrollHeight).toBeGreaterThan(before.clientHeight+160);
- expect(before.contentTouchAction).toBe("auto");
+ expect(before.contentTouchAction).toBe("none");
  expect(before.bodyTouchAction).toBe("auto");
  await swipe(page,await content.boundingBox(),false);
  await expect.poll(async()=>(await scrollMetrics(page)).scrollTop).toBeGreaterThan(12);
