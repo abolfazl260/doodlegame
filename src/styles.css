@@ -2988,7 +2988,8 @@ html.software-landscape .game-ui.playing .game-ui__bow-panel{
  overflow-x:hidden;
  overflow-y:auto;
  overscroll-behavior:contain;
- touch-action:auto;
+ /* Manual drag handling avoids compositor gesture cancellation after rotation. */
+ touch-action:none;
  -webkit-overflow-scrolling:touch;
  scrollbar-width:thin;
  padding-block:.1rem .45rem;
