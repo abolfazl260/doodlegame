@@ -640,7 +640,7 @@ export class GameUI{
   this.loadoutPlayerTabs.className="game-ui__loadout-player-tabs";this.loadoutPlayerTabs.setAttribute("role","group");
   for(const [button,player] of [[this.loadoutP1Button,1],[this.loadoutP2Button,2]] as const){
    button.type="button";button.className="game-ui__loadout-player-tab";
-   button.onclick=()=>{this.loadoutPlayer=player;this.syncWizard(this.currentState,this.readHud?.()??null);};
+   button.onclick=()=>{this.loadoutPlayer=player;this.menuSetupSection.scrollTop=0;this.syncWizard(this.currentState,this.readHud?.()??null);};
    this.loadoutPlayerTabs.append(button);
   }
   this.loadoutStatus.className="game-ui__loadout-status";this.loadoutStatus.setAttribute("role","status");
@@ -1194,7 +1194,7 @@ export class GameUI{
  showPvPLoadout(){
   if(this.currentState!==GameState.MENU)return;
   this.menuView="setup";this.menuStepIndex=MENU_STEPS.length-1;this.loadoutPlayer=1;
-  this.menu.scrollTop=0;this.syncWizard(this.currentState,this.readHud?.()??null);
+  this.menu.scrollTop=0;this.menuSetupSection.scrollTop=0;this.syncWizard(this.currentState,this.readHud?.()??null);
   this.characterPickerTitle.focus?.();
  }
  private openMenuRoute(route:"home"|"custom"|"local"|"arenas"|"progression"|"settings"){
@@ -1204,7 +1204,7 @@ export class GameUI{
   this.menuView=route==="home"?"landing":route==="progression"||route==="settings"?route:"setup";
   if(route==="custom"||route==="local"){this.menuStepIndex=0;this.loadoutPlayer=1;}
   if(route==="arenas")this.menuStepIndex=1;
-  this.menu.scrollTop=0;this.syncWizard(this.currentState,this.readHud?.()??null);
+  this.menu.scrollTop=0;this.menuSetupSection.scrollTop=0;this.syncWizard(this.currentState,this.readHud?.()??null);
   if(route==="home")this.landingQuick.focus();else this.menuHome.focus();
  }
  private syncMenuView(state:GameState,s:HudState|null){
@@ -1240,7 +1240,7 @@ export class GameUI{
   const next=Math.max(0,Math.min(MENU_STEPS.length-1,index));
   if(next===this.menuStepIndex)return;
   this.menuStepIndex=next;
-  this.menu.scrollTop=0;
+  this.menu.scrollTop=0;this.menuSetupSection.scrollTop=0;
   this.syncWizard(this.currentState,this.readHud?.()??null);
   const heading=next===0?this.menuLead:next===1?this.arenaTitle:this.characterPickerTitle;
   heading.focus?.();
