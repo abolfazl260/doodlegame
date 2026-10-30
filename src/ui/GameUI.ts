@@ -67,6 +67,23 @@ const MENU_STEPS:readonly MenuStep[]=["mode","arena","loadout"];
 
 const ARENA_IDS:readonly ArenaId[]=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor","alpine-lake","dusk-valley","autumn-valley","ember-river"];
 const WEAPON_IDS:readonly WeaponId[]=["blade","hammer","blaster","uzi","boomerang","bow","bomb","missile","spear","grapple","gravity-gauntlet"];
+/** Large high-contrast gauntlet silhouette, shown next to its translated name. */
+const GRAVITY_GAUNTLET_PREVIEW=`<svg class="game-ui__gauntlet-preview" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+<defs><linearGradient id="gauntlet-icon-steel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#617eac"/><stop offset="1" stop-color="#192a47"/></linearGradient></defs>
+<circle cx="44" cy="42" r="37" fill="#351d56" opacity=".53"/>
+<circle cx="44" cy="42" r="31" fill="none" stroke="#aa66ee" stroke-width="1.6" stroke-dasharray="4 5" opacity=".75"/>
+<!-- Distinct four fingers and thumb are more recognizable than the old rectangular barrel. -->
+<path d="M28 50 25 23Q24 17 29 16Q35 15 36 21L39 38 39 15Q39 10 44 10Q50 10 50 16V38L52 19Q53 14 58 16Q63 17 62 23L60 41 64 28Q67 24 71 28Q74 32 71 38L66 58Q63 66 54 70L32 71Q24 70 20 60L12 47Q9 41 13 38Q17 35 21 40Z" fill="url(#gauntlet-icon-steel)" stroke="#071322" stroke-width="5" stroke-linejoin="round"/>
+<path d="M29 25 34 36M44 19V36M57 25 55 39M66 35 61 45" fill="none" stroke="#a5bad7" stroke-width="4" stroke-linecap="round"/>
+<path d="M21 43 28 53 35 54M31 67 54 67" fill="none" stroke="#c17aff" stroke-width="4" stroke-linecap="round"/>
+<path d="M29 69H55L58 81H27Z" fill="#25304c" stroke="#071322" stroke-width="4" stroke-linejoin="round"/>
+<path d="M30 74H54" stroke="#c77dff" stroke-width="3"/>
+<circle cx="45" cy="52" r="12" fill="#0c1833" stroke="#b48aff" stroke-width="3.4"/>
+<circle cx="45" cy="52" r="7" fill="#39e9e5" stroke="#d9ffff" stroke-width="1.8"/>
+<path d="m45 45 5 7-5 7-5-7z" fill="#f4ffff"/>
+<path d="M30 12 27 6M60 9 65 5M75 51 82 54" stroke="#5dfef4" stroke-width="3" stroke-linecap="round"/>
+</svg>`;
+
 const MODE_IDS:readonly GameModeId[]=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill"];
 const CHARACTER_IDS:readonly CharacterId[]=["soldier","ninja","viking","ranger","pharaoh","knight","mummy","archer"];
 const CHARACTER_TEXT={
@@ -2069,7 +2086,11 @@ export class GameUI{
   for(const item of this.weaponCards.children){
    const card=item as HTMLButtonElement;
    if(card===this.randomWeaponButton)continue;
-   card.textContent=messages.weapons[card.dataset.startingWeapon as WeaponId];
+   const id=card.dataset.startingWeapon as WeaponId;
+   if(id==="gravity-gauntlet"){
+    card.innerHTML=GRAVITY_GAUNTLET_PREVIEW+'<span class="game-ui__weapon-name">'+messages.weapons[id]+'</span>';
+    card.setAttribute("aria-label",messages.weapons[id]);
+   }else card.textContent=messages.weapons[id];
   }
   this.randomWeaponButton.textContent=this.i18n.locale==="fa"?"انتخاب اسلحه تصادفی":"CHOOSE RANDOM WEAPON";
   for(const item of this.upgradeCardGrid.children){
