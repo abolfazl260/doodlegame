@@ -14,9 +14,50 @@ export interface CombatCue {
  readonly age:number;
  readonly life:number;
  readonly variant?:CombatCueVariant;
+ /** Recorded only for real HP loss, after health mutation. */
+ readonly appliedDamage?:number;
+ readonly target?:"player"|"opponent";
+ readonly damageSource?:"weapon"|"hazard";
 }
 export const MAX_COMBAT_CUES=24;
-export const cueLife=(kind:CombatCueKind)=>kind==="slam"?.34:kind==="explosion"?.42:kind==="defeat"?.55:kind==="throw"?.34:kind==="attack"?.13:.28;
+// Hits keep their source cue alive for the 480ms damage-label fade; visual glow stays bounded.
+export const cueLife=(kind:CombatCueKind)=>kind==="slam"?.34:kind==="explosion"?.42:kind==="defeat"?.55:kind==="throw"?.34:kind==="attack"?.13:kind==="hit"?.48:.28;
+
+/** At most twelve simultaneous labels, always using actual HP deltas and cue IDs. */
+export const MAX_DAMAGE_LABELS=12;
+export function visibleDamageCues(cues:readonly CombatCue[]):readonly CombatCue[]{
+ const matches:CombatCue[]=[];
+ for(const cue of cues){
+  if(cue.kind!=="hit"||!Number.isFinite(cue.appliedDamage)||!(cue.appliedDamage!>0)||cue.life<=0||cue.age>=cue.life)continue;
+  matches.push(cue);
+  if(matches.length>MAX_DAMAGE_LABELS)matches.shift();
+ }
+ return matches;
+}
+export function formatAppliedDamage(amount:number):string{
+ if(!Number.isFinite(amount)||amount<=0)return"";
+ // Tiny fractional hits must never display a misleading zero.
+ const display=amount>=1?Number(amount.toFixed(2)):Number(amount.toPrecision(2));
+ return"-"+display.toString();
+}
+export interface DamageLabelFrame{
+ readonly text:string;readonly x:number;readonly y:number;readonly alpha:number;readonly scale:number;readonly color:string;
+}
+/** Both renderers use the same moving world-space anchor and deterministic overlap lanes. */
+export function damageLabelFrame(cue:CombatCue,anchor:Readonly<{x:number;y:number}>,reducedMotion=false):DamageLabelFrame|null{
+ const text=cue.kind==="hit"?formatAppliedDamage(cue.appliedDamage??0):"";
+ if(!text||cue.life<=0||cue.age<0||cue.age>=cue.life)return null;
+ const t=Math.min(1,Math.max(0,cue.age/cue.life));
+ const lane=cue.id%3-1;
+ return{
+  text,
+  x:anchor.x+lane*.21,
+  y:anchor.y+1.12+(cue.id%2)*.13+(reducedMotion?.06*t:.53*t),
+  alpha:Math.min(1,(1-t)*2.1),
+  scale:cue.appliedDamage!>=20?1.14:1,
+  color:cue.damageSource==="hazard"?"#ffcf85":cue.appliedDamage!>=20?"#ffe49a":"#ffffff"
+ };
+}
 /** Visual-only semantic variants; a parry *attempt* is never a successful deflection. */
 export type CombatCueVariant="pull"|"parry"|"parry-success";
 export type CombatGlyph="slash"|"impact"|"smash"|"muzzle"|"arrow"|"return"|"hook"|"blast"|"gravity"|"shield"|"finish";
