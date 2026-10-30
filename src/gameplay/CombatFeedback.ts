@@ -28,7 +28,7 @@ export const MAX_DAMAGE_LABELS=12;
 export function visibleDamageCues(cues:readonly CombatCue[]):readonly CombatCue[]{
  const matches:CombatCue[]=[];
  for(const cue of cues){
-  if(cue.kind!=="hit"||!Number.isFinite(cue.appliedDamage)||!(cue.appliedDamage!>0)||cue.life<=0||cue.age>=cue.life)continue;
+  if(cue.kind!=="hit"||!Number.isFinite(cue.appliedDamage)||!((cue.appliedDamage??0)>0)||cue.life<=0||cue.age>=cue.life)continue;
   matches.push(cue);
   if(matches.length>MAX_DAMAGE_LABELS)matches.shift();
  }
