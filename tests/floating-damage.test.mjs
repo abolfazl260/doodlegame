@@ -32,6 +32,24 @@ test("damage cue reports post-mutation HP delta, not nominal attack or overkill"
  assert.equal(hits.length,2);
  game.dispose();
 });
+test("scaled missile splash creates one exact damage value per damaged fighter",()=>{
+ const game=session();game.setArena("fortress");
+ game.player.x=-.25;game.opponent.x=.35;
+ game.player.y=0;game.opponent.y=0;
+ const oldP=game.player.health,oldO=game.opponent.health;
+ const projectile={x:0,y:.35,vx:5,vy:0,life:1,weapon:"missile",owner:"player",originX:-2,
+  returning:false,spin:0,age:0,bounce:0,ricochets:0,damageScale:.58,clusterChild:true};
+ game.explodeMissile(projectile);
+ const hits=game.getRenderState().combatCues.filter(c=>c.kind==="hit");
+ assert.equal(hits.length,2,"one independent number for each accepted splash hit");
+ for(const h of hits){
+  const lost=h.target==="player"?oldP-game.player.health:oldO-game.opponent.health;
+  assert.ok(lost>0&&lost<22);
+  assert.ok(Math.abs(h.appliedDamage-lost)<1e-9);
+  assert.equal(h.weapon,"missile");
+ }
+ game.dispose();
+});
 test("sudden death reports exact remaining HP, not base weapon damage",()=>{
  const game=session();game.setMode("sudden-death");
  const target=game.opponent;target.health=43.25;
