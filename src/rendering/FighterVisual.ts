@@ -908,11 +908,10 @@ export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
    [[.14,-.18],[.14,.18]],[[-.24,-.08],[-.24,.08]]
   ];
   case "gravity-gauntlet":return [
-   [[-.17,-.23],[-.17,.30]],[[.45,-.12],[.95,-.12]],
-   [[.45,.21],[.95,.21]],[[.08,-.09],[.08,.16]]
-  ];
-  case "hammer":return [
-   [[.53,-.12],[.53,.12]],[[-.30,-.115],[-.30,.115]],[[.68,.25],[.87,.25]]
+   {color:"#222c49",width:.37,segments:[[[-.19,.02],[.10,.02]],[[.10,-.04],[.46,-.04]],[[.47,-.13],[.82,-.13]],[[.47,.22],[.82,.22]]]},
+   {color:"#7895b9",width:.095,segments:[[[-.29,-.25],[-.29,.29]],[[.47,.30],[.65,.31]],[[.73,-.17],[.90,-.17]],[[.76,-.05],[.95,-.05]],[[.76,.07],[.96,.07]],[[.73,.19],[.89,.19]]]},
+   {color:"#36f0e6",width:.073,segments:[[[.16,.075],[.245,.16]],[[.245,.16],[.33,.075]],[[.33,.075],[.245,-.01]],[[.245,-.01],[.16,.075]],[[.85,-.10],[.96,-.10]],[[.85,.14],[.96,.14]]]},
+   {color:"#b46bff",width:.064,segments:[[[-.15,-.23],[-.15,.27]],[[.42,-.37],[.60,-.36]],[[.04,-.23],[.16,-.28]],[[.01,.27],[.17,.31]]]}
   ];
   case "blaster":return [
    [[.205,.11],[.375,.11]],[[.59,.09],[.73,.09]]
@@ -1040,6 +1039,9 @@ export const FIGHTER_INK_WIDTH={
 export function weaponBaseInk(s:DuelistRenderState){
  if(weaponDrawPose(s).weapon==="hammer"){
   return {outline:.050,core:.015,metal:"#7c8b9a"} as const;
+ }
+ if(weaponDrawPose(s).weapon==="gravity-gauntlet"){
+  return {outline:.075,core:.023,metal:"#96aaca"} as const;
  }
  return {outline:FIGHTER_INK_WIDTH.weapon.outline,core:FIGHTER_INK_WIDTH.weapon.core,metal:"#b0bdc9"} as const;
 }
