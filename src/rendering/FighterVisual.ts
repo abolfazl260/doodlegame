@@ -300,24 +300,54 @@ export function grabEffectSegments(s:DuelistRenderState):Segment[]{
   [[.68+r,.03],[.75+r,.2]]
  ];
 }
-/** Shared gravity effects for both GPU and Canvas renderers; visual only. */
+/** Glove-anchored, visually distinct cyan punch, purple pull and cyan parry. 
+ * These marks use the current animated hand pose but never affect gameplay. */
 export function gauntletEffectSegments(s:DuelistRenderState):Segment[]{
- if(s.weapon!=="gravity-gauntlet"||((s.gauntletPullTime??0)<=0&&(s.gauntletParryTime??0)<=0))return[];
- const segments:Segment[]=[];
- const activeParry=(s.gauntletParryTime??0)>0;
- const radius=activeParry?.87:.53;
- const cx=.45,cy=.23;
- for(let i=0;i<24;i++){
-  const t=i*Math.PI/12+s.animationTime*2,u=(i+1)*Math.PI/12+s.animationTime*2;
-  segments.push([[cx+radius*Math.cos(t),cy+radius*Math.sin(t)],
-   [cx+radius*Math.cos(u),cy+radius*Math.sin(u)]]);
+ if(s.weapon!=="gravity-gauntlet"||s.health<=0)return[];
+ const parry=(s.gauntletParryTime??0)>0,pull=(s.gauntletPullTime??0)>0;
+ const punch=s.attackTime>0&&!parry&&!pull;
+ if(!parry&&!pull&&!punch)return[];
+ const pose=fighterVisual(s),cos=Math.cos(pose.toolAngle),sin=Math.sin(pose.toolAngle);
+ const at=(x:number,y:number):Point=>[pose.hand[0]+x*cos-y*sin,pose.hand[1]+x*sin+y*cos];
+ const strokes:Segment[]=[];
+ const line=(x:number,y:number,tx:number,ty:number)=>strokes.push([at(x,y),at(tx,ty)]);
+ const arc=(cx:number,cy:number,r:number,start:number,end:number,count:number)=>{
+  for(let i=0;i<count;i++){
+   const a=start+(end-start)*i/count,b=start+(end-start)*(i+1)/count;
+   line(cx+Math.cos(a)*r,cy+Math.sin(a)*r,cx+Math.cos(b)*r,cy+Math.sin(b)*r);
+  }
+ };
+ if(parry){
+  // Dual forward crescents clearly read as a shield instead of an attack ring.
+  const wobble=Math.sin(s.animationTime*18)*.025;
+  arc(.69,.05,.76+wobble,-Math.PI*.48,Math.PI*.48,18);
+  arc(.69,.05,.92+wobble,-Math.PI*.43,Math.PI*.43,16);
+  for(let i=-2;i<=2;i++){
+   const a=i*.34,x=.69+Math.cos(a)*(.78+wobble),y=.05+Math.sin(a)*(.78+wobble);
+   line(x-.035,y-.045,x+.08,y+.045);
+  }
+  line(.55,-.21,.79,-.34);line(.55,.30,.79,.43);
+ }else if(pull){
+  // Spirals and converging streaks indicate attraction, not an explosion.
+  const t=s.animationTime*4.8;
+  for(let ring=0;ring<3;ring++){
+   const r=.47+ring*.21,start=t+ring*2.1;
+   arc(.35,.07,r,start,start+Math.PI*1.20,13);
+   const a=start+Math.PI*1.20,x=.35+Math.cos(a)*r,y=.07+Math.sin(a)*r;
+   line(x,y,x-Math.cos(a+.6)*.17,y-Math.sin(a+.6)*.17);
+   line(x,y,x-Math.cos(a-.6)*.17,y-Math.sin(a-.6)*.17);
+  }
+  for(const y of [-.20,.08,.35]){line(1.30,y*1.6,.96,y);line(1.42,y*1.9,1.33,y*1.6);}
+ }else{
+  // Brief advancing impact arc after pressing ATTACK.
+  const progress=clamp(1-s.attackTime/.24),r=.20+progress*.43;
+  arc(1.03+progress*.21,.055,r,-Math.PI*.65,Math.PI*.65,19);
+  for(let i=-3;i<=3;i++){
+   const y=i*.17;line(1.09+progress*.30,y*.82,1.36+progress*.66,y*1.22);
+  }
+  line(.82,-.33,1.01,-.48);line(.85,.34,1.03,.52);
  }
- for(let i=0;i<8;i++){
-  const a=i*Math.PI/4-s.animationTime*2;
-  segments.push([[cx+radius*.72*Math.cos(a),cy+radius*.72*Math.sin(a)],
-   [cx+radius*1.23*Math.cos(a),cy+radius*1.23*Math.sin(a)]]);
- }
- return segments;
+ return strokes;
 }
 
 /** Each segment is a real pair of 3D vertices; buffers are sized from these arrays. */
@@ -346,15 +376,22 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
    path([[.62,-.38],[.68,-.29],[.88,-.29],[.99,-.28]]);
    line([.66,-.23],[.66,.23]);line([.66,.23],[.84,.27]);break;
   case 'gravity-gauntlet': {
-   // Thick segmented mech glove with an orbit-core ring; all geometry is procedural
-   // and shared by Canvas and WebGL (no sprite, texture or added load time).
-   path([[-.24,-.21],[.37,-.22],[.49,-.14],[.49,.25],[.37,.33],[-.24,.29],[-.24,-.21]]);
-   rect(-.18,-.26,.16,.60);
-   path([[.36,-.20],[.66,-.28],[.95,-.21],[1.04,-.09],[1.01,.19],[.9,.30],[.63,.30],[.36,.25]]);
-   for(const x of [.53,.67,.81,.95])line([x,-.2],[x,.29]);
-   for(let i=0;i<16;i++){const a=i*Math.PI/8,b=(i+1)*Math.PI/8;
-    line([.08+Math.cos(a)*.17,.04+Math.sin(a)*.17],[.08+Math.cos(b)*.17,.04+Math.sin(b)*.17]);}
-   path([[-.04,.06],[.06,.17],[.2,.06],[.08,-.02],[-.04,.06]]);
+   // Silhouette-first powered glove: wrist cuff, palm, bent thumb, four knuckles.
+   path([[-.30,-.27],[-.09,-.31],[-.01,-.23],[-.01,.26],[-.10,.34],[-.30,.30],[-.30,-.27]]);
+   rect(-.29,-.27,.16,.57);line([-.13,-.25],[-.13,.28]);
+   path([[-.06,-.26],[.20,-.34],[.52,-.30],[.63,-.19],[.63,.21],[.50,.34],[.19,.38],[-.06,.27],[-.06,-.26]]);
+   path([[.22,-.26],[.39,-.45],[.59,-.44],[.72,-.34],[.65,-.24],[.46,-.19]]);
+   line([.40,-.37],[.58,-.36]);line([.48,-.30],[.58,-.24]);
+   for(const [y,tip] of [[-.19,1.00],[-.07,1.07],[.05,1.09],[.17,1.02]] as const){
+    path([[.47,y],[tip-.12,y-.025],[tip,y+.02],[tip-.01,y+.098],[.48,y+.108]]);
+    line([.70,y+.005],[.70,y+.090]);line([.82,y+.01],[.82,y+.089]);
+   }
+   for(let i=0;i<20;i++){
+    const a=i*Math.PI/10,b=(i+1)*Math.PI/10;
+    line([.245+Math.cos(a)*.18,.075+Math.sin(a)*.18],[.245+Math.cos(b)*.18,.075+Math.sin(b)*.18]);
+   }
+   path([[.245,-.025],[.345,.075],[.245,.175],[.145,.075],[.245,-.025]]);
+   path([[-.04,.29],[.08,.36],[.18,.38]]);
    break;
   }
   case 'blaster': {
@@ -871,8 +908,10 @@ export function weaponAccentSegments(s:DuelistRenderState):Segment[]{
    [[.14,-.18],[.14,.18]],[[-.24,-.08],[-.24,.08]]
   ];
   case "gravity-gauntlet":return [
-   [[-.17,-.23],[-.17,.30]],[[.45,-.12],[.95,-.12]],
-   [[.45,.21],[.95,.21]],[[.08,-.09],[.08,.16]]
+   [[-.22,-.24],[-.22,.27]],[[.14,.075],[.245,.18]],[[.245,.18],[.35,.075]],
+   [[.35,.075],[.245,-.03]],[[.245,-.03],[.14,.075]],
+   [[.90,-.14],[.98,-.14]],[[.96,-.02],[1.04,-.02]],
+   [[.97,.10],[1.06,.10]],[[.90,.22],[.99,.22]]
   ];
   case "hammer":return [
    [[.53,-.12],[.53,.12]],[[-.30,-.115],[-.30,.115]],[[.68,.25],[.87,.25]]
@@ -923,10 +962,10 @@ export function weaponStyleLayers(s:DuelistRenderState):readonly WeaponStyleLaye
    {color:"#dce7f0",width:.028,segments:[[[.65,.24],[.87,.24]]]}
   ];
   case "gravity-gauntlet":return [
-   {color:"#252b45",width:.30,segments:[[[-.19,.03],[.34,.03]],[[.66,.03],[.93,.03]]]},
-   {color:"#33e9e4",width:.079,segments:[[[-.18,-.20],[-.18,.27]],[[.48,-.14],[.94,-.14]]]},
-   {color:"#b958fa",width:.082,segments:[[[.48,.25],[.93,.25]],[[.08,-.10],[.08,.15]]]},
-   {color:"#d6e4ff",width:.034,segments:[[[.53,.31],[.90,.31]],[[.23,-.19],[.37,-.19]]]}
+   {color:"#222c49",width:.37,segments:[[[-.19,.02],[.10,.02]],[[.10,-.04],[.46,-.04]],[[.47,-.13],[.82,-.13]],[[.47,.22],[.82,.22]]]},
+   {color:"#7895b9",width:.095,segments:[[[-.29,-.25],[-.29,.29]],[[.47,.30],[.65,.31]],[[.73,-.17],[.90,-.17]],[[.76,-.05],[.95,-.05]],[[.76,.07],[.96,.07]],[[.73,.19],[.89,.19]]]},
+   {color:"#36f0e6",width:.073,segments:[[[.16,.075],[.245,.16]],[[.245,.16],[.33,.075]],[[.33,.075],[.245,-.01]],[[.245,-.01],[.16,.075]],[[.85,-.10],[.96,-.10]],[[.85,.14],[.96,.14]]]},
+   {color:"#b46bff",width:.064,segments:[[[-.15,-.23],[-.15,.27]],[[.42,-.37],[.60,-.36]],[[.04,-.23],[.16,-.28]],[[.01,.27],[.17,.31]]]}
   ];
   case "blaster":return [
    {color:"#303a49",width:.126,segments:[[[-.15,.085],[.53,.085]]]},
@@ -1003,6 +1042,9 @@ export const FIGHTER_INK_WIDTH={
 export function weaponBaseInk(s:DuelistRenderState){
  if(weaponDrawPose(s).weapon==="hammer"){
   return {outline:.050,core:.015,metal:"#7c8b9a"} as const;
+ }
+ if(weaponDrawPose(s).weapon==="gravity-gauntlet"){
+  return {outline:.075,core:.023,metal:"#96aaca"} as const;
  }
  return {outline:FIGHTER_INK_WIDTH.weapon.outline,core:FIGHTER_INK_WIDTH.weapon.core,metal:"#b0bdc9"} as const;
 }

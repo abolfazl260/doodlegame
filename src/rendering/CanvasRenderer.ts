@@ -284,7 +284,7 @@ export class CanvasRenderer implements Renderer{
   lines(kickEffectSegments(s),ink.halo,.06);
   lines(slamEffectSegments(s),ink.halo,.055);
   lines(grabEffectSegments(s),ink.halo,.055);
-  lines(gauntletEffectSegments(s),(s.gauntletParryTime??0)>0?"#47f7fa":"#bd65ff",.075);
+  lines(gauntletEffectSegments(s),(s.gauntletParryTime??0)>0?"#55fff1":(s.gauntletPullTime??0)>0?"#c082ff":"#91fff6",.075);
   c.restore();
  }
  dispose(){this.platformInk.clear();this.backdropCanvas=null;this.backdropArena=null;}
