@@ -10,7 +10,7 @@ import {getArenaTheme,paintArenaBackdrop,platformColors,svgBackdropRevision} fro
 import {getDownloadedImage} from "../gameplay/DownloadableArenas.js";
 import {combatCameraFrame,type CombatCameraFrame} from "./CombatCamera.js";
 import type {GameRenderState,DuelistRenderState} from "../gameplay/GameSession";
-import {combatCueArt,combatCueFrame,COMBAT_GLYPH_LINES} from "../gameplay/CombatFeedback.js";
+import {combatCueArt,combatCueFrame,COMBAT_GLYPH_LINES,visibleDamageCues,damageLabelFrame} from "../gameplay/CombatFeedback.js";
 export class CanvasRenderer implements Renderer{
  private readonly combatMotionMedia=typeof window!=="undefined"&&typeof window.matchMedia==="function"?
   window.matchMedia("(prefers-reduced-motion: reduce)"):null;
@@ -160,6 +160,23 @@ export class CanvasRenderer implements Renderer{
    };
    draw(shape.main,art.color,art.lineAlpha,.046);
    draw(shape.accent,art.accent,art.accentAlpha,.032);
+   c.restore();
+  }
+  // World-space, non-interactive HP deltas: never reuse attack-start or deflect cues.
+  // No DOM elements are created. Repeated renders only paint the same immutable cue.
+  for(const cue of visibleDamageCues(state.combatCues)){
+   const anchor=cue.target==="player"?state.player:cue.target==="opponent"?state.opponent:cue;
+   const label=damageLabelFrame(cue,anchor,reduced);
+   if(!label)continue;
+   const fontSize=Math.min(26,Math.max(14,scale*.44))*label.scale;
+   c.save();
+   c.globalAlpha=label.alpha;
+   c.font=`900 ${fontSize}px system-ui,sans-serif`;
+   c.textAlign="center";c.textBaseline="middle";c.lineJoin="round";
+   c.strokeStyle="#0b1423";c.lineWidth=Math.max(3,fontSize*.23);
+   c.strokeText(label.text,toX(label.x),toY(label.y));
+   c.fillStyle=label.color;
+   c.fillText(label.text,toX(label.x),toY(label.y));
    c.restore();
   }
  }

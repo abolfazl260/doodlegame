@@ -224,8 +224,9 @@ export class GameSession{
  lockLoadout(){if(!this.hasConfirmedLoadout())return false;this.loadoutLocked=true;return true;}
  clearLoadoutSelections(){this.loadoutLocked=false;this.characterChosen=false;this.weaponChosen=false;this.secondCharacterChosen=false;this.secondWeaponChosen=false;}
  setShakeEnabled(enabled:boolean){this.shakeEnabled=enabled;}
- private emitCue(kind:CombatCueKind,weapon:WeaponId,x:number,y:number,direction:number,intensity=1,variant?:CombatCueVariant){
-  const cue:CombatCue={id:++this.cueSequence,kind,weapon,x,y,direction,variant,intensity:Math.max(.25,Math.min(2,intensity)),age:0,life:cueLife(kind)};
+ private emitCue(kind:CombatCueKind,weapon:WeaponId,x:number,y:number,direction:number,intensity=1,variant?:CombatCueVariant,
+  damageInfo?:Readonly<{appliedDamage:number;target:"player"|"opponent";damageSource:"weapon"|"hazard"}>){
+  const cue:CombatCue={id:++this.cueSequence,kind,weapon,x,y,direction,variant,...damageInfo,intensity:Math.max(.25,Math.min(2,intensity)),age:0,life:cueLife(kind)};
   this.combatCues.push(cue);
   if(this.combatCues.length>MAX_COMBAT_CUES)this.combatCues.shift();
   if(this.shakeEnabled&&(kind==="explosion"||(kind==="hit"&&cue.intensity>=1.1))){
@@ -1227,12 +1228,16 @@ export class GameSession{
   if(a.weapon==="boomerang"&&upgraded){spawn(4,.72);spawn(1.2,.72);return;}
   spawn(a.weapon==="boomerang"?2.8:a.weapon==="bomb"?2.4:a.weapon==="bow"?1.8:0,1,a.weapon==="uzi"&&upgraded?2:0);
 }
- private damage(t:Fighter,damage:number,knockback:number,weapon:WeaponId="blade",reaction?:Readonly<{ignoreMass?:boolean;minVerticalSpeed?:number;restoreAirActions?:boolean}>){
+ private damage(t:Fighter,damage:number,knockback:number,weapon:WeaponId="blade",reaction?:Readonly<{ignoreMass?:boolean;minVerticalSpeed?:number;restoreAirActions?:boolean}>,damageSource:"weapon"|"hazard"="weapon"){
   if(t.health<=0||damage<=0)return;
   this.cancelSlam(t);this.interruptGrab(t);this.cancelKick(t);this.clearAirPose(t);
-  this.emitCue("hit",weapon,t.x,t.y+.3,Math.sign(knockback)||t.facing,Math.max(.45,Math.min(1.65,damage/15)));
+  const oldHP=t.health;
   const mass=t.enemyType==="tank"?1.8:t.enemyType==="boss"?2.2:1;
   t.health=Math.max(0,t.health-(this.modeId==="sudden-death"?t.health:damage));
+  const appliedDamage=Math.max(0,oldHP-t.health);
+  if(appliedDamage>0)this.emitCue("hit",weapon,t.x,t.y+.3,Math.sign(knockback)||t.facing,
+   Math.max(.45,Math.min(1.65,damage/15)),undefined,
+   {appliedDamage,target:t===this.player?"player":"opponent",damageSource});
   t.velocityX+=knockback/(reaction?.ignoreMass?1:mass);
   t.velocityY=Math.max(t.velocityY,reaction?.minVerticalSpeed??2/mass);
   t.grounded=false;t.hitTime=.22;
@@ -1375,12 +1380,19 @@ export class GameSession{
    }else if(e.kind==="vent"){
     const touching=Math.abs(f.x-e.x)<e.width/2+PH/2-.05&&Math.abs((f.y-HH/2)-(e.y+e.height/2))<.46;
     if(touching&&e.pulse>.2&&e.cooldown<=0){
-     this.damage(f,11,Math.sign(f.x-e.x||f.facing)*3,"bomb");
+     this.damage(f,11,Math.sign(f.x-e.x||f.facing)*3,"bomb",undefined,"hazard");
      f.velocityY=Math.max(f.velocityY,4.2);e.cooldown=.78;
     }
    }else if(e.kind==="trap"){
     const touching=Math.abs(f.x-e.x)<e.width/2+PH/2&&Math.abs((f.y-HH/2)-(e.y+e.height/2))<.28;
-    if(touching&&e.cooldown<=0&&f.velocityY<=1){f.health=Math.max(0,f.health-(this.modeId==="sudden-death"?f.health:18));this.clearAirPose(f);f.velocityY=10;e.cooldown=.55;e.pulse=1;}
+    if(touching&&e.cooldown<=0&&f.velocityY<=1){
+     const oldHP=f.health;
+     f.health=Math.max(0,f.health-(this.modeId==="sudden-death"?f.health:18));
+     const appliedDamage=Math.max(0,oldHP-f.health);
+     if(appliedDamage>0)this.emitCue("hit","blade",f.x,f.y+.3,f.facing,.7,undefined,
+      {appliedDamage,target:f===this.player?"player":"opponent",damageSource:"hazard"});
+     this.clearAirPose(f);f.velocityY=10;e.cooldown=.55;e.pulse=1;
+    }
    }else if(e.kind==="barrel"){
     const touching=Math.abs(f.x-e.x)<e.width/2+PH/2&&Math.abs(f.y-e.y)<HH/2+e.height/2;
     if(touching&&Math.abs(f.velocityX)>2)this.explodeBarrel(e,f.x>=e.x?1:-1);
