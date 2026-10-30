@@ -5,6 +5,7 @@ import {getArenaTheme} from "../.test-build/themes/ArenaThemes.js";
 import {getDownloadedArena,installedArenas,arenaImageDataUrl} from "../.test-build/gameplay/DownloadableArenas.js";
 import {ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl} from "../.test-build/ui/ArenaPreviews.js";
 import {MobileOnboarding} from "../.test-build/ui/MobileOnboarding.js";
+import {touchActionGuide,touchActionStatus,WeaponTipTracker} from "../.test-build/ui/TouchWeaponGuide.js";
 const states={MENU:"MENU",PLAYING:"PLAYING",PAUSED:"PAUSED",GAME_OVER:"GAME_OVER"};
 const compiled=readFileSync(".test-build/ui/GameUI.js","utf8");
 const gameStateImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("GameState"));
@@ -13,9 +14,9 @@ const themeImport=compiled.split("\n").find(line=>line.startsWith("import ")&&li
 assert.ok(themeImport,"compiled UI imports arena themes");
 const extraImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("DownloadableArenas"));
 assert.ok(extraImport,"compiled UI imports downloaded arenas");
-const runnable=compiled.replace(/^import .*ArenaPreviews.*$/m,"").replace(/^import .*MobileOnboarding.*$/m,"").replace(gameStateImport,"const GameState=states;").replace(themeImport,"").replace(extraImport,"").replace("export class GameUI","class GameUI");
+const runnable=compiled.replace(/^import .*ArenaPreviews.*$/m,"").replace(/^import .*MobileOnboarding.*$/m,"").replace(/^import .*TouchWeaponGuide.*$/m,"").replace(gameStateImport,"const GameState=states;").replace(themeImport,"").replace(extraImport,"").replace("export class GameUI","class GameUI");
 assert.equal(runnable.includes("export class GameUI"),false);
-const {GameUI}=new Function("states","getArenaTheme","getDownloadedArena","installedArenas","arenaImageDataUrl","MobileOnboarding","ARENA_CATEGORY_IDS","arenaCategories","arenaPreviewUrl",runnable+";return {GameUI};")(states,getArenaTheme,getDownloadedArena,installedArenas,arenaImageDataUrl,MobileOnboarding,ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl);
+const {GameUI}=new Function("states","getArenaTheme","getDownloadedArena","installedArenas","arenaImageDataUrl","MobileOnboarding","touchActionGuide","touchActionStatus","WeaponTipTracker","ARENA_CATEGORY_IDS","arenaCategories","arenaPreviewUrl",runnable+";return {GameUI};")(states,getArenaTheme,getDownloadedArena,installedArenas,arenaImageDataUrl,MobileOnboarding,touchActionGuide,touchActionStatus,WeaponTipTracker,ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl);
 
 const arenas=["classic","towers","pit","steps","zigzag","sky","moving","fortress","bridge","crater","vertical","ruins","conveyor","collapse","storm","reactor","alpine-lake","dusk-valley","autumn-valley","ember-river"];
 const modes=["duel","missile-duel","melee-only","random-weapons","sudden-death","low-gravity","king-of-hill","local-pvp"];
