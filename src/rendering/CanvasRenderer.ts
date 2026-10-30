@@ -10,6 +10,7 @@ import {getArenaTheme,paintArenaBackdrop,platformColors,svgBackdropRevision} fro
 import {getDownloadedImage} from "../gameplay/DownloadableArenas.js";
 import {combatCameraFrame,type CombatCameraFrame} from "./CombatCamera.js";
 import type {GameRenderState,DuelistRenderState} from "../gameplay/GameSession";
+import {combatCueArt,combatCueFrame,COMBAT_GLYPH_LINES} from "../gameplay/CombatFeedback.js";
 export class CanvasRenderer implements Renderer{
  private grappleImages:{gun:HTMLImageElement;flight:HTMLImageElement;open:HTMLImageElement}|null=null;
  private readonly platformInk=new PlatformInkCache();private readonly context:CanvasRenderingContext2D;private width=1;private height=1;private dpr=1;private playerVisual={x:0,y:0,ready:false};private opponentVisual={x:0,y:0,ready:false};private cameraFrame:CombatCameraFrame|null=null;private framedArena:GameRenderState["arena"]|null=null;private backdropArena:GameRenderState["arena"]|null=null;private backdropCanvas:HTMLCanvasElement|null=null;private lastBackgroundImage:HTMLImageElement|undefined;private backdropArtRevision=-1;
@@ -131,21 +132,33 @@ export class CanvasRenderer implements Renderer{
   paintArenaBackdrop(screen,this.width,this.height,theme,arena);
  }
  private drawCombatCues(c:CanvasRenderingContext2D,state:GameRenderState,toX:(x:number)=>number,toY:(y:number)=>number,scale:number){
+  const reduced=typeof window!=="undefined"&&typeof window.matchMedia==="function"&&
+   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   for(const cue of state.combatCues){
-   const t=Math.min(1,cue.age/cue.life),fade=(1-t)*(1-t);
-   const radius=(cue.kind==="slam"?1.4:cue.kind==="explosion"?1.15:cue.kind==="attack"?.22:cue.kind==="deflect"?.48:cue.kind==="block"?.44:.56)*cue.intensity*(.4+1.4*t)*scale;
-   c.save();c.translate(toX(cue.x),toY(cue.y));c.rotate(cue.direction<0?Math.PI:0);
-   c.strokeStyle="#fff";c.fillStyle="#fff";c.lineWidth=Math.max(1.4,scale*.035);
-   c.globalAlpha=(cue.kind==="attack"?.3:.75)*fade;
-   c.beginPath();c.arc(0,0,Math.max(2,radius*.82),0,Math.PI*2);c.stroke();
-   if(cue.kind!=="attack"){
-    c.globalAlpha=fade;
-    for(let i=0;i<8;i++){
-     const a=i*Math.PI/4,inner=radius*.4,outer=radius*1.1;
-     c.beginPath();c.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);
-     c.lineTo(Math.cos(a)*outer,Math.sin(a)*outer);c.stroke();
-    }
+   const art=combatCueArt(cue),frame=combatCueFrame(cue,reduced);
+   if(frame.fade<=0)continue;
+   const radius=art.radius*frame.size*scale;
+   // One read-only glyph profile feeds Canvas and WebGL; no collision or damage decisions here.
+   const shape=COMBAT_GLYPH_LINES[art.glyph],direction=cue.direction<0?-1:1;
+   c.save();c.translate(toX(cue.x),toY(cue.y));
+   c.lineCap="round";c.lineJoin="round";
+   if(art.ringAlpha>0){
+    c.globalAlpha=art.ringAlpha*frame.fade;
+    c.strokeStyle=art.color;c.lineWidth=Math.max(1.3,scale*.032);
+    c.beginPath();c.ellipse(0,0,radius*.9,radius*.9*art.aspectY,0,0,Math.PI*2);c.stroke();
    }
+   const draw=(lines:typeof shape.main,color:string,alpha:number,width:number)=>{
+    if(alpha<=0)return;
+    c.strokeStyle=color;c.globalAlpha=alpha*frame.fade;c.lineWidth=Math.max(1.2,scale*width);
+    c.beginPath();
+    for(const [x1,y1,x2,y2] of lines){
+     c.moveTo(x1*radius*direction,-y1*radius*art.aspectY);
+     c.lineTo(x2*radius*direction,-y2*radius*art.aspectY);
+    }
+    c.stroke();
+   };
+   draw(shape.main,art.color,art.lineAlpha,.046);
+   draw(shape.accent,art.accent,art.accentAlpha,.032);
    c.restore();
   }
  }
