@@ -105,9 +105,20 @@ export class CombatAudio{
   else{this.unlock();this.startAmbient();}
  }
  render(cues:readonly CombatCue[]){
+  const pending:CombatCue[]=[];
   for(const cue of cues){
    if(cue.id<=this.lastCueId)continue;
    this.lastCueId=cue.id;
+   if(cue.age<.1)pending.push(cue);
+  }
+  // A contact can occur in the same tick as its attack cue. Prioritize the hit,
+  // successful reflection or KO, or the rate limiter would play only the whiff.
+  const priority=(cue:CombatCue)=>cue.kind==="defeat"?6:
+   cue.kind==="hit"||cue.variant==="parry-success"?5:
+   cue.kind==="explosion"||cue.kind==="slam"?4:
+   cue.kind==="deflect"||cue.kind==="block"?3:cue.kind==="throw"?2:1;
+  pending.sort((a,b)=>priority(b)-priority(a)||a.id-b.id);
+  for(const cue of pending){
    if(!this.muted&&cue.age<.1)this.play(cue);
   }
  }
