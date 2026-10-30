@@ -75,12 +75,12 @@ export function combatCueArt(cue:Pick<CombatCue,"kind"|"weapon"|"intensity"|"var
    weapon==="bow"||weapon==="spear"?"arrow":
    weapon==="boomerang"?"return":weapon==="grapple"?"hook":
    weapon==="bomb"||weapon==="missile"?"blast":
-   gauntlet?"gravity":"impact";
+   "impact";
  }else if(kind==="hit"){
   glyph=weapon==="blade"?"slash":
    weapon==="bow"||weapon==="spear"?"arrow":
    weapon==="boomerang"?"return":weapon==="grapple"?"hook":
-   gauntlet?"gravity":"impact";
+   "impact";
  }
  const color=finishing?"#fff0b9":
   gauntlet?(cue.variant==="pull"?"#ca89ff":"#5dfff2"):
