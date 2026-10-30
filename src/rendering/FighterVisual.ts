@@ -346,15 +346,22 @@ export function toolSegments(s:DuelistRenderState):Segment[] {
    path([[.62,-.38],[.68,-.29],[.88,-.29],[.99,-.28]]);
    line([.66,-.23],[.66,.23]);line([.66,.23],[.84,.27]);break;
   case 'gravity-gauntlet': {
-   // Thick segmented mech glove with an orbit-core ring; all geometry is procedural
-   // and shared by Canvas and WebGL (no sprite, texture or added load time).
-   path([[-.24,-.21],[.37,-.22],[.49,-.14],[.49,.25],[.37,.33],[-.24,.29],[-.24,-.21]]);
-   rect(-.18,-.26,.16,.60);
-   path([[.36,-.20],[.66,-.28],[.95,-.21],[1.04,-.09],[1.01,.19],[.9,.30],[.63,.30],[.36,.25]]);
-   for(const x of [.53,.67,.81,.95])line([x,-.2],[x,.29]);
-   for(let i=0;i<16;i++){const a=i*Math.PI/8,b=(i+1)*Math.PI/8;
-    line([.08+Math.cos(a)*.17,.04+Math.sin(a)*.17],[.08+Math.cos(b)*.17,.04+Math.sin(b)*.17]);}
-   path([[-.04,.06],[.06,.17],[.2,.06],[.08,-.02],[-.04,.06]]);
+   // Silhouette-first powered glove: wrist cuff, palm, bent thumb, four knuckles.
+   path([[-.30,-.27],[-.09,-.31],[-.01,-.23],[-.01,.26],[-.10,.34],[-.30,.30],[-.30,-.27]]);
+   rect(-.29,-.27,.16,.57);line([-.13,-.25],[-.13,.28]);
+   path([[-.06,-.26],[.20,-.34],[.52,-.30],[.63,-.19],[.63,.21],[.50,.34],[.19,.38],[-.06,.27],[-.06,-.26]]);
+   path([[.22,-.26],[.39,-.45],[.59,-.44],[.72,-.34],[.65,-.24],[.46,-.19]]);
+   line([.40,-.37],[.58,-.36]);line([.48,-.30],[.58,-.24]);
+   for(const [y,tip] of [[-.19,1.00],[-.07,1.07],[.05,1.09],[.17,1.02]] as const){
+    path([[.47,y],[tip-.12,y-.025],[tip,y+.02],[tip-.01,y+.098],[.48,y+.108]]);
+    line([.70,y+.005],[.70,y+.090]);line([.82,y+.01],[.82,y+.089]);
+   }
+   for(let i=0;i<20;i++){
+    const a=i*Math.PI/10,b=(i+1)*Math.PI/10;
+    line([.245+Math.cos(a)*.18,.075+Math.sin(a)*.18],[.245+Math.cos(b)*.18,.075+Math.sin(b)*.18]);
+   }
+   path([[.245,-.025],[.345,.075],[.245,.175],[.145,.075],[.245,-.025]]);
+   path([[-.04,.29],[.08,.36],[.18,.38]]);
    break;
   }
   case 'blaster': {
