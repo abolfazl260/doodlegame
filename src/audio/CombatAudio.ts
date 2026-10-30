@@ -1,4 +1,5 @@
 import type {CombatCue} from "../gameplay/CombatFeedback";
+import {combatSoundProfile} from "./CombatSoundProfile.js";
 
 /** Small synthesized cues; WebAudio is unlocked only by a user's pointer/keyboard gesture. */
 export class CombatAudio{
@@ -7,7 +8,8 @@ export class CombatAudio{
  private disposed=false;
  private lastCueId=0;
  private lastPlayTime=-1;
- resetCueHistory(){this.lastCueId=0;this.lastPlayTime=-1;}
+ private lastDefeatTime=-1;
+ resetCueHistory(){this.lastCueId=0;this.lastPlayTime=-1;this.lastDefeatTime=-1;}
  private ambientWanted=false;
  private ambientGain:GainNode|null=null;
  private ambientOscillators:OscillatorNode[]=[];
@@ -103,29 +105,45 @@ export class CombatAudio{
   else{this.unlock();this.startAmbient();}
  }
  render(cues:readonly CombatCue[]){
+  const pending:CombatCue[]=[];
   for(const cue of cues){
    if(cue.id<=this.lastCueId)continue;
    this.lastCueId=cue.id;
+   if(cue.age<.1)pending.push(cue);
+  }
+  // A contact can occur in the same tick as its attack cue. Prioritize the hit,
+  // successful reflection or KO, or the rate limiter would play only the whiff.
+  const priority=(cue:CombatCue)=>cue.kind==="defeat"?7:
+   cue.variant==="parry-success"?6:
+   cue.kind==="explosion"||cue.kind==="slam"?5:
+   cue.kind==="hit"?4:
+   cue.kind==="deflect"||cue.kind==="block"?3:cue.kind==="throw"?2:1;
+  pending.sort((a,b)=>priority(b)-priority(a)||a.id-b.id);
+  for(const cue of pending){
    if(!this.muted&&cue.age<.1)this.play(cue);
   }
  }
  private play(cue:CombatCue){
   const ctx=this.context;
-  if(!ctx||ctx.state!=="running"||ctx.currentTime-this.lastPlayTime<.045)return;
-  this.lastPlayTime=ctx.currentTime;
-  const explosion=cue.kind==="explosion",slam=cue.kind==="slam",heavy=cue.weapon==="hammer"||cue.weapon==="missile"||cue.weapon==="bomb";
-  const base=cue.kind==="attack"?(heavy?115:260):cue.kind==="deflect"?700:cue.kind==="block"?450:cue.kind==="defeat"?140:slam?80:explosion?70:heavy?105:320;
-  const duration=slam?.19:explosion?.22:cue.kind==="defeat"?.26:cue.kind==="attack"?.065:.11;
+  if(!ctx||ctx.state!=="running")return;
+  const time=ctx.currentTime;
+  // KO needs its own audible finish even immediately after the deciding hit.
+  // Two simultaneous defeats (draw) still create just one finishing sound.
+  if(cue.kind==="defeat"){
+   if(time-this.lastDefeatTime<.12)return;
+   this.lastDefeatTime=time;
+  }else if(time-this.lastPlayTime<.045)return;
+  this.lastPlayTime=time;
+  const preset=combatSoundProfile(cue);
   try{
-   const oscillator=ctx.createOscillator(),gain=ctx.createGain(),time=ctx.currentTime;
-   oscillator.type=explosion||slam?"sawtooth":cue.kind==="deflect"?"sine":"triangle";
-   oscillator.frequency.setValueAtTime(base,time);
-   oscillator.frequency.exponentialRampToValueAtTime(Math.max(32,base*((explosion||slam)?.35:cue.kind==="deflect"?1.5:.55)),time+duration);
-   const volume=((explosion||slam)?.12:cue.kind==="attack"?.045:.085)*Math.min(1.5,cue.intensity);
-   gain.gain.setValueAtTime(Math.max(.0001,volume),time);
-   gain.gain.exponentialRampToValueAtTime(.0001,time+duration);
+   const oscillator=ctx.createOscillator(),gain=ctx.createGain();
+   oscillator.type=preset.wave;
+   oscillator.frequency.setValueAtTime(preset.frequency,time);
+   oscillator.frequency.exponentialRampToValueAtTime(Math.max(32,preset.frequency*preset.bend),time+preset.duration);
+   gain.gain.setValueAtTime(Math.max(.0001,preset.volume),time);
+   gain.gain.exponentialRampToValueAtTime(.0001,time+preset.duration);
    oscillator.connect(gain);gain.connect(ctx.destination);
-   oscillator.start(time);oscillator.stop(time+duration+.01);
+   oscillator.start(time);oscillator.stop(time+preset.duration+.01);
    oscillator.onended=()=>{oscillator.disconnect();gain.disconnect();};
   }catch{/* Unsupported/paused audio must never interrupt the game. */}
  }

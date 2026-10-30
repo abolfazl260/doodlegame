@@ -3,7 +3,7 @@ import {isMummyStyle,type MummyStyleId} from "./MummyStyles.js";
 import {GRAVITY_GAUNTLET,gauntletPullImpulse,gauntletParryContact} from "./GravityGauntlet.js";
 import {GRAB,heldPosition,isGrabTarget,type GrabPhase} from "./GrabCombat.js";
 import {KICK_SPECS,KICK_COMBO_TIME,KICK_DOWN_THRESHOLD,kickIsActive,type KickKind} from "./KickCombat.js";
-import {combatShake,cueLife,MAX_COMBAT_CUES,type CombatCue,type CombatCueKind} from "./CombatFeedback.js";
+import {combatShake,cueLife,MAX_COMBAT_CUES,type CombatCue,type CombatCueKind,type CombatCueVariant} from "./CombatFeedback.js";
 import {bossPhaseFor,chooseEnemyPlan,ENEMY_PROFILES,hasClearShot,terrainAhead,type EnemyPlan} from "./EnemyAI.js";
 import type {LiveGameData} from "./LiveGameData.js";
 import {getDownloadedArena} from "./DownloadableArenas.js";
@@ -224,8 +224,8 @@ export class GameSession{
  lockLoadout(){if(!this.hasConfirmedLoadout())return false;this.loadoutLocked=true;return true;}
  clearLoadoutSelections(){this.loadoutLocked=false;this.characterChosen=false;this.weaponChosen=false;this.secondCharacterChosen=false;this.secondWeaponChosen=false;}
  setShakeEnabled(enabled:boolean){this.shakeEnabled=enabled;}
- private emitCue(kind:CombatCueKind,weapon:WeaponId,x:number,y:number,direction:number,intensity=1){
-  const cue:CombatCue={id:++this.cueSequence,kind,weapon,x,y,direction,intensity:Math.max(.25,Math.min(2,intensity)),age:0,life:cueLife(kind)};
+ private emitCue(kind:CombatCueKind,weapon:WeaponId,x:number,y:number,direction:number,intensity=1,variant?:CombatCueVariant){
+  const cue:CombatCue={id:++this.cueSequence,kind,weapon,x,y,direction,variant,intensity:Math.max(.25,Math.min(2,intensity)),age:0,life:cueLife(kind)};
   this.combatCues.push(cue);
   if(this.combatCues.length>MAX_COMBAT_CUES)this.combatCues.shift();
   if(this.shakeEnabled&&(kind==="explosion"||(kind==="hit"&&cue.intensity>=1.1))){
@@ -1038,7 +1038,7 @@ export class GameSession{
    if(a.gauntletPullCooldown<=0&&a.grabPhase===null&&a.hitTime<=0&&a.health>0){
     a.gauntletPullTime=GRAVITY_GAUNTLET.pullDuration;
     a.gauntletPullCooldown=GRAVITY_GAUNTLET.pullCooldown;
-    this.emitCue("deflect","gravity-gauntlet",a.x+a.facing*.65,a.y+.25,a.facing,1.1);
+    this.emitCue("deflect","gravity-gauntlet",a.x+a.facing*.65,a.y+.25,a.facing,1.1,"pull");
    }
   }
  }
@@ -1050,7 +1050,7 @@ export class GameSession{
   f.gauntletParryTime=GRAVITY_GAUNTLET.parryWindow+(upgraded?.08:0);
   f.gauntletParryCooldown=GRAVITY_GAUNTLET.parryCooldown;
   f.attackTime=Math.max(f.attackTime,.12);
-  this.emitCue("deflect","gravity-gauntlet",f.x+f.facing*.6,f.y+.25,f.facing,.75);
+  this.emitCue("deflect","gravity-gauntlet",f.x+f.facing*.6,f.y+.25,f.facing,.75,"parry");
   return true;
  }
  /** Short bounded physics impulses; never teleport or pull a victim through solid cover. */
@@ -1441,7 +1441,7 @@ export class GameSession{
    p.vy=Math.min(8,Math.max(-8,p.vy));
    p.x=cx+f.facing*.45;p.y=cy;p.deflectCooldown=.18;
    f.gauntletParryTime=0;
-   this.emitCue("deflect","gravity-gauntlet",cx,cy,f.facing,1.5);
+   this.emitCue("deflect","gravity-gauntlet",cx,cy,f.facing,1.5,"parry-success");
    return true;
   }
   if(f.attackTime<=0||(f.weapon!=='blade'&&f.weapon!=='hammer')||p.weapon==='bomb'||p.weapon==='missile')return false;

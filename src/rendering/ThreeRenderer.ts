@@ -12,7 +12,10 @@ import type {GameRenderState,DuelistRenderState,EnvironmentRenderState} from "..
 import {WebGLContextLifecycle} from "./WebGLContextLifecycle";
 import {PlatformInkCache,platformInkReaction,type PlatformInkStroke} from "./PlatformDecorations.js";
 import {combatCameraFrame,type CombatCameraFrame} from "./CombatCamera.js";
+import {combatCueArt,combatCueFrame,COMBAT_GLYPH_LINES,type CombatGlyph} from "../gameplay/CombatFeedback.js";
 export class ThreeRenderer implements Renderer{
+ private readonly combatMotionMedia=typeof window!=="undefined"&&typeof window.matchMedia==="function"?
+  window.matchMedia("(prefers-reduced-motion: reduce)"):null;
  private platformInk=new PlatformInkCache();private platformInkGroups:THREE.Group[]=[];private platformInkKeys:string[]=[];private platformInkActive:boolean[]=[];private platformInkLayers:Array<Array<{line:THREE.LineSegments;strokes:readonly PlatformInkStroke[];positions:Float32Array}>>=[];
  private scene=new THREE.Scene();private camera=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);private renderer:THREE.WebGLRenderer;private contextLifecycle:WebGLContextLifecycle;
  private readonly grappleTextures=(()=>{
@@ -24,7 +27,7 @@ export class ThreeRenderer implements Renderer{
  private readonly grappleLines:THREE.Line[]=[];
  private readonly grappleHooks:THREE.Mesh[]=[];
  private player=this.fighter(0xffffff,false);private opponent=this.fighter(0x555555,true);private platforms:THREE.Mesh[]=[];private platformEdges:THREE.Mesh[]=[];private themeArena:GameRenderState["arena"]|null=null;private themeBackgroundImage:HTMLImageElement|undefined;private themeArtRevision=-1;private themeTexture:THREE.CanvasTexture|null=null;private projectiles:THREE.Mesh[]=[];private missileTrails:THREE.Mesh[]=[];private missileFlashes:THREE.Mesh[]=[];
- private projectileGeometry=new THREE.CircleGeometry(.09,10);private bowProjectiles:THREE.LineSegments[]=[];private explosionVisuals:THREE.Group[]=[];private combatVisuals:THREE.Group[]=[];private cameraFrame:CombatCameraFrame|null=null;private framedArena:GameRenderState["arena"]|null=null;private bombVisuals:THREE.Group[]=[];private boomerangIcons:THREE.Group[]=[];private missileIcons:THREE.Group[]=[];private spearIcons:THREE.Group[]=[];private platformMaterial=new THREE.MeshBasicMaterial({color:0x777777});private icePlatformMaterial=new THREE.MeshBasicMaterial({color:0x9a9a9a});private slipperyPlatformMaterial=new THREE.MeshBasicMaterial({color:0x858585});private oneWayPlatformMaterial=new THREE.MeshBasicMaterial({color:0x6f6f6f});private conveyorLeftPlatformMaterial=new THREE.MeshBasicMaterial({color:0x5a5a5a});private conveyorRightPlatformMaterial=new THREE.MeshBasicMaterial({color:0xaaaaaa});private environmentGroup=new THREE.Group();private environmentVisuals:THREE.Group[]=[];private debrisVisuals:THREE.Mesh[]=[];private environmentArena:GameRenderState["arena"]|null=null;private fortressGroup:THREE.Group;
+ private projectileGeometry=new THREE.CircleGeometry(.09,10);private bowProjectiles:THREE.LineSegments[]=[];private explosionVisuals:THREE.Group[]=[];private combatVisuals:THREE.Group[]=[];private combatGlyphGeometry=new Map<CombatGlyph,{main:THREE.BufferGeometry;accent:THREE.BufferGeometry}>();private cameraFrame:CombatCameraFrame|null=null;private framedArena:GameRenderState["arena"]|null=null;private bombVisuals:THREE.Group[]=[];private boomerangIcons:THREE.Group[]=[];private missileIcons:THREE.Group[]=[];private spearIcons:THREE.Group[]=[];private platformMaterial=new THREE.MeshBasicMaterial({color:0x777777});private icePlatformMaterial=new THREE.MeshBasicMaterial({color:0x9a9a9a});private slipperyPlatformMaterial=new THREE.MeshBasicMaterial({color:0x858585});private oneWayPlatformMaterial=new THREE.MeshBasicMaterial({color:0x6f6f6f});private conveyorLeftPlatformMaterial=new THREE.MeshBasicMaterial({color:0x5a5a5a});private conveyorRightPlatformMaterial=new THREE.MeshBasicMaterial({color:0xaaaaaa});private environmentGroup=new THREE.Group();private environmentVisuals:THREE.Group[]=[];private debrisVisuals:THREE.Mesh[]=[];private environmentArena:GameRenderState["arena"]|null=null;private fortressGroup:THREE.Group;
  constructor(private readonly canvas:HTMLCanvasElement,private readonly animateDecorations=true){this.fortressGroup=this.buildFortress();this.renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:"high-performance"});this.contextLifecycle=new WebGLContextLifecycle(canvas,()=>this.resize());this.renderer.setClearColor(0,1);this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));this.camera.position.z=20;for(const _ of [0,1,2,3,4,5,6,7]){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),this.platformMaterial);this.platforms.push(m);this.scene.add(m);const edge=new THREE.Mesh(new THREE.BoxGeometry(1,1,.02),new THREE.MeshBasicMaterial({color:0xffffff}));this.platformEdges.push(edge);this.scene.add(edge);}this.scene.add(this.player.group,this.opponent.group,this.fortressGroup,this.environmentGroup);
   for(let i=0;i<2;i++){
    const ropeGeometry=new THREE.BufferGeometry();
@@ -249,30 +252,62 @@ export class ThreeRenderer implements Renderer{
    (mesh.material as THREE.MeshBasicMaterial).opacity=Math.max(0,1-d.age/d.life)*.9;
   });
  }
+ private getCombatGlyphGeometry(glyph:CombatGlyph){
+  const cached=this.combatGlyphGeometry.get(glyph);
+  if(cached)return cached;
+  const profile=COMBAT_GLYPH_LINES[glyph];
+  const geometry=(segments:typeof profile.main)=>{
+   const points:number[]=[];
+   for(const [x1,y1,x2,y2] of segments)points.push(x1,y1,0,x2,y2,0);
+   const g=new THREE.BufferGeometry();
+   g.setAttribute("position",new THREE.Float32BufferAttribute(points,3));
+   return g;
+  };
+  const result={main:geometry(profile.main),accent:geometry(profile.accent)};
+  this.combatGlyphGeometry.set(glyph,result);
+  return result;
+ }
  private makeCombatVisual(){
   const group=new THREE.Group();
-  const ring=new THREE.Mesh(new THREE.RingGeometry(.78,.9,22),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.8,depthTest:false}));
-  const points:number[]=[];
-  for(let i=0;i<8;i++){const a=i*Math.PI/4;points.push(Math.cos(a)*.4,Math.sin(a)*.4,0,Math.cos(a)*1.1,Math.sin(a)*1.1,0);}
-  const geom=new THREE.BufferGeometry();geom.setAttribute("position",new THREE.Float32BufferAttribute(points,3));
-  const sparks=new THREE.LineSegments(geom,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.8,depthTest:false}));
-  group.add(ring,sparks);group.position.z=.45;
+  // Each pooled visual owns its materials; its immutable glyph geometry is shared.
+  const ring=new THREE.Mesh(new THREE.RingGeometry(.80,.92,28),
+   new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthTest:false,depthWrite:false}));
+  const initial=this.getCombatGlyphGeometry("impact");
+  const main=new THREE.LineSegments(initial.main,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthTest:false,depthWrite:false}));
+  const accent=new THREE.LineSegments(initial.accent,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthTest:false,depthWrite:false}));
+  group.userData.glyph="impact";
+  group.add(ring,main,accent);
+  group.position.z=.45;
+  group.renderOrder=18;
   return group;
  }
  private drawCombatCues(state:GameRenderState){
-  while(this.combatVisuals.length<state.combatCues.length){const g=this.makeCombatVisual();this.combatVisuals.push(g);this.scene.add(g);}
+  while(this.combatVisuals.length<state.combatCues.length){
+   const group=this.makeCombatVisual();this.combatVisuals.push(group);this.scene.add(group);
+  }
+  const reduced=this.combatMotionMedia?.matches??false;
   for(let i=0;i<this.combatVisuals.length;i++){
-   const g=this.combatVisuals[i],cue=state.combatCues[i];if(!cue){g.visible=false;continue;}
-   const t=Math.min(1,cue.age/cue.life),fade=(1-t)*(1-t);
-   g.visible=true;g.position.set(cue.x,cue.y,.45);
-   const r=cue.kind==="slam"?1.4:cue.kind==="explosion"?1.15:cue.kind==="attack"?.22:cue.kind==="deflect"?.48:cue.kind==="block"?.44:.56;
-   const size=r*cue.intensity*(.4+t*1.4);
-   g.scale.set(size,size,1);
-   g.rotation.z=cue.direction<0?Math.PI:0;
-   const ring=g.children[0] as THREE.Mesh,sparks=g.children[1] as THREE.LineSegments;
-   (ring.material as THREE.MeshBasicMaterial).opacity=(cue.kind==="attack"?.3:.75)*fade;
-   (sparks.material as THREE.LineBasicMaterial).opacity=(cue.kind==="explosion"?.65:1)*fade;
-   sparks.visible=cue.kind!=="attack";
+   const g=this.combatVisuals[i],cue=state.combatCues[i];
+   if(!cue){g.visible=false;continue;}
+   const art=combatCueArt(cue),frame=combatCueFrame(cue,reduced);
+   g.visible=frame.fade>0;
+   if(!g.visible)continue;
+   const size=art.radius*frame.size;
+   g.position.set(cue.x,cue.y,.45);
+   g.scale.set(cue.direction<0?-size:size,size*art.aspectY,1);
+   const ring=g.children[0] as THREE.Mesh,main=g.children[1] as THREE.LineSegments,accent=g.children[2] as THREE.LineSegments;
+   if(g.userData.glyph!==art.glyph){
+    const geom=this.getCombatGlyphGeometry(art.glyph);
+    main.geometry=geom.main;accent.geometry=geom.accent;
+    g.userData.glyph=art.glyph;
+   }
+   ring.visible=art.ringAlpha>0;
+   (ring.material as THREE.MeshBasicMaterial).color.set(art.color);
+   (ring.material as THREE.MeshBasicMaterial).opacity=art.ringAlpha*frame.fade;
+   (main.material as THREE.LineBasicMaterial).color.set(art.color);
+   (main.material as THREE.LineBasicMaterial).opacity=art.lineAlpha*frame.fade;
+   (accent.material as THREE.LineBasicMaterial).color.set(art.accent);
+   (accent.material as THREE.LineBasicMaterial).opacity=art.accentAlpha*frame.fade;
   }
  }
  resize(){if(!this.contextLifecycle.canRender())return;const w=Math.max(1,this.canvas.clientWidth),h=Math.max(1,this.canvas.clientHeight),a=w/h;this.renderer.setSize(w,h,false);const vh=this.cameraFrame?.height??10;this.camera.left=-a*vh/2;this.camera.right=a*vh/2;this.camera.top=vh/2;this.camera.bottom=-vh/2;this.camera.updateProjectionMatrix();}
@@ -419,5 +454,5 @@ export class ThreeRenderer implements Renderer{
    ((s.gauntletParryTime??0)>0||(s.gauntletPullTime??0)>0)?(s.gauntletParryTime??0)>0?"#55fff1":"#c082ff":s.weapon==="gravity-gauntlet"&&s.attackTime>0?"#91fff6":"#ffffff");
   (view.effect.material as THREE.LineBasicMaterial).opacity=effect.length?(s.attackTelegraph>0?.95:.6):0;
  }
- dispose(){for(const line of this.grappleLines){line.geometry.dispose();(line.material as THREE.Material).dispose();}for(const texture of Object.values(this.grappleTextures))texture.dispose();this.platformInk.clear();this.contextLifecycle.dispose();this.themeTexture?.dispose();this.themeTexture=null;for(const m of this.missileTrails)this.scene.remove(m);for(const m of this.missileFlashes)this.scene.remove(m);for(const m of this.bowProjectiles)this.scene.remove(m);this.renderer.dispose();this.renderer.forceContextLoss();this.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});this.scene.clear();this.projectileGeometry.dispose();this.platformMaterial.dispose();this.icePlatformMaterial.dispose();this.slipperyPlatformMaterial.dispose();this.oneWayPlatformMaterial.dispose();this.conveyorLeftPlatformMaterial.dispose();this.conveyorRightPlatformMaterial.dispose();this.environmentVisuals.forEach(g=>g.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}}));}
+ dispose(){for(const line of this.grappleLines){line.geometry.dispose();(line.material as THREE.Material).dispose();}for(const texture of Object.values(this.grappleTextures))texture.dispose();this.platformInk.clear();this.contextLifecycle.dispose();this.themeTexture?.dispose();this.themeTexture=null;for(const m of this.missileTrails)this.scene.remove(m);for(const m of this.missileFlashes)this.scene.remove(m);for(const m of this.bowProjectiles)this.scene.remove(m);this.renderer.dispose();this.renderer.forceContextLoss();this.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});this.scene.clear();for(const glyph of this.combatGlyphGeometry.values()){glyph.main.dispose();glyph.accent.dispose();}this.combatGlyphGeometry.clear();this.projectileGeometry.dispose();this.platformMaterial.dispose();this.icePlatformMaterial.dispose();this.slipperyPlatformMaterial.dispose();this.oneWayPlatformMaterial.dispose();this.conveyorLeftPlatformMaterial.dispose();this.conveyorRightPlatformMaterial.dispose();this.environmentVisuals.forEach(g=>g.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}if(o instanceof THREE.LineSegments){o.geometry.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}}));}
 }

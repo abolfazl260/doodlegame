@@ -12,7 +12,8 @@ async function rendererModule(name){
  const decorations=new URL('../.test-build/rendering/PlatformDecorations.js',import.meta.url).href;
  const themes=new URL('../.test-build/themes/ArenaThemes.js',import.meta.url).href;
  const downloadable=new URL('../.test-build/gameplay/DownloadableArenas.js',import.meta.url).href;
- return import('data:text/javascript;base64,'+Buffer.from(source.replaceAll("'./FighterVisual'",JSON.stringify(visual)).replaceAll('"three"',JSON.stringify(three)).replaceAll('"./WebGLContextLifecycle"',JSON.stringify(contextLifecycle)).replaceAll('"./CombatCamera.js"',JSON.stringify(combatCamera)).replaceAll('"./PlatformDecorations.js"',JSON.stringify(decorations)).replaceAll('"../themes/ArenaThemes"',JSON.stringify(themes)).replaceAll('"../gameplay/DownloadableArenas.js"',JSON.stringify(downloadable))).toString('base64'));
+ const feedback=new URL('../.test-build/gameplay/CombatFeedback.js',import.meta.url).href;
+ return import('data:text/javascript;base64,'+Buffer.from(source.replaceAll("'./FighterVisual'",JSON.stringify(visual)).replaceAll('"three"',JSON.stringify(three)).replaceAll('"./WebGLContextLifecycle"',JSON.stringify(contextLifecycle)).replaceAll('"./CombatCamera.js"',JSON.stringify(combatCamera)).replaceAll('"./PlatformDecorations.js"',JSON.stringify(decorations)).replaceAll('"../themes/ArenaThemes"',JSON.stringify(themes)).replaceAll('"../gameplay/DownloadableArenas.js"',JSON.stringify(downloadable)).replaceAll('"../gameplay/CombatFeedback.js"',JSON.stringify(feedback))).toString('base64'));
 }
 const state=()=>new GameSession({getState(){return {}},endFrame(){}}).getRenderState();
 test('WebGL fighter draw places both fighters and produces valid geometries for every tool',async()=>{
