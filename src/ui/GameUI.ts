@@ -1953,7 +1953,7 @@ export class GameUI{
   const mobile=typeof window.matchMedia==="function"&&window.matchMedia("(pointer: coarse)").matches;
   const playing=mobile&&state===GameState.PLAYING&&s.winner===null&&!document.hidden;
   this.setHidden(this.touchHint,!playing);
-  const second=Boolean(s.localPvP??s.mode==="local-pvp");
+  const second=!s.lanPlayer&&Boolean(s.localPvP??s.mode==="local-pvp");
   this.setHidden(this.p2TouchHint,!playing||!second);
   if(!playing)return;
   const locale=this.i18n.locale;
@@ -1966,7 +1966,12 @@ export class GameUI{
    const accessibility=guide.primary+"; "+guide.secondary+"; "+ability.label;
    if(root.getAttribute("aria-label")!==accessibility)root.setAttribute("aria-label",accessibility);
   };
-  paint(this.touchHint,this.touchHintPrimary,this.touchHintSecondary,this.touchHintStatus,this.touchHintFill,s.weapon,s);
+  // LAN clients see their own weapon, not the host's P1 weapon.
+  const localWeapon=s.lanPlayer===2?s.secondWeapon??s.weapon:s.weapon;
+  const localHud:TouchAbilityHud=s.lanPlayer===2?{
+   bowCharge:s.secondBowCharge??0,attackCooldown:s.secondAttackCooldown,gauntlet:s.secondGauntlet
+  }:s;
+  paint(this.touchHint,this.touchHintPrimary,this.touchHintSecondary,this.touchHintStatus,this.touchHintFill,localWeapon,localHud);
   if(second)paint(this.p2TouchHint,this.p2HintPrimary,this.p2HintSecondary,this.p2HintStatus,this.p2HintFill,s.secondWeapon??"blade",{
    bowCharge:s.secondBowCharge??0,attackCooldown:s.secondAttackCooldown,gauntlet:s.secondGauntlet
   });
