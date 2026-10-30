@@ -12,6 +12,8 @@ import {combatCameraFrame,type CombatCameraFrame} from "./CombatCamera.js";
 import type {GameRenderState,DuelistRenderState} from "../gameplay/GameSession";
 import {combatCueArt,combatCueFrame,COMBAT_GLYPH_LINES} from "../gameplay/CombatFeedback.js";
 export class CanvasRenderer implements Renderer{
+ private readonly combatMotionMedia=typeof window!=="undefined"&&typeof window.matchMedia==="function"?
+  window.matchMedia("(prefers-reduced-motion: reduce)"):null;
  private grappleImages:{gun:HTMLImageElement;flight:HTMLImageElement;open:HTMLImageElement}|null=null;
  private readonly platformInk=new PlatformInkCache();private readonly context:CanvasRenderingContext2D;private width=1;private height=1;private dpr=1;private playerVisual={x:0,y:0,ready:false};private opponentVisual={x:0,y:0,ready:false};private cameraFrame:CombatCameraFrame|null=null;private framedArena:GameRenderState["arena"]|null=null;private backdropArena:GameRenderState["arena"]|null=null;private backdropCanvas:HTMLCanvasElement|null=null;private lastBackgroundImage:HTMLImageElement|undefined;private backdropArtRevision=-1;
  constructor(private readonly canvas:HTMLCanvasElement,private readonly animateDecorations=true){const c=canvas.getContext("2d");if(!c)throw new Error("2D canvas rendering is unavailable.");this.context=c;if(typeof Image!=="undefined"){
@@ -132,8 +134,7 @@ export class CanvasRenderer implements Renderer{
   paintArenaBackdrop(screen,this.width,this.height,theme,arena);
  }
  private drawCombatCues(c:CanvasRenderingContext2D,state:GameRenderState,toX:(x:number)=>number,toY:(y:number)=>number,scale:number){
-  const reduced=typeof window!=="undefined"&&typeof window.matchMedia==="function"&&
-   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduced=this.combatMotionMedia?.matches??false;
   for(const cue of state.combatCues){
    const art=combatCueArt(cue),frame=combatCueFrame(cue,reduced);
    if(frame.fade<=0)continue;
