@@ -2933,6 +2933,24 @@ html.software-landscape .game-ui.playing .game-ui__bow-panel{
 }
 
 
+/* Recognizable, accessible glove preview on the loadout selection grid. */
+.game-ui .game-ui__loadout-card[data-starting-weapon="gravity-gauntlet"]{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:.2rem;min-height:82px;padding:.35rem .2rem;
+ border-color:#758ac0;background:linear-gradient(155deg,#241d43,#142d45);
+ color:#e6faff;
+}
+.game-ui__gauntlet-preview{display:block;flex:none;width:min(100%,3.8rem);height:3.8rem;filter:drop-shadow(0 0 5px #48e9e955)}
+.game-ui__weapon-name{display:block;font-size:.66rem;line-height:1.25;font-weight:850;overflow-wrap:anywhere}
+.game-ui .game-ui__loadout-card[data-starting-weapon="gravity-gauntlet"][aria-pressed="true"]{
+ border-color:#70f9ed;box-shadow:0 0 0 1px #70f9ed,0 0 14px #69f5ea52;
+ background:linear-gradient(145deg,#253259,#18534f);color:#ffffff
+}
+@media (orientation:landscape) and (max-height:370px){
+ .game-ui .game-ui__loadout-card[data-starting-weapon="gravity-gauntlet"]{min-height:68px}
+ .game-ui__gauntlet-preview{width:2.65rem;height:2.65rem}
+}
+
 /* Gravity Gauntlet: compact mobile move list and active ability cooldowns. */
 .game-ui__gauntlet-guide[hidden],.game-ui__gauntlet-status[hidden]{display:none!important}
 .game-ui__gauntlet-guide{
