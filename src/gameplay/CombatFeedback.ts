@@ -53,7 +53,7 @@ export function damageLabelFrame(cue:CombatCue,anchor:Readonly<{x:number;y:numbe
   text,
   x:anchor.x+lane*.21,
   y:anchor.y+1.12+(cue.id%2)*.13+(reducedMotion?.06*t:.53*t),
-  alpha:Math.min(1,(1-t)*2.1),
+  alpha:Math.max(0,1-t*t),
   scale:cue.appliedDamage!>=20?1.14:1,
   color:cue.damageSource==="hazard"?"#ffcf85":cue.appliedDamage!>=20?"#ffe49a":"#ffffff"
  };
