@@ -2009,7 +2009,7 @@ export class GameUI{
   };
   for(const id of ["controls","advanced","weapons","modes","progression","local"] as const){
    const section=document.createElement("details"),summary=document.createElement("summary");section.dataset.guideSection=id;section.open=id==="controls";summary.textContent=guide.sections[id];section.append(summary);
-   if(id==="weapons")entries(section,WEAPON_IDS.map(weapon=>({title:messages.weapons[weapon],body:touchActionGuide(weapon,this.i18n.locale).tip+" "+guide.weapons[weapon]+" "+guide.upgradeLabel": "+(messages.upgrades[weapon]?.name??weapon)+" — "+(messages.upgrades[weapon]?.description??"")})));
+   if(id==="weapons")entries(section,WEAPON_IDS.map(weapon=>({title:messages.weapons[weapon],body:touchActionGuide(weapon,this.i18n.locale).tip+" "+guide.weapons[weapon]+" "+guide.upgradeLabel+": "+(messages.upgrades[weapon]?.name??weapon)+" — "+(messages.upgrades[weapon]?.description??"")})));
    else if(id==="modes")entries(section,[...MODE_IDS,"local-pvp" as const].map(mode=>({title:messages.modes[mode],body:guide.modes[mode]})));
    else entries(section,guide[id]);this.helpContent.append(section);
   }
