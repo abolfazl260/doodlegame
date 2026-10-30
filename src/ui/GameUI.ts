@@ -174,6 +174,7 @@ export class GameUI{
  private activeWeaponTip:WeaponId|null=null;
  private weaponTipCurrent:WeaponId|null=null;
  private weaponTipAttackBaseline=0;
+ private weaponTipWasShown=false;
  private coach=document.createElement("aside");
  private coachText=document.createElement("p");
  private coachSkip=document.createElement("button");
@@ -408,7 +409,7 @@ export class GameUI{
   this.coachText.setAttribute("role","status");this.coachText.setAttribute("aria-live","polite");
   this.coachSkip.type="button";this.coachSkip.onclick=()=>{if(this.activeWeaponTip){this.weaponTips.markLearned(this.activeWeaponTip);this.activeWeaponTip=null;this.tutorialView="";}else this.onboarding.skip();this.coach.hidden=true;this.joystick.classList.remove("tutorial-target");this.mobileAttackButton.classList.remove("tutorial-target");};
   this.coach.append(this.coachText,this.coachSkip);
-  this.tutorialReplay.type="button";this.tutorialReplay.onclick=()=>{this.onboarding.replay();this.weaponTips.replay();this.weaponTipCurrent=null;this.activeWeaponTip=null;this.tutorialView="";this.help.hidden=true;this.helpButton.focus();};
+  this.tutorialReplay.type="button";this.tutorialReplay.onclick=()=>{this.onboarding.replay();this.weaponTips.replay();this.weaponTipCurrent=null;this.weaponTipWasShown=false;this.activeWeaponTip=null;this.tutorialView="";this.help.hidden=true;this.helpButton.focus();};
   this.help.append(this.tutorialReplay);
   this.extraActions=actions;
   if(actions.quickPlay)this.menuView="landing";
@@ -1978,14 +1979,18 @@ export class GameUI{
   const step=s.tutorial?this.onboarding.update(s.tutorial,eligible,s.weapon==="missile"):null;
   if(step==="ready")this.coachReadyUntil=performance.now()+1800;
   const ready=eligible&&this.coachReadyUntil>performance.now();
-  if(this.weaponTipCurrent!==s.weapon){this.weaponTipCurrent=s.weapon;this.weaponTipAttackBaseline=s.tutorial.attack;this.activeWeaponTip=null;}
+  if(this.weaponTipCurrent!==s.weapon){this.weaponTipCurrent=s.weapon;this.weaponTipAttackBaseline=s.tutorial.attack;this.weaponTipWasShown=false;this.activeWeaponTip=null;}
   let weaponTip:WeaponId|null=null;
   // Wait for the existing core tutorial and its READY banner to finish.
   if(eligible&&!step&&!ready&&this.onboarding.isCoreComplete()&&this.onboarding.status!=="skipped"&&s.tutorial.safe){
-   if(s.tutorial.attack>this.weaponTipAttackBaseline)this.weaponTips.markLearned(s.weapon);
+   // Do not auto-complete a tip from an attack made before it was first displayed.
+   if(!this.weaponTipWasShown){this.weaponTipAttackBaseline=s.tutorial.attack;this.weaponTipWasShown=true;}
+   else if(s.tutorial.attack>this.weaponTipAttackBaseline)this.weaponTips.markLearned(s.weapon);
    if(!this.weaponTips.isLearned(s.weapon))weaponTip=s.weapon;
   }
   this.activeWeaponTip=weaponTip;
+  // Do not stack the weapon tip and the always-visible ATTACK hint over the thumb zone.
+  if(weaponTip)this.setHidden(this.touchHint,true);
   const view=[step,ready,eligible,this.i18n.locale,s.weapon,weaponTip].join("|");
   if(view===this.tutorialView)return;this.tutorialView=view;
   this.setHidden(this.coach,!eligible||(!step&&!ready&&!weaponTip));
