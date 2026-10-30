@@ -1228,7 +1228,7 @@ export class GameSession{
   if(a.weapon==="boomerang"&&upgraded){spawn(4,.72);spawn(1.2,.72);return;}
   spawn(a.weapon==="boomerang"?2.8:a.weapon==="bomb"?2.4:a.weapon==="bow"?1.8:0,1,a.weapon==="uzi"&&upgraded?2:0);
 }
- private damage(t:Fighter,damage:number,knockback:number,weapon:WeaponId="blade",reaction?:Readonly<{ignoreMass?:boolean;minVerticalSpeed?:number;restoreAirActions?:boolean}>){
+ private damage(t:Fighter,damage:number,knockback:number,weapon:WeaponId="blade",reaction?:Readonly<{ignoreMass?:boolean;minVerticalSpeed?:number;restoreAirActions?:boolean}>,damageSource:"weapon"|"hazard"="weapon"){
   if(t.health<=0||damage<=0)return;
   this.cancelSlam(t);this.interruptGrab(t);this.cancelKick(t);this.clearAirPose(t);
   const oldHP=t.health;
@@ -1237,7 +1237,7 @@ export class GameSession{
   const appliedDamage=Math.max(0,oldHP-t.health);
   if(appliedDamage>0)this.emitCue("hit",weapon,t.x,t.y+.3,Math.sign(knockback)||t.facing,
    Math.max(.45,Math.min(1.65,damage/15)),undefined,
-   {appliedDamage,target:t===this.player?"player":"opponent",damageSource:"weapon"});
+   {appliedDamage,target:t===this.player?"player":"opponent",damageSource});
   t.velocityX+=knockback/(reaction?.ignoreMass?1:mass);
   t.velocityY=Math.max(t.velocityY,reaction?.minVerticalSpeed??2/mass);
   t.grounded=false;t.hitTime=.22;
@@ -1380,7 +1380,7 @@ export class GameSession{
    }else if(e.kind==="vent"){
     const touching=Math.abs(f.x-e.x)<e.width/2+PH/2-.05&&Math.abs((f.y-HH/2)-(e.y+e.height/2))<.46;
     if(touching&&e.pulse>.2&&e.cooldown<=0){
-     this.damage(f,11,Math.sign(f.x-e.x||f.facing)*3,"bomb");
+     this.damage(f,11,Math.sign(f.x-e.x||f.facing)*3,"bomb",undefined,"hazard");
      f.velocityY=Math.max(f.velocityY,4.2);e.cooldown=.78;
     }
    }else if(e.kind==="trap"){
