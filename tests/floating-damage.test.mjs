@@ -34,6 +34,8 @@ test("damage cue reports post-mutation HP delta, not nominal attack or overkill"
 });
 test("scaled missile splash creates one exact damage value per damaged fighter",()=>{
  const game=session();game.setArena("fortress");
+ // Isolate the missile AoE from fortress barrels that can chain-explode.
+ game.environment=[];
  game.player.x=-.25;game.opponent.x=.35;
  game.player.y=0;game.opponent.y=0;
  const oldP=game.player.health,oldO=game.opponent.health;
