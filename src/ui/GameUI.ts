@@ -10,6 +10,7 @@ const MUMMY_STYLE_NAMES:Readonly<Record<MummyStyleId,{en:string;fa:string}>>={
  desert:{en:"DESERT",fa:"کویری"},sentinel:{en:"SENTINEL",fa:"نگهبان معبد"}
 };
 import {MobileOnboarding,type TutorialSignals} from "./MobileOnboarding";
+import {touchActionGuide,touchActionStatus,WeaponTipTracker,type TouchAbilityHud} from "./TouchWeaponGuide";
 import type {Storage} from "../storage/Storage";
 import {GameState} from "../core/GameState";
 
@@ -24,8 +25,8 @@ import type {ProgressionView} from "../progression/Progression";
 type HudState={
  tutorial?:TutorialSignals;lanPlayer?:1|2;
  playerHealth:number;playerMaxHealth:number;opponentHealth:number;opponentMaxHealth:number;weapon:WeaponId;winner:"player"|"opponent"|"draw"|null;arena:ArenaId;mode:GameModeId;hill:HillState;
- bowCharge:number;gauntlet?:Readonly<{pullCooldown:number;parryCooldown:number;pulling:boolean;parrying:boolean}>;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
- progression?:ProgressionView|null;skinUnlocks?:SkinUnlockView;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;mummyStyle?:MummyStyleId;secondMummyStyle?:MummyStyleId;
+ bowCharge:number;attackCooldown?:number;gauntlet?:Readonly<{pullCooldown:number;parryCooldown:number;pulling:boolean;parrying:boolean;holdProgress?:number}>;playerFacing:number;upgradePoints:number;upgradedWeapons:readonly WeaponId[];
+ progression?:ProgressionView|null;skinUnlocks?:SkinUnlockView;inRun?:boolean;secondWeapon?:WeaponId;secondBowCharge?:number;secondAttackCooldown?:number;secondGauntlet?:TouchAbilityHud["gauntlet"];mummyStyle?:MummyStyleId;secondMummyStyle?:MummyStyleId;
  characterId?:CharacterId;opponentCharacterId?:CharacterId;characterChosen?:boolean;weaponChosen?:boolean;secondCharacterChosen?:boolean;secondWeaponChosen?:boolean;weaponAimAngle?:number|null;secondAimAngle?:number|null;playerName?:string;secondPlayerName?:string;localPvP?:boolean;pvpSeries?:Readonly<{round:number;playerWins:number;opponentWins:number;complete:boolean;countdown:number;swapped:boolean}>;
 };
 type Actions={
@@ -169,6 +170,10 @@ function landingRouteIcon(route:keyof typeof LANDING_ROUTE_ICONS):HTMLElement{
 
 export class GameUI{
  private onboarding:MobileOnboarding;
+ private weaponTips:WeaponTipTracker;
+ private activeWeaponTip:WeaponId|null=null;
+ private weaponTipCurrent:WeaponId|null=null;
+ private weaponTipAttackBaseline=0;
  private coach=document.createElement("aside");
  private coachText=document.createElement("p");
  private coachSkip=document.createElement("button");
@@ -190,6 +195,16 @@ export class GameUI{
  private joystick=document.createElement("div");
  private joystickThumb=document.createElement("div");
  private mobileAttackButton=document.createElement("button");
+ private touchHint=document.createElement("div");
+ private touchHintPrimary=document.createElement("span");
+ private touchHintSecondary=document.createElement("span");
+ private touchHintStatus=document.createElement("span");
+ private touchHintFill=document.createElement("span");
+ private p2TouchHint=document.createElement("div");
+ private p2HintPrimary=document.createElement("span");
+ private p2HintSecondary=document.createElement("span");
+ private p2HintStatus=document.createElement("span");
+ private p2HintFill=document.createElement("span");
  private mobilePauseButton=document.createElement("button");
  private cancelPauseHold:()=>void=()=>{};
  private cancelTouchControls:()=>void=()=>{};
@@ -388,11 +403,12 @@ export class GameUI{
 
  constructor(container:HTMLElement,actions:Actions,private readonly i18n:I18n,storage?:Storage){
   this.onboarding=new MobileOnboarding(storage);
+  this.weaponTips=new WeaponTipTracker(storage);
   this.coach.className="game-ui__coach";this.coach.hidden=true;
   this.coachText.setAttribute("role","status");this.coachText.setAttribute("aria-live","polite");
-  this.coachSkip.type="button";this.coachSkip.onclick=()=>{this.onboarding.skip();this.coach.hidden=true;this.joystick.classList.remove("tutorial-target");this.mobileAttackButton.classList.remove("tutorial-target");};
+  this.coachSkip.type="button";this.coachSkip.onclick=()=>{if(this.activeWeaponTip){this.weaponTips.markLearned(this.activeWeaponTip);this.activeWeaponTip=null;this.tutorialView="";}else this.onboarding.skip();this.coach.hidden=true;this.joystick.classList.remove("tutorial-target");this.mobileAttackButton.classList.remove("tutorial-target");};
   this.coach.append(this.coachText,this.coachSkip);
-  this.tutorialReplay.type="button";this.tutorialReplay.onclick=()=>{this.onboarding.replay();this.help.hidden=true;this.helpButton.focus();};
+  this.tutorialReplay.type="button";this.tutorialReplay.onclick=()=>{this.onboarding.replay();this.weaponTips.replay();this.weaponTipCurrent=null;this.activeWeaponTip=null;this.tutorialView="";this.help.hidden=true;this.helpButton.focus();};
   this.help.append(this.tutorialReplay);
   this.extraActions=actions;
   if(actions.quickPlay)this.menuView="landing";
@@ -456,13 +472,15 @@ export class GameUI{
   this.p2Next.append(this.p2WeaponName);
   this.p2Next.setAttribute("aria-expanded","false");
   this.p2WeaponControls.append(this.p2Next);
-  this.p2Controls.append(this.p2Joystick,this.p2Attack);
+  this.prepareTouchHint(this.p2TouchHint,this.p2HintPrimary,this.p2HintSecondary,this.p2HintStatus,this.p2HintFill,"p2");
+  this.p2Controls.append(this.p2Joystick,this.p2Attack,this.p2TouchHint);
   this.p2Controls.hidden=true;
   this.p2Next.onclick=()=>this.toggleWeaponPicker(2);
   this.joystick.className="game-ui__joystick";
   this.joystickThumb.className="game-ui__joystick-thumb";
   this.mobileAttackButton.type="button";
   this.mobileAttackButton.className="game-ui__mobile-button game-ui__mobile-button--attack";
+  this.prepareTouchHint(this.touchHint,this.touchHintPrimary,this.touchHintSecondary,this.touchHintStatus,this.touchHintFill,"p1");
   this.mobilePauseButton.type="button";
   this.mobilePauseButton.className="game-ui__mobile-pause";
   this.mobilePauseButton.textContent="Ⅱ";
@@ -539,7 +557,7 @@ export class GameUI{
   this.nextWeaponButton.append(weaponDisplay);
   this.mobileWeaponSwitcher.append(this.nextWeaponButton);
   this.joystick.append(this.joystickThumb);
-  this.mobileControls.append(this.joystick,this.mobileAttackButton,this.p2Controls);
+  this.mobileControls.append(this.joystick,this.mobileAttackButton,this.touchHint,this.p2Controls);
   this.help.className="game-ui__help game-ui__menu-dialog";
   this.help.hidden=true;
   this.help.setAttribute("role","dialog");
@@ -1454,6 +1472,7 @@ export class GameUI{
  render(state:GameState,s:HudState){
   this.currentState=state;
   if(s.lanPlayer)this.root.dataset.lanPlayer=String(s.lanPlayer);else delete this.root.dataset.lanPlayer;
+  this.renderTouchHints(state,s);
   this.renderTutorial(state,s);
   const messages=this.i18n.messages,locale=this.i18n.locale,old=this.lastView;
   // Standalone UI tests and older integrations may supply a legacy pvp copy.
@@ -1921,6 +1940,36 @@ export class GameUI{
   this.pauseScrim.remove();
  }
 
+ private prepareTouchHint(root:HTMLElement,primary:HTMLElement,secondary:HTMLElement,status:HTMLElement,fill:HTMLElement,player:"p1"|"p2"){
+  root.className="game-ui__touch-hint game-ui__touch-hint--"+player;
+  root.hidden=true;root.setAttribute("aria-live","off");root.setAttribute("dir","auto");
+  primary.className="game-ui__touch-primary";secondary.className="game-ui__touch-secondary";
+  status.className="game-ui__touch-status";
+  const meter=document.createElement("div");meter.className="game-ui__touch-meter";fill.className="game-ui__touch-fill";meter.append(fill);
+  root.append(primary,secondary,status,meter);
+ }
+ private renderTouchHints(state:GameState,s:HudState){
+  const mobile=typeof window.matchMedia==="function"&&window.matchMedia("(pointer: coarse)").matches;
+  const playing=mobile&&state===GameState.PLAYING&&s.winner===null&&!document.hidden;
+  this.setHidden(this.touchHint,!playing);
+  const second=Boolean(s.localPvP??s.mode==="local-pvp");
+  this.setHidden(this.p2TouchHint,!playing||!second);
+  if(!playing)return;
+  const locale=this.i18n.locale;
+  const paint=(root:HTMLElement,primary:HTMLElement,secondary:HTMLElement,status:HTMLElement,fill:HTMLElement,weapon:WeaponId,hud:TouchAbilityHud)=>{
+   const guide=touchActionGuide(weapon,locale),ability=touchActionStatus(weapon,locale,hud);
+   this.setText(primary,guide.primary);this.setText(secondary,guide.secondary);this.setText(status,ability.label);
+   const progress=Math.round(ability.progress*100)+"%";
+   if(fill.style.width!==progress)fill.style.width=progress;
+   root.dataset.phase=ability.phase;
+   const accessibility=guide.primary+"; "+guide.secondary+"; "+ability.label;
+   if(root.getAttribute("aria-label")!==accessibility)root.setAttribute("aria-label",accessibility);
+  };
+  paint(this.touchHint,this.touchHintPrimary,this.touchHintSecondary,this.touchHintStatus,this.touchHintFill,s.weapon,s);
+  if(second)paint(this.p2TouchHint,this.p2HintPrimary,this.p2HintSecondary,this.p2HintStatus,this.p2HintFill,s.secondWeapon??"blade",{
+   bowCharge:s.secondBowCharge??0,attackCooldown:s.secondAttackCooldown,gauntlet:s.secondGauntlet
+  });
+ }
  private renderTutorial(state:GameState,s:HudState){
   if(!s.tutorial)return;
   const mobile=typeof window.matchMedia==="function"&&window.matchMedia("(pointer: coarse)").matches;
@@ -1929,15 +1978,23 @@ export class GameUI{
   const step=s.tutorial?this.onboarding.update(s.tutorial,eligible,s.weapon==="missile"):null;
   if(step==="ready")this.coachReadyUntil=performance.now()+1800;
   const ready=eligible&&this.coachReadyUntil>performance.now();
-  const view=[step,ready,eligible,this.i18n.locale,s.weapon].join("|");
+  if(this.weaponTipCurrent!==s.weapon){this.weaponTipCurrent=s.weapon;this.weaponTipAttackBaseline=s.tutorial.attack;this.activeWeaponTip=null;}
+  let weaponTip:WeaponId|null=null;
+  // Wait for the existing core tutorial and its READY banner to finish.
+  if(eligible&&!step&&!ready&&this.onboarding.isCoreComplete()&&this.onboarding.status!=="skipped"&&s.tutorial.safe){
+   if(s.tutorial.attack>this.weaponTipAttackBaseline)this.weaponTips.markLearned(s.weapon);
+   if(!this.weaponTips.isLearned(s.weapon))weaponTip=s.weapon;
+  }
+  this.activeWeaponTip=weaponTip;
+  const view=[step,ready,eligible,this.i18n.locale,s.weapon,weaponTip].join("|");
   if(view===this.tutorialView)return;this.tutorialView=view;
-  this.setHidden(this.coach,!eligible||(!step&&!ready));
+  this.setHidden(this.coach,!eligible||(!step&&!ready&&!weaponTip));
   this.coach.dataset.target=step==="move"||step==="jump"||step==="double"?"stick":"attack";
   const copy=this.i18n.messages.tutorial;
-  this.setText(this.coachText,ready?copy.ready:step?step==="attack"&&s.weapon==="missile"?copy.missile:copy[step]:"");
+  this.setText(this.coachText,ready?copy.ready:step?step==="attack"&&s.weapon==="missile"?copy.missile:copy[step]:weaponTip?touchActionGuide(weaponTip,this.i18n.locale).tip:"");
   this.coach.dir=this.i18n.locale==="fa"?"rtl":"ltr";
   this.joystick.classList.toggle("tutorial-target",Boolean(eligible&&step&&!ready&&this.coach.dataset.target==="stick"));
-  this.mobileAttackButton.classList.toggle("tutorial-target",Boolean(eligible&&step&&!ready&&this.coach.dataset.target==="attack"));
+  this.mobileAttackButton.classList.toggle("tutorial-target",Boolean(eligible&&(step||weaponTip)&&!ready&&this.coach.dataset.target==="attack"));
  }
 
  private renderGuide(){
@@ -1952,7 +2009,7 @@ export class GameUI{
   };
   for(const id of ["controls","advanced","weapons","modes","progression","local"] as const){
    const section=document.createElement("details"),summary=document.createElement("summary");section.dataset.guideSection=id;section.open=id==="controls";summary.textContent=guide.sections[id];section.append(summary);
-   if(id==="weapons")entries(section,WEAPON_IDS.map(weapon=>({title:messages.weapons[weapon],body:guide.weapons[weapon]+" "+guide.upgradeLabel+": "+(messages.upgrades[weapon]?.name??weapon)+" — "+(messages.upgrades[weapon]?.description??"")})));
+   if(id==="weapons")entries(section,WEAPON_IDS.map(weapon=>({title:messages.weapons[weapon],body:touchActionGuide(weapon,this.i18n.locale).tip+" "+guide.weapons[weapon]+" "+guide.upgradeLabel": "+(messages.upgrades[weapon]?.name??weapon)+" — "+(messages.upgrades[weapon]?.description??"")})));
    else if(id==="modes")entries(section,[...MODE_IDS,"local-pvp" as const].map(mode=>({title:messages.modes[mode],body:guide.modes[mode]})));
    else entries(section,guide[id]);this.helpContent.append(section);
   }
