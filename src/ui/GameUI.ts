@@ -1950,7 +1950,7 @@ export class GameUI{
   root.append(primary,secondary,status,meter);
  }
  private renderTouchHints(state:GameState,s:HudState){
-  const mobile=typeof window.matchMedia==="function"&&window.matchMedia("(pointer: coarse)").matches;
+  const mobile=typeof window!=="undefined"&&typeof window.matchMedia==="function"&&window.matchMedia("(pointer: coarse)").matches;
   const playing=mobile&&state===GameState.PLAYING&&s.winner===null&&!document.hidden;
   this.setHidden(this.touchHint,!playing);
   const second=!s.lanPlayer&&Boolean(s.localPvP??s.mode==="local-pvp");
