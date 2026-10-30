@@ -94,7 +94,7 @@ test("bounded labels expire after 480ms and reposition with a moving fighter",()
  const original=damageLabelFrame(cue(28,.1),{x:3,y:4});
  const moved=damageLabelFrame(cue(28,.1),{x:8,y:7});
  assert.equal(moved.x-original.x,5);
- assert.equal(moved.y-original.y,3);
+ assert.ok(Math.abs((moved.y-original.y)-3)<1e-10);
  const later=damageLabelFrame(cue(28,.25),{x:3,y:4});
  assert.ok(later.y>original.y&&later.alpha<original.alpha);
  const reduced=damageLabelFrame(cue(28,.25),{x:3,y:4},true);
