@@ -300,24 +300,54 @@ export function grabEffectSegments(s:DuelistRenderState):Segment[]{
   [[.68+r,.03],[.75+r,.2]]
  ];
 }
-/** Shared gravity effects for both GPU and Canvas renderers; visual only. */
+/** Glove-anchored, visually distinct cyan punch, purple pull and cyan parry. 
+ * These marks use the current animated hand pose but never affect gameplay. */
 export function gauntletEffectSegments(s:DuelistRenderState):Segment[]{
- if(s.weapon!=="gravity-gauntlet"||((s.gauntletPullTime??0)<=0&&(s.gauntletParryTime??0)<=0))return[];
- const segments:Segment[]=[];
- const activeParry=(s.gauntletParryTime??0)>0;
- const radius=activeParry?.87:.53;
- const cx=.45,cy=.23;
- for(let i=0;i<24;i++){
-  const t=i*Math.PI/12+s.animationTime*2,u=(i+1)*Math.PI/12+s.animationTime*2;
-  segments.push([[cx+radius*Math.cos(t),cy+radius*Math.sin(t)],
-   [cx+radius*Math.cos(u),cy+radius*Math.sin(u)]]);
+ if(s.weapon!=="gravity-gauntlet"||s.health<=0)return[];
+ const parry=(s.gauntletParryTime??0)>0,pull=(s.gauntletPullTime??0)>0;
+ const punch=s.attackTime>0&&!parry&&!pull;
+ if(!parry&&!pull&&!punch)return[];
+ const pose=fighterVisual(s),cos=Math.cos(pose.toolAngle),sin=Math.sin(pose.toolAngle);
+ const at=(x:number,y:number):Point=>[pose.hand[0]+x*cos-y*sin,pose.hand[1]+x*sin+y*cos];
+ const strokes:Segment[]=[];
+ const line=(x:number,y:number,tx:number,ty:number)=>strokes.push([at(x,y),at(tx,ty)]);
+ const arc=(cx:number,cy:number,r:number,start:number,end:number,count:number)=>{
+  for(let i=0;i<count;i++){
+   const a=start+(end-start)*i/count,b=start+(end-start)*(i+1)/count;
+   line(cx+Math.cos(a)*r,cy+Math.sin(a)*r,cx+Math.cos(b)*r,cy+Math.sin(b)*r);
+  }
+ };
+ if(parry){
+  // Dual forward crescents clearly read as a shield instead of an attack ring.
+  const wobble=Math.sin(s.animationTime*18)*.025;
+  arc(.69,.05,.76+wobble,-Math.PI*.48,Math.PI*.48,18);
+  arc(.69,.05,.92+wobble,-Math.PI*.43,Math.PI*.43,16);
+  for(let i=-2;i<=2;i++){
+   const a=i*.34,x=.69+Math.cos(a)*(.78+wobble),y=.05+Math.sin(a)*(.78+wobble);
+   line(x-.035,y-.045,x+.08,y+.045);
+  }
+  line(.55,-.21,.79,-.34);line(.55,.30,.79,.43);
+ }else if(pull){
+  // Spirals and converging streaks indicate attraction, not an explosion.
+  const t=s.animationTime*4.8;
+  for(let ring=0;ring<3;ring++){
+   const r=.47+ring*.21,start=t+ring*2.1;
+   arc(.35,.07,r,start,start+Math.PI*1.20,13);
+   const a=start+Math.PI*1.20,x=.35+Math.cos(a)*r,y=.07+Math.sin(a)*r;
+   line(x,y,x-Math.cos(a+.6)*.17,y-Math.sin(a+.6)*.17);
+   line(x,y,x-Math.cos(a-.6)*.17,y-Math.sin(a-.6)*.17);
+  }
+  for(const y of [-.20,.08,.35]){line(1.30,y*1.6,.96,y);line(1.42,y*1.9,1.33,y*1.6);}
+ }else{
+  // Brief advancing impact arc after pressing ATTACK.
+  const progress=clamp(1-s.attackTime/.24),r=.20+progress*.43;
+  arc(1.03+progress*.21,.055,r,-Math.PI*.65,Math.PI*.65,19);
+  for(let i=-3;i<=3;i++){
+   const y=i*.17;line(1.09+progress*.30,y*.82,1.36+progress*.66,y*1.22);
+  }
+  line(.82,-.33,1.01,-.48);line(.85,.34,1.03,.52);
  }
- for(let i=0;i<8;i++){
-  const a=i*Math.PI/4-s.animationTime*2;
-  segments.push([[cx+radius*.72*Math.cos(a),cy+radius*.72*Math.sin(a)],
-   [cx+radius*1.23*Math.cos(a),cy+radius*1.23*Math.sin(a)]]);
- }
- return segments;
+ return strokes;
 }
 
 /** Each segment is a real pair of 3D vertices; buffers are sized from these arrays. */
