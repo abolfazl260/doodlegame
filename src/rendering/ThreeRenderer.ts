@@ -14,6 +14,8 @@ import {PlatformInkCache,platformInkReaction,type PlatformInkStroke} from "./Pla
 import {combatCameraFrame,type CombatCameraFrame} from "./CombatCamera.js";
 import {combatCueArt,combatCueFrame,COMBAT_GLYPH_LINES,type CombatGlyph} from "../gameplay/CombatFeedback.js";
 export class ThreeRenderer implements Renderer{
+ private readonly combatMotionMedia=typeof window!=="undefined"&&typeof window.matchMedia==="function"?
+  window.matchMedia("(prefers-reduced-motion: reduce)"):null;
  private platformInk=new PlatformInkCache();private platformInkGroups:THREE.Group[]=[];private platformInkKeys:string[]=[];private platformInkActive:boolean[]=[];private platformInkLayers:Array<Array<{line:THREE.LineSegments;strokes:readonly PlatformInkStroke[];positions:Float32Array}>>=[];
  private scene=new THREE.Scene();private camera=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);private renderer:THREE.WebGLRenderer;private contextLifecycle:WebGLContextLifecycle;
  private readonly grappleTextures=(()=>{
@@ -283,8 +285,7 @@ export class ThreeRenderer implements Renderer{
   while(this.combatVisuals.length<state.combatCues.length){
    const group=this.makeCombatVisual();this.combatVisuals.push(group);this.scene.add(group);
   }
-  const reduced=typeof window!=="undefined"&&typeof window.matchMedia==="function"&&
-   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduced=this.combatMotionMedia?.matches??false;
   for(let i=0;i<this.combatVisuals.length;i++){
    const g=this.combatVisuals[i],cue=state.combatCues[i];
    if(!cue){g.visible=false;continue;}
