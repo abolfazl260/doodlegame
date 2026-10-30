@@ -6,6 +6,7 @@ import {getDownloadedArena,installedArenas,arenaImageDataUrl} from "../.test-bui
 
 import {ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl} from "../.test-build/ui/ArenaPreviews.js";
 import {MobileOnboarding} from "../.test-build/ui/MobileOnboarding.js";
+import {touchActionGuide,touchActionStatus,WeaponTipTracker} from "../.test-build/ui/TouchWeaponGuide.js";
 const states={MENU:"MENU",PLAYING:"PLAYING",PAUSED:"PAUSED",GAME_OVER:"GAME_OVER"};
 const compiled=readFileSync(".test-build/ui/GameUI.js","utf8");
 const gameStateImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("GameState"));
@@ -13,8 +14,8 @@ const themeImport=compiled.split("\n").find(line=>line.startsWith("import ")&&li
 assert.ok(gameStateImport&&themeImport);
 const extraImport=compiled.split("\n").find(line=>line.startsWith("import ")&&line.includes("DownloadableArenas"));
 assert.ok(extraImport,"compiled UI imports downloaded arenas");
-const runnable=compiled.replace(/^import .*ArenaPreviews.*$/m,"").replace(/^import .*MobileOnboarding.*$/m,"").replace(gameStateImport,"const GameState=states;").replace(themeImport,"").replace(extraImport,"").replace("export class GameUI","class GameUI");
-const {GameUI}=new Function("states","getArenaTheme","getDownloadedArena","installedArenas","arenaImageDataUrl","MobileOnboarding","ARENA_CATEGORY_IDS","arenaCategories","arenaPreviewUrl",runnable+";return {GameUI};")(states,getArenaTheme,getDownloadedArena,installedArenas,arenaImageDataUrl,MobileOnboarding,ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl);
+const runnable=compiled.replace(/^import .*ArenaPreviews.*$/m,"").replace(/^import .*MobileOnboarding.*$/m,"").replace(/^import .*TouchWeaponGuide.*$/m,"").replace(gameStateImport,"const GameState=states;").replace(themeImport,"").replace(extraImport,"").replace("export class GameUI","class GameUI");
+const {GameUI}=new Function("states","getArenaTheme","getDownloadedArena","installedArenas","arenaImageDataUrl","MobileOnboarding","touchActionGuide","touchActionStatus","WeaponTipTracker","ARENA_CATEGORY_IDS","arenaCategories","arenaPreviewUrl",runnable+";return {GameUI};")(states,getArenaTheme,getDownloadedArena,installedArenas,arenaImageDataUrl,MobileOnboarding,touchActionGuide,touchActionStatus,WeaponTipTracker,ARENA_CATEGORY_IDS,arenaCategories,arenaPreviewUrl);
 
 const counters={writes:0,optionReads:0};
 class SpyNode{

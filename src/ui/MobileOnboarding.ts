@@ -12,6 +12,7 @@ export class MobileOnboarding{
  constructor(private storage?:Storage){try{const saved=storage?.get<string>(ONBOARDING_KEY);if(saved==="completed"||saved==="skipped")this.status=saved;}catch{/* Storage may be blocked. */}}
  private save(value:"completed"|"skipped"){try{this.storage?.set(ONBOARDING_KEY,value);}catch{/* Keep session usable. */}}
  replay(){this.status="eligible";this.step="move";this.baseline=null;this.coreDone=false;this.learned.clear();try{this.storage?.remove(ONBOARDING_KEY);}catch{}}
+ isCoreComplete(){return this.coreDone||this.status==="completed";}
  skip(){this.status="skipped";this.save("skipped");}
  dismiss(){if(this.status==="active")this.status=this.coreDone?"completed":"dismissed";this.baseline=null;}
  update(s:TutorialSignals,eligible:boolean,missile:boolean):TutorialStep|null{

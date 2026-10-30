@@ -3024,3 +3024,47 @@ html.software-landscape .game-ui.playing .game-ui__bow-panel{
 @media(orientation:landscape) and (max-height:390px),(orientation:portrait) and (max-width:390px){
  .game-ui__loadout-scroll-hint{font-size:.63rem;padding:.23rem .4rem}
 }
+
+
+/* #188 P0: contextual, read-only ATTACK affordance; never steals pointer input. */
+.game-ui__touch-hint[hidden]{display:none!important}
+.game-ui__touch-hint{display:none}
+@media (pointer:coarse){
+ .game-ui.playing .game-ui__touch-hint:not([hidden]){
+  position:absolute;z-index:21;display:grid;gap:.15rem;
+  right:calc(var(--safe-right) + .55rem);
+  bottom:calc(var(--safe-bottom) + clamp(5.6rem,19cqmin,7rem));
+  width:clamp(142px,27cqw,220px);max-width:calc(42cqw - .5rem);
+  padding:.4rem .55rem;
+  border:1px solid #9fb4cb;border-radius:.6rem;
+  background:#08131eea;color:#f5fbff;
+  box-shadow:0 2px 12px #0009;
+  pointer-events:none;user-select:none;text-align:center;
+  direction:auto;line-height:1.3;overflow-wrap:anywhere;
+ }
+ .game-ui__touch-primary{font-size:clamp(.56rem,1.7cqmin,.72rem);font-weight:850}
+ .game-ui__touch-secondary{font-size:clamp(.51rem,1.5cqmin,.63rem);color:#d0dbe9;font-weight:650}
+ .game-ui__touch-status{font-size:clamp(.51rem,1.5cqmin,.65rem);color:#96f0e2;font-weight:750}
+ .game-ui__touch-meter{display:none;height:4px;overflow:hidden;border-radius:99px;background:#4f6473a0}
+ .game-ui__touch-fill{display:block;height:100%;width:0;background:#5be8da}
+ .game-ui__touch-hint[data-phase="charging"] .game-ui__touch-meter{display:block}
+ .game-ui__touch-hint[data-phase="cooldown"] .game-ui__touch-status{color:#e7c18d}
+ .game-ui__touch-hint[data-phase="active"] .game-ui__touch-status{color:#65f7e8}
+ /* Existing top gauntlet cooldown pill is redundant when local touch hints are visible. */
+ .game-ui.playing .game-ui__gauntlet-status:not([hidden]){display:none!important}
+ .game-ui.playing[data-players="2"] .game-ui__touch-hint--p1:not([hidden]){
+  left:calc(var(--safe-left) + 1rem + clamp(84px,22cqmin,112px) + .3rem);
+  right:auto;width:clamp(110px,22cqw,168px);max-width:23cqw;
+ }
+ .game-ui.playing[data-players="2"] .game-ui__touch-hint--p2:not([hidden]){
+  right:calc(var(--safe-right) + 1rem + clamp(84px,22cqmin,112px) + .3rem);
+  left:auto;width:clamp(110px,22cqw,168px);max-width:23cqw;
+ }
+}
+@media (pointer:fine){.game-ui__touch-hint{display:none!important}}
+@media (pointer:coarse) and (max-height:350px){
+ .game-ui.playing .game-ui__touch-hint:not([hidden]){padding:.24rem .38rem;gap:.06rem;bottom:calc(var(--safe-bottom) + clamp(5.0rem,18cqmin,6.2rem))}
+ .game-ui__touch-primary{font-size:.53rem}
+ .game-ui__touch-secondary,.game-ui__touch-status{font-size:.48rem}
+}
+@media (prefers-reduced-motion:reduce){.game-ui__touch-hint *{transition:none!important;animation:none!important}}

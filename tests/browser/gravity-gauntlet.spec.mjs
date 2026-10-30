@@ -22,8 +22,15 @@ test("Gravity Gauntlet is selectable, documents all four moves, and shows cooldo
  await expect(guide).toContainText(/Perfect Parry|دفع/);
  await page.locator('button[data-action="start"]').tap();
  await expect.poll(()=>page.evaluate(()=>window.__runFixture.state())).toBe("PLAYING");
- await expect(page.locator(".game-ui__gauntlet-status")).toBeVisible();
- await expect(page.locator(".game-ui__gauntlet-status")).toContainText(/PULL READY|کشش آماده/);
- await expect(page.locator(".game-ui__gauntlet-status")).toContainText(/PARRY READY|دفع آماده/);
+ // On coarse-pointer devices, the contextual ATTACK hint replaces the old top cooldown pill.
+ const attackHint=page.locator(".game-ui__touch-hint--p1");
+ await expect(attackHint).toBeVisible();
+ await expect(attackHint.locator(".game-ui__touch-primary")).toContainText(/PUNCH|مشت/);
+ await expect(attackHint.locator(".game-ui__touch-primary")).toContainText(/PULL|کشش/);
+ await expect(attackHint.locator(".game-ui__touch-secondary")).toContainText(/PARRY|دفع/);
+ await expect(attackHint.locator(".game-ui__touch-secondary")).toContainText(/SLAM|کوبش/);
+ await expect(attackHint.locator(".game-ui__touch-status")).toContainText(/PULL READY|کشش آماده/);
+ await expect(attackHint.locator(".game-ui__touch-status")).toContainText(/PARRY READY|دفع آماده/);
+ await expect(page.locator(".game-ui__gauntlet-status")).toBeHidden();
  expect((await page.evaluate(()=>window.__runFixture.view())).weapon).toBe("gravity-gauntlet");
 });
